@@ -1,9 +1,11 @@
 import { Bvh, Shadow } from '@react-three/drei';
-import { useLoader } from '@react-three/fiber';
-import { useMemo } from 'react';
+import { createPortal, useLoader } from '@react-three/fiber';
+import { Fragment, useMemo } from 'react';
+import type { Mesh } from 'three';
 import type { Vec3 } from '@shared/types';
 import { useEditor } from '../state/store';
 import { GLTFLoader, withMeshopt } from './gltf';
+import { Outline } from './SelectionOutline';
 
 const ignoreRaycast = () => null;
 
@@ -12,14 +14,22 @@ function BlobShadow({ size: [width, , depth] }: { size: Vec3 }) {
   return <Shadow scale={[width * 1.1, depth * 1.1, 1]} position-y={0.005} opacity={0.35} raycast={ignoreRaycast} />;
 }
 
-/** One Catalog model. Pieces of the same item share its geometry and materials. */
-function PieceModel({ url }: { url: string }) {
+/** One Catalog model, outlined when selected. Pieces of the same item share its geometry and materials. */
+function PieceModel({ url, selected }: { url: string; selected: boolean }) {
   const gltf = useLoader(GLTFLoader, url, withMeshopt);
   const model = useMemo(() => gltf.scene.clone(true), [gltf]);
+  const meshes = useMemo(() => {
+    const found: Mesh[] = [];
+    model.traverse((object) => (object as Mesh).isMesh && found.push(object as Mesh));
+    return found;
+  }, [model]);
   return (
-    <Bvh>
-      <primitive object={model} />
-    </Bvh>
+    <>
+      <Bvh>
+        <primitive object={model} />
+      </Bvh>
+      {selected && meshes.map((mesh) => <Fragment key={mesh.uuid}>{createPortal(<Outline />, mesh)}</Fragment>)}
+    </>
   );
 }
 
@@ -31,11 +41,20 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
     const piece = s.roomState!.pieces[pieceId];
     return piece && s.catalog!.items.find(({ id }) => id === piece.catalogId);
   });
+  const selected = useEditor((s) => s.selection?.kind === 'piece' && s.selection.id === pieceId);
   if (!placement || !item) return null;
 
   return (
-    <group name={pieceId} position={placement.position} rotation-y={placement.rotationY}>
-      <PieceModel url={item.model} />
+    <group
+      name={pieceId}
+      position={placement.position}
+      rotation-y={placement.rotationY}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (event.delta <= 2) useEditor.getState().select({ kind: 'piece', id: pieceId });
+      }}
+    >
+      <PieceModel url={item.model} selected={selected} />
       {placement.mount === 'floor' && item.category !== 'rug' && <BlobShadow size={item.size} />}
     </group>
   );

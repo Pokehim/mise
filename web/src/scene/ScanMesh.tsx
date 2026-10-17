@@ -1,9 +1,12 @@
 import { Bvh } from '@react-three/drei';
+import type { ThreeEvent } from '@react-three/fiber';
 import { use, useLayoutEffect, useMemo } from 'react';
 import { MeshBasicMaterial, type MeshStandardMaterial, type Object3D, Plane, Vector3 } from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { RoomSetup, RoomState } from '@shared/types';
 import { scanFileUrl } from '../api';
-import { useEditor } from '../state/store';
+import { type Selection, useEditor } from '../state/store';
+import { wallCoordinates } from './floorPlan';
 import { GLTFLoader, withMeshopt } from './gltf';
 import { forEachMaterial } from './objects';
 import { type ScanNodes, setupRoomNodes, splitScanStub } from './scanNodes';
@@ -40,6 +43,29 @@ function makeUnlit(root: Object3D) {
   });
 }
 
+/**
+ * What a click on the Scan selects: the Original whose box holds the point, else the Wall it lies
+ * on, else nothing. The same tests that sort triangles in splitScan (spec §9.4, rules 1 and 4),
+ * so they work on one unsplit mesh too.
+ */
+function scanTargetAt({ x, y, z }: Vector3, setup: RoomSetup, originals: RoomState['originals']): Selection | null {
+  for (const { id, box } of setup.originals) {
+    if (!originals[id]?.visible) continue;
+    const { position: [bx, by, bz], size: [width, height, depth], rotationY } = box;
+    const [cos, sin] = [Math.cos(rotationY), Math.sin(rotationY)];
+    const across = (x - bx) * cos - (z - bz) * sin;
+    const deep = (x - bx) * sin + (z - bz) * cos;
+    if (Math.abs(across) <= width / 2 + 0.02 && Math.abs(deep) <= depth / 2 + 0.02 && y - by > 0.02 && y - by <= height + 0.02) {
+      return { kind: 'original', id };
+    }
+  }
+  for (const wall of setup.walls) {
+    const { along, into, length } = wallCoordinates([x, z], wall);
+    if (Math.abs(into) < 0.04 && along >= 0 && along <= length && y <= wall.height) return { kind: 'wall', id: wall.id };
+  }
+  return null;
+}
+
 /** The Scan: its mesh split into nodes, or a stand-in room from the Room Setup when it has no mesh yet. */
 export function ScanMesh() {
   const manifest = useEditor((s) => s.manifest!);
@@ -68,8 +94,16 @@ export function ScanMesh() {
     ceilingClip.constant = view === 'dollhouse' ? setup.ceilingHeight - 0.05 : 1e6;
   }, [ceilingClip, view, setup]);
 
+  const onClick = (event: ThreeEvent<MouseEvent>) => {
+    if (event.delta > 2) return;   // the end of a drag that moved the camera
+    const target = scanTargetAt(event.point, setup, originals);
+    // A click on the floor goes on to the Walk view, which moves there.
+    if (target) event.stopPropagation();
+    useEditor.getState().select(target);
+  };
+
   return (
-    <group name="scan">
+    <group name="scan" onClick={onClick}>
       <Bvh>
         <primitive object={nodes.shell} />
         <primitive object={nodes.floor} />

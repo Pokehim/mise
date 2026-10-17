@@ -5,10 +5,23 @@ import { TopBar } from '../ui/TopBar';
 import { SceneCanvas } from './SceneCanvas';
 import './editor.css';
 
+/** Editor shortcuts (spec §10.3). Keys typed into a field are left alone. */
+function useEditorKeys() {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) return;
+      if (event.key === 'Escape') useEditor.getState().select(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+}
+
 /** The editor at /d/:designId (spec §10.1). */
 export function EditorPage({ params: { designId } }: { params: { designId: string } }) {
   const ready = useEditor((s) => s.status === 'ready' && s.design?.id === designId);
   const error = useEditor((s) => s.error);
+  useEditorKeys();
 
   useEffect(() => {
     void useEditor.getState().load(designId);

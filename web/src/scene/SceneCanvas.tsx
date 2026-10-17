@@ -8,6 +8,7 @@ import { DollhouseCamera } from './DollhouseCamera';
 import { isShown } from './objects';
 import { PieceNode } from './PieceNode';
 import { ScanMesh } from './ScanMesh';
+import { SelectionOutline } from './SelectionOutline';
 
 /** Renders nothing in place of children that fail to load, so one bad asset can't blank the editor. */
 class Optional extends Component<{ what: string; children: ReactNode }, { failed: boolean }> {
@@ -49,6 +50,7 @@ export function SceneCanvas() {
         gl={{ localClippingEnabled: true, toneMapping: NeutralToneMapping }}
         // Hidden objects, such as faded walls and replaced Originals, must not catch clicks.
         events={(store) => ({ ...events(store), filter: (hits) => hits.filter((hit) => isShown(hit.object)) })}
+        onPointerMissed={() => useEditor.getState().select(null)}
       >
         <color attach="background" args={['#f4f1ea']} />
         <hemisphereLight args={['#ffffff', '#d9cfbf', 0.6]} />
@@ -61,6 +63,7 @@ export function SceneCanvas() {
           <ScanMesh />
         </Suspense>
         <Pieces />
+        <SelectionOutline />
         {view === 'dollhouse' && <DollhouseCamera />}
         {debug && <Stats parent={container} className="stats" />}
       </Canvas>

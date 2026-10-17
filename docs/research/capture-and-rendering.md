@@ -10,6 +10,8 @@ Markers used in this document:
 
 Companion doc: `docs/research/assets-and-hackathon.md` (catalog GLBs, PBR materials, deadlines).
 
+> **Update, Sat 4 PM:** the team now has **Polycam Business**. Every export is unlocked, including Splat PLY, and Polycam builds splats in its cloud. Where this document treats Polycam's splat export as paid or unavailable, that no longer applies. Training our own splat (msplat on the raw data) is now only the fallback. The current plan is in `.plans/mise-spec.md` §9.1 and §12.
+
 ---
 
 ## TL;DR

@@ -68,7 +68,7 @@ We build in this order. The order is the user's decision; see Round 7.
 
 | Area | Phase 1 | Later | Out (not this hackathon) |
 |---|---|---|---|
-| Capture | Polycam free tier, LiDAR mode, **Developer Mode ON**, glTF + raw data | Splat from raw data (P3) | Our own iOS app, RoomPlan, video upload, capture from a phone webpage |
+| Capture | **Polycam Business** (every export unlocked): LiDAR / Space-mode mesh as GLB, a Polycam Gaussian splat as Splat PLY, and Developer Mode raw data as a fallback | Pre-filling Room Setup from Polycam's floor-plan export, if it turns out to be readable (§18) | Our own iOS app, RoomPlan, video upload, capture from a phone webpage |
 | Room meaning | Room Setup by hand: floor corners → walls, Openings, click-to-tag Originals with auto-box | Auto-setup by RoomPlan or AI | — |
 | Look | Polycam textured mesh | Splat + mesh hybrid, Realism levels (P3) | AI photo stills (dropped) |
 | Pieces | Place, Move, Rotate, Remove, Swap, Resize, Recolor per Part | Text-to-3D for categories the Catalog lacks (P4 stretch) | Live web product search |
@@ -99,14 +99,16 @@ We build in this order. The order is the user's decision; see Round 7.
 ## 3. Architecture
 
 ```
-iPhone 16 Pro ─ Polycam (LiDAR / Space mode, Developer Mode ON)
-   ├─ glTF export (textured mesh) ──────────────┐   AirDrop
-   └─ Raw Data export (photos + camera poses) ─┐│
-                                               ││
-M3 Pro, offline (any duration)                 ││
-   scripts/scan-import.ts  ◄───────────────────┘│   → data/scans/<id>/room.glb + manifest.json
-   msplat-train (Phase 3)  ◄────────────────────┘   → data/scans/<id>/splat.spz
-   scripts/catalog-build.ts                         → data/catalog/catalog.json + models/*.glb
+iPhone 16 Pro ─ Polycam Business (Developer Mode ON)              ── AirDrop all exports to the M3 Pro
+   ├─ Space (LiDAR) mode            → mesh export (GLB)
+   ├─ Gaussian splat (Polycam cloud) → Splat PLY
+   └─ Raw Data (photos + poses)     → fallback only
+
+M3 Pro, offline (any duration)
+   scripts/scan-import.ts   ◄ mesh       → data/scans/<id>/room.glb + manifest.json
+   scripts/splat.sh (P3)    ◄ Splat PLY  → splat-transform → data/scans/<id>/splat.spz
+   msplat-train (fallback)  ◄ raw data   → a splat in the mesh's own coordinates
+   scripts/catalog-build.ts              → data/catalog/catalog.json + models/*.glb
 
 Browser (Vite + React + TypeScript + React Three Fiber + drei)
    /setup/:scanId   Room Setup tool  ──PUT──►  data/scans/<id>/setup.json
@@ -178,7 +180,7 @@ There's one `package.json` at the root, so there's no workspace tooling to confi
 │  ├─ scan-import.ts             ← Polycam export → data/scans/<id>/
 │  ├─ catalog-build.ts           ← picks → optimized GLBs + catalog.json
 │  ├─ materials-build.ts         ← Phase 2: ambientCG/Poly Haven → data/materials/
-│  └─ splat.sh                   ← Phase 3: msplat + splat-transform
+│  └─ splat.sh                   ← Phase 3: Polycam Splat PLY → splat-transform → splat.spz
 └─ data/
    ├─ scans/<scanId>/            ← manifest.json, room.glb, setup.json, patches/, splat.spz, raw/ (gitignored)
    ├─ catalog/                   ← catalog.json, models/, thumbs/
@@ -556,14 +558,28 @@ ABO has no prices (ADR-0003). `priceEstimateUsd` defaults by category, can be ov
 
 ### 9.1 Capture checklist (the dorm, **before 5 PM today**)
 
-- [ ] Polycam **Developer Mode ON before capturing** (Settings). Use LiDAR / "Space" mode.
+We have **Polycam Business**, so every export format is unlocked, including Gaussian splats as Splat PLY. Polycam builds the splat in its cloud, so we don't train our own.
+
+- [ ] Polycam **Developer Mode ON before capturing** (Settings). The raw data is now only a fallback, but it costs nothing.
+- [ ] **Mesh:** capture in LiDAR / "Space" mode.
+- [ ] **Splat:** create a Gaussian splat of the same room.
+  - If Polycam can build the splat from the same Space capture, do that, so both come from one capture.
+  - Otherwise, do a separate Gaussian Splat capture right after, with the same lighting. Expect to align it to the mesh by hand in Phase 3.
 - [ ] All lights on. Blinds in their final position, unchanged for the whole capture.
 - [ ] Dorm furniture stays in place; these become the Kept Originals. Personal clutter goes off the floor and desk.
 - [ ] Walk slowly, two loops at two heights. Get under the desk and behind the chair.
 - [ ] **Capture twice** (a backup).
-- [ ] Export the **glTF** (free) and the **Raw Data** zip. Raw Data must be exported *from the phone that captured it*. AirDrop both to the M3 Pro.
+- [ ] **Export:**
+  - the mesh as **GLB** (glTF also works)
+  - the splat as **Splat PLY**
+  - the **Raw Data** zip, which must be exported *from the phone that captured it*
 
-Do a **10-minute test scan of the hackathon table area first**. It becomes the development fixture, and it tests export, scale, and up-axis before the dorm trip.
+  AirDrop everything to the M3 Pro. The Splat PLY is large, so keep it out of git; only the compressed `splat.spz` is committed.
+
+Do a **10-minute test scan of the hackathon table area first**. It becomes the development fixture, and it tests export, scale, and up-axis before the dorm trip. While you're in the app, check two things that decide later work:
+
+- Can a splat be built from a Space (LiDAR) capture, or only from a separate splat capture?
+- What does the Business **floor-plan export** contain (DXF, PDF, JSON, or USDZ)? Does it include the detected walls, doors, windows, and furniture in a readable format? If it does, and it lines up with the mesh, Room Setup could be pre-filled from it (§18).
 
 ### 9.2 `scripts/scan-import.ts <polycam-export> <scanId>`
 
@@ -708,9 +724,9 @@ It lists every Piece in the Design with its thumbnail, title, "≈ $X (est.)", a
 
 | Step | Details |
 |---|---|
-| **Train** (start in the background **right after the dorm capture**, around 5 PM) | `pip install "msplat[cli]"` (Python 3.12+, macOS 14+), then `msplat-train data/scans/dorm-v1/raw -n 30000`. Roughly 25–45 minutes on the M3 Pro (estimated). msplat's normalization isn't documented, so check whether its output is re-centered or rescaled. |
-| **Clean and compress** | Use `@playcanvas/splat-transform` (CLI): crop to the room box, remove floaters, decimate to ≤ 1.5M (`-d`), strip the higher spherical-harmonic bands (`-H`), and write `splat.spz`. SuperSplat is available for manual cleanup. |
-| **Align** | A debug panel with sliders for `splatTransform` (x, y, z, yaw, scale). Tune until the splat's walls overlay the mesh's walls, then save it to the manifest. |
+| **Get the splat** (start Polycam's cloud processing **right after the dorm capture**, around 5 PM) | Polycam Business builds the Gaussian splat in its cloud. Export it as **Splat PLY** to the M3 Pro. **Fallback**, if Polycam's splat looks poor indoors or can't be made: train one from the Developer Mode raw data with msplat (`pip install "msplat[cli]"`, then `msplat-train data/scans/dorm-v1/raw -n 30000`; roughly 25–45 minutes on the M3 Pro, estimated). A raw-data splat comes from the same capture as the mesh, which makes alignment easier. |
+| **Clean and compress** | Use `@playcanvas/splat-transform` (CLI): crop to the room box, remove floaters, decimate to ≤ 1.5M (`-d`), strip the higher spherical-harmonic bands (`-H`), and write `data/scans/<id>/splat.spz`. Add `"splat": "splat.spz"` to the manifest. SuperSplat is available for manual cleanup. |
+| **Align** | A debug panel with sliders for `splatTransform` (x, y, z, yaw, scale). **Starting guess:** Polycam's Unity guide says its splat and mesh exports differ by a 180° rotation about Y and a ×100 scale. Verify that against your files instead of trusting it. Tune until the splat's walls overlay the mesh's walls, then save the result to the manifest. If the splat came from a separate capture, expect a larger manual fit. |
 | **Render** | Spark 2.3.1 in R3F: `extend({ SparkRenderer, SplatMesh })`, a `<sparkRenderer args={[{ renderer: gl }]}>` with a `<splatMesh args={[{ url }]}>` inside. Use **Vite**: Spark's R3F examples break under Webpack. |
 | **Touched means mesh** (ADR-0005) | For every touched Original, Wall, or the Floor: add a `SplatEditSdf` of type BOX with **opacity 0** over its region, and show its mesh node with the change. A painted wall uses a thin box over the wall slab. **Verify in the spike** how to keep Opening splats visible: a second SDF with opacity 1 per Opening, or showing the Opening's mesh instead. |
 | **Room lighting for Pieces** | A `CubeCamera` at the room center, 1.2 m high, renders the mesh look once, run through `PMREMGenerator`, and is used as the `envMap` for Piece materials only |
@@ -799,9 +815,9 @@ If the resolved Placement violates a Fit rule, the resolver **slides it along th
 | Time | Person A (Scan and rendering) | Person B (editor, Catalog, Claude) |
 |---|---|---|
 | 2:15–2:45 | **Both:** scaffold the repo, paste `shared/types.ts`, get `npm run dev` working | ← same |
-| 2:45–3:15 | Test scan of the venue table (Developer Mode ON) → `scan-import` → fixture | ABO metadata download; pick 15 items; start `catalog-build` |
+| 2:45–3:15 | Test scan of the venue table (mesh + splat, Developer Mode ON; check the two questions in §9.1) → `scan-import` → fixture | ABO metadata download; pick 15 items; start `catalog-build` |
 | 3:15–5:00 | **Dorm capture ×2** (including travel) → AirDrop → `scan-import dorm-v1` | Editor shell: Canvas, fixture mesh, Dollhouse camera, hand-written fixture `setup.json`, Catalog panel, Add Piece |
-| 5:00–6:00 | Start `msplat-train` in the background. Room Setup steps 1–3 (level, ceiling, corners → walls). | Selection + Inspector; Move / Rotate drag, wall snap, drop onto surfaces; Remove |
+| 5:00–6:00 | Start Polycam's splat processing; it runs in Polycam's cloud. Room Setup steps 1–3 (level, ceiling, corners → walls). | Selection + Inspector; Move / Rotate drag, wall snap, drop onto surfaces; Remove |
 | 6:00–7:00 | Dinner | Dinner |
 | 7:00–8:30 | Room Setup steps 4–6 (Openings, auto-box Originals, Bake), Save; `splitScan` | `replay` + `describe` + History panel + Undo; Designs save and load through Hono |
 | 8:30–10:00 | Paint (`recolor.ts` + `avgLuminance`); `parts.ts` + per-Part Recolor; simple Patch + Replace | Swap; Resize flow; `fit.ts` (overlap, outside-floor, door-swing, blocks-window) with red highlight; Shopping list |
@@ -859,8 +875,8 @@ Plan one staggered 90-minute nap each, during Phase 2 or Phase 3, where the sche
 
 | # | Risk | Spike (owner, when) | If it fails |
 |---|---|---|---|
-| 1 | The Polycam free glTF is too heavy, has many textures, or has an unexpected up-axis or scale | A, test scan, 2:45 PM: run `scan-import` and inspect the printout | `gltf-transform simplify`; fix the axis in `meshTransform` |
-| 2 | Polycam Raw Data doesn't export, or msplat can't read it | A, test scan: export the raw data and run msplat for 2k steps | Phase 3 is cut (mesh look only). Scaniverse is an alternative capture, with a manual `splatTransform`. |
+| 1 | The Polycam mesh export is too heavy, has many textures, or has an unexpected up-axis or scale | A, test scan, 2:45 PM: run `scan-import` and inspect the printout | `gltf-transform simplify`; fix the axis in `meshTransform` |
+| 2 | Polycam's splat looks poor indoors, or doesn't line up with the mesh | A, test scan: export the Splat PLY and open it next to `room.glb`, in SuperSplat or the editor's Align panel | Train from the raw data with msplat (same capture as the mesh). If that fails too, cut Phase 3 and ship the mesh look. |
 | 3 | Load-time split is too slow or misassigns triangles | A, ~7 PM, on the dorm mesh | Run the split once in Room Setup and save the per-Original index lists in `setup.json` |
 | 4 | Texture readback for `avgLuminance` fails (CORS, compressed textures) | A, ~8:30 PM | Use a fixed `avgLuminance` of 0.5 per node, tuned by eye |
 | 5 | Some ABO GLBs fail to optimize, or come out bigger than 2 MB | B, 2:45 PM, on 15 items | Drop those items; there are about 1,200 chairs to choose from |
@@ -897,4 +913,5 @@ If behind, cut from the top of this list down.
 - Whether Visa is a title track or a side track. Ask on Discord before 10:30 PM.
 - Who is Person A and who is Person B.
 - The fal inpainting model for the optional Patch v2 upgrade, and confirming TRELLIS.2 for text-to-3D.
-- Later, after the hackathon: RoomPlan or AI auto-setup that writes the same `RoomSetup`; capture of a splat in one step.
+- Whether Polycam's floor-plan export (a Business feature, with automatic furniture detection) is machine-readable and lines up with the mesh. Person A checks this on the test scan. If it does, a small importer could pre-fill Room Setup's walls, Openings, and Originals, and the manual steps become corrections.
+- Later, after the hackathon: our own RoomPlan or AI auto-setup that writes the same `RoomSetup`.

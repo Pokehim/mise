@@ -12,5 +12,5 @@ We chose this over editing splats directly (no surfaces for materials, no shadow
 ## Consequences
 
 - Edited objects show a visible step down in realism compared with their surroundings.
-- The splat must be aligned to the mesh. The transform between them is tuned by hand and stored with the Scan.
+- The splat must be aligned to the mesh. The transform between them is tuned by hand and stored with the Scan. The starting guess is the fixed offset that Polycam's Unity guide describes between its splat and mesh exports (a 180° rotation about Y and a ×100 scale), verified against the actual files.
 - If the splat fails, the fallback is mesh-only rendering, and the editor and Edits don't change at all.

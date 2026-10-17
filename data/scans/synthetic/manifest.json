@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "synthetic",
+  "name": "Synthetic dorm (3.6 × 4.2 m)",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  }
+}

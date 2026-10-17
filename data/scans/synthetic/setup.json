@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "scanId": "synthetic",
+  "ceilingHeight": 2.6,
+  "floor": {
+    "polygon": [
+      [
+        -1.8,
+        -2.1
+      ],
+      [
+        1.8,
+        -2.1
+      ],
+      [
+        1.8,
+        2.1
+      ],
+      [
+        -1.8,
+        2.1
+      ]
+    ]
+  },
+  "walls": [
+    {
+      "id": "wl_1",
+      "name": "North wall",
+      "start": [
+        -1.8,
+        -2.1
+      ],
+      "end": [
+        1.8,
+        -2.1
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.6
+    },
+    {
+      "id": "wl_2",
+      "name": "East wall",
+      "start": [
+        1.8,
+        -2.1
+      ],
+      "end": [
+        1.8,
+        2.1
+      ],
+      "normal": [
+        -1,
+        0
+      ],
+      "height": 2.6
+    },
+    {
+      "id": "wl_3",
+      "name": "South wall",
+      "start": [
+        1.8,
+        2.1
+      ],
+      "end": [
+        -1.8,
+        2.1
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.6
+    },
+    {
+      "id": "wl_4",
+      "name": "West wall",
+      "start": [
+        -1.8,
+        2.1
+      ],
+      "end": [
+        -1.8,
+        -2.1
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.6
+    }
+  ],
+  "openings": [
+    {
+      "id": "op_1",
+      "kind": "window",
+      "wallId": "wl_1",
+      "offset": 1.8,
+      "width": 1.2,
+      "bottom": 0.9,
+      "height": 1.2
+    },
+    {
+      "id": "op_2",
+      "kind": "door",
+      "wallId": "wl_3",
+      "offset": 0.3,
+      "width": 0.9,
+      "bottom": 0,
+      "height": 2.05,
+      "swing": "in-right"
+    }
+  ],
+  "originals": [
+    {
+      "id": "og_bed",
+      "label": "Bed",
+      "category": "bed",
+      "kept": true,
+      "box": {
+        "position": [
+          -1.27,
+          0,
+          -1.045
+        ],
+        "size": [
+          1,
+          0.6,
+          2.05
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#96785a"
+    },
+    {
+      "id": "og_desk",
+      "label": "Desk",
+      "category": "desk",
+      "kept": false,
+      "box": {
+        "position": [
+          0.6,
+          0,
+          -1.77
+        ],
+        "size": [
+          1.2,
+          0.75,
+          0.6
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#9a7b5d"
+    },
+    {
+      "id": "og_chair",
+      "label": "Chair",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          0.6,
+          0,
+          -1.145
+        ],
+        "size": [
+          0.45,
+          0.9,
+          0.45
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "floorColor": "#9b7c5d"
+    },
+    {
+      "id": "og_dresser",
+      "label": "Dresser",
+      "category": "dresser",
+      "kept": true,
+      "box": {
+        "position": [
+          1.52,
+          0,
+          0
+        ],
+        "size": [
+          0.8,
+          0.75,
+          0.5
+        ],
+        "rotationY": -1.5707963267948966
+      },
+      "floorColor": "#a48463"
+    }
+  ]
+}

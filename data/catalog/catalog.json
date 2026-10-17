@@ -2,18 +2,709 @@
   "version": 1,
   "items": [
     {
+      "id": "B07MDJXWGN",
+      "source": "abo",
+      "title": "AmazonBasics Classic, Adjustable, Swivel Office Desk Chair with Casters and Twill Fabric, Navy",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.599,
+        0.82,
+        0.655
+      ],
+      "model": "/data/catalog/models/B07MDJXWGN.glb",
+      "thumbnail": "/data/catalog/thumbs/B07MDJXWGN.jpg",
+      "colors": [
+        "Navy",
+        "Blue"
+      ],
+      "colorHex": "#314f6b",
+      "materials": [
+        "Textile"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07MDJXWGN",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B082BLFMRC",
+      "source": "abo",
+      "title": "Rivet Celine Upholstered Home Office Task Chair, 22.25\"W, Beige",
+      "brand": "Rivet",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.564,
+        0.952,
+        0.668
+      ],
+      "model": "/data/catalog/models/B082BLFMRC.glb",
+      "thumbnail": "/data/catalog/thumbs/B082BLFMRC.jpg",
+      "colors": [
+        "Beige"
+      ],
+      "colorHex": "#dfd0c6",
+      "materials": [
+        "Metal",
+        "Textile",
+        "Vinyl",
+        "Foam"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B082BLFMRC",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B072PZJZY3",
+      "source": "abo",
+      "title": "Rivet Ashworth Armless Velvet Accent Chair, 21.6\"W, Smoky Teal",
+      "brand": "Rivet",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.522,
+        0.806,
+        0.554
+      ],
+      "model": "/data/catalog/models/B072PZJZY3.glb",
+      "thumbnail": "/data/catalog/thumbs/B072PZJZY3.jpg",
+      "colors": [
+        "Smoky Teal",
+        "Gray"
+      ],
+      "colorHex": "#747975",
+      "materials": [
+        "Solid beech wood/ Velvet"
+      ],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B072PZJZY3",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07DBHCKJ5",
+      "source": "abo",
+      "title": "Ravenna Home Ryleigh Rounded Mid-Century Barrel Accent Chair, 27.5\"W, Charcoal Grey",
+      "brand": "Ravenna Home",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.798,
+        0.815,
+        0.704
+      ],
+      "model": "/data/catalog/models/B07DBHCKJ5.glb",
+      "thumbnail": "/data/catalog/thumbs/B07DBHCKJ5.jpg",
+      "colors": [
+        "Charcoal Grey",
+        "Gray"
+      ],
+      "colorHex": "#626266",
+      "materials": [
+        "Polyester"
+      ],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07DBHCKJ5",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QGFS4JC",
+      "source": "abo",
+      "title": "Rivet Mid-Century Desk, 42\"W, Warm Brown Wood with Veneer",
+      "brand": "Rivet",
+      "category": "desk",
+      "mount": "floor",
+      "size": [
+        1.066,
+        0.754,
+        0.66
+      ],
+      "model": "/data/catalog/models/B07QGFS4JC.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QGFS4JC.jpg",
+      "colors": [
+        "Walnut",
+        "Beige"
+      ],
+      "colorHex": "#6d5136",
+      "materials": [
+        "Engineered Wood"
+      ],
+      "styleTags": [
+        "Mid-century modern"
+      ],
+      "priceEstimateUsd": 180,
+      "url": "https://www.amazon.com/dp/B07QGFS4JC",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B082JLXB9Z",
+      "source": "abo",
+      "title": "Stone & Beam Modern Home Office Writing Desk with Recessed Metal Handles, 48\"W, White",
+      "brand": "Stone & Beam",
+      "category": "desk",
+      "mount": "floor",
+      "size": [
+        1.22,
+        0.775,
+        0.508
+      ],
+      "model": "/data/catalog/models/B082JLXB9Z.glb",
+      "thumbnail": "/data/catalog/thumbs/B082JLXB9Z.jpg",
+      "colors": [
+        "White"
+      ],
+      "colorHex": "#d4d4d2",
+      "materials": [
+        "Engineered Wood"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 180,
+      "url": "https://www.amazon.com/dp/B082JLXB9Z",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075YZ16V4",
+      "source": "abo",
+      "title": "Rivet Mid-Century Stark 2-Drawer Nightstand, 24\"H, Walnut",
+      "brand": "Rivet",
+      "category": "nightstand",
+      "mount": "floor",
+      "size": [
+        0.46,
+        0.618,
+        0.411
+      ],
+      "model": "/data/catalog/models/B075YZ16V4.glb",
+      "thumbnail": "/data/catalog/thumbs/B075YZ16V4.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "colorHex": "#935534",
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Nightstand"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "https://www.amazon.com/dp/B075YZ16V4",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07DBDZC9N",
+      "source": "abo",
+      "title": "Ravenna Home Naomi 3-Drawer Storage Side End Table Nightstand, 17.7\"W, White",
+      "brand": "Ravenna Home",
+      "category": "nightstand",
+      "mount": "floor",
+      "size": [
+        0.435,
+        0.681,
+        0.351
+      ],
+      "model": "/data/catalog/models/B07DBDZC9N.glb",
+      "thumbnail": "/data/catalog/thumbs/B07DBDZC9N.jpg",
+      "colors": [
+        "White"
+      ],
+      "colorHex": "#dcd7d1",
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 70,
+      "url": "https://www.amazon.com/dp/B07DBDZC9N",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B0856FL9HR",
+      "source": "abo",
+      "title": "Rivet Modern Solid Pine Wood Platform Bed, Twin, 38.39\"W, Antique Espresso",
+      "brand": "Rivet",
+      "category": "bed",
+      "mount": "floor",
+      "size": [
+        0.961,
+        0.616,
+        1.902
+      ],
+      "model": "/data/catalog/models/B0856FL9HR.glb",
+      "thumbnail": "/data/catalog/thumbs/B0856FL9HR.jpg",
+      "colors": [],
+      "materials": [
+        "Pine"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 300,
+      "url": "https://www.amazon.com/dp/B0856FL9HR",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B086TFXK75",
+      "source": "abo",
+      "title": "AmazonBasics Metal Bed with Modern Industrial Design Headboard - 14 Inch Height for Under-Bed Storage - Wood Slats - Easy Assemble, Twin",
+      "brand": "AmazonBasics",
+      "category": "bed",
+      "mount": "floor",
+      "size": [
+        0.991,
+        0.967,
+        1.93
+      ],
+      "model": "/data/catalog/models/B086TFXK75.glb",
+      "thumbnail": "/data/catalog/thumbs/B086TFXK75.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Metal",
+        "Wood"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 300,
+      "url": "https://www.amazon.com/dp/B086TFXK75",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07P6JVMJL",
+      "source": "abo",
+      "title": "Rivet Cove Modern Tufted Loveseat with Tapered Legs, Mid-Century, 56\"W, Caramel",
+      "brand": "Rivet",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.43,
+        0.898,
+        0.868
+      ],
+      "model": "/data/catalog/models/B07P6JVMJL.glb",
+      "thumbnail": "/data/catalog/thumbs/B07P6JVMJL.jpg",
+      "colors": [
+        "Caramel"
+      ],
+      "colorHex": "#92673d",
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Modern style"
+      ],
+      "priceEstimateUsd": 450,
+      "url": "https://www.amazon.com/dp/B07P6JVMJL",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07P8SRVPN",
+      "source": "abo",
+      "title": "Rivet Revolve Modern Upholstered Loveseat Sofa, 56\"W, Heritage Green",
+      "brand": "Rivet",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.43,
+        0.899,
+        0.879
+      ],
+      "model": "/data/catalog/models/B07P8SRVPN.glb",
+      "thumbnail": "/data/catalog/thumbs/B07P8SRVPN.jpg",
+      "colors": [
+        "Heritage Green",
+        "Green"
+      ],
+      "colorHex": "#243329",
+      "materials": [
+        "Polyester"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 450,
+      "url": "https://www.amazon.com/dp/B07P8SRVPN",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B0732J9VG6",
+      "source": "abo",
+      "title": "Rivet Abstract Reflections Modern Wool Area Rug, 4 x 6 Foot, Navy Blue",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.854,
+        0.006,
+        1.234
+      ],
+      "model": "/data/catalog/models/B0732J9VG6.glb",
+      "thumbnail": "/data/catalog/thumbs/B0732J9VG6.jpg",
+      "colors": [
+        "Navy Blue",
+        "Blue"
+      ],
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B0732J9VG6",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07Q9TF1MT",
+      "source": "abo",
+      "title": "Amazon Basics Modern Plush High-Pile Shag Area Rug - 4x6 (3'11\" x 5'3\"), Beige",
+      "brand": "Amazon Basics",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.6,
+        0.025,
+        1.199
+      ],
+      "model": "/data/catalog/models/B07Q9TF1MT.glb",
+      "thumbnail": "/data/catalog/thumbs/B07Q9TF1MT.jpg",
+      "colors": [
+        "Beige"
+      ],
+      "materials": [
+        "Polypropylene"
+      ],
+      "styleTags": [
+        "High Pile Solid"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07Q9TF1MT",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07374SBFL",
+      "source": "abo",
+      "title": "Rivet Adjustable Arm Mid-Century Modern Living Room Standing Floor Lamp - 59 Inches, Brushed Nickel",
+      "brand": "Rivet",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.25,
+        1.526,
+        0.431
+      ],
+      "model": "/data/catalog/models/B07374SBFL.glb",
+      "thumbnail": "/data/catalog/thumbs/B07374SBFL.jpg",
+      "colors": [
+        "Brushed Nickel",
+        "Grey"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07374SBFL",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B0828FBDV7",
+      "source": "abo",
+      "title": "Ravenna Home Single-Light Swing-Arm Floor Lamp with Beige Linen Shade, LED Bulb Included, 63\"H, Dark Bronze",
+      "brand": "Ravenna Home",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.324,
+        1.6,
+        0.416
+      ],
+      "model": "/data/catalog/models/B0828FBDV7.glb",
+      "thumbnail": "/data/catalog/thumbs/B0828FBDV7.jpg",
+      "colors": [
+        "Dark Bronze"
+      ],
+      "materials": [
+        "Linen"
+      ],
+      "styleTags": [
+        "Floor Lamp"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B0828FBDV7",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07B4VGZ9B",
+      "source": "abo",
+      "title": "Rivet Mid-Century Modern Curved Task Desk Table Lamp With USB Port And Light Bulb - 26 Inches, Matte Black & Brushed Steel",
+      "brand": "Adesso",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.189,
+        0.647,
+        0.292
+      ],
+      "model": "/data/catalog/models/B07B4VGZ9B.glb",
+      "thumbnail": "/data/catalog/thumbs/B07B4VGZ9B.jpg",
+      "colors": [
+        "Matte Black With Brushed Steel Accents"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Desk Lamp"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07B4VGZ9B",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075HWHVN6",
+      "source": "abo",
+      "title": "Rivet Mid Century Modern Abstract Mountain Landscape Wall Art Decor on Canvas - 36 x 48 Inches",
+      "brand": "Rivet",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.219,
+        0.912,
+        0.042
+      ],
+      "model": "/data/catalog/models/B075HWHVN6.glb",
+      "thumbnail": "/data/catalog/thumbs/B075HWHVN6.jpg",
+      "colors": [
+        "Multicolor",
+        "Multi"
+      ],
+      "materials": [
+        "Canvas"
+      ],
+      "styleTags": [
+        "Abstract"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://www.amazon.com/dp/B075HWHVN6",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B073WQ8JNK",
+      "source": "abo",
+      "title": "Rivet Black and White Matted Print Wall Art of Brooklyn Bridge, Black Frame, 22\" x 18\"",
+      "brand": "Rivet",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.521,
+        0.45,
+        0.018
+      ],
+      "model": "/data/catalog/models/B073WQ8JNK.glb",
+      "thumbnail": "/data/catalog/thumbs/B073WQ8JNK.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Contemporary"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://www.amazon.com/dp/B073WQ8JNK",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B084HV148L",
+      "source": "abo",
+      "title": "Rivet Modern Round Cutout Hanging Mirror, 22.25\" Diameter, Gold",
+      "brand": "Rivet",
+      "category": "mirror",
+      "mount": "wall",
+      "size": [
+        0.565,
+        0.565,
+        0.032
+      ],
+      "model": "/data/catalog/models/B084HV148L.glb",
+      "thumbnail": "/data/catalog/thumbs/B084HV148L.jpg",
+      "colors": [
+        "Brass",
+        "Gold"
+      ],
+      "materials": [
+        "Brass"
+      ],
+      "styleTags": [
+        "Round"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://www.amazon.com/dp/B084HV148L",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07RRR2NDK",
+      "source": "abo",
+      "title": "Amazon Basics Rectangular Wall Mirror 24\" x 36\" - Standard Trim, Walnut",
+      "brand": "Amazon Basics",
+      "category": "mirror",
+      "mount": "wall",
+      "size": [
+        0.609,
+        0.915,
+        0.04
+      ],
+      "model": "/data/catalog/models/B07RRR2NDK.glb",
+      "thumbnail": "/data/catalog/thumbs/B07RRR2NDK.jpg",
+      "colors": [
+        "Walnut",
+        "Beige"
+      ],
+      "materials": [
+        "Walnut"
+      ],
+      "styleTags": [
+        "Standard"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://www.amazon.com/dp/B07RRR2NDK",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07PSZHDMW",
+      "source": "abo",
+      "title": "AmazonBasics Modern 5-Tier Ladder Bookshelf Organizer with Solid Rubber Wood Frame, Walnut",
+      "brand": "AmazonBasics",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.63,
+        1.78,
+        0.356
+      ],
+      "model": "/data/catalog/models/B07PSZHDMW.glb",
+      "thumbnail": "/data/catalog/thumbs/B07PSZHDMW.jpg",
+      "colors": [
+        "Walnut",
+        "Brown"
+      ],
+      "colorHex": "#4b3229",
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B07PSZHDMW",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B0754KHKCX",
+      "source": "abo",
+      "title": "Furniture 247 2 Tier (4 Cube) Shelving Unit - White",
+      "brand": "Furniture 247",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.79,
+        0.786,
+        0.39
+      ],
+      "model": "/data/catalog/models/B0754KHKCX.glb",
+      "thumbnail": "/data/catalog/thumbs/B0754KHKCX.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B0754KHKCX",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B082JH42QQ",
+      "source": "abo",
+      "title": "Stone & Beam 2-Drawer Rolling File Cabinet, 15.8\"W, Weathered Gray Finish",
+      "brand": "Stone & Beam",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.409,
+        0.579,
+        0.401
+      ],
+      "model": "/data/catalog/models/B082JH42QQ.glb",
+      "thumbnail": "/data/catalog/thumbs/B082JH42QQ.jpg",
+      "colors": [
+        "Weathered Grey"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Firm"
+      ],
+      "priceEstimateUsd": 110,
+      "url": "https://www.amazon.com/dp/B082JH42QQ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075HX9T8Y",
+      "source": "abo",
+      "title": "Rivet Mid-Century Ceramic Planter with Iron Stand, 17\"H, Pale Green",
+      "brand": "Rivet",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.314,
+        0.475,
+        0.323
+      ],
+      "model": "/data/catalog/models/B075HX9T8Y.glb",
+      "thumbnail": "/data/catalog/thumbs/B075HX9T8Y.jpg",
+      "colors": [
+        "Green"
+      ],
+      "materials": [
+        "Ceramic",
+        "Iron",
+        "Stoneware"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 30,
+      "url": "https://www.amazon.com/dp/B075HX9T8Y",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
       "id": "placeholder-chair",
       "source": "generated",
       "title": "Placeholder Desk Chair",
       "category": "chair",
       "mount": "floor",
-      "size": [0.6, 0.9, 0.6],
+      "size": [
+        0.6,
+        0.9,
+        0.6
+      ],
       "model": "/data/catalog/models/placeholder-chair.glb",
       "thumbnail": "/data/catalog/thumbs/placeholder-chair.svg",
-      "colors": ["Black"],
+      "colors": [
+        "Black"
+      ],
       "colorHex": "#2b2b2b",
-      "materials": ["Plastic"],
-      "styleTags": ["Modern"],
+      "materials": [
+        "Plastic"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
       "priceEstimateUsd": 120,
       "url": "https://www.amazon.com/s?k=desk+chair",
       "attribution": "Mise placeholder box model"
@@ -24,13 +715,23 @@
       "title": "Placeholder Writing Desk",
       "category": "desk",
       "mount": "floor",
-      "size": [1.2, 0.75, 0.6],
+      "size": [
+        1.2,
+        0.75,
+        0.6
+      ],
       "model": "/data/catalog/models/placeholder-desk.glb",
       "thumbnail": "/data/catalog/thumbs/placeholder-desk.svg",
-      "colors": ["Walnut"],
+      "colors": [
+        "Walnut"
+      ],
       "colorHex": "#5c4033",
-      "materials": ["Wood"],
-      "styleTags": ["Mid-Century Modern"],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Mid-Century Modern"
+      ],
       "priceEstimateUsd": 180,
       "url": "https://www.amazon.com/s?k=writing+desk",
       "attribution": "Mise placeholder box model"
@@ -41,13 +742,23 @@
       "title": "Placeholder 5×7 Rug",
       "category": "rug",
       "mount": "floor",
-      "size": [1.52, 0.01, 2.13],
+      "size": [
+        1.52,
+        0.01,
+        2.13
+      ],
       "model": "/data/catalog/models/placeholder-rug.glb",
       "thumbnail": "/data/catalog/thumbs/placeholder-rug.svg",
-      "colors": ["Gray"],
+      "colors": [
+        "Gray"
+      ],
       "colorHex": "#8a8d91",
-      "materials": ["Polyester"],
-      "styleTags": ["Contemporary"],
+      "materials": [
+        "Polyester"
+      ],
+      "styleTags": [
+        "Contemporary"
+      ],
       "priceEstimateUsd": 80,
       "url": "https://www.amazon.com/s?k=5x7+rug",
       "attribution": "Mise placeholder box model"

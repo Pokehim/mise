@@ -3,6 +3,7 @@ import type { Wall } from '@shared/types';
 import { autoBox } from './autoBox';
 import { mergeMeshes } from './mesh';
 import { box, horizontal } from './testShapes';
+import { wallsFromPolygon } from './walls';
 
 // The fixture room: 4 × 3 m, floor at y = 0, ceiling at 2.6 m.
 const walls: Wall[] = [
@@ -55,6 +56,12 @@ describe('autoBox', () => {
       .toEqual({ position: [-1.505, 0, -0.55], size: [0.99, 0.6, 1.9], rotationY: 0 });
   });
 
+  it('does not climb the corner of the room, even with the corners clicked a little inside it', () => {
+    const clicked = { walls: wallsFromPolygon([[-1.99, -1.49], [1.99, -1.49], [1.99, 1.49], [-1.99, 1.49]], 2.6), ceilingHeight: 2.6 };
+    const bed = box([-2, 0, -1.5], [-1, 0.6, 0.55]);
+    expect(autoBox(mergeMeshes([shell, bed]), [-1.5, 0.6, -0.4], clicked, 'length')!.size[1]).toBeCloseTo(0.6, 3);
+  });
+
   it('keeps the bottom of something mounted on a wall, such as a shelf', () => {
     const shelf = box([-0.5, 1.2, -1.5], [0.5, 1.5, -1.25]);
     expect(autoBox(mergeMeshes([shell, shelf]), [0, 1.5, -1.4], room))
@@ -67,10 +74,16 @@ describe('autoBox', () => {
     expect(autoBox(mesh, [0, 1.2, 1.5], room)).toBeNull();
   });
 
-  it('only reaches 1 m from the click', () => {
+  it('reaches all of a 2.05 m bed clicked near its middle', () => {
+    const bed = box([-2, 0, -1.5], [-1, 0.6, 0.55]);
+    expect(autoBox(mergeMeshes([shell, bed]), [-1.5, 0.6, -0.4], room, 'length'))
+      .toEqual({ position: [-1.5, 0, -0.475], size: [1, 0.6, 2.05], rotationY: 0 });
+  });
+
+  it('only reaches 1.25 m from the click', () => {
     const bench = box([-1.8, 0, 0.6], [1.8, 0.45, 1]);
     const floor = horizontal([-2, -1.5], [2, 1.5], 0);
     const found = autoBox(mergeMeshes([floor, bench]), [0, 0.45, 0.8], { walls: [], ceilingHeight: 2.6 });
-    expect(found!.size[0]).toBeCloseTo(2, 1);
+    expect(found!.size[0]).toBeCloseTo(2.5, 1);
   });
 });

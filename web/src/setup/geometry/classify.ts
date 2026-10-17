@@ -10,7 +10,11 @@ export type SplitGroup =
 /** The thresholds of spec §9.4, in meters. */
 export const SPLIT = {
   originalGrowth: 0.02,
-  originalMinY: 0.02,
+  /**
+   * Spec §9.4 says 2 cm, which kept the floor out of rule 1. Rule 1 now leaves floor-like triangles
+   * to the Floor anyway, and 2 cm left a line of an Original's own slivers along its base when hidden.
+   */
+  originalMinY: 0,
   originalWallGap: 0.02,
   ceilingBand: 0.05,
   /**
@@ -56,10 +60,10 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
     return { depth: rx * wall.normal[0] + rz * wall.normal[1], along: rx * wall.dx + rz * wall.dz };
   };
 
-  /** True when the point is within `band` of a wall's plane and inside the wall's extent. */
+  /** True when the point is within `band` of a wall's plane, beside the wall or within `band` past its ends (a corner). */
   const nearAnyWall = (x: number, z: number, band: number) => walls.some((wall) => {
     const { depth, along } = wallCoordinates(wall, x, z);
-    return Math.abs(depth) <= band && along >= 0 && along <= wall.length;
+    return Math.abs(depth) <= band && along >= -band && along <= wall.length + band;
   });
 
   const floorLike = (cx: number, cy: number, cz: number, ny: number) =>
@@ -67,7 +71,7 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
 
   function classify({ cx, cy, cz, nx, ny, nz }: TriangleInfo): number {
     // 1. Inside an Original's box, grown by 2 cm, above the floor and away from the walls. Added to
-    //    spec §9.4: never a triangle rule 3 would call floor, so a bumpy floor stays under a hidden Original.
+    //    spec §9.4: never a triangle rule 3 would call floor, so the floor stays under a hidden Original.
     if (cy > SPLIT.originalMinY && !floorLike(cx, cy, cz, ny)) {
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];

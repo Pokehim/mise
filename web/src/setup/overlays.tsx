@@ -1,11 +1,12 @@
 // What each step draws over the scan, and its click handling.
-import { Edges, Html, Line } from '@react-three/drei';
+import { Edges, Line } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import type { RefObject } from 'react';
 import { DoubleSide, type Group, type Object3D } from 'three';
 import type { Opening, Original, RoomSetup, Vec2, Vec3, Wall } from '@shared/types';
 import { BoxHandles } from './BoxHandles';
 import { autoBox } from './geometry/autoBox';
+import { Label } from './Label';
 import { openingFromClicks } from './geometry/openings';
 import { wallAxis, wallsFromPolygon } from './geometry/walls';
 import { handPlacedBox, newOriginal } from './originals';
@@ -77,10 +78,8 @@ export function CornersOverlay({ bounds }: { bounds: RoomBounds }) {
         </mesh>
       ))}
       {walls.map((wall) => (
-        <Html key={wall.id} position={[(wall.start[0] + wall.end[0]) / 2 + wall.normal[0] * 0.25, y, (wall.start[1] + wall.end[1]) / 2 + wall.normal[1] * 0.25]}
-          center className="rs-label">
-          {wall.name}
-        </Html>
+        <Label key={wall.id} text={wall.name}
+          position={[(wall.start[0] + wall.end[0]) / 2 + wall.normal[0] * 0.25, y, (wall.start[1] + wall.end[1]) / 2 + wall.normal[1] * 0.25]} />
       ))}
     </>
   );
@@ -175,7 +174,7 @@ function OpeningOutline({ wall, opening }: { wall: Wall; opening: Opening }) {
     <>
       <Line points={rect} color={color} lineWidth={3} />
       {swing && <Line points={swing} color={color} lineWidth={2} dashed dashSize={0.05} gapSize={0.04} />}
-      <Html position={at(offset + width / 2, bottom + height + 0.08)} center className="rs-label">{opening.kind === 'door' ? 'Door' : 'Window'}</Html>
+      <Label position={at(offset + width / 2, bottom + height + 0.08)} text={opening.kind === 'door' ? 'Door' : 'Window'} />
     </>
   );
 }
@@ -242,9 +241,7 @@ function OriginalBox({ original, selected, showPatch, register }: {
           <meshBasicMaterial color={original.floorColor} />
         </mesh>
       )}
-      <Html position={[0, h + 0.1, 0]} center className={selected ? 'rs-label rs-label-selected' : 'rs-label'}>
-        {original.label}{original.kept ? ' · Kept' : ''}
-      </Html>
+      <Label position={[0, h + 0.1, 0]} text={`${original.label}${original.kept ? ' · Kept' : ''}`} selected={selected} />
     </group>
   );
 }

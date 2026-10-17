@@ -265,13 +265,16 @@ function OriginalsPanel() {
   );
 }
 
-/** The box turned 90° about its center, keeping its footprint on the floor: width and depth swap. */
+/** The box turned a quarter turn about its center, keeping its footprint on the floor: width and depth swap. */
 function turned(box: Original['box'], direction: 1 | -1): Original['box'] {
   const [w, h, d] = box.size;
-  let rotationY = box.rotationY + (direction * Math.PI) / 2;
+  const quarter = Math.PI / 2;
+  const turns = box.rotationY / quarter + direction;
+  // Whole quarter turns stay exact (π, not 3.141592…), and the angle stays in (−π, π].
+  let rotationY = Math.abs(turns - Math.round(turns)) < 1e-6 ? Math.round(turns) * quarter : turns * quarter;
   if (rotationY > Math.PI) rotationY -= 2 * Math.PI;
   if (rotationY <= -Math.PI) rotationY += 2 * Math.PI;
-  return { ...box, size: [d, h, w], rotationY: round(rotationY, 6) };
+  return { ...box, size: [d, h, w], rotationY };
 }
 
 function CategorySelect({ value, onChange }: { value: Category; onChange: (category: Category) => void }) {

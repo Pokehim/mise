@@ -6,7 +6,11 @@ import { wallAxis } from './walls';
 
 /** The thresholds of spec §9.3 step 5, in meters, plus the two this implementation adds. */
 export const AUTO_BOX = {
-  radius: 1.0,              // horizontal reach from the click
+  /**
+   * Horizontal reach from the click. Spec §9.3 says 1.0 m, which can't take in a 2.03 m twin XL
+   * bed even when clicked at its middle; 1.25 m does when clicked within 20 cm of it.
+   */
+  radius: 1.25,
   minY: 0.03,               // above the floor
   wallGap: 0.03,            // away from every wall plane
   voxel: 0.05,
@@ -47,7 +51,9 @@ export function autoBox(
       const rx = x - wall.start[0];
       const rz = z - wall.start[1];
       const along = rx * wall.dx + rz * wall.dz;
-      return Math.abs(rx * wall.normal[0] + rz * wall.normal[1]) <= AUTO_BOX.wallGap && along >= 0 && along <= wall.length;
+      // Each wall reaches wallGap past its ends, so a corner's column of samples is left out too.
+      return Math.abs(rx * wall.normal[0] + rz * wall.normal[1]) <= AUTO_BOX.wallGap
+        && along >= -AUTO_BOX.wallGap && along <= wall.length + AUTO_BOX.wallGap;
     });
   };
   const addSample = (x: number, y: number, z: number, facesUp: boolean) => {

@@ -54,6 +54,10 @@ describe('triangleClassifier, rule 1: Originals', () => {
     expect(groupOf([1.25, 0.5, -0.6], [-1, 0, 0])).toEqual({ kind: 'shell' });
   });
 
+  it("takes an Original's sides right down to the floor", () => {
+    expect(groupOf([-1.005, 0.01, -0.5], [1, 0, 0])).toEqual(original('og_bed'));
+  });
+
   it('leaves the floor under an Original to the Floor', () => {
     expect(groupOf([-1.5, 0.015, -0.5], UP)).toEqual({ kind: 'floor' });
   });
@@ -65,6 +69,10 @@ describe('triangleClassifier, rule 1: Originals', () => {
 
   it('leaves the wall behind an Original to that Wall', () => {
     expect(groupOf([-1.99, 0.3, -0.5], [1, 0, 0])).toEqual(wall('wl_4'));
+  });
+
+  it("leaves the room's corner out of an Original in that corner", () => {
+    expect(groupOf([-2.005, 0.3, -1.505], [0.7071, 0, 0.7071])).toEqual({ kind: 'shell' });
   });
 
   it('comes before the Ceiling, for an Original as tall as the room', () => {

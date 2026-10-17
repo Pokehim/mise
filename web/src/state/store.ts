@@ -21,10 +21,12 @@
  *                              recomputes roomState and sets dirty. Returns the stamped Edit.
  *   setEdits(edits)            Replaces the whole Edit list (undo, deleting from History). applyEdit uses it.
  *   select(selection), setView(view), setPreview(preview)
+ *
+ *   pieceItem(state, pieceId)  The Catalog item a Piece shows, for selectors: useEditor((s) => pieceItem(s, id)).
  */
 import { create } from 'zustand';
 import { newId } from '@shared/ids';
-import type { Actor, Catalog, Design, Edit, Placement, RoomSetup, RoomState, ScanManifest } from '@shared/types';
+import type { Actor, Catalog, CatalogItem, Design, Edit, Placement, RoomSetup, RoomState, ScanManifest } from '@shared/types';
 import { listScans, loadCatalog, loadDesign, loadSetup } from '../api';
 import { replay } from './core';
 
@@ -56,6 +58,11 @@ interface EditorState {
   setPreview(preview: Preview | null): void;
 }
 
+export function pieceItem(state: EditorState, pieceId: string): CatalogItem | undefined {
+  const piece = state.roomState?.pieces[pieceId];
+  return piece && state.catalog?.items.find(({ id }) => id === piece.catalogId);
+}
+
 /** Whether a selection still points at something in the room. */
 function inRoom(selection: Selection, roomState: RoomState) {
   if (selection.kind === 'piece') return selection.id in roomState.pieces;
@@ -82,8 +89,8 @@ export const useEditor = create<EditorState>()((set, get) => ({
     const thisLoad = ++latestLoad;
     set({ status: 'loading', error: null, selection: null, preview: null });
     try {
-      const design = await loadDesign(designId);
-      const [scans, setup, catalog] = await Promise.all([listScans(), loadSetup(design.scanId), loadCatalog()]);
+      const [design, scans, catalog] = await Promise.all([loadDesign(designId), listScans(), loadCatalog()]);
+      const setup = await loadSetup(design.scanId);
       const manifest = scans.find((scan) => scan.id === design.scanId);
       if (!manifest) throw new Error(`No Scan ${design.scanId}`);
       if (thisLoad !== latestLoad) return;   // a newer load() took over

@@ -1,9 +1,10 @@
 import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { Euler, Raycaster, Vector2, Vector3 } from 'three';
+import { Euler, EventDispatcher, MathUtils, Vector3 } from 'three';
 import { useEditor } from '../state/store';
 import { floorGeometry, keepInside } from './floorPlan';
-import { floorHit } from './placement';
+import { CLICK_TOLERANCE_PX } from './objects';
+import { viewCenterOnFloor } from './placement';
 
 const EYE_HEIGHT = 1.6;
 const GLIDE_SECONDS = 0.4;
@@ -24,6 +25,7 @@ export function WalkControls() {
   const setup = useEditor((s) => s.setup!);
   const camera = useThree((s) => s.camera);
   const canvas = useThree((s) => s.gl.domElement);
+  const setThree = useThree((s) => s.set);
   const look = useRef({ yaw: 0, pitch: 0 });
   const glide = useRef<Glide | null>(null);
   const floor = useMemo(() => floorGeometry(setup), [setup]);
@@ -42,12 +44,18 @@ export function WalkControls() {
   useLayoutEffect(() => {
     const { x: pitch, y: yaw } = new Euler().setFromQuaternion(camera.quaternion, 'YXZ');
     look.current = { yaw, pitch };
-    const raycaster = new Raycaster();
-    raycaster.setFromCamera(new Vector2(0, 0), camera);
-    const [x, z] = floorHit(raycaster.ray) ?? [camera.position.x, camera.position.z];
+    const [x, z] = viewCenterOnFloor(camera);
     // The camera looks along (-sin yaw, -cos yaw), so step back the other way.
     glideTo(x + Math.sin(yaw) * STEP_BACK, z + Math.cos(yaw) * STEP_BACK, START_PITCH);
   }, []);   // only when the Walk view opens
+
+  // Like the Dollhouse view's CameraControls, these are the scene's controls, which a Piece drag
+  // turns off while it has the pointer.
+  const controls = useMemo(() => Object.assign(new EventDispatcher(), { enabled: true }), []);
+  useEffect(() => {
+    setThree({ controls });
+    return () => setThree({ controls: null });
+  }, [controls, setThree]);
 
   useEffect(() => {
     let last: { x: number; y: number } | null = null;
@@ -55,15 +63,10 @@ export function WalkControls() {
       if (e.button === 0) last = { x: e.clientX, y: e.clientY };
     };
     const onMove = (e: PointerEvent) => {
-      if (!last) return;
-      // A Piece being dragged has the pointer instead.
-      if (useEditor.getState().preview) {
-        last = null;
-        return;
-      }
+      if (!last || !controls.enabled) return;
       // Dragging grabs the view: drag right to turn left, drag down to look up.
       look.current.yaw += (e.clientX - last.x) * LOOK_RADIANS_PER_PX;
-      look.current.pitch = Math.min(Math.max(look.current.pitch + (e.clientY - last.y) * LOOK_RADIANS_PER_PX, -1.2), 1.2);
+      look.current.pitch = MathUtils.clamp(look.current.pitch + (e.clientY - last.y) * LOOK_RADIANS_PER_PX, -1.2, 1.2);
       last = { x: e.clientX, y: e.clientY };
     };
     const onUp = () => (last = null);
@@ -75,7 +78,7 @@ export function WalkControls() {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [canvas]);
+  }, [canvas, controls]);
 
   useFrame((_, delta) => {
     const current = glide.current;
@@ -83,7 +86,7 @@ export function WalkControls() {
       current.elapsed = Math.min(current.elapsed + delta, GLIDE_SECONDS);
       const t = easeInOut(current.elapsed / GLIDE_SECONDS);
       camera.position.lerpVectors(current.from, current.to, t);
-      if (current.pitch) look.current.pitch = current.pitch[0] + (current.pitch[1] - current.pitch[0]) * t;
+      if (current.pitch) look.current.pitch = MathUtils.lerp(current.pitch[0], current.pitch[1], t);
       if (current.elapsed === GLIDE_SECONDS) glide.current = null;
     }
     camera.rotation.set(look.current.pitch, look.current.yaw, 0, 'YXZ');
@@ -91,7 +94,7 @@ export function WalkControls() {
 
   // Clicks on the floor that nothing else took, such as a Piece or an Original.
   const onFloorClick = (event: ThreeEvent<MouseEvent>) => {
-    if (event.delta <= 2) glideTo(event.point.x, event.point.z);
+    if (event.delta <= CLICK_TOLERANCE_PX) glideTo(event.point.x, event.point.z);
   };
   return (
     <mesh geometry={floor} position-y={0.001} onClick={onFloorClick}>

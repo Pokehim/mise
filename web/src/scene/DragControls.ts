@@ -1,31 +1,41 @@
 import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { useCallback } from 'react';
-import { type Camera, type Object3D, Plane, type Ray, Raycaster, Vector2, Vector3 } from 'three';
+import { type Camera, type Intersection, type Object3D, type Ray, Raycaster, Vector2, Vector3 } from 'three';
 import type { CatalogItem, Placement, RoomSetup, Vec2 } from '@shared/types';
-import { useEditor } from '../state/store';
+import { pieceItem, useEditor } from '../state/store';
 import { faces, keepInside, wallCoordinates } from './floorPlan';
-import { isShown } from './objects';
-import { floorHit, onWall, snapToWall } from './placement';
+import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
+import { floorHit, liesFlat, onWall, snapToWall } from './placement';
 
-const DRAG_THRESHOLD_PX = 3;
+/** How high a hit must be to count as a furniture top rather than the floor (spec §9.4 uses 3 cm too). */
+const FLOOR_TOLERANCE = 0.03;
+const DOWN = new Vector3(0, -1, 0);
+
+const facesUp = ({ face, object }: Intersection) =>
+  !!face && face.normal.clone().transformDirection(object.matrixWorld).y > 0.8;
 
 /**
- * Where the pointer puts a floor item: on the first upward-facing surface under it (normal.y > 0.8,
- * such as a desk top), else on the floor inside the room. Snaps to a wall it is backed up against.
+ * Where the pointer puts a floor item (spec §10.3). The pointer picks the level: the upward-facing
+ * surface under it, such as a desk top, or the floor. The Piece lands at the pointer plus the grab
+ * offset, inside the room, on whatever is at that spot no higher than that level, and snaps to a
+ * wall it is backed up against.
  */
 function onFloorOrSurface(
-  raycaster: Raycaster, targets: Object3D[], item: CatalogItem, start: Placement, offset: Vec2, setup: RoomSetup,
+  raycaster: Raycaster, surfaces: Object3D[], item: CatalogItem, start: Placement, offset: Vec2, setup: RoomSetup,
 ): Placement | null {
-  const hit = raycaster.intersectObjects(targets, true).find((h) => isShown(h.object));
-  const upward = hit?.face && hit.face.normal.clone().transformDirection(hit.object.matrixWorld).y > 0.8;
-  const onSurface = hit && upward && hit.point.y > 0.03 && item.category !== 'rug';
-  const pointer = onSurface ? ([hit.point.x, hit.point.z] as Vec2) : floorHit(raycaster.ray);
+  const hit = raycaster.intersectObjects(surfaces, true).find(isDrawn);
+  const level = hit && facesUp(hit) ? hit.point.y : 0;
+  const pointer: Vec2 | null = hit && facesUp(hit) ? [hit.point.x, hit.point.z] : floorHit(raycaster.ray);
   if (!pointer) return null;
-  let [x, z]: Vec2 = [pointer[0] + offset[0], pointer[1] + offset[1]];
-  if (!onSurface) [x, z] = keepInside([x, z], setup, 0.001);
-  const placement: Placement = {
-    position: [x, onSurface ? hit.point.y : 0, z], rotationY: start.rotationY, mount: onSurface ? 'surface' : 'floor',
-  };
+  const [x, z] = keepInside([pointer[0] + offset[0], pointer[1] + offset[1]], setup, 0.001);
+
+  let y = 0;
+  if (!liesFlat(item)) {
+    raycaster.set(new Vector3(x, level + 0.05, z), DOWN);
+    const support = raycaster.intersectObjects(surfaces, true).find((h) => isDrawn(h) && facesUp(h));
+    if (support && support.point.y > FLOOR_TOLERANCE) y = support.point.y;
+  }
+  const placement: Placement = { position: [x, y, z], rotationY: start.rotationY, mount: y > 0 ? 'surface' : 'floor' };
   return snapToWall(placement, item.size[2], setup.walls) ?? placement;
 }
 
@@ -57,10 +67,10 @@ export function useDragPiece(pieceId: string) {
     event.stopPropagation();
     const editor = useEditor.getState();
     editor.select({ kind: 'piece', id: pieceId });
-    const { setup, catalog, roomState } = editor;
+    const { setup, roomState } = editor;
     const start = roomState!.pieces[pieceId].placement;
-    const item = catalog!.items.find(({ id }) => id === roomState!.pieces[pieceId].catalogId)!;
-    const { camera, gl, scene, controls } = get();
+    const item = pieceItem(editor, pieceId)!;
+    const { camera, gl, scene, controls, setEvents } = get();
     const raycaster = new Raycaster();
     const aim = ({ clientX, clientY }: PointerEvent) => {
       const { left, top, width, height } = gl.domElement.getBoundingClientRect();
@@ -69,25 +79,32 @@ export function useDragPiece(pieceId: string) {
 
     // Keep the grabbed point under the pointer: the offset from it to the Piece's origin, at the Piece's base.
     aim(event.nativeEvent);
-    const grabbed = raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -start.position[1]), new Vector3());
-    const offset: Vec2 = grabbed ? [start.position[0] - grabbed.x, start.position[2] - grabbed.z] : [0, 0];
-    const targets = [scene.getObjectByName('scan'), ...(scene.getObjectByName('pieces')?.children ?? [])]
-      .filter((object): object is Object3D => !!object && object.name !== pieceId);
+    const grabbed = floorHit(raycaster.ray, start.position[1]);
+    const offset: Vec2 = grabbed ? [start.position[0] - grabbed[0], start.position[2] - grabbed[1]] : [0, 0];
+    // What the Piece can rest on: the Scan and the other Pieces, except flat ones like rugs.
+    const surfaces = [
+      scene.getObjectByName('scan'),
+      ...(scene.getObjectByName('pieces')?.children ?? []).filter(({ name }) => {
+        const other = pieceItem(editor, name);
+        return name !== pieceId && other && !liesFlat(other);
+      }),
+    ].filter((object) => !!object);
     const [downX, downY] = [event.nativeEvent.clientX, event.nativeEvent.clientY];
     let dragging = false;
 
-    // The pointer now moves the Piece, not the camera. Walk view checks the preview instead.
+    // Until the pointer is released it moves the Piece: the camera holds still, and nothing else
+    // in the scene listens to it.
     const cameraControls = controls as { enabled: boolean } | null;
     if (cameraControls) cameraControls.enabled = false;
-    editor.setPreview({ pieceId, placement: start });
+    setEvents({ enabled: false });
 
     const onMove = (e: PointerEvent) => {
-      if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) < DRAG_THRESHOLD_PX) return;
+      if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) <= CLICK_TOLERANCE_PX) return;
       dragging = true;
       aim(e);
       const placement = item.mount === 'wall'
         ? onWallUnder(raycaster.ray, camera, item, setup!)
-        : onFloorOrSurface(raycaster, targets, item, start, offset, setup!);
+        : onFloorOrSurface(raycaster, surfaces, item, start, offset, setup!);
       if (placement) useEditor.getState().setPreview({ pieceId, placement });
     };
     const onUp = () => {
@@ -95,8 +112,9 @@ export function useDragPiece(pieceId: string) {
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
       if (cameraControls) cameraControls.enabled = true;
+      setEvents({ enabled: true });
       const { preview, applyEdit, setPreview } = useEditor.getState();
-      if (dragging && preview && JSON.stringify(preview.placement) !== JSON.stringify(start)) {
+      if (preview && JSON.stringify(preview.placement) !== JSON.stringify(start)) {
         applyEdit({ type: 'move', targetId: pieceId, placement: preview.placement });
       }
       setPreview(null);

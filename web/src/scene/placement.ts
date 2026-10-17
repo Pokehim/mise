@@ -1,15 +1,21 @@
-import type { Ray } from 'three';
-import type { Placement, Vec2, Vec3, Wall } from '@shared/types';
-import { wallCoordinates, wallLength, wallPoint } from './floorPlan';
+import { type Camera, MathUtils, Plane, type Ray, Raycaster, Vector2, Vector3 } from 'three';
+import type { CatalogItem, Placement, Vec2, Vec3, Wall } from '@shared/types';
+import { wallCoordinates, wallLength, wallPoint, wallRotationY } from './floorPlan';
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), Math.max(min, max));
+/** Rugs lie flat: they stay on the floor, nothing rests on them, and they cast no blob shadow. */
+export const liesFlat = (item: CatalogItem) => item.category === 'rug';
 
-/** Where a ray meets the floor (y = 0), if it points down at it. */
-export function floorHit(ray: Ray): Vec2 | null {
-  const { origin, direction } = ray;
-  if (direction.y > -1e-6) return null;
-  const t = -origin.y / direction.y;
-  return [origin.x + direction.x * t, origin.z + direction.z * t];
+/** Where a ray meets the horizontal plane at height y (the floor by default), if it points at it. */
+export function floorHit(ray: Ray, y = 0): Vec2 | null {
+  const hit = ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), new Vector3());
+  return hit && [hit.x, hit.z];
+}
+
+/** The floor point under the center of the view, or the point under the camera when it looks above the floor. */
+export function viewCenterOnFloor(camera: Camera): Vec2 {
+  const raycaster = new Raycaster();
+  raycaster.setFromCamera(new Vector2(0, 0), camera);
+  return floorHit(raycaster.ray) ?? [camera.position.x, camera.position.z];
 }
 
 /** The rotationY that turns a Piece's front (+Z) from one floor point toward another, to the nearest quarter turn. */
@@ -20,7 +26,7 @@ export function facing(from: Vec2, to: Vec2) {
 
 /** A rotationY turned by whole 15° steps, kept in (-π, π]. */
 export function turned(rotationY: number, steps: number) {
-  const angle = rotationY + (steps * Math.PI) / 12;
+  const angle = rotationY + steps * MathUtils.degToRad(15);
   return angle - 2 * Math.PI * Math.ceil((angle - Math.PI) / (2 * Math.PI));
 }
 
@@ -29,13 +35,13 @@ export function turned(rotationY: number, steps: number) {
  * `centerY`, and kept within the wall.
  */
 export function onWall(wall: Wall, along: number, centerY: number, [width, height, depth]: Vec3): Placement {
-  const [x, z] = wallPoint(wall, clamp(along, width / 2, wallLength(wall) - width / 2), depth / 2);
-  const bottom = clamp(centerY - height / 2, 0, wall.height - height);
-  return { position: [x, bottom, z], rotationY: Math.atan2(wall.normal[0], wall.normal[1]), mount: 'wall', wallId: wall.id };
+  const [x, z] = wallPoint(wall, MathUtils.clamp(along, width / 2, wallLength(wall) - width / 2), depth / 2);
+  const bottom = MathUtils.clamp(centerY - height / 2, 0, wall.height - height);
+  return { position: [x, bottom, z], rotationY: wallRotationY(wall), mount: 'wall', wallId: wall.id };
 }
 
 const SNAP_DISTANCE = 0.1;
-const SNAP_ANGLE = (20 * Math.PI) / 180;
+const SNAP_ANGLE = MathUtils.degToRad(20);
 
 /**
  * If the Piece's back is within 10 cm of a wall, or pushed into it, and the Piece faces within 20°
@@ -54,7 +60,7 @@ export function snapToWall(placement: Placement, depth: number, walls: Wall[]): 
   }
   if (!best) return null;
   const [sx, sz] = wallPoint(best.wall, best.along, depth / 2);
-  return { ...placement, position: [sx, y, sz], rotationY: Math.atan2(best.wall.normal[0], best.wall.normal[1]) };
+  return { ...placement, position: [sx, y, sz], rotationY: wallRotationY(best.wall) };
 }
 
 /** Floor points spiraling out from a center in rings `step` apart, about `step` apart along each ring. */

@@ -1,4 +1,4 @@
-import { Box3, Shape, ShapeGeometry, Vector2, Vector3 } from 'three';
+import { Box3, MathUtils, Shape, ShapeGeometry, Vector2, Vector3 } from 'three';
 import type { RoomSetup, Vec2, Wall } from '@shared/types';
 
 /** The room as a box: its floor polygon, from the floor up to the ceiling. */
@@ -29,6 +29,9 @@ export function insideFloor([x, z]: Vec2, polygon: Vec2[]) {
 
 export const wallLength = ({ start, end }: Wall) => Math.hypot(end[0] - start[0], end[1] - start[1]);
 
+/** The rotationY that turns something's front (+Z) away from a wall, into the room. */
+export const wallRotationY = ({ normal }: Wall) => Math.atan2(normal[0], normal[1]);
+
 /** Where a floor point lands on a wall's line: how far along it from its start, and how far into the room. */
 export function wallCoordinates([x, z]: Vec2, wall: Wall) {
   const [sx, sz] = wall.start;
@@ -53,7 +56,7 @@ export function nearestWall(point: Vec2, walls: Wall[]) {
   return walls
     .map((wall) => {
       const { along, length } = wallCoordinates(point, wall);
-      const onWall = wallPoint(wall, Math.min(Math.max(along, 0), length), 0);
+      const onWall = wallPoint(wall, MathUtils.clamp(along, 0, length), 0);
       return { wall, onWall, distance: Math.hypot(point[0] - onWall[0], point[1] - onWall[1]) };
     })
     .reduce((a, b) => (b.distance < a.distance ? b : a));

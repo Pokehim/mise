@@ -1,7 +1,7 @@
 import type { Vec3 } from '@shared/types';
 import { wallLength } from '../scene/floorPlan';
 import { removePiece, rotatePiece } from '../scene/pieceEdits';
-import { useEditor } from '../state/store';
+import { pieceItem, useEditor } from '../state/store';
 
 // The Inspector shell (spec §10.4). #10 takes this file over; the disabled buttons are the
 // slots where the Swap, Resize, Recolor, Paint and Replace controls of #9 and #10 go.
@@ -25,10 +25,7 @@ const Slot = ({ name, issue }: { name: string; issue: string }) => (
 );
 
 function PieceInspector({ pieceId }: { pieceId: string }) {
-  const item = useEditor((s) => {
-    const piece = s.roomState!.pieces[pieceId];
-    return piece && s.catalog!.items.find(({ id }) => id === piece.catalogId);
-  });
+  const item = useEditor((s) => pieceItem(s, pieceId));
   if (!item) return null;
   return (
     <>

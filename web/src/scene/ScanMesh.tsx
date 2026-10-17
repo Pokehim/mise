@@ -8,11 +8,14 @@ import { scanFileUrl } from '../api';
 import { type Selection, useEditor } from '../state/store';
 import { wallCoordinates } from './floorPlan';
 import { GLTFLoader, withMeshopt } from './gltf';
-import { forEachMaterial } from './objects';
+import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
 import { type ScanNodes, setupRoomNodes, splitScanStub } from './scanNodes';
 import { WallFader } from './WallFader';
 
 const scanLoads = new Map<string, Promise<GLTF | null>>();
+// three-mesh-bvh's CENTER split: builds the raycast tree for a 300k-triangle Scan several times
+// faster than the default, and a drag only casts a few rays per move.
+const CENTER = 0;
 
 /** A Scan's mesh file, or null when it has none yet (404). Cached, so suspending on it resolves once. */
 function loadScanMesh(url: string) {
@@ -95,7 +98,7 @@ export function ScanMesh() {
   }, [ceilingClip, view, setup]);
 
   const onClick = (event: ThreeEvent<MouseEvent>) => {
-    if (event.delta > 2) return;   // the end of a drag that moved the camera
+    if (event.delta > CLICK_TOLERANCE_PX) return;   // the end of a drag that moved the camera
     const target = scanTargetAt(event.point, setup, originals);
     // A click on the floor goes on to the Walk view, which moves there.
     if (target) event.stopPropagation();
@@ -104,7 +107,7 @@ export function ScanMesh() {
 
   return (
     <group name="scan" onClick={onClick}>
-      <Bvh>
+      <Bvh strategy={CENTER}>
         <primitive object={nodes.shell} />
         <primitive object={nodes.floor} />
         <primitive object={nodes.ceiling} visible={view === 'walk'} />

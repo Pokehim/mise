@@ -5,13 +5,16 @@ import { type Camera, NeutralToneMapping } from 'three';
 import { useShallow } from 'zustand/react/shallow';
 import { useEditor } from '../state/store';
 import { DollhouseCamera } from './DollhouseCamera';
-import { isShown } from './objects';
+import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
 import { ScanMesh } from './ScanMesh';
 import { SelectionOutline } from './SelectionOutline';
 import { WalkControls } from './WalkControls';
 
-/** Renders nothing in place of children that fail to load, so one bad asset can't blank the editor. */
+/**
+ * Loads its children in the background, and renders nothing in their place if they fail, so one
+ * bad asset can't blank the editor.
+ */
 class Optional extends Component<{ what: string; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError = () => ({ failed: true });
@@ -19,7 +22,7 @@ class Optional extends Component<{ what: string; children: ReactNode }, { failed
     console.warn(`${this.props.what} failed to load: ${error.message}`);
   }
   render() {
-    return this.state.failed ? null : this.props.children;
+    return this.state.failed ? null : <Suspense fallback={null}>{this.props.children}</Suspense>;
   }
 }
 
@@ -29,9 +32,7 @@ function Pieces() {
     <group name="pieces">
       {ids.map((id) => (
         <Optional key={id} what={`Piece ${id}`}>
-          <Suspense fallback={null}>
-            <PieceNode pieceId={id} />
-          </Suspense>
+          <PieceNode pieceId={id} />
         </Optional>
       ))}
     </group>
@@ -49,8 +50,8 @@ export function SceneCanvas({ cameraRef }: { cameraRef: RefObject<Camera | null>
       <Canvas
         camera={{ fov: 55, near: 0.05, far: 100, position: [0, 5, 5] }}
         gl={{ localClippingEnabled: true, toneMapping: NeutralToneMapping }}
-        // Hidden objects, such as faded walls and replaced Originals, must not catch clicks.
-        events={(store) => ({ ...events(store), filter: (hits) => hits.filter((hit) => isShown(hit.object)) })}
+        // Faded walls, replaced Originals and the clipped ceiling must not catch the pointer.
+        events={(store) => ({ ...events(store), filter: (hits) => hits.filter(isDrawn) })}
         onPointerMissed={() => useEditor.getState().select(null)}
         onCreated={({ camera }) => {
           cameraRef.current = camera;
@@ -59,9 +60,7 @@ export function SceneCanvas({ cameraRef }: { cameraRef: RefObject<Camera | null>
         <color attach="background" args={['#f4f1ea']} />
         <hemisphereLight args={['#ffffff', '#d9cfbf', 0.6]} />
         <Optional what="The environment map">
-          <Suspense fallback={null}>
-            <Environment preset="apartment" />
-          </Suspense>
+          <Environment preset="apartment" />
         </Optional>
         <Suspense fallback={null}>
           <ScanMesh />

@@ -172,7 +172,7 @@
         ],
         "rotationY": 3.141592653589793
       },
-      "floorColor": "#9c7d5e"
+      "floorColor": "#9b7c5d"
     },
     {
       "id": "og_dresser",
@@ -192,7 +192,7 @@
         ],
         "rotationY": -1.5707963267948966
       },
-      "floorColor": "#a58463"
+      "floorColor": "#a48463"
     }
   ]
 }

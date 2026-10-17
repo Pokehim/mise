@@ -4,13 +4,13 @@
 // It builds the room in the room frame (meters, +Y up, floor at y = 0), saves it as a raw .glb, and imports
 // that with scan-import, so room.glb goes through the same pipeline as a Polycam export. It also writes the
 // room's true setup.json, which Room Setup (#8) can be checked against.
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Document, type TypedArray } from '@gltf-transform/core';
 import { PNG } from 'pngjs';
 import type { Box, Hex, Opening, Original, RoomSetup, Vec2, Vec3, Wall } from '../shared/types';
-import { formatSummary, importScan, io } from './scan-import';
+import { formatSummary, importScan, io, writeJson } from './scan-import';
 
 const SCAN_ID = 'synthetic';
 const NAME = 'Synthetic dorm (3.6 × 4.2 m)';
@@ -20,12 +20,14 @@ const NOISE = 0.002; // ±2 mm along the normal, like a scan, so simplify can't 
 const TEXTURE_SIZE = 128;
 
 type Rgb = [r: number, g: number, b: number];
+/** A rectangle in a grid's 0–1 coordinates. */
+type Rect = [s0: number, t0: number, s1: number, t1: number];
 
-/** A Scan surface or Original Part: one primitive, with its own noise texture. */
-interface Surface { name: string; texture: PNG; positions: number[]; uvs: number[]; indices: number[] }
+/** One primitive of the room (the floor, the ceiling, a wall, or an Original's Part), with its own noise texture. */
+interface Shape { name: string; texture: PNG; positions: number[]; uvs: number[]; indices: number[] }
 
 /** Deterministic random numbers in [0, 1), so re-running gives the same files (mulberry32). */
-function random(seed: number) {
+function seededRandom(seed: number) {
   return () => {
     seed = (seed + 0x6d2b79f5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -33,7 +35,7 @@ function random(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 2 ** 32;
   };
 }
-const noise = random(1);
+const noise = seededRandom(1);
 
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const scale = (a: Vec3, s: number): Vec3 => [a[0] * s, a[1] * s, a[2] * s];
@@ -45,34 +47,34 @@ const rotateY = ([x, y, z]: Vec3, angle: number): Vec3 => [
 
 /**
  * Adds the rectangle corner + s·u + t·v (s, t in 0–1) as a grid of cells no larger than CELL, facing u × v.
- * Cells whose center is in a hole ([s0, t0, s1, t1]) are left out. The texture spans the whole rectangle.
+ * Cells whose center is in one of the Openings are left out. The texture spans the whole rectangle.
  */
-function addGrid(surface: Surface, corner: Vec3, u: Vec3, v: Vec3, holes: [number, number, number, number][] = []) {
+function addGrid(shape: Shape, corner: Vec3, u: Vec3, v: Vec3, openingRects: Rect[] = []) {
   const [nu, nv] = [u, v].map((edge) => Math.ceil(Math.hypot(...edge) / CELL - 1e-9));
   const normal = cross(u, v);
   const unitNormal = scale(normal, 1 / Math.hypot(...normal));
-  const first = surface.positions.length / 3;
+  const first = shape.positions.length / 3;
   for (let j = 0; j <= nv; j++) {
     for (let i = 0; i <= nu; i++) {
       const edge = i === 0 || j === 0 || i === nu || j === nv; // edges stay put, so boxes and walls meet exactly
       const offset = edge ? 0 : NOISE * (2 * noise() - 1);
-      surface.positions.push(...add(add(corner, add(scale(u, i / nu), scale(v, j / nv))), scale(unitNormal, offset)));
-      surface.uvs.push(i / nu, 1 - j / nv);
+      shape.positions.push(...add(add(corner, add(scale(u, i / nu), scale(v, j / nv))), scale(unitNormal, offset)));
+      shape.uvs.push(i / nu, 1 - j / nv);
     }
   }
   for (let j = 0; j < nv; j++) {
     for (let i = 0; i < nu; i++) {
       const [s, t] = [(i + 0.5) / nu, (j + 0.5) / nv];
-      if (holes.some(([s0, t0, s1, t1]) => s > s0 && s < s1 && t > t0 && t < t1)) continue;
+      if (openingRects.some(([s0, t0, s1, t1]) => s > s0 && s < s1 && t > t0 && t < t1)) continue;
       const a = first + j * (nu + 1) + i;
       const c = a + nu + 2;
-      surface.indices.push(a, a + 1, c, a, c, c - 1);
+      shape.indices.push(a, a + 1, c, a, c, c - 1);
     }
   }
 }
 
 /** Adds the outside of the box min–max, given in an Original's frame, placed by its Box. */
-function addBox(surface: Surface, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { position, rotationY }: Box, raised = false) {
+function addBox(shape: Shape, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { position, rotationY }: Box, raised = false) {
   const [dx, dy, dz] = [x1 - x0, y1 - y0, z1 - z0];
   const faces: [Vec3, Vec3, Vec3][] = [
     [[x0, y1, z1], [dx, 0, 0], [0, 0, -dz]], // top
@@ -83,7 +85,7 @@ function addBox(surface: Surface, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { posi
   ];
   // Only a raised box has a bottom: a scanner never sees the bottom of one that rests on something.
   if (raised) faces.push([[x0, y0, z0], [dx, 0, 0], [0, 0, dz]]);
-  for (const [corner, u, v] of faces) addGrid(surface, add(rotateY(corner, rotationY), position), rotateY(u, rotationY), rotateY(v, rotationY));
+  for (const [corner, u, v] of faces) addGrid(shape, add(rotateY(corner, rotationY), position), rotateY(u, rotationY), rotateY(v, rotationY));
 }
 
 /* ───────────── The room, as Room Setup should find it ───────────── */
@@ -160,45 +162,50 @@ const furniture: Furniture[] = [
 
 /* ───────────── Geometry and textures ───────────── */
 
-let seed = 0;
-const surface = (name: string, color: Rgb): Surface => ({ name, texture: noiseTexture(color, ++seed), positions: [], uvs: [], indices: [] });
+let textureSeed = 0;
+const shape = (name: string, color: Rgb): Shape =>
+  ({ name, texture: noiseTexture(color, ++textureSeed), positions: [], uvs: [], indices: [] });
 
-function buildSurfaces(): Surface[] {
-  const floor = surface('Floor', [176, 141, 106]);
+function buildShapes(): Shape[] {
+  const floor = shape('Floor', [176, 141, 106]);
   addGrid(floor, [-W / 2, 0, D / 2], [W, 0, 0], [0, 0, -D]);
-  const ceiling = surface('Ceiling', [236, 234, 228]);
+  const ceiling = shape('Ceiling', [236, 234, 228]);
   addGrid(ceiling, [-W / 2, H, -D / 2], [W, 0, 0], [0, 0, D]);
 
   const wallColors: Rgb[] = [[224, 218, 206], [218, 214, 204], [226, 220, 210], [220, 216, 206]];
-  const wallSurfaces = walls.map((wall, i) => {
-    const wallSurface = surface(wall.name, wallColors[i]);
+  const wallShapes = walls.map((wall, i) => {
+    const wallShape = shape(wall.name, wallColors[i]);
     const [dx, dz] = [wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]];
     const length = Math.hypot(dx, dz);
-    const holes = openings
+    const openingRects = openings
       .filter((opening) => opening.wallId === wall.id)
-      .map(({ offset, width, bottom, height }): [number, number, number, number] =>
-        [offset / length, bottom / H, (offset + width) / length, (bottom + height) / H]);
+      .map(({ offset, width, bottom, height }): Rect => [offset / length, bottom / H, (offset + width) / length, (bottom + height) / H]);
     // Along the wall from start to end, then up: that faces the inward normal.
-    addGrid(wallSurface, [wall.start[0], 0, wall.start[1]], [dx, 0, dz], [0, H, 0], holes);
-    return wallSurface;
+    addGrid(wallShape, [wall.start[0], 0, wall.start[1]], [dx, 0, dz], [0, H, 0], openingRects);
+    return wallShape;
   });
 
-  const partSurfaces = furniture.flatMap(({ original, parts }) =>
+  const partShapes = furniture.flatMap(({ original, parts }) =>
     parts.map(({ name, color, boxes, raised }) => {
-      const partSurface = surface(name, color);
-      for (const [min, max] of boxes) addBox(partSurface, min, max, original.box, raised);
-      return partSurface;
+      const partShape = shape(name, color);
+      for (const [min, max] of boxes) addBox(partShape, min, max, original.box, raised);
+      return partShape;
     }));
-  return [floor, ceiling, ...wallSurfaces, ...partSurfaces];
+  return [floor, ceiling, ...wallShapes, ...partShapes];
 }
 
-/** Small noise around the surface's color, under a soft brightness gradient, so luminance sampling reads something. */
+/**
+ * Noise around the shape's color under a soft brightness gradient, so luminance sampling reads something.
+ * The grains are 2 px and ±10%: finer or fainter noise doesn't survive WebP on dark colors.
+ */
 function noiseTexture(color: Rgb, seed: number): PNG {
   const png = new PNG({ width: TEXTURE_SIZE, height: TEXTURE_SIZE });
-  const grain = random(seed);
+  const random = seededRandom(seed);
+  const grains = Array.from({ length: (TEXTURE_SIZE / 2) ** 2 }, () => 0.9 + 0.2 * random());
   for (let y = 0; y < TEXTURE_SIZE; y++) {
     for (let x = 0; x < TEXTURE_SIZE; x++) {
-      const brightness = (0.8 + (0.2 * (x + y)) / (2 * (TEXTURE_SIZE - 1))) * (0.94 + 0.12 * grain());
+      const grain = grains[(y >> 1) * (TEXTURE_SIZE / 2) + (x >> 1)];
+      const brightness = (0.8 + (0.2 * (x + y)) / (2 * (TEXTURE_SIZE - 1))) * grain;
       const i = (y * TEXTURE_SIZE + x) * 4;
       color.forEach((channel, c) => (png.data[i + c] = Math.min(255, Math.round(channel * brightness))));
       png.data[i + 3] = 255;
@@ -207,13 +214,13 @@ function noiseTexture(color: Rgb, seed: number): PNG {
   return png;
 }
 
-function buildDocument(surfaces: Surface[]): Document {
+function buildDocument(shapes: Shape[]): Document {
   const document = new Document();
   const buffer = document.createBuffer();
   const scene = document.createScene('Room');
   const accessor = (type: 'VEC3' | 'VEC2' | 'SCALAR', array: TypedArray) =>
     document.createAccessor().setType(type).setArray(array).setBuffer(buffer);
-  for (const { name, texture: png, positions, uvs, indices } of surfaces) {
+  for (const { name, texture: png, positions, uvs, indices } of shapes) {
     const texture = document.createTexture(name).setImage(PNG.sync.write(png)).setMimeType('image/png');
     const primitive = document.createPrimitive()
       .setAttribute('POSITION', accessor('VEC3', new Float32Array(positions)))
@@ -245,8 +252,8 @@ function floorColor({ position, size, rotationY }: Box, floorTexture: PNG): Hex 
   return `#${sum.map((channel) => Math.round(channel / count).toString(16).padStart(2, '0')).join('')}`;
 }
 
-const surfaces = buildSurfaces();
-const floorTexture = surfaces.find((s) => s.name === 'Floor')!.texture;
+const shapes = buildShapes();
+const floorTexture = shapes.find((s) => s.name === 'Floor')!.texture;
 const setup: RoomSetup = {
   version: 1,
   scanId: SCAN_ID,
@@ -257,12 +264,12 @@ const setup: RoomSetup = {
   originals: furniture.map(({ original }) => ({ ...original, floorColor: floorColor(original.box, floorTexture) })),
 };
 
-const raw = await mkdtemp(join(tmpdir(), 'synthetic-room-'));
+const exportDir = await mkdtemp(join(tmpdir(), 'synthetic-room-'));
 try {
-  await io.write(join(raw, 'synthetic.glb'), buildDocument(surfaces));
-  const { dir, stats } = await importScan({ input: join(raw, 'synthetic.glb'), scanId: SCAN_ID, name: NAME, force: true });
-  await writeFile(join(dir, 'setup.json'), `${JSON.stringify(setup, null, 2)}\n`);
+  await io.write(join(exportDir, 'synthetic.glb'), buildDocument(shapes));
+  const { dir, stats } = await importScan({ input: join(exportDir, 'synthetic.glb'), scanId: SCAN_ID, name: NAME, force: true });
+  await writeJson(join(dir, 'setup.json'), setup);
   console.log(`Wrote ${dir}: room.glb, manifest.json, and setup.json\n\n${formatSummary(stats)}`);
 } finally {
-  await rm(raw, { recursive: true, force: true });
+  await rm(exportDir, { recursive: true, force: true });
 }

@@ -21,8 +21,10 @@ const MAX_TRIANGLES = 300_000;
 const TEXTURE_SIZE = 2048;
 /** A room's height, in meters. A Y extent outside it usually means +Y isn't up, or the units aren't meters. */
 const ROOM_HEIGHT = { min: 2.0, max: 3.5 };
+const ROOM_HEIGHT_TEXT = `${ROOM_HEIGHT.min.toFixed(1)}–${ROOM_HEIGHT.max.toFixed(1)} m`;
 export const SCANS_DIR = fileURLToPath(new URL('../data/scans', import.meta.url));
 const MODEL = /\.(gltf|glb)$/i;
+const ZIP = /\.zip$/i;
 
 const HELP = `
 Turns a Polycam glTF export into a Scan folder that the editor can load: data/scans/<scanId>/.
@@ -48,7 +50,7 @@ What it does:
   2. Optimizes it like "gltf-transform optimize --texture-compress webp --texture-size 2048", and
      simplifies it further while it has more than 300,000 triangles.
   3. Writes room.glb, and manifest.json with an identity meshTransform (Room Setup step 1 sets it).
-  4. Prints a summary. Check that the sizes are in meters and +Y is up: a room's Y extent is ${ROOM_HEIGHT.min.toFixed(1)}–${ROOM_HEIGHT.max.toFixed(1)} m.
+  4. Prints a summary. Check that the sizes are in meters and +Y is up: a room's Y extent is ${ROOM_HEIGHT_TEXT}.
 
 Examples:
   npx tsx scripts/scan-import.ts ~/Downloads/venue.glb venue-test --name "Venue test"
@@ -97,14 +99,17 @@ export async function importScan({ input, scanId, name = scanId, raw, force = fa
   }
   if (raw) await unpackRaw(raw, join(dir, 'raw'));
   // Written last: a manifest is what makes the folder a Scan (GET /api/scans lists them).
-  await writeFile(join(dir, 'manifest.json'), `${JSON.stringify(scanManifest(scanId, name), null, 2)}\n`);
+  await writeJson(join(dir, 'manifest.json'), scanManifest(scanId, name));
   return { dir, stats: measureScan(await io.read(join(dir, 'room.glb'))) };
 }
+
+/** Writes JSON the way the server's PUT routes do, so a later save makes a small diff. */
+export const writeJson = (path: string, value: unknown) => writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
 
 /** The path of the model to import: the input itself, or the one model inside the folder or .zip. */
 async function locateModel(input: string, unzipDir: string): Promise<string> {
   if (MODEL.test(input)) return input;
-  if (/\.zip$/i.test(input)) {
+  if (ZIP.test(input)) {
     // Check the zip's index first: extracting the Raw Data zip by mistake would take minutes.
     const model = findModel(listZip(input));
     unzip(input, unzipDir);
@@ -132,7 +137,7 @@ export function findModel(files: string[]): string {
 /** Puts the Raw Data export in raw/, without the zip's top folder, so raw/ holds keyframes/ as msplat-train expects. */
 async function unpackRaw(raw: string, rawDir: string) {
   await rm(rawDir, { recursive: true, force: true });
-  if (/\.zip$/i.test(raw)) unzip(raw, rawDir);
+  if (ZIP.test(raw)) unzip(raw, rawDir);
   else await cp(raw, rawDir, { recursive: true });
   const entries = await readdir(rawDir);
   if (entries.length === 1 && (await stat(join(rawDir, entries[0]))).isDirectory()) {
@@ -150,8 +155,8 @@ const unzip = (zip: string, dir: string) => runUnzip(['-q', '-o', zip, '-d', dir
 
 /**
  * Does what `gltf-transform optimize --texture-compress webp --texture-size 2048` does, with the CLI's
- * defaults (v4.5), in process. If the mesh still has more than maxTriangles, one more simplify pass
- * targets that count. Scans have no animation, so the CLI's resample step is left out.
+ * defaults (v4.5), in process. Then, while the mesh has more than maxTriangles, simplify passes target
+ * that count. Scans have no animation, so the CLI's resample step is left out.
  */
 export async function optimizeScan(document: Document, maxTriangles = MAX_TRIANGLES) {
   await Promise.all([MeshoptSimplifier.ready, MeshoptEncoder.ready]);
@@ -160,9 +165,10 @@ export async function optimizeScan(document: Document, maxTriangles = MAX_TRIANG
     simplify({ simplifier: MeshoptSimplifier, error: 0.0001 }),
   );
   // meshoptimizer collapses the cheapest edges first, so with no error limit it stops at the target count.
-  const triangles = countTriangles(document);
-  if (triangles > maxTriangles) {
+  // The ratio applies to each primitive; when one can't shrink that far, the next pass takes more from the others.
+  for (let triangles = countTriangles(document), before = Infinity; triangles > maxTriangles && triangles < before;) {
     await document.transform(simplify({ simplifier: MeshoptSimplifier, ratio: maxTriangles / triangles, error: 1 }));
+    [before, triangles] = [triangles, countTriangles(document)];
   }
   await document.transform(
     prune(), sparse(),
@@ -211,8 +217,8 @@ export function measureScan(document: Document): ScanStats {
 const formatBytes = (bytes: number) =>
   bytes < 1e3 ? `${bytes} B` : bytes < 1e6 ? `${Math.round(bytes / 1e3)} KB` : `${(bytes / 1e6).toFixed(1)} MB`;
 // signDisplay: 'negative' prints scan noise just below 0 as "0.00", not "-0.00".
-const meters = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'negative' }).format;
-const formatPoint = (point: Vec3) => `(${point.map(meters).join(', ')})`;
+const formatMeters = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'negative' }).format;
+const formatPoint = (point: Vec3) => `(${point.map(formatMeters).join(', ')})`;
 
 /** The summary printed after an import. */
 export function formatSummary({ triangles, textures, bounds: { min, max } }: ScanStats): string {
@@ -224,14 +230,13 @@ export function formatSummary({ triangles, textures, bounds: { min, max } }: Sca
     `Mesh      ${triangles.toLocaleString('en-US')} triangles`,
     `Textures  ${textures.length}: ${textureList}`,
     `Bounds    min ${formatPoint(min)} m, max ${formatPoint(max)} m`,
-    `Size      X ${meters(sx)} m, Y ${meters(sy)} m (up), Z ${meters(sz)} m`,
+    `Size      X ${formatMeters(sx)} m, Y ${formatMeters(sy)} m (up), Z ${formatMeters(sz)} m`,
   ];
   if (triangles > MAX_TRIANGLES) {
     lines.push(`⚠ ${triangles.toLocaleString('en-US')} triangles is over the limit of ${MAX_TRIANGLES.toLocaleString('en-US')}.`);
   }
   if (sy < ROOM_HEIGHT.min || sy > ROOM_HEIGHT.max) {
-    const range = `${ROOM_HEIGHT.min.toFixed(1)}–${ROOM_HEIGHT.max.toFixed(1)} m`;
-    lines.push(`⚠ The Y extent is ${meters(sy)} m, outside ${range} for a room. Check that +Y is up and the units are meters.`);
+    lines.push(`⚠ The Y extent is ${formatMeters(sy)} m, outside ${ROOM_HEIGHT_TEXT} for a room. Check that +Y is up and the units are meters.`);
   }
   return lines.join('\n');
 }

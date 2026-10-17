@@ -16,7 +16,7 @@ const LUMMI_CHAIR: AboListing = {
   ],
   brand: [{ language_tag: 'en_US', value: 'Stone & Beam' }],
   color: [{ language_tag: 'en_US', standardized_values: ['Blue'], value: 'Denim' }],
-  // "stone" is ABO copying the brand name: 773 of the 782 listings with it are Stone & Beam.
+  // "stone" is ABO copying a word of the brand name, as it does in 929 Stone & Beam listings.
   material: [{ language_tag: 'en_US', value: 'denim' }, { language_tag: 'en_US', value: 'stone' }],
   style: [{ language_tag: 'en_US', value: 'Transitional' }],
 };
@@ -94,7 +94,7 @@ describe('toCatalogItem', () => {
     });
   });
 
-  it('decodes the "&amp;" that 41 ABO titles contain', () => {
+  it('decodes the HTML entities in ABO text, such as the "&amp;" in 57 product names', () => {
     // ABO listing B07B4VGZ9B.
     const name = 'Amazon Brand – Rivet Mid-Century Modern Curved Task Desk Table Lamp With USB Port And Light Bulb - 26 Inches, Matte Black &amp; Brushed Steel';
     const lamp: AboListing = { item_id: 'B07B4VGZ9B', item_name: [{ language_tag: 'en_US', value: name }] };

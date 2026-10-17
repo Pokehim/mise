@@ -9,8 +9,7 @@
 
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { copyFile, mkdir, mkdtemp, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { copyFile, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs, promisify } from 'node:util';
@@ -80,21 +79,29 @@ export function findListings(listings: Iterable<Listing>, category: Category, ke
     .filter((listing) => {
       if (!PRODUCT_TYPES[category].includes(listing.product_type?.[0]?.value ?? '')) return false;
       const fields = [listing.item_name, listing.color, listing.material, listing.style];
-      const text = fields.flatMap((field) => english(field).map((entry) => entry.value)).join(' ').toLowerCase();
+      const text = fields.flatMap(englishValues).join(' ').toLowerCase();
       return words.every((word) => text.includes(word));
     })
     .sort((a, b) => Number(!a.model) - Number(!b.model) || titleOf(a).localeCompare(titleOf(b)));
 }
 
-/** The entries of a multilingual ABO field in en_US, or else in another English, such as en_GB. */
+const isCategory = (value: string): value is Category => Object.hasOwn(DEFAULT_PRICE_USD, value);
+
+/** Every HTML entity in ABO's English text, such as the "&amp;" in 57 product names. */
+const ENTITIES: Record<string, string> = { amp: '&', quot: '"', apos: "'", nbsp: ' ', eacute: 'é' };
+
+/** The entries of a multilingual ABO field in en_US, or else in another English, such as en_GB, with entities decoded. */
 function english<T extends Text>(texts: T[] = []): T[] {
   const us = texts.filter((text) => text.language_tag === 'en_US');
-  return us.length > 0 ? us : texts.filter((text) => text.language_tag.startsWith('en_'));
+  return (us.length > 0 ? us : texts.filter((text) => text.language_tag.startsWith('en_')))
+    .map((text) => ({ ...text, value: text.value.replace(/&(\w+);/g, (entity, name) => ENTITIES[name] ?? entity) }));
 }
 
-/** The English product name, without the "Amazon Brand – " that starts the house brands' names, and with "&amp;" decoded. */
+const englishValues = (texts?: Text[]) => english(texts).map((text) => text.value);
+
+/** The English product name, without the "Amazon Brand – " that starts the house brands' names. */
 const titleOf = (listing: AboListing) =>
-  (english(listing.item_name)[0]?.value ?? listing.item_id).replace(/^Amazon Brand\s*[-–—]\s*/, '').replaceAll('&amp;', '&');
+  (englishValues(listing.item_name)[0] ?? listing.item_id).replace(/^Amazon Brand\s*[-–—]\s*/, '');
 
 /** ABO's free text, tidied: "faux_leather" → "Faux leather", repeats in any case dropped, and so are junk values such as "0" or "Y". */
 function tidy(values: string[]): string[] {
@@ -109,12 +116,12 @@ function tidy(values: string[]): string[] {
 
 /** The Catalog entry for a pick: §8.1 step 5, with its size measured from the optimized GLB. */
 export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3): CatalogItem {
-  if (!Object.hasOwn(DEFAULT_PRICE_USD, pick.category)) throw new Error(`"${pick.category}" is not a Category`);
+  if (!isCategory(pick.category)) throw new Error(`"${pick.category}" is not a Category`);
   const id = listing.item_id;
-  const brand = english(listing.brand)[0]?.value;
-  const colorHex = listing.color_code?.[0]?.toLowerCase() as Hex | undefined;
-  // ABO copies the brand name into `material` as "stone" for 773 of the 782 Stone & Beam listings that have it.
-  const materials = english(listing.material).map((m) => m.value).filter((m) => !(brand === 'Stone & Beam' && m === 'stone'));
+  const brand = englishValues(listing.brand)[0];
+  // ABO copies a word of the brand name into `material`: "stone" in 929 Stone & Beam listings.
+  const brandWords = new Set(brand?.toLowerCase().split(/\W+/));
+  const materials = englishValues(listing.material).filter((material) => !brandWords.has(material.toLowerCase()));
   return {
     id,
     source: 'abo',
@@ -126,9 +133,9 @@ export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3
     model: `/data/catalog/models/${id}.glb`,
     thumbnail: `/data/catalog/thumbs/${id}.jpg`,
     colors: tidy(english(listing.color).flatMap((color) => [color.value, ...(color.standardized_values ?? [])])),
-    colorHex,
+    colorHex: listing.color_code?.[0]?.toLowerCase() as Hex | undefined,
     materials: tidy(materials),
-    styleTags: tidy(english(listing.style).map((style) => style.value)),
+    styleTags: tidy(englishValues(listing.style)),
     priceEstimateUsd: pick.price ?? DEFAULT_PRICE_USD[pick.category],
     url: `https://www.amazon.com/dp/${id}`,
     attribution: 'Amazon Berkeley Objects (CC BY 4.0), Amazon.com',
@@ -178,11 +185,11 @@ async function cached(key: string): Promise<string> {
   return file;
 }
 
-/** The rows of one of ABO's gzipped CSV files, which have CRLF line endings and no quoted fields. */
+/** The rows of one of ABO's gzipped CSV files, which have CRLF line endings. */
 async function readCsv(file: string): Promise<Record<string, string>[]> {
   const [header, ...lines] = gunzipSync(await readFile(file)).toString('utf8').split(/\r?\n/).filter(Boolean);
-  const columns = header.split(',');
-  return lines.map((line) => Object.fromEntries(line.split(',').map((value, i) => [columns[i], value])));
+  const columns = csvFields(header);
+  return lines.map((line) => Object.fromEntries(csvFields(line).map((value, i) => [columns[i], value])));
 }
 
 /** Every ABO listing by item_id, joined to its 3D model. Of a listing on several Amazon sites, the amazon.com one wins. */
@@ -217,21 +224,22 @@ async function gltfTransform(...args: string[]): Promise<string> {
 const megabytes = (bytes: number) => (bytes / 1e6).toFixed(2);
 
 /** Builds a pick's GLB and thumbnail into data/catalog/ and returns its Catalog entry. */
-async function buildPick(pick: CatalogPick, listing: Listing | undefined, imagePaths: Map<string, string>, work: string) {
+async function buildPick(pick: CatalogPick, listing: Listing | undefined, imagePaths: Map<string, string>) {
   if (!listing?.model) throw new Error('no ABO listing with a 3D model has this item_id');
+  // A few ABO models are in the wrong units, such as B07HZ7TKSV: a loveseat 221 m wide.
+  const { extent } = listing.model;
+  if (Math.max(...extent) > 4) throw new Error(`${extent.join(' × ')} m is not a real furniture size`);
   const original = await cached(`3dmodels/original/${listing.model.path}`);
   // Center first: `center` decodes meshopt and writes the file uncompressed, so it must not run after `optimize`.
-  const centered = join(work, `${pick.id}.centered.glb`);
-  const glb = join(work, `${pick.id}.glb`);
+  const centered = join(CACHE, 'build', `${pick.id}.centered.glb`);
+  const glb = join(CACHE, 'build', `${pick.id}.glb`);
   await gltfTransform('center', original, centered, '--pivot', 'below');
   await gltfTransform('optimize', centered, glb, '--texture-compress', 'webp', '--texture-size', '1024');
+  await rm(centered);                         // as large as the original
   await gltfTransform('validate', glb);      // exits with an error when the glTF validator reports one
   const bytes = (await stat(glb)).size;
   if (bytes > MAX_GLB_BYTES) throw new Error(`${megabytes(bytes)} MB is over the 2 MB budget`);
-  const size = sizeFromInspect(await gltfTransform('inspect', glb, '--format', 'csv'));
-  // A few ABO models are in the wrong units, such as B07HZ7TKSV: a loveseat 221 m wide.
-  if (Math.max(...size) > 4) throw new Error(`${size.join(' × ')} m is not a real furniture size`);
-  const item = toCatalogItem(pick, listing, size);
+  const item = toCatalogItem(pick, listing, sizeFromInspect(await gltfTransform('inspect', glb, '--format', 'csv')));
 
   const imagePath = imagePaths.get(listing.main_image_id ?? '');
   if (!imagePath?.endsWith('.jpg')) throw new Error(`the main image ${listing.main_image_id} is not a JPEG in ABO`);
@@ -246,21 +254,25 @@ async function build() {
   const picks: CatalogPick[] = JSON.parse(await readFile(PICKS, 'utf8'));
   const [listings, imagesCsv] = await Promise.all([loadListings(), cached('images/metadata/images.csv.gz')]);
   const imagePaths = new Map((await readCsv(imagesCsv)).map((row) => [row.image_id, row.path]));
-  const work = await mkdtemp(join(tmpdir(), 'catalog-build-'));
-  const items: CatalogItem[] = [];
-  try {
-    for (const pick of picks) {
+  await mkdir(join(CACHE, 'build'), { recursive: true });
+
+  // Four picks at a time, since each gltf-transform run keeps about one core busy. Items keep the picks' order.
+  const built: (CatalogItem | undefined)[] = [];
+  let next = 0;
+  const worker = async () => {
+    for (let i = next++; i < picks.length; i = next++) {
+      const pick = picks[i];
       try {
-        const { item, bytes } = await buildPick(pick, listings.get(pick.id), imagePaths, work);
-        items.push(item);
+        const { item, bytes } = await buildPick(pick, listings.get(pick.id), imagePaths);
+        built[i] = item;
         console.log(`✓ ${pick.id} ${pick.category.padEnd(10)} ${item.size.join(' × ')} m  ${megabytes(bytes)} MB  ${item.title}`);
       } catch (error) {
         console.error(`✗ ${pick.id} ${pick.category.padEnd(10)} skipped: ${error instanceof Error ? error.message : error}`);
       }
     }
-  } finally {
-    await rm(work, { recursive: true, force: true });
-  }
+  };
+  await Promise.all(Array.from({ length: 4 }, worker));
+  const items = built.filter((item) => item !== undefined);
 
   // Items from other sources, such as the placeholder boxes, are built elsewhere: keep them.
   const file = join(CATALOG_DIR, 'catalog.json');
@@ -280,22 +292,21 @@ async function build() {
 
 /** Prints the listings of a Category that contain the keywords, for picking. */
 async function find(category: string, keywords: string | undefined, limit: number) {
-  if (!Object.hasOwn(PRODUCT_TYPES, category)) {
+  if (!isCategory(category)) {
     throw new Error(`Unknown category "${category}". Use one of: ${Object.keys(PRODUCT_TYPES).join(', ')}`);
   }
-  const found = findListings((await loadListings()).values(), category as Category, keywords);
+  const found = findListings((await loadListings()).values(), category, keywords);
   const cm = (meters: number) => Math.round(meters * 100);
   const inches = ({ length, width, height }: NonNullable<AboListing['item_dimensions']>) =>
     [length, width, height].map((side) => side?.normalized_value?.value ?? '?').join('×');
-  const first = (texts?: Text[]) => english(texts).map((text) => text.value).join(', ');
   console.log(['item_id', '3D model W×H×D', 'listed L×W×H', 'color', 'style', 'name'].join('\t'));
   for (const listing of found.slice(0, limit)) {
     console.log([
       listing.item_id,
       listing.model ? `${listing.model.extent.map(cm).join('×')} cm` : 'no 3D model',
       listing.item_dimensions ? `${inches(listing.item_dimensions)} in` : '?',
-      first(listing.color),
-      first(listing.style),
+      englishValues(listing.color).join(', '),
+      englishValues(listing.style).join(', '),
       titleOf(listing),
     ].join('\t'));
   }

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "ds_fixture1",
+  "scanId": "fixture",
+  "name": "Fixture Design",
+  "createdAt": "2026-10-17T21:15:00.000Z",
+  "updatedAt": "2026-10-17T21:19:00.000Z",
+  "origin": "mover",
+  "edits": [
+    {
+      "id": "ed_1", "at": "2026-10-17T21:16:00.000Z", "by": "mover",
+      "type": "place", "pieceId": "pc_1", "catalogId": "fixture-chair",
+      "placement": { "position": [1.05, 0, -0.6], "rotationY": 1.5707963267948966, "mount": "floor" }
+    },
+    {
+      "id": "ed_2", "at": "2026-10-17T21:17:00.000Z", "by": "mover",
+      "type": "recolor", "targetId": "pc_1", "partId": "legs", "color": "#1a1a1a"
+    },
+    {
+      "id": "ed_3", "at": "2026-10-17T21:18:00.000Z", "by": "mover",
+      "type": "finish", "target": { "kind": "wall", "wallId": "wl_1" }, "finish": { "kind": "paint", "color": "#9caf88" }
+    },
+    {
+      "id": "ed_4", "at": "2026-10-17T21:19:00.000Z", "by": "mover",
+      "type": "replace", "originalId": "og_desk", "pieceId": "pc_2", "catalogId": "fixture-desk",
+      "placement": { "position": [1.7, 0, -0.6], "rotationY": -1.5707963267948966, "mount": "floor" },
+      "via": "replace"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import { type TriangleMesh, newTriangleInfo, triangleInfo } from './mesh';
 /** Weights per bin, with each bin's weighted sum of values so a peak can be located inside its bin. */
 export interface Histogram { start: number; binSize: number; weights: Float64Array; sums: Float64Array }
 
-export const LEVEL = {
+const LEVEL = {
   /** A triangle faces up (floor) when normal.y > this, and down (ceiling) when normal.y < −this. */
   facing: 0.9,
   heightBin: 0.01,
@@ -106,7 +106,7 @@ export function detectYaw(mesh: TriangleMesh): number | null {
 }
 
 /** The angle in (−π, π]. */
-const wrapAngle = (a: number) => a - 2 * Math.PI * Math.ceil((a - Math.PI) / (2 * Math.PI));
+export const wrapAngle = (a: number) => a - 2 * Math.PI * Math.ceil((a - Math.PI) / (2 * Math.PI));
 
 /**
  * The meshTransform (capture frame → room frame) that rotates by `rotationY`, puts the floor at

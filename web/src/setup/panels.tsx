@@ -1,13 +1,16 @@
 // The sidebar panel of each Room Setup step.
 import { useEffect, useMemo, useState } from 'react';
+import { MathUtils } from 'three';
 import type { Category, Opening, Original } from '@shared/types';
-import { saveManifest } from '../api';
 import { bakeFloorColors } from './bake';
-import { detectCeilingHeight, detectFloorHeight, detectYaw, type Histogram, heightHistogram, levelTransform } from './geometry/level';
+import {
+  detectCeilingHeight, detectFloorHeight, detectYaw, type Histogram, heightHistogram, levelTransform, wrapAngle,
+} from './geometry/level';
+import { mm } from './geometry/mesh';
 import { wallAxis } from './geometry/walls';
 import { CATEGORIES, CATEGORY_NAMES, UNBAKED_FLOOR_COLOR, defaultPartParams } from './originals';
 import { withPolygon } from './overlays';
-import { type StepId, scanTriangles, useSetup } from './store';
+import { isLeveled, type StepId, scanTriangles, useSetup } from './store';
 
 export function StepPanel({ step }: { step: StepId }) {
   switch (step) {
@@ -20,17 +23,13 @@ export function StepPanel({ step }: { step: StepId }) {
   }
 }
 
-const isIdentity = ({ position, rotationY }: { position: number[]; rotationY: number }) =>
-  rotationY === 0 && position.every((v) => v === 0);
-const degrees = (radians: number) => (radians * 180) / Math.PI;
-const round = (v: number, places = 3) => Math.round(v * 10 ** places) / 10 ** places;
 
 /** Step 1: the floor height and yaw, which make the meshTransform. */
 function LevelPanel() {
   const scene = useSetup((s) => s.scene!);
   const manifest = useSetup((s) => s.manifest!);
-  const setMeshTransform = useSetup((s) => s.setMeshTransform);
-  const [saving, setSaving] = useState<string>();
+  const levelSaved = useSetup((s) => s.saved.manifest === s.manifest);
+  const { setMeshTransform, saveLevel } = useSetup.getState();
   const capture = scanTriangles(scene);   // the capture's frame: no meshTransform
   const histogram = useMemo(() => heightHistogram(capture, 'up'), [capture]);
   const floorHeight = -manifest.meshTransform.position[1];
@@ -40,38 +39,27 @@ function LevelPanel() {
   const detect = () => apply(detectFloorHeight(capture) ?? 0, detectYaw(capture) ?? 0);
   useEffect(() => {
     // Once, when a Scan that was never leveled opens.
-    if (isIdentity(manifest.meshTransform)) detect();
+    if (!isLeveled(manifest)) detect();
   }, []);
-
-  const save = async () => {
-    setSaving('Saving…');
-    try {
-      await saveManifest(manifest);
-      useSetup.setState((s) => ({ saved: { ...s.saved, manifest: JSON.stringify(manifest) } }));
-      setSaving('Level saved to the manifest.');
-    } catch (error) {
-      setSaving(`Not saved: ${(error as Error).message}`);
-    }
-  };
 
   return (
     <>
       <p>Check that the floor sits on the grid and the walls run along its lines. Adjust if they don't.</p>
       <label className="rs-field">
         <span>Floor height in the capture <small>(m)</small></span>
-        <input type="number" step={0.005} value={round(floorHeight)} onChange={(e) => apply(Number(e.target.value), yaw)} />
+        <input type="number" step={0.005} value={mm(floorHeight)} onChange={(e) => apply(Number(e.target.value), yaw)} />
       </label>
       {histogram && <HistogramChart histogram={histogram} marker={floorHeight} label="Up-facing surfaces by height" />}
       <label className="rs-field">
-        <span>Yaw <small>({round(degrees(yaw), 1)}°)</small></span>
-        <input type="range" min={-45} max={45} step={0.1} value={degrees(yaw)}
-          onChange={(e) => apply(floorHeight, (Number(e.target.value) * Math.PI) / 180)} />
+        <span>Yaw <small>({MathUtils.radToDeg(yaw).toFixed(1)}°)</small></span>
+        <input type="range" min={-45} max={45} step={0.1} value={MathUtils.radToDeg(yaw)}
+          onChange={(e) => apply(floorHeight, MathUtils.degToRad(Number(e.target.value)))} />
       </label>
       <div className="rs-row">
         <button type="button" onClick={detect}>Auto-detect</button>
-        <button type="button" className="rs-primary" onClick={save}>Confirm level</button>
+        <button type="button" className="rs-primary" onClick={saveLevel}>Confirm level</button>
       </div>
-      {saving && <p className="rs-note">{saving}</p>}
+      {levelSaved && isLeveled(manifest) && <p className="rs-note">Level saved to the manifest.</p>}
     </>
   );
 }
@@ -89,7 +77,7 @@ function CeilingPanel() {
   }));
   const detect = () => {
     const found = detectCeilingHeight(room);
-    if (found) setHeight(round(found));
+    if (found) setHeight(mm(found));
   };
   return (
     <>
@@ -131,20 +119,29 @@ function CornersPanel() {
   );
 }
 
-const SWINGS: { value: NonNullable<Opening['swing']>; label: string }[] = [
+type Swing = NonNullable<Opening['swing']>;
+
+const SWINGS: { value: Swing; label: string }[] = [
   { value: 'in-left', label: 'Opens in, hinge on the left' },
   { value: 'in-right', label: 'Opens in, hinge on the right' },
   { value: 'none', label: 'No swing (sliding, or opens out)' },
 ];
+
+function SwingSelect({ value, onChange }: { value: Swing; onChange: (swing: Swing) => void }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value as Swing)}>
+      {SWINGS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+    </select>
+  );
+}
 
 /** Step 4: doors and windows. */
 function OpeningsPanel() {
   const { walls, openings } = useSetup((s) => s.setup!);
   const selectedWallId = useSetup((s) => s.selectedWallId);
   const draft = useSetup((s) => s.openingDraft);
-  const { set, updateSetup } = useSetup.getState();
-  const update = (id: string, change: Partial<Opening>) =>
-    updateSetup((s) => ({ ...s, openings: s.openings.map((o) => (o.id === id ? { ...o, ...change } : o)) }));
+  const { selectWall, updateOpening, updateSetup } = useSetup.getState();
+  const setDraft = (change: Partial<typeof draft>) => useSetup.setState({ openingDraft: { ...draft, ...change } });
   if (walls.length === 0) return <p>Mark the corners first (step 3).</p>;
   return (
     <>
@@ -152,20 +149,16 @@ function OpeningsPanel() {
       <div className="rs-chips">
         {walls.map((wall) => (
           <button type="button" key={wall.id} className={wall.id === selectedWallId ? 'rs-chip rs-chip-on' : 'rs-chip'}
-            onClick={() => set({ selectedWallId: wall.id, openingDraft: { ...draft, first: undefined } })}>
+            onClick={() => selectWall(wall.id)}>
             {wall.name}
           </button>
         ))}
       </div>
       <div className="rs-row">
-        <label><input type="radio" checked={draft.kind === 'door'} onChange={() => set({ openingDraft: { ...draft, kind: 'door' } })} /> Door</label>
-        <label><input type="radio" checked={draft.kind === 'window'} onChange={() => set({ openingDraft: { ...draft, kind: 'window' } })} /> Window</label>
+        <label><input type="radio" checked={draft.kind === 'door'} onChange={() => setDraft({ kind: 'door' })} /> Door</label>
+        <label><input type="radio" checked={draft.kind === 'window'} onChange={() => setDraft({ kind: 'window' })} /> Window</label>
       </div>
-      {draft.kind === 'door' && (
-        <select value={draft.swing} onChange={(e) => set({ openingDraft: { ...draft, swing: e.target.value as NonNullable<Opening['swing']> } })}>
-          {SWINGS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
-      )}
+      {draft.kind === 'door' && <SwingSelect value={draft.swing} onChange={(swing) => setDraft({ swing })} />}
       <p className="rs-note">
         {!selectedWallId ? 'Pick a wall.' : draft.first ? 'Now click the opposite corner.' : `Click a corner of the ${draft.kind}.`}
       </p>
@@ -176,8 +169,8 @@ function OpeningsPanel() {
               <select value={opening.kind} onChange={(e) => {
                 const kind = e.target.value as Opening['kind'];
                 // A door starts at the floor.
-                update(opening.id, kind === 'door'
-                  ? { kind, bottom: 0, height: round(opening.bottom + opening.height), swing: opening.swing ?? 'in-left' }
+                updateOpening(opening.id, kind === 'door'
+                  ? { kind, bottom: 0, height: mm(opening.bottom + opening.height), swing: opening.swing ?? 'in-left' }
                   : { kind, swing: undefined });
               }}>
                 <option value="door">Door</option>
@@ -187,9 +180,7 @@ function OpeningsPanel() {
               <button type="button" className="rs-link" onClick={() => updateSetup((s) => ({ ...s, openings: s.openings.filter((o) => o.id !== opening.id) }))}>Delete</button>
             </div>
             {opening.kind === 'door' && (
-              <select value={opening.swing ?? 'none'} onChange={(e) => update(opening.id, { swing: e.target.value as NonNullable<Opening['swing']> })}>
-                {SWINGS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+              <SwingSelect value={opening.swing ?? 'none'} onChange={(swing) => updateOpening(opening.id, { swing })} />
             )}
             <small>{opening.width.toFixed(2)} × {opening.height.toFixed(2)} m, {opening.offset.toFixed(2)} m along, {opening.bottom.toFixed(2)} m up</small>
           </li>
@@ -205,16 +196,15 @@ function OriginalsPanel() {
   const selectedId = useSetup((s) => s.selectedOriginalId);
   const tagCategory = useSetup((s) => s.tagCategory);
   const notice = useSetup((s) => s.notice);
-  const { set, updateSetup } = useSetup.getState();
+  const { updateOriginal, updateSetup } = useSetup.getState();
   const selected = originals.find((o) => o.id === selectedId);
-  const update = (change: Partial<Original>) =>
-    updateSetup((s) => ({ ...s, originals: s.originals.map((o) => (o.id === selectedId ? { ...o, ...change } : o)) }));
+  const update = (change: Partial<Original>) => updateOriginal(selectedId!, change);
   return (
     <>
       <p>Choose what you're tagging, then click it in the room. Click a box to select it.</p>
       <label className="rs-field">
         <span>Next click tags a</span>
-        <CategorySelect value={tagCategory} onChange={(category) => set({ tagCategory: category })} />
+        <CategorySelect value={tagCategory} onChange={(category) => useSetup.setState({ tagCategory: category })} />
       </label>
       {notice && <p className="rs-note rs-warn">{notice}</p>}
       {selected && (
@@ -245,7 +235,7 @@ function OriginalsPanel() {
             <button type="button" title="Turn the front 90° right" onClick={() => update({ box: turned(selected.box, -1) })}>⟳ 90°</button>
             <button type="button" className="rs-link" onClick={() => {
               updateSetup((s) => ({ ...s, originals: s.originals.filter((o) => o.id !== selected.id) }));
-              set({ selectedOriginalId: undefined });
+              useSetup.setState({ selectedOriginalId: undefined });
             }}>Delete</button>
           </div>
           <small>The thick edge on the floor is the front.</small>
@@ -254,7 +244,7 @@ function OriginalsPanel() {
       <ul className="rs-list">
         {originals.map((o) => (
           <li key={o.id}>
-            <button type="button" className={o.id === selectedId ? 'rs-chip rs-chip-on' : 'rs-chip'} onClick={() => set({ selectedOriginalId: o.id })}>
+            <button type="button" className={o.id === selectedId ? 'rs-chip rs-chip-on' : 'rs-chip'} onClick={() => useSetup.setState({ selectedOriginalId: o.id })}>
               {o.label}
             </button>
             <small>{CATEGORY_NAMES[o.category]}{o.kept ? ' · Kept' : ''}</small>
@@ -268,13 +258,10 @@ function OriginalsPanel() {
 /** The box turned a quarter turn about its center, keeping its footprint on the floor: width and depth swap. */
 function turned(box: Original['box'], direction: 1 | -1): Original['box'] {
   const [w, h, d] = box.size;
-  const quarter = Math.PI / 2;
-  const turns = box.rotationY / quarter + direction;
-  // Whole quarter turns stay exact (π, not 3.141592…), and the angle stays in (−π, π].
-  let rotationY = Math.abs(turns - Math.round(turns)) < 1e-6 ? Math.round(turns) * quarter : turns * quarter;
-  if (rotationY > Math.PI) rotationY -= 2 * Math.PI;
-  if (rotationY <= -Math.PI) rotationY += 2 * Math.PI;
-  return { ...box, size: [d, h, w], rotationY };
+  const turns = box.rotationY / (Math.PI / 2) + direction;
+  // Whole quarter turns stay exact (π, not 3.141592…).
+  const quarters = Math.abs(turns - Math.round(turns)) < 1e-6 ? Math.round(turns) : turns;
+  return { ...box, size: [d, h, w], rotationY: wrapAngle(quarters * (Math.PI / 2)) };
 }
 
 function CategorySelect({ value, onChange }: { value: Category; onChange: (category: Category) => void }) {

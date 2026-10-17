@@ -1,6 +1,8 @@
 // Defaults for tagging Originals in Room Setup step 5.
-import type { Box, Category, Original, PartParams, Vec3, Wall } from '@shared/types';
-import { wallAxis } from './geometry/walls';
+import type { Box, Category, Original, PartParams, RoomSetup, Vec3, Wall } from '@shared/types';
+import { autoBox } from './geometry/autoBox';
+import { type TriangleMesh, mm } from './geometry/mesh';
+import { nearestWall, wallCoordinates, withAxis } from './geometry/walls';
 
 export const CATEGORY_NAMES: Record<Category, string> = {
   bed: 'Bed', desk: 'Desk', chair: 'Chair', table: 'Table', nightstand: 'Nightstand', sofa: 'Sofa',
@@ -40,43 +42,39 @@ export function newOriginal(category: Category, box: Box, existing: Original[]):
   };
 }
 
-// [width, height, depth] for a box placed by hand, when auto-box finds nothing (rugs are too flat
-// for it and wall art too close to the wall).
+// How each category is tagged when the Mover clicks it: auto-boxed (beds facing along their
+// length, everything else away from the nearest wall), or, for things too flat for auto-box (rugs)
+// or too close to their wall (wall art, mirrors), placed by hand at a usual size.
+const HANG_ON_WALL: Category[] = ['wall_art', 'mirror'];
+const BY_HAND: Category[] = ['rug', ...HANG_ON_WALL];
+// [width, height, depth] for a box placed by hand, including when auto-box finds nothing.
 const HAND_SIZES: Partial<Record<Category, Vec3>> = {
   rug: [1.5, 0.02, 1], wall_art: [0.6, 0.6, 0.04], mirror: [0.5, 1, 0.04], lamp: [0.3, 1.5, 0.3], plant: [0.4, 0.8, 0.4],
 };
 
 /**
- * A box of the category's usual size at a clicked point. Wall art and mirrors hang centered on the
- * click against the nearest wall; everything else stands on the floor.
+ * The box for a click on the scan while tagging a category, and whether auto-box found furniture
+ * there. When it didn't, the box is the category's usual size at the click, for the Mover to fit.
  */
-export function handPlacedBox(category: Category, [x, y, z]: Vec3, walls: Wall[]): Box {
-  const size = HAND_SIZES[category] ?? [0.5, 0.5, 0.5];
-  if (category === 'wall_art' || category === 'mirror') {
-    const wall = nearestWall(walls, x, z);
-    if (wall) {
-      const [nx, nz] = wall.normal;
-      const { dx, dz } = wallAxis(wall);
-      const along = (x - wall.start[0]) * dx + (z - wall.start[1]) * dz;
-      const [wx, wz] = [wall.start[0] + along * dx, wall.start[1] + along * dz];
-      return {
-        position: [mm(wx + nx * (size[2] / 2)), mm(Math.max(0, y - size[1] / 2)), mm(wz + nz * (size[2] / 2))],
-        size,
-        rotationY: Math.atan2(nx, nz),
-      };
-    }
+export function boxForClick(category: Category, room: TriangleMesh, point: Vec3, setup: RoomSetup): { box: Box; found: boolean } {
+  if (!BY_HAND.includes(category)) {
+    const box = autoBox(room, point, setup, category === 'bed' ? 'length' : 'away-from-wall');
+    if (box) return { box, found: true };
   }
-  return { position: [mm(x), 0, mm(z)], size, rotationY: 0 };
+  return { box: handPlacedBox(category, point, setup.walls), found: BY_HAND.includes(category) };
 }
 
-const mm = (v: number) => Math.round(v * 1000) / 1000;
-
-function nearestWall(walls: Wall[], x: number, z: number): Wall | undefined {
-  let best: Wall | undefined;
-  let bestDistance = Infinity;
-  for (const wall of walls) {
-    const d = Math.abs((x - wall.start[0]) * wall.normal[0] + (z - wall.start[1]) * wall.normal[1]);
-    if (d < bestDistance) [best, bestDistance] = [wall, d];
-  }
-  return best;
+/** A box of the category's usual size at a point: hung on the nearest wall for wall art and mirrors, otherwise standing on the floor. */
+function handPlacedBox(category: Category, [x, y, z]: Vec3, walls: Wall[]): Box {
+  const size = HAND_SIZES[category] ?? [0.5, 0.5, 0.5];
+  const { wall } = HANG_ON_WALL.includes(category) ? nearestWall(walls.map(withAxis), x, z) : { wall: undefined };
+  if (!wall) return { position: [mm(x), 0, mm(z)], size, rotationY: 0 };
+  const [nx, nz] = wall.normal;
+  const { along } = wallCoordinates(wall, x, z);
+  const [wx, wz] = [wall.start[0] + along * wall.dx, wall.start[1] + along * wall.dz];
+  return {
+    position: [mm(wx + nx * (size[2] / 2)), mm(Math.max(0, y - size[1] / 2)), mm(wz + nz * (size[2] / 2))],
+    size,
+    rotationY: Math.atan2(nx, nz),
+  };
 }

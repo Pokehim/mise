@@ -1,7 +1,7 @@
 // The per-triangle rules of the load-time split (spec §9.4), kept free of three.js so they can be tested.
 import type { RoomSetup, Vec2 } from '@shared/types';
 import type { TriangleInfo } from './mesh';
-import { wallAxis } from './walls';
+import { nearAnyWall, wallCoordinates, withAxis } from './walls';
 
 export type SplitGroup =
   | { kind: 'shell' } | { kind: 'floor' } | { kind: 'ceiling' }
@@ -27,7 +27,7 @@ export const SPLIT = {
   wallNormalDot: 0.7,
 };
 
-export interface TriangleClassifier {
+interface TriangleClassifier {
   /** Shell, Floor, Ceiling, then one per Wall and one per Original, in setup order. */
   groups: SplitGroup[];
   /** The index in `groups` of the first rule (spec §9.4) that matches the triangle, in the room frame. */
@@ -38,12 +38,11 @@ const SHELL = 0;
 const FLOOR = 1;
 const CEILING = 2;
 
+/** A triangle at this height, with this normal.y, faces up within the floor's band: rule 3, but for its polygon test. */
+export const onFloor = (y: number, ny: number) => Math.abs(y) < SPLIT.floorBand && ny > SPLIT.floorNormalY;
+
 export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
-  const walls = setup.walls.map((wall) => ({
-    ...wall,
-    ...wallAxis(wall),
-    openings: setup.openings.filter((o) => o.wallId === wall.id),
-  }));
+  const walls = setup.walls.map((wall) => ({ ...withAxis(wall), openings: setup.openings.filter((o) => o.wallId === wall.id) }));
   const boxes = setup.originals.map(({ box: { position: [px, py, pz], size: [w, h, d], rotationY } }) => ({
     px, py, pz, c: Math.cos(rotationY), s: Math.sin(rotationY),
     halfW: w / 2 + SPLIT.originalGrowth, halfD: d / 2 + SPLIT.originalGrowth,
@@ -53,21 +52,7 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
   const firstWall = 3;
   const firstOriginal = firstWall + walls.length;
 
-  /** The signed distance from a wall's plane (positive inside the room), and the distance along it from its start. */
-  const wallCoordinates = (wall: (typeof walls)[number], x: number, z: number) => {
-    const rx = x - wall.start[0];
-    const rz = z - wall.start[1];
-    return { depth: rx * wall.normal[0] + rz * wall.normal[1], along: rx * wall.dx + rz * wall.dz };
-  };
-
-  /** True when the point is within `band` of a wall's plane, beside the wall or within `band` past its ends (a corner). */
-  const nearAnyWall = (x: number, z: number, band: number) => walls.some((wall) => {
-    const { depth, along } = wallCoordinates(wall, x, z);
-    return Math.abs(depth) <= band && along >= -band && along <= wall.length + band;
-  });
-
-  const floorLike = (cx: number, cy: number, cz: number, ny: number) =>
-    Math.abs(cy) < SPLIT.floorBand && ny > SPLIT.floorNormalY && insidePolygon(polygon, cx, cz);
+  const floorLike = (cx: number, cy: number, cz: number, ny: number) => onFloor(cy, ny) && insidePolygon(polygon, cx, cz);
 
   function classify({ cx, cy, cz, nx, ny, nz }: TriangleInfo): number {
     // 1. Inside an Original's box, grown by 2 cm, above the floor and away from the walls. Added to
@@ -82,7 +67,7 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
         const lx = b.c * dx - b.s * dz;
         const lz = b.s * dx + b.c * dz;
         if (Math.abs(lx) <= b.halfW && Math.abs(lz) <= b.halfD && ly >= b.bottom && ly <= b.top
-          && !nearAnyWall(cx, cz, SPLIT.originalWallGap)) return firstOriginal + i;
+          && !nearAnyWall(walls, cx, cz, SPLIT.originalWallGap)) return firstOriginal + i;
       }
     }
     // 2. Ceiling.
@@ -114,7 +99,7 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
 }
 
 /** Even-odd test of a point on the floor plane against a polygon of (x, z) corners. */
-export function insidePolygon(polygon: Vec2[], x: number, z: number): boolean {
+function insidePolygon(polygon: Vec2[], x: number, z: number): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
     const [xi, zi] = polygon[i];

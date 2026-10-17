@@ -53,3 +53,6 @@ export function triangleInfo(mesh: TriangleMesh, t: number, out: TriangleInfo): 
 }
 
 export const newTriangleInfo = (): TriangleInfo => ({ cx: 0, cy: 0, cz: 0, nx: 0, ny: 0, nz: 0, area: 0 });
+
+/** Meters rounded to millimeters (and −0 to 0), which keeps float noise such as 0.4000000059604645 out of setup.json. */
+export const mm = (v: number) => Math.round(v * 1000) / 1000 + 0;

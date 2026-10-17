@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { CanvasTexture, type OrthographicCamera, type PerspectiveCamera, SRGBColorSpace, type Sprite } from 'three';
+import { CanvasTexture, MathUtils, type OrthographicCamera, type PerspectiveCamera, SRGBColorSpace, type Sprite } from 'three';
 import type { Vec3 } from '@shared/types';
 
 const FONT_PX = 12;
@@ -22,7 +22,7 @@ export function Label({ position, text, selected = false }: { position: Vec3; te
     // sprites are scaled by their distance in the shader, orthographic ones are not.
     const pixel = (camera as OrthographicCamera).isOrthographicCamera
       ? 1 / camera.zoom
-      : (2 * Math.tan(((camera as PerspectiveCamera).fov * Math.PI) / 360)) / size.height;
+      : (2 * Math.tan(MathUtils.degToRad((camera as PerspectiveCamera).fov) / 2)) / size.height;
     const { width, height } = texture.image as HTMLCanvasElement;
     ref.current?.scale.set((width / RATIO) * pixel, (height / RATIO) * pixel, 1);
   });

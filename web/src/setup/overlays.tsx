@@ -1,16 +1,16 @@
 // What each step draws over the scan, and its click handling.
 import { Edges, Line } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
-import type { RefObject } from 'react';
-import { DoubleSide, type Group, type Object3D } from 'three';
+import { memo, useMemo } from 'react';
+import { DoubleSide } from 'three';
 import type { Opening, Original, RoomSetup, Vec2, Vec3, Wall } from '@shared/types';
 import { BoxHandles } from './BoxHandles';
-import { autoBox } from './geometry/autoBox';
-import { Label } from './Label';
+import { mm } from './geometry/mesh';
 import { openingFromClicks } from './geometry/openings';
 import { wallAxis, wallsFromPolygon } from './geometry/walls';
-import { handPlacedBox, newOriginal } from './originals';
-import { type RoomBounds, useClickRaycast } from './SetupCanvas';
+import { Label } from './Label';
+import { boxForClick, newOriginal } from './originals';
+import type { RoomBounds } from './SetupCanvas';
 import { scanTriangles, useSetup } from './store';
 
 const ACCENT = '#e5b567';
@@ -27,7 +27,7 @@ export function CeilingPlane({ bounds }: { bounds: RoomBounds }) {
 }
 
 /** Corners within 8 cm of the previous or the first corner's x (or z) snap to it, so walls come out square. */
-export function snapCorner([x, z]: Vec2, polygon: Vec2[]): Vec2 {
+function snapCorner([x, z]: Vec2, polygon: Vec2[]): Vec2 {
   const tolerance = 0.08;
   const anchors = [polygon.at(-1), polygon[0]].filter((p): p is Vec2 => p !== undefined);
   const snap = (v: number, axis: 0 | 1) => anchors.map((p) => p[axis]).find((a) => Math.abs(a - v) < tolerance) ?? v;
@@ -61,7 +61,7 @@ export function CornersOverlay({ bounds }: { bounds: RoomBounds }) {
     const corner = e.nativeEvent.altKey ? ([mm(e.point.x), mm(e.point.z)] as Vec2) : snapCorner([e.point.x, e.point.z], polygon);
     updateSetup((s) => withPolygon(s, [...s.floor.polygon, corner]));
   };
-  const outline = polygon.length >= 2 ? [...polygon, ...(polygon.length >= 3 ? [polygon[0]] : [])] : [];
+  const outline = polygon.length >= 3 ? [...polygon, polygon[0]] : polygon;
   return (
     <>
       <mesh position={[(bounds.minX + bounds.maxX) / 2, 0, (bounds.minZ + bounds.maxZ) / 2]} rotation-x={-Math.PI / 2} onClick={onClick}>
@@ -90,22 +90,22 @@ export function OpeningsOverlay() {
   const { walls, openings } = useSetup((s) => s.setup!);
   const selectedWallId = useSetup((s) => s.selectedWallId);
   const draft = useSetup((s) => s.openingDraft);
-  const { set, updateSetup } = useSetup.getState();
+  const { selectWall, updateSetup } = useSetup.getState();
 
   const onWallClick = (wall: Wall) => (e: ThreeEvent<MouseEvent>) => {
     if (e.delta > 4) return;
     e.stopPropagation();
     if (wall.id !== selectedWallId) {
-      set({ selectedWallId: wall.id, openingDraft: { ...draft, first: undefined } });
+      selectWall(wall.id);
       return;
     }
     const point = e.point.toArray() as Vec3;
     if (!draft.first) {
-      set({ openingDraft: { ...draft, first: point } });
+      useSetup.setState({ openingDraft: { ...draft, first: point } });
       return;
     }
     const rect = openingFromClicks(wall, draft.first, point, draft.kind);
-    set({ openingDraft: { ...draft, first: undefined } });
+    useSetup.setState({ openingDraft: { ...draft, first: undefined } });
     if (rect.width < 0.05 || rect.height < 0.05) return;
     updateSetup((s) => ({
       ...s,
@@ -179,63 +179,53 @@ function OpeningOutline({ wall, opening }: { wall: Wall; opening: Opening }) {
   );
 }
 
-/** Steps 5 and 6: the Originals' boxes. In step 5, clicking furniture boxes it, and the selected box has handles. */
-export function OriginalsOverlay({ scan, editable }: { scan: RefObject<Group | null>; editable: boolean }) {
+/** Step 5: tag the furniture at a clicked point as an Original of the chosen category, and select it. */
+export function tagOriginalAt(point: Vec3) {
+  const { setup, manifest, scene, tagCategory, updateSetup } = useSetup.getState();
+  const { box, found } = boxForClick(tagCategory, scanTriangles(scene!, manifest!.meshTransform), point, setup!);
+  const original = newOriginal(tagCategory, box, setup!.originals);
+  updateSetup((s) => ({ ...s, originals: [...s.originals, original] }));
+  useSetup.setState({
+    selectedOriginalId: original.id,
+    notice: found ? undefined : 'Auto-box found no furniture there, so this box has a default size. Drag its handles to fit.',
+  });
+}
+
+/** Steps 5 and 6: the Originals' boxes. In step 5 a box can be selected, and the selected one has handles. */
+export function OriginalsOverlay({ editable }: { editable: boolean }) {
   const originals = useSetup((s) => s.setup!.originals);
   const selectedId = useSetup((s) => s.selectedOriginalId);
-  const step = useSetup((s) => s.step);
-  const boxes = new Map<string, Object3D>();
-
-  useClickRaycast(
-    () => (editable && scan.current ? [scan.current, ...boxes.values()] : []),
-    (point, object) => {
-      const { setup, manifest, scene, tagCategory, set, updateSetup } = useSetup.getState();
-      const hitBox = [...boxes].find(([, mesh]) => mesh === object)?.[0];
-      if (hitBox) {
-        set({ selectedOriginalId: hitBox, notice: undefined });
-        return;
-      }
-      // Rugs are too flat for auto-box, and wall art too close to its wall: place those by hand.
-      const byHand = tagCategory === 'rug' || tagCategory === 'wall_art' || tagCategory === 'mirror';
-      // A bed's front is its foot; anything else faces away from the nearest wall.
-      const facing = tagCategory === 'bed' ? 'length' : 'away-from-wall';
-      const found = byHand ? null : autoBox(scanTriangles(scene!, manifest!.meshTransform), point, setup!, facing);
-      const box = found ?? handPlacedBox(tagCategory, point, setup!.walls);
-      const original = newOriginal(tagCategory, box, setup!.originals);
-      updateSetup((s) => ({ ...s, originals: [...s.originals, original] }));
-      set({
-        selectedOriginalId: original.id,
-        notice: found || byHand ? undefined : 'Auto-box found no furniture there, so this box has a default size. Drag its handles to fit.',
-      });
-    },
-  );
-
   return (
     <>
       {originals.map((original) => (
-        <OriginalBox key={original.id} original={original} selected={editable && original.id === selectedId}
-          showPatch={step === 'bake'} register={(mesh) => { if (mesh) boxes.set(original.id, mesh); }} />
+        <OriginalBox key={original.id} original={original} selected={editable && original.id === selectedId} editable={editable} />
       ))}
       {editable && selectedId && <BoxHandles originalId={selectedId} />}
     </>
   );
 }
 
-function OriginalBox({ original, selected, showPatch, register }: {
-  original: Original; selected: boolean; showPatch: boolean; register: (mesh: Object3D | null) => void;
-}) {
+// Memoized, so dragging one box's handles doesn't rebuild every other box's lines.
+const OriginalBox = memo(function OriginalBox({ original, selected, editable }: { original: Original; selected: boolean; editable: boolean }) {
   const { position, size: [w, h, d], rotationY } = original.box;
   const color = selected ? ACCENT : original.kept ? '#a78bfa' : '#34d399';
+  const front = useMemo((): Vec3[] => [[-w / 2, 0.01, d / 2], [w / 2, 0.01, d / 2]], [w, d]);
+  const select = (e: ThreeEvent<MouseEvent>) => {
+    if (e.delta > 4) return;
+    e.stopPropagation();
+    useSetup.setState({ selectedOriginalId: original.id, notice: undefined });
+  };
   return (
     <group position={position} rotation-y={rotationY}>
-      <mesh ref={register} position={[0, h / 2, 0]}>
+      <mesh position={[0, h / 2, 0]} onClick={editable ? select : undefined}>
         <boxGeometry args={[w, h, d]} />
         <meshBasicMaterial color={color} transparent opacity={selected ? 0.18 : 0.08} depthWrite={false} />
         <Edges color={color} />
       </mesh>
       {/* The front (+Z) edge on the floor. */}
-      <Line points={[[-w / 2, 0.01, d / 2], [w / 2, 0.01, d / 2]]} color={color} lineWidth={4} />
-      {showPatch && (
+      <Line points={front} color={color} lineWidth={4} />
+      {/* Step 6: the simple Patch a replaced Original would leave, in its baked floorColor. */}
+      {!editable && (
         <mesh position={[0, 0.004 - position[1], 0]} rotation-x={-Math.PI / 2}>
           <planeGeometry args={[w + 0.1, d + 0.1]} />
           <meshBasicMaterial color={original.floorColor} />
@@ -244,13 +234,11 @@ function OriginalBox({ original, selected, showPatch, register }: {
       <Label position={[0, h + 0.1, 0]} text={`${original.label}${original.kept ? ' · Kept' : ''}`} selected={selected} />
     </group>
   );
-}
+});
 
 /** The next free id with a prefix, such as op_3. */
-export function nextId(prefix: string, existing: { id: string }[]) {
+function nextId(prefix: string, existing: { id: string }[]) {
   let n = 1;
   while (existing.some((e) => e.id === `${prefix}_${n}`)) n++;
   return `${prefix}_${n}`;
 }
-
-const mm = (v: number) => Math.round(v * 1000) / 1000;

@@ -19,8 +19,11 @@ export function luminanceAt(image: Pixels, u: number, v: number): number {
   const column = Math.min(image.width - 1, Math.floor(fraction(u) * image.width));
   const row = Math.min(image.height - 1, Math.floor(fraction(v) * image.height));
   const i = (row * image.width + column) * 4;
-  return 0.2126 * SRGB_TO_LINEAR[image.data[i]] + 0.7152 * SRGB_TO_LINEAR[image.data[i + 1]] + 0.0722 * SRGB_TO_LINEAR[image.data[i + 2]];
+  return luminance(SRGB_TO_LINEAR[image.data[i]], SRGB_TO_LINEAR[image.data[i + 1]], SRGB_TO_LINEAR[image.data[i + 2]]);
 }
+
+/** Rec. 709 luminance of a linear-light color, as three.js's `luminance()`. */
+export const luminance = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
 /**
  * The average color of the floor within `ring` meters around a box's footprint, as sRGB hex, or

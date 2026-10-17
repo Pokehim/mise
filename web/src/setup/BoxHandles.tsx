@@ -4,7 +4,7 @@ import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { useRef } from 'react';
 import { Plane, type Ray, Vector3 } from 'three';
 import type { Box } from '@shared/types';
-import { markHandleClick } from './SetupCanvas';
+import { mm } from './geometry/mesh';
 import { useSetup } from './store';
 
 type Handle = { kind: 'side'; axis: 0 | 2; sign: 1 | -1 } | { kind: 'top' } | { kind: 'move' };
@@ -22,13 +22,10 @@ export function BoxHandles({ originalId }: { originalId: string }) {
   if (!original) return null;
   const { position, size: [w, h, d], rotationY } = original.box;
 
-  const setBox = (box: Box) => useSetup.getState().updateSetup((s) => ({
-    ...s, originals: s.originals.map((o) => (o.id === originalId ? { ...o, box } : o)),
-  }));
+  const setBox = (box: Box) => useSetup.getState().updateOriginal(originalId, { box });
 
   const onDown = (handle: Handle) => (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
-    markHandleClick();
     (e.target as unknown as Element).setPointerCapture(e.pointerId);
     if (controls) controls.enabled = false;
     const start = original.box;
@@ -118,5 +115,3 @@ function axisParameter(origin: Vector3, axis: Vector3, ray: Ray): number | null 
 function floorPoint(ray: Ray, y: number): Vector3 | null {
   return ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), new Vector3());
 }
-
-const mm = (v: number) => Math.round(v * 1000) / 1000;

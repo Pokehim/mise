@@ -2,12 +2,13 @@
 // one per Wall and per Original, so walls can be painted and Originals hidden or moved.
 import {
   Box3, BufferAttribute, BufferGeometry, Group, type Material, Matrix3, Matrix4, Mesh, MeshBasicMaterial,
-  type MeshStandardMaterial, type Object3D, Quaternion, Sphere, type Texture, Vector2, Vector3,
+  type MeshStandardMaterial, type Object3D, Sphere, type Texture, Vector2, Vector3,
 } from 'three';
 import type { RoomSetup, ScanManifest } from '@shared/types';
 import { type SplitGroup, triangleClassifier } from '../setup/geometry/classify';
-import { type Pixels, luminanceAt } from '../setup/geometry/color';
+import { type Pixels, luminance, luminanceAt } from '../setup/geometry/color';
 import { type TriangleMesh, newTriangleInfo, triangleInfo } from '../setup/geometry/mesh';
+import { meshTriangles, toFrame } from '../setup/sceneTriangles';
 
 export interface SplitScan {
   shell: Object3D;
@@ -23,7 +24,6 @@ export interface SplitNodeData {
   id?: string;                          // the Wall or Original id
   /** Average linear-light luminance of the node's texture, for recolor's relLum (spec §10.6). */
   avgLuminance: number;
-  triangles: number;
 }
 
 /** Spec §9.4: sample the texture at the UV centroids of up to this many random triangles per node. */
@@ -64,9 +64,12 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
     const lists = Array.from(counts, (n) => new Uint32Array(n * 3));
     const filled = new Uint32Array(groups.length);
     for (let t = 0; t < count; t++) {
-      const group = assigned[t];
-      lists[group].set(index.subarray(3 * t, 3 * t + 3), filled[group]);
-      filled[group] += 3;
+      const list = lists[assigned[t]];
+      const f = filled[assigned[t]];
+      list[f] = index[3 * t];
+      list[f + 1] = index[3 * t + 1];
+      list[f + 2] = index[3 * t + 2];
+      filled[assigned[t]] = f + 3;
     }
     lists.forEach((list, group) => {
       if (list.length > 0) pieces[group].push({ primitive, index: list });
@@ -82,7 +85,6 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
       kind: group.kind,
       ...('id' in group && { id: group.id }),
       avgLuminance: averageLuminance(pieces[g], random),
-      triangles: pieces[g].reduce((n, piece) => n + piece.index.length / 3, 0),
     };
     node.userData = data;
     return node;
@@ -118,37 +120,27 @@ interface Primitive {
   material: Material;
   /** Room-frame attributes, shared by every piece cut from this primitive. */
   attributes: Record<string, BufferAttribute>;
-  uv?: BufferAttribute;
 }
 
 /** The triangles of one primitive that went to one node. */
 interface Piece { primitive: Primitive; index: Uint32Array }
 
 function roomFramePrimitives(gltfScene: Object3D, { meshTransform }: ScanManifest): Primitive[] {
-  gltfScene.updateMatrixWorld(true);
-  const toRoom = new Matrix4()
-    .compose(
-      new Vector3(...meshTransform.position),
-      new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), meshTransform.rotationY),
-      new Vector3(1, 1, 1),
-    )
-    .multiply(new Matrix4().copy(gltfScene.matrixWorld).invert());
+  const matrixOf = toFrame(gltfScene, meshTransform);
   const primitives: Primitive[] = [];
 
   gltfScene.traverse((object) => {
     if (!(object instanceof Mesh) || !object.geometry.attributes.position) return;
     const geometry = object.geometry as BufferGeometry;
-    const matrix = new Matrix4().multiplyMatrices(toRoom, object.matrixWorld);
-    const position = geometry.attributes.position;
-    const positions = new Float32Array(position.count * 3);
-    const v = new Vector3();
-    for (let i = 0; i < position.count; i++) v.fromBufferAttribute(position, i).applyMatrix4(matrix).toArray(positions, 3 * i);
+    const matrix = matrixOf(object);
+    const { positions, index } = meshTriangles(object, matrix);
 
     const attributes: Record<string, BufferAttribute> = { position: new BufferAttribute(positions, 3) };
     const normal = geometry.attributes.normal;
     if (normal) {
       const normals = new Float32Array(normal.count * 3);
       const normalMatrix = new Matrix3().getNormalMatrix(matrix);
+      const v = new Vector3();
       for (let i = 0; i < normal.count; i++) v.fromBufferAttribute(normal, i).applyMatrix3(normalMatrix).normalize().toArray(normals, 3 * i);
       attributes.normal = new BufferAttribute(normals, 3);
     }
@@ -163,20 +155,12 @@ function roomFramePrimitives(gltfScene: Object3D, { meshTransform }: ScanManifes
       attributes[name] = new BufferAttribute(copy, source.itemSize);
     }
 
-    const index = geometry.index
-      ? new Uint32Array(geometry.index.array)
-      : Uint32Array.from({ length: position.count - (position.count % 3) }, (_, i) => i);
     // A mesh with an array of materials draws each geometry group with its own material.
     const ranges = Array.isArray(object.material)
       ? geometry.groups.map((g) => ({ start: g.start, count: g.count, material: object.material[g.materialIndex ?? 0] }))
       : [{ start: 0, count: index.length, material: object.material as Material }];
     for (const { start, count, material } of ranges) {
-      primitives.push({
-        mesh: { positions, index: index.subarray(start, start + count - (count % 3)) },
-        material,
-        attributes,
-        uv: attributes.uv,
-      });
+      primitives.push({ mesh: { positions, index: index.subarray(start, start + count - (count % 3)) }, material, attributes });
     }
   });
   return primitives;
@@ -225,7 +209,7 @@ function pieceMesh({ primitive, index }: Piece): Mesh {
 }
 
 /** Scan nodes are unlit (spec §10.6): the texture already holds the room's real lighting. */
-function unlit(source: Material, vertexColors: boolean): MeshBasicMaterial {
+export function unlit(source: Material, vertexColors = source.vertexColors): MeshBasicMaterial {
   const s = source as Partial<MeshStandardMaterial>;
   const material = new MeshBasicMaterial({
     name: source.name,
@@ -243,6 +227,13 @@ function unlit(source: Material, vertexColors: boolean): MeshBasicMaterial {
 
 /** The mean luminance at the UV centroids of up to LUMINANCE_SAMPLES random triangles of a node. */
 function averageLuminance(pieces: Piece[], random: () => number): number {
+  // Each piece's texture pixels, and the luminance of its material's color, which tints the texture.
+  const sources = pieces.map(({ primitive }) => {
+    const { map, color } = primitive.material as Partial<MeshStandardMaterial>;
+    map?.updateMatrix();
+    return { map, tint: color ? luminance(color.r, color.g, color.b) : 1, pixels: map ? texturePixels(map) : null };
+  });
+  if (sources.some((source) => source.map && !source.pixels)) return FALLBACK_LUMINANCE;
   const counts = pieces.map((piece) => piece.index.length / 3);
   const total = counts.reduce((a, b) => a + b, 0);
   let sum = 0;
@@ -252,23 +243,17 @@ function averageLuminance(pieces: Piece[], random: () => number): number {
     let t = Math.floor(random() * total);
     let p = 0;
     while (t >= counts[p]) t -= counts[p++];
-    const { primitive, index } = pieces[p];
-    const material = primitive.material as Partial<MeshStandardMaterial>;
-    const color = material.color ? 0.2126 * material.color.r + 0.7152 * material.color.g + 0.0722 * material.color.b : 1;
-    const pixels = material.map && primitive.uv ? texturePixels(material.map) : null;
-    if (material.map && !pixels) return FALLBACK_LUMINANCE;
-    let luminance = color;
-    if (pixels) {
-      const a = index[3 * t];
-      const b = index[3 * t + 1];
-      const c = index[3 * t + 2];
-      const uvs = primitive.uv!;
+    const { map, tint, pixels } = sources[p];
+    const uvs = pieces[p].primitive.attributes.uv;
+    let sample = tint;
+    if (map && pixels && uvs) {
+      const { index } = pieces[p];
+      const [a, b, c] = [index[3 * t], index[3 * t + 1], index[3 * t + 2]];
       uv.set((uvs.getX(a) + uvs.getX(b) + uvs.getX(c)) / 3, (uvs.getY(a) + uvs.getY(b) + uvs.getY(c)) / 3);
-      material.map!.updateMatrix();
-      material.map!.transformUv(uv);   // texture transform, wrapping, and flipY → image space, row 0 at the top
-      luminance *= luminanceAt(pixels, uv.x, uv.y);
+      map.transformUv(uv);   // texture transform, wrapping, and flipY → image space, row 0 at the top
+      sample *= luminanceAt(pixels, uv.x, uv.y);
     }
-    sum += luminance;
+    sum += sample;
     samples++;
   }
   return samples > 0 ? sum / samples : FALLBACK_LUMINANCE;

@@ -45,3 +45,38 @@ export function wallAxis({ start, end }: Wall) {
   const length = Math.hypot(dx, dz);
   return { length, dx: dx / length, dz: dz / length };
 }
+
+/** A Wall with its axis worked out once, for code that measures many points against it. */
+export type AxisWall = Wall & ReturnType<typeof wallAxis>;
+export const withAxis = (wall: Wall): AxisWall => ({ ...wall, ...wallAxis(wall) });
+
+/** A point's signed distance from a wall's plane (positive inside the room), and its distance along the wall from its start. */
+export function wallCoordinates(wall: AxisWall, x: number, z: number) {
+  const rx = x - wall.start[0];
+  const rz = z - wall.start[1];
+  return { depth: rx * wall.normal[0] + rz * wall.normal[1], along: rx * wall.dx + rz * wall.dz };
+}
+
+/** True when the point is within `band` of a wall's plane, beside the wall or up to `band` past its ends (a corner). */
+export const nearAnyWall = (walls: AxisWall[], x: number, z: number, band: number) => walls.some((wall) => {
+  const { depth, along } = wallCoordinates(wall, x, z);
+  return Math.abs(depth) <= band && along >= -band && along <= wall.length + band;
+});
+
+/** The nearest wall the point is beside, and the point's distance from its plane. */
+export function nearestWall(walls: AxisWall[], x: number, z: number) {
+  let nearest: AxisWall | undefined;
+  let distance = Infinity;
+  for (const wall of walls) {
+    const { depth, along } = wallCoordinates(wall, x, z);
+    if (along >= 0 && along <= wall.length && Math.abs(depth) < distance) [nearest, distance] = [wall, Math.abs(depth)];
+  }
+  return { wall: nearest, distance };
+}
+
+/** The floor polygon's bounds: [minX, minZ, maxX, maxZ]. */
+export function polygonBounds(polygon: Vec2[]): [number, number, number, number] {
+  const xs = polygon.map(([x]) => x);
+  const zs = polygon.map(([, z]) => z);
+  return [Math.min(...xs), Math.min(...zs), Math.max(...xs), Math.max(...zs)];
+}

@@ -1,20 +1,39 @@
 import { Grid, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import { Canvas, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Color, type Group, type Mesh, type MeshBasicMaterial, type Object3D, Plane, Raycaster, Vector2, Vector3 } from 'three';
+import { Canvas, type RootState, type RootStore, type ThreeEvent, events, useThree } from '@react-three/fiber';
+import { memo, useEffect, useMemo, useState } from 'react';
+import { Box3, Color, type Intersection, type Mesh, type MeshBasicMaterial, type Object3D, Plane, Vector3 } from 'three';
 import type { Vec3 } from '@shared/types';
 import { disposeSplit, splitNodes, splitScan } from '../scene/splitScan';
-import { CeilingPlane, CornersOverlay, OpeningsOverlay, OriginalsOverlay } from './overlays';
+import { SPLIT } from './geometry/classify';
+import { polygonBounds, wallAxis } from './geometry/walls';
+import { CeilingPlane, CornersOverlay, OpeningsOverlay, OriginalsOverlay, tagOriginalAt } from './overlays';
 import { scanTriangles, type StepId, useSetup } from './store';
 
-export function SetupCanvas() {
-  const set = useSetup((s) => s.set);
+// Memoized: the page re-renders on every store change, and the scene subscribes to what it needs.
+export const SetupCanvas = memo(function SetupCanvas() {
   return (
-    <Canvas onCreated={({ gl }) => set({ renderer: gl })} gl={{ antialias: true }}>
+    <Canvas onCreated={({ gl }) => useSetup.setState({ renderer: gl })} events={visibleHitsOnly} gl={{ antialias: true }}>
       <color attach="background" args={['#1d1f23']} />
       <StepView />
     </Canvas>
   );
+});
+
+/**
+ * R3F's pointer events, minus hits nobody can see: above the ceiling clip, or on a hidden Original
+ * (three's raycaster tests both). A click then reaches the furniture, not the clipped-off ceiling.
+ */
+function visibleHitsOnly(store: RootStore) {
+  return {
+    ...events(store),
+    filter: (hits: Intersection[], state: RootState) => hits.filter(({ object, point }) =>
+      isShown(object) && !state.gl.clippingPlanes.some((plane) => plane.distanceToPoint(point) < 0)),
+  };
+}
+
+function isShown(object: Object3D | null): boolean {
+  for (; object; object = object.parent) if (!object.visible) return false;
+  return true;
 }
 
 function StepView() {
@@ -22,12 +41,16 @@ function StepView() {
   const ceilingHeight = useSetup((s) => s.setup!.ceilingHeight);
   // While corners are being clicked, frame the whole scan, not the polygon so far.
   const bounds = useRoomBounds(step !== 'corners');
-  const scanRef = useRef<Group>(null);
-  useCeilingClip(step === 'level' || step === 'ceiling' ? null : ceilingHeight - 0.05);
+  useCeilingClip(step === 'level' || step === 'ceiling' ? null : ceilingHeight - SPLIT.ceilingBand);
+  const tagOnClick = (e: ThreeEvent<MouseEvent>) => {
+    if (e.delta > 4) return;   // the end of an orbit drag, not a click
+    e.stopPropagation();
+    tagOriginalAt(e.point.toArray());
+  };
   return (
     <>
       <StepCamera step={step} bounds={bounds} />
-      <group ref={scanRef}>
+      <group onClick={step === 'originals' ? tagOnClick : undefined}>
         <ScanView />
       </group>
       {step === 'level' && (
@@ -36,36 +59,27 @@ function StepView() {
       {step === 'ceiling' && <CeilingPlane bounds={bounds} />}
       {step === 'corners' && <CornersOverlay bounds={bounds} />}
       {step === 'openings' && <OpeningsOverlay />}
-      {(step === 'originals' || step === 'bake') && <OriginalsOverlay scan={scanRef} editable={step === 'originals'} />}
+      {(step === 'originals' || step === 'bake') && <OriginalsOverlay editable={step === 'originals'} />}
     </>
   );
 }
 
 /** The room's extent on the floor: the floor polygon once it exists (and `usePolygon`), otherwise the scan's bounds. */
-export interface RoomBounds { minX: number; maxX: number; minZ: number; maxZ: number; maxY: number }
+export interface RoomBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 
 function useRoomBounds(usePolygon: boolean): RoomBounds {
   const scene = useSetup((s) => s.scene!);
   const meshTransform = useSetup((s) => s.manifest!.meshTransform);
   const polygon = useSetup((s) => s.setup!.floor.polygon);
+  const scanBounds = useMemo(() => {
+    const { min, max } = new Box3().setFromArray(scanTriangles(scene, meshTransform).positions);
+    return { minX: min.x, maxX: max.x, minZ: min.z, maxZ: max.z };
+  }, [scene, meshTransform]);
   return useMemo(() => {
-    const { positions } = scanTriangles(scene, meshTransform);
-    const b = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, maxY: -Infinity };
-    for (let i = 0; i < positions.length; i += 3) {
-      b.minX = Math.min(b.minX, positions[i]);
-      b.maxX = Math.max(b.maxX, positions[i]);
-      b.maxY = Math.max(b.maxY, positions[i + 1]);
-      b.minZ = Math.min(b.minZ, positions[i + 2]);
-      b.maxZ = Math.max(b.maxZ, positions[i + 2]);
-    }
-    if (usePolygon && polygon.length >= 3) {
-      b.minX = Math.min(...polygon.map(([x]) => x));
-      b.maxX = Math.max(...polygon.map(([x]) => x));
-      b.minZ = Math.min(...polygon.map(([, z]) => z));
-      b.maxZ = Math.max(...polygon.map(([, z]) => z));
-    }
-    return b;
-  }, [scene, meshTransform, polygon, usePolygon]);
+    if (!usePolygon || polygon.length < 3) return scanBounds;
+    const [minX, minZ, maxX, maxZ] = polygonBounds(polygon);
+    return { minX, maxX, minZ, maxZ };
+  }, [scanBounds, polygon, usePolygon]);
 }
 
 /** Corners looks straight down with North (−Z) up; Openings faces the selected wall; the rest orbit from above. */
@@ -73,9 +87,11 @@ function StepCamera({ step, bounds }: { step: StepId; bounds: RoomBounds }) {
   const size = useThree((s) => s.size);
   const walls = useSetup((s) => s.setup!.walls);
   const selectedWallId = useSetup((s) => s.selectedWallId);
-  const cx = (bounds.minX + bounds.maxX) / 2;
-  const cz = (bounds.minZ + bounds.maxZ) / 2;
-  const span = Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ, 1);
+  // Framing rounded to 10 cm, so small edits (a Level slider tick) don't reset the camera.
+  const round = (v: number) => Math.round(v * 10) / 10;
+  const cx = round((bounds.minX + bounds.maxX) / 2);
+  const cz = round((bounds.minZ + bounds.maxZ) / 2);
+  const span = Math.max(round(bounds.maxX - bounds.minX), round(bounds.maxZ - bounds.minZ), 1);
 
   if (step === 'corners') {
     const zoom = 0.85 * Math.min(size.width / (bounds.maxX - bounds.minX + 0.5), size.height / (bounds.maxZ - bounds.minZ + 0.5));
@@ -92,7 +108,7 @@ function StepCamera({ step, bounds }: { step: StepId; bounds: RoomBounds }) {
   let target: Vec3 = [cx, 0.8, cz];
   if (wall) {
     const mid = [(wall.start[0] + wall.end[0]) / 2, (wall.start[1] + wall.end[1]) / 2];
-    const back = Math.max(1.6, 0.9 * Math.hypot(wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]));
+    const back = Math.max(1.6, 0.9 * wallAxis(wall).length);
     target = [mid[0], wall.height / 2, mid[1]];
     position = [mid[0] + wall.normal[0] * back, wall.height / 2, mid[1] + wall.normal[1] * back];
   }
@@ -139,7 +155,6 @@ function SplitPreview() {
   const setup = useDebounced(useSetup((s) => s.setup!), 250);
   const manifest = useDebounced(useSetup((s) => s.manifest!), 250);
   const hidden = useSetup((s) => s.hiddenOriginals);
-  const set = useSetup((s) => s.set);
   const split = useMemo(() => {
     const started = performance.now();
     const result = splitScan(scene, setup, manifest);
@@ -150,9 +165,9 @@ function SplitPreview() {
     return { result, ms };
   }, [scene, setup, manifest]);
   useEffect(() => {
-    set({ lastSplitMs: split.ms });
+    useSetup.setState({ lastSplitMs: split.ms });
     return () => disposeSplit(split.result);
-  }, [split, set]);
+  }, [split]);
   return (
     <>
       {splitNodes(split.result).map((node) => (
@@ -170,53 +185,4 @@ function useDebounced<T>(value: T, ms: number): T {
     return () => clearTimeout(timer);
   }, [value, ms]);
   return debounced;
-}
-
-/**
- * Calls `onClick` with the point and object under a click (not a drag) on any of `targets`.
- * Raycasting a 300k-triangle scan on every pointer move, as R3F's own events do, would stutter, so
- * this raycasts only on click.
- */
-export function useClickRaycast(targets: () => Object3D[], onClick: (point: Vec3, object: Object3D) => void) {
-  const gl = useThree((s) => s.gl);
-  const camera = useThree((s) => s.camera);
-  const latest = useRef({ targets, onClick, camera });
-  latest.current = { targets, onClick, camera };
-  useEffect(() => {
-    const element = gl.domElement;
-    let down: { x: number; y: number } | null = null;
-    const onDown = (e: PointerEvent) => { down = e.button === 0 ? { x: e.clientX, y: e.clientY } : null; };
-    const onUp = (e: PointerEvent) => {
-      if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4 || consumeHandleClick()) return;
-      const rect = element.getBoundingClientRect();
-      const ndc = new Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
-      const raycaster = new Raycaster();
-      raycaster.setFromCamera(ndc, latest.current.camera);
-      const hit = raycaster.intersectObjects(latest.current.targets(), true)
-        .find((h) => isShown(h.object) && !isClipped(h.point, gl.clippingPlanes));
-      if (hit) latest.current.onClick(hit.point.toArray(), hit.object);
-    };
-    element.addEventListener('pointerdown', onDown);
-    element.addEventListener('pointerup', onUp);
-    return () => {
-      element.removeEventListener('pointerdown', onDown);
-      element.removeEventListener('pointerup', onUp);
-    };
-  }, [gl]);
-}
-
-const isClipped = (point: Vector3, planes: Plane[]) => planes.some((plane) => plane.distanceToPoint(point) < 0);
-
-function isShown(object: Object3D | null): boolean {
-  for (; object; object = object.parent) if (!object.visible) return false;
-  return true;
-}
-
-// A drag that starts on a box handle must not also count as a click on the scan behind it.
-let handleClick = false;
-export const markHandleClick = () => { handleClick = true; };
-function consumeHandleClick() {
-  const was = handleClick;
-  handleClick = false;
-  return was;
 }

@@ -3,6 +3,7 @@ import { type Object3D, OrthographicCamera, Scene, type WebGLRenderer, WebGLRend
 import type { Hex, RoomSetup, ScanManifest } from '@shared/types';
 import { disposeSplit, splitScan } from '../scene/splitScan';
 import { type FloorImage, ringColor } from './geometry/color';
+import { polygonBounds } from './geometry/walls';
 
 /** 1 cm per pixel, up to 2048 pixels a side. */
 const PIXEL = 0.01;
@@ -18,9 +19,8 @@ export function bakeFloorColors(
   renderer: WebGLRenderer, gltfScene: Object3D, setup: RoomSetup, manifest: ScanManifest,
 ): Record<string, Hex> {
   const split = splitScan(gltfScene, setup, manifest);
-  const xs = setup.floor.polygon.map(([x]) => x);
-  const zs = setup.floor.polygon.map(([, z]) => z);
-  const [minX, maxX, minZ, maxZ] = [Math.min(...xs) - MARGIN, Math.max(...xs) + MARGIN, Math.min(...zs) - MARGIN, Math.max(...zs) + MARGIN];
+  const [x0, z0, x1, z1] = polygonBounds(setup.floor.polygon);
+  const [minX, maxX, minZ, maxZ] = [x0 - MARGIN, x1 + MARGIN, z0 - MARGIN, z1 + MARGIN];
   const pixel = Math.max(PIXEL, (maxX - minX) / MAX_PIXELS, (maxZ - minZ) / MAX_PIXELS);
   const width = Math.ceil((maxX - minX) / pixel);
   const height = Math.ceil((maxZ - minZ) / pixel);

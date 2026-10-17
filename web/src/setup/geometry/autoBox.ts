@@ -1,11 +1,11 @@
 // Room Setup step 5 (spec §9.3): click a piece of furniture, get a box around it.
 import type { Box, RoomSetup, Vec3 } from '@shared/types';
-import { SPLIT } from './classify';
-import type { TriangleMesh } from './mesh';
-import { wallAxis } from './walls';
+import { SPLIT, onFloor } from './classify';
+import { type TriangleMesh, mm, newTriangleInfo, triangleInfo } from './mesh';
+import { type AxisWall, nearAnyWall, nearestWall, withAxis } from './walls';
 
 /** The thresholds of spec §9.3 step 5, in meters, plus the two this implementation adds. */
-export const AUTO_BOX = {
+const AUTO_BOX = {
   /**
    * Horizontal reach from the click. Spec §9.3 says 1.0 m, which can't take in a 2.03 m twin XL
    * bed even when clicked at its middle; 1.25 m does when clicked within 20 cm of it.
@@ -31,8 +31,8 @@ export type Facing = 'away-from-wall' | 'length';
  *
  * The triangles' surfaces are sampled every half voxel, not only their vertices, because a
  * simplified scan has few vertices on its flat tops. Samples within `radius` (horizontally) of the
- * click, above `minY`, below the ceiling and more than `wallGap` from every wall are voxelized
- * (leaving out the floor's bumps: up-facing triangles the split would call floor), and
+ * click, above `minY`, below the ceiling and more than `wallGap` from every wall (and its ends, so
+ * a room's corners too) are voxelized, leaving out the floor's bumps, which the split calls floor; and
  * the voxels touching the click's voxel are grown into a region. The region's bounds, in the room
  * frame (whose axes the walls already follow after step 1), become the box. Its front faces as
  * `facing` says.
@@ -40,24 +40,14 @@ export type Facing = 'away-from-wall' | 'length';
 export function autoBox(
   mesh: TriangleMesh, click: Vec3, room: Pick<RoomSetup, 'walls' | 'ceilingHeight'>, facing: Facing = 'away-from-wall',
 ): Box | null {
-  const walls = room.walls.map((wall) => ({ ...wall, ...wallAxis(wall) }));
+  const walls = room.walls.map(withAxis);
   const voxels = new Map<number, Float64Array>();   // voxel key → [minX, minY, minZ, maxX, maxY, maxZ]
   const [clickX, , clickZ] = click;
-  const maxY = room.ceilingHeight - 0.05;
+  const maxY = room.ceilingHeight - SPLIT.ceilingBand;
 
-  const keep = (x: number, y: number, z: number) => {
-    if (y <= AUTO_BOX.minY || y >= maxY || Math.hypot(x - clickX, z - clickZ) > AUTO_BOX.radius) return false;
-    return !walls.some((wall) => {
-      const rx = x - wall.start[0];
-      const rz = z - wall.start[1];
-      const along = rx * wall.dx + rz * wall.dz;
-      // Each wall reaches wallGap past its ends, so a corner's column of samples is left out too.
-      return Math.abs(rx * wall.normal[0] + rz * wall.normal[1]) <= AUTO_BOX.wallGap
-        && along >= -AUTO_BOX.wallGap && along <= wall.length + AUTO_BOX.wallGap;
-    });
-  };
-  const addSample = (x: number, y: number, z: number, facesUp: boolean) => {
-    if ((facesUp && y < SPLIT.floorBand) || !keep(x, y, z)) return;
+  const addSample = (x: number, y: number, z: number, ny: number) => {
+    if (y <= AUTO_BOX.minY || y >= maxY || onFloor(y, ny) || Math.hypot(x - clickX, z - clickZ) > AUTO_BOX.radius
+      || nearAnyWall(walls, x, z, AUTO_BOX.wallGap)) return;
     const key = voxelKey(Math.floor(x / AUTO_BOX.voxel), Math.floor(y / AUTO_BOX.voxel), Math.floor(z / AUTO_BOX.voxel));
     const b = voxels.get(key);
     if (!b) voxels.set(key, Float64Array.of(x, y, z, x, y, z));
@@ -69,6 +59,7 @@ export function autoBox(
 
   const p = mesh.positions;
   const spacing = AUTO_BOX.voxel / 2;
+  const info = newTriangleInfo();
   for (let t = 0; t < mesh.index.length; t += 3) {
     const a = 3 * mesh.index[t];
     const b = 3 * mesh.index[t + 1];
@@ -79,7 +70,7 @@ export function autoBox(
     if (Math.hypot(dx, dz) > AUTO_BOX.radius) continue;
     const edge = Math.max(distance(p, a, b), distance(p, b, c), distance(p, c, a));
     const n = Math.max(1, Math.ceil(edge / spacing));
-    const facesUp = upNormalY(p, a, b, c) > SPLIT.floorNormalY;
+    const { ny } = triangleInfo(mesh, t / 3, info);
     for (let i = 0; i <= n; i++) {
       for (let j = 0; i + j <= n; j++) {
         const u = i / n;
@@ -88,7 +79,7 @@ export function autoBox(
           p[a] + u * (p[b] - p[a]) + v * (p[c] - p[a]),
           p[a + 1] + u * (p[b + 1] - p[a + 1]) + v * (p[c + 1] - p[a + 1]),
           p[a + 2] + u * (p[b + 2] - p[a + 2]) + v * (p[c + 2] - p[a + 2]),
-          facesUp,
+          ny,
         );
       }
     }
@@ -172,22 +163,6 @@ function growRegion(voxels: Map<number, Float64Array>, seed: number): number[] {
   return bounds;
 }
 
-type AxisWall = RoomSetup['walls'][number] & ReturnType<typeof wallAxis>;
-
-/** The nearest wall whose extent the point is beside, and the point's distance from its plane. */
-function nearestWall(walls: AxisWall[], x: number, z: number) {
-  let nearest: AxisWall | undefined;
-  let distance = Infinity;
-  for (const wall of walls) {
-    const rx = x - wall.start[0];
-    const rz = z - wall.start[1];
-    const along = rx * wall.dx + rz * wall.dz;
-    const depth = Math.abs(rx * wall.normal[0] + rz * wall.normal[1]);
-    if (along >= 0 && along <= wall.length && depth < distance) [nearest, distance] = [wall, depth];
-  }
-  return { wall: nearest, distance };
-}
-
 /** The rotationY that turns a box's +Z front to the inward normal of the nearest wall, snapped to an axis. */
 function frontAwayFromNearestWall(walls: AxisWall[], x: number, z: number) {
   const front = nearestWall(walls, x, z).wall?.normal ?? [0, 1];
@@ -206,15 +181,4 @@ function frontAlongLength(walls: AxisWall[], [x0, , z0, x1, , z1]: number[]) {
   return headAtLowZ ? 0 : Math.PI;
 }
 
-/** The y component of a triangle's unit normal. */
-function upNormalY(p: Float32Array, a: number, b: number, c: number) {
-  const [abx, aby, abz] = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
-  const [acx, acy, acz] = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
-  const ny = abz * acx - abx * acz;
-  return ny / (Math.hypot(aby * acz - abz * acy, ny, abx * acy - aby * acx) || 1);
-}
-
 const distance = (p: Float32Array, a: number, b: number) => Math.hypot(p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]);
-
-/** Meters to millimeters, which keeps float32 noise such as 0.4000000059604645 out of setup.json. */
-const mm = (v: number) => Math.round(v * 1000) / 1000 + 0;

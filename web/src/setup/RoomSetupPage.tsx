@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { Link } from 'wouter';
+import { useShallow } from 'zustand/react/shallow';
 import type { RoomSetup, ScanManifest } from '@shared/types';
+import { UNBAKED_FLOOR_COLOR } from './originals';
 import { StepPanel } from './panels';
 import { SetupCanvas } from './SetupCanvas';
-import { hasUnsavedChanges, STEPS, type StepId, useSetup } from './store';
-import { UNBAKED_FLOOR_COLOR } from './originals';
+import { hasUnsavedChanges, isLeveled, STEPS, type StepId, useSetup } from './store';
 import './setup.css';
 
 // Room Setup (spec §9.3): a stepper that turns a raw capture into a usable Scan.
@@ -31,16 +32,19 @@ export function RoomSetupPage({ params }: { params: { scanId: string } }) {
 }
 
 function SetupLayout() {
-  const { manifest, setup, step, status, message, preview } = useSetup();
-  const unsaved = useSetup(hasUnsavedChanges);
-  const { setStep, save, set } = useSetup.getState();
+  const { name, step, status, message, preview, unsaved } = useSetup(useShallow((s) => ({
+    name: s.manifest!.name, step: s.step, status: s.status, message: s.message, preview: s.preview, unsaved: hasUnsavedChanges(s),
+  })));
+  const done = useSetup(useShallow((s) => STEPS.map(({ id }) => isDone(id, s.manifest!, s.setup!))));
+  const { setStep, save } = useSetup.getState();
+  const stepIndex = STEPS.findIndex((s) => s.id === step);
   return (
     <div className="rs">
       <header className="rs-header">
         <Link href="/">← Scans</Link>
-        <h1>Room Setup <span>· {manifest!.name}</span></h1>
+        <h1>Room Setup <span>· {name}</span></h1>
         <label className="rs-toggle">
-          <input type="checkbox" checked={preview} onChange={(e) => set({ preview: e.target.checked })} />
+          <input type="checkbox" checked={preview} onChange={(e) => useSetup.setState({ preview: e.target.checked })} />
           Preview split
         </label>
         <span className="rs-status">{status === 'saving' ? 'Saving…' : message ?? (unsaved ? 'Unsaved changes' : 'Saved')}</span>
@@ -51,14 +55,14 @@ function SetupLayout() {
           {STEPS.map((s, i) => (
             <li key={s.id}>
               <button type="button" className={s.id === step ? 'rs-step rs-step-on' : 'rs-step'} onClick={() => setStep(s.id)}>
-                <span className="rs-step-number">{isDone(s.id, manifest!, setup!) ? '✓' : i + 1}</span>
+                <span className="rs-step-number">{done[i] ? '✓' : i + 1}</span>
                 {s.title}
               </button>
             </li>
           ))}
         </ol>
         <section className="rs-panel">
-          <h2>{STEPS.findIndex((s) => s.id === step) + 1}. {STEPS.find((s) => s.id === step)!.title}</h2>
+          <h2>{stepIndex + 1}. {STEPS[stepIndex].title}</h2>
           <StepPanel step={step} />
         </section>
       </aside>
@@ -72,7 +76,7 @@ function SetupLayout() {
 
 function isDone(step: StepId, manifest: ScanManifest, setup: RoomSetup): boolean {
   switch (step) {
-    case 'level': return manifest.meshTransform.rotationY !== 0 || manifest.meshTransform.position.some((v) => v !== 0);
+    case 'level': return isLeveled(manifest);
     case 'ceiling': return setup.walls.length > 0;
     case 'corners': return setup.walls.length >= 3;
     case 'openings': return setup.openings.length > 0;
@@ -86,7 +90,6 @@ function PreviewPanel() {
   const originals = useSetup((s) => s.setup!.originals);
   const hidden = useSetup((s) => s.hiddenOriginals);
   const ms = useSetup((s) => s.lastSplitMs);
-  const set = useSetup((s) => s.set);
   return (
     <div className="rs-preview">
       <strong>Split preview</strong>
@@ -94,7 +97,8 @@ function PreviewPanel() {
       {originals.length === 0 && <small>No Originals yet.</small>}
       {originals.map((o) => (
         <label key={o.id} className="rs-check">
-          <input type="checkbox" checked={!!hidden[o.id]} onChange={(e) => set({ hiddenOriginals: { ...hidden, [o.id]: e.target.checked } })} />
+          <input type="checkbox" checked={!!hidden[o.id]}
+            onChange={(e) => useSetup.setState({ hiddenOriginals: { ...hidden, [o.id]: e.target.checked } })} />
           Hide {o.label}
         </label>
       ))}

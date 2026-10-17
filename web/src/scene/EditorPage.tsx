@@ -3,6 +3,7 @@ import type { Camera } from 'three';
 import { Link } from 'wouter';
 import { useEditor } from '../state/store';
 import { CatalogPanel } from '../ui/CatalogPanel';
+import { Inspector } from '../ui/Inspector';
 import { TopBar } from '../ui/TopBar';
 import { addPiece, removePiece, rotatePiece } from './pieceEdits';
 import { SceneCanvas } from './SceneCanvas';
@@ -46,6 +47,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
       <TopBar />
       <CatalogPanel onAdd={(item) => camera.current && addPiece(item, camera.current)} />
       <SceneCanvas cameraRef={camera} />
+      <Inspector />
       <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
     </div>
   );

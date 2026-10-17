@@ -1,9 +1,10 @@
 import { Environment, Stats } from '@react-three/drei';
 import { Canvas, events } from '@react-three/fiber';
-import { Component, type ReactNode, type RefObject, Suspense, useRef } from 'react';
-import { type Camera, NeutralToneMapping } from 'three';
+import { Component, type DragEvent, type ReactNode, type RefObject, Suspense, useRef } from 'react';
+import { type Camera, NeutralToneMapping, Vector2 } from 'three';
 import { useShallow } from 'zustand/react/shallow';
 import { useEditor } from '../state/store';
+import { CATALOG_ITEM_TYPE } from '../ui/CatalogPanel';
 import { DollhouseCamera } from './DollhouseCamera';
 import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
@@ -13,7 +14,7 @@ import { WalkControls } from './WalkControls';
 
 /**
  * Loads its children in the background, and renders nothing in their place if they fail, so one
- * bad asset can't blank the editor.
+ * bad file can't blank the editor.
  */
 class Optional extends Component<{ what: string; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -41,12 +42,31 @@ function Pieces() {
 
 const debug = new URLSearchParams(location.search).has('debug');
 
+interface SceneCanvasProps {
+  cameraRef: RefObject<Camera | null>;
+  /** A Catalog card dropped on the view, and where, in normalized device coordinates. */
+  onDropItem: (itemId: string, at: Vector2) => void;
+}
+
 /** The 3D view: the Scan, the Pieces, and the camera for the current view, which it shares through cameraRef. */
-export function SceneCanvas({ cameraRef }: { cameraRef: RefObject<Camera | null> }) {
+export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
   const view = useEditor((s) => s.view);
   const container = useRef<HTMLDivElement>(null!);
+  const onDrop = (event: DragEvent) => {
+    const itemId = event.dataTransfer.getData(CATALOG_ITEM_TYPE);
+    if (!itemId) return;
+    const { left, top, width, height } = container.current.getBoundingClientRect();
+    onDropItem(itemId, new Vector2(((event.clientX - left) / width) * 2 - 1, -((event.clientY - top) / height) * 2 + 1));
+  };
   return (
-    <div className="view" ref={container}>
+    <div
+      className="view"
+      ref={container}
+      onDragOver={(event) => {
+        if (event.dataTransfer.types.includes(CATALOG_ITEM_TYPE)) event.preventDefault();
+      }}
+      onDrop={onDrop}
+    >
       <Canvas
         camera={{ fov: 55, near: 0.05, far: 100, position: [0, 5, 5] }}
         gl={{ localClippingEnabled: true, toneMapping: NeutralToneMapping }}

@@ -11,10 +11,13 @@ export function floorHit(ray: Ray, y = 0): Vec2 | null {
   return hit && [hit.x, hit.z];
 }
 
-/** The floor point under the center of the view, or the point under the camera when it looks above the floor. */
-export function viewCenterOnFloor(camera: Camera): Vec2 {
+/**
+ * The floor point under a point of the view, given in normalized device coordinates (the view
+ * center by default), or the point under the camera when that looks above the floor.
+ */
+export function floorPointInView(camera: Camera, at = new Vector2(0, 0)): Vec2 {
   const raycaster = new Raycaster();
-  raycaster.setFromCamera(new Vector2(0, 0), camera);
+  raycaster.setFromCamera(at, camera);
   return floorHit(raycaster.ray) ?? [camera.position.x, camera.position.z];
 }
 

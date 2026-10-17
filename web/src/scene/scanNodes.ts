@@ -55,7 +55,7 @@ function wallMesh(wall: Wall, setup: RoomSetup) {
   const length = along.length();
   const outline = new Shape([new Vector2(0, 0), new Vector2(length, 0), new Vector2(length, wall.height), new Vector2(0, wall.height)]);
   for (const opening of setup.openings.filter((o) => o.wallId === wall.id)) {
-    // Lift door holes off the bottom edge: a hole touching the outline doesn't triangulate.
+    // Lift doors off the bottom edge: a cutout that touches the outline doesn't triangulate.
     const bottom = Math.max(opening.bottom, 0.001);
     const [left, right, top] = [opening.offset, opening.offset + opening.width, opening.bottom + opening.height];
     outline.holes.push(new Path([new Vector2(left, bottom), new Vector2(right, bottom), new Vector2(right, top), new Vector2(left, top)]));

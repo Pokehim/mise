@@ -4,7 +4,7 @@ import { Euler, EventDispatcher, MathUtils, Vector3 } from 'three';
 import { useEditor } from '../state/store';
 import { floorGeometry, keepInside } from './floorPlan';
 import { CLICK_TOLERANCE_PX } from './objects';
-import { viewCenterOnFloor } from './placement';
+import { floorPointInView } from './placement';
 
 const EYE_HEIGHT = 1.6;
 const GLIDE_SECONDS = 0.4;
@@ -44,7 +44,7 @@ export function WalkControls() {
   useLayoutEffect(() => {
     const { x: pitch, y: yaw } = new Euler().setFromQuaternion(camera.quaternion, 'YXZ');
     look.current = { yaw, pitch };
-    const [x, z] = viewCenterOnFloor(camera);
+    const [x, z] = floorPointInView(camera);
     // The camera looks along (-sin yaw, -cos yaw), so step back the other way.
     glideTo(x + Math.sin(yaw) * STEP_BACK, z + Math.cos(yaw) * STEP_BACK, START_PITCH);
   }, []);   // only when the Walk view opens

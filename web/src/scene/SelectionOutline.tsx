@@ -1,5 +1,5 @@
 import { Hud, Outlines } from '@react-three/drei';
-import type { RoomSetup, Vec3 } from '@shared/types';
+import type { RoomSetup, RoomState, Vec3 } from '@shared/types';
 import { type Selection, useEditor } from '../state/store';
 import { wallLength, wallPoint, wallRotationY } from './floorPlan';
 import { ignoreRaycast } from './objects';
@@ -12,14 +12,16 @@ export const Outline = ({ renderOrder, angle = 0 }: { renderOrder?: number; angl
   <Outlines color="#1a73e8" thickness={4} angle={angle} renderOrder={renderOrder} />
 );
 
-type Box = { center: Vec3; size: Vec3; rotationY: number };
+type OutlineBox = { center: Vec3; size: Vec3; rotationY: number };
 
-/** The box to outline for the selected Original or Wall, from the Room Setup. */
-function selectedBox(selection: Selection | null, setup: RoomSetup): Box | null {
+/** The box to outline for the selected Original (its Room Setup box, where it is now) or Wall. */
+function selectedBox(selection: Selection | null, setup: RoomSetup, roomState: RoomState): OutlineBox | null {
   if (selection?.kind === 'original') {
     const original = setup.originals.find(({ id }) => id === selection.id);
-    if (!original) return null;
-    const { position: [x, y, z], size: [width, height, depth], rotationY } = original.box;
+    const placement = roomState.originals[selection.id]?.placement;
+    if (!original || !placement) return null;
+    const { position: [x, y, z], rotationY } = placement;
+    const [width, height, depth] = original.box.size;
     return { center: [x, y + height / 2, z], size: [width + 0.02, height + 0.02, depth + 0.02], rotationY };
   }
   if (selection?.kind === 'wall') {
@@ -41,7 +43,8 @@ function selectedBox(selection: Selection | null, setup: RoomSetup): Box | null 
 export function SelectionOutline() {
   const selection = useEditor((s) => s.selection);
   const setup = useEditor((s) => s.setup!);
-  const box = selectedBox(selection, setup);
+  const roomState = useEditor((s) => s.roomState!);
+  const box = selectedBox(selection, setup, roomState);
   return (
     <Hud>
       {box && (

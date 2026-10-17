@@ -46,7 +46,13 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
     <div className="editor">
       <TopBar />
       <CatalogPanel onAdd={(item) => camera.current && addPiece(item, camera.current)} />
-      <SceneCanvas cameraRef={camera} />
+      <SceneCanvas
+        cameraRef={camera}
+        onDropItem={(itemId, at) => {
+          const item = useEditor.getState().catalog!.items.find(({ id }) => id === itemId);
+          if (item && camera.current) addPiece(item, camera.current, at);
+        }}
+      />
       <Inspector />
       <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
     </div>

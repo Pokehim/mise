@@ -20,15 +20,18 @@ const facesUp = ({ face, object }: Intersection) =>
  * way it snaps to a wall it is backed up against.
  */
 function onFloorOrSurface(
-  raycaster: Raycaster, surfaces: Object3D[], item: CatalogItem, start: Placement, offset: Vec2, setup: RoomSetup,
+  raycaster: Raycaster, supports: Object3D[], item: CatalogItem, start: Placement, offset: Vec2, setup: RoomSetup,
 ): Placement | null {
-  const hit = raycaster.intersectObjects(surfaces, true).find(isDrawn);
+  const hit = raycaster.intersectObjects(supports, true).find(isDrawn);
   let placement: Placement;
   if (hit && facesUp(hit) && hit.point.y > FLOOR_TOLERANCE && !liesFlat(item)) {
     placement = { position: hit.point.toArray(), rotationY: start.rotationY, mount: 'surface' };
   } else {
     const pointer = floorHit(raycaster.ray);
     if (!pointer) return null;
+    // Past a wall, the floor plane is somewhere the Mover can't see or mean: they are pointing at
+    // the wall. So the Piece's origin stays in the room; its footprint can still poke out, which
+    // the outside-floor Fit rule reports.
     const [x, z] = keepInside([pointer[0] + offset[0], pointer[1] + offset[1]], setup, 0.001);
     placement = { position: [x, 0, z], rotationY: start.rotationY, mount: 'floor' };
   }
@@ -77,13 +80,10 @@ export function useDragPiece(pieceId: string) {
     aim(event.nativeEvent);
     const grabbed = floorHit(raycaster.ray, start.position[1]);
     const offset: Vec2 = grabbed ? [start.position[0] - grabbed[0], start.position[2] - grabbed[1]] : [0, 0];
-    // What the Piece can rest on: the Scan and the other Pieces, except flat ones like rugs.
-    const surfaces = [
+    // What the Piece can rest on: the Scan and the other Pieces.
+    const supports = [
       scene.getObjectByName('scan'),
-      ...(scene.getObjectByName('pieces')?.children ?? []).filter(({ name }) => {
-        const other = pieceItem(editor, name);
-        return name !== pieceId && other && !liesFlat(other);
-      }),
+      ...(scene.getObjectByName('pieces')?.children ?? []).filter(({ name }) => name !== pieceId),
     ].filter((object) => !!object);
     const [downX, downY] = [event.nativeEvent.clientX, event.nativeEvent.clientY];
     let dragging = false;
@@ -100,7 +100,7 @@ export function useDragPiece(pieceId: string) {
       aim(e);
       const placement = item.mount === 'wall'
         ? onWallUnder(raycaster.ray, camera, item, setup!)
-        : onFloorOrSurface(raycaster, surfaces, item, start, offset, setup!);
+        : onFloorOrSurface(raycaster, supports, item, start, offset, setup!);
       if (placement) useEditor.getState().setPreview({ pieceId, placement });
     };
     const onUp = () => {

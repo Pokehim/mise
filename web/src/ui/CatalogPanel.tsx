@@ -8,6 +8,9 @@ const CATEGORY_NAMES: Record<Category, string> = {
   rug: 'Rugs', lamp: 'Lamps', wall_art: 'Wall art', mirror: 'Mirrors', plant: 'Plants', decor: 'Decor',
 };
 
+/** The drag-and-drop type of a Catalog card dragged into the view; its data is the item id. */
+export const CATALOG_ITEM_TYPE = 'application/x-mise-catalog-item';
+
 /** Browse the Catalog by category and text, and Add an item to the Design as a Piece (spec §10.1). */
 export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) {
   const items = useEditor((s) => s.catalog!.items);
@@ -31,7 +34,15 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
       <input type="search" placeholder="Search by name or style" value={text} onChange={(e) => setText(e.target.value)} />
       <ul className="cards">
         {shown.map((item) => (
-          <li key={item.id} className="card">
+          <li
+            key={item.id}
+            className="card"
+            draggable
+            onDragStart={(event) => {
+              event.dataTransfer.setData(CATALOG_ITEM_TYPE, item.id);
+              event.dataTransfer.effectAllowed = 'copy';
+            }}
+          >
             <img src={item.thumbnail} alt="" />
             <div>
               <div className="title" title={item.title}>{item.title}</div>

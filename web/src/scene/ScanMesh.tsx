@@ -2,12 +2,12 @@ import { Bvh } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { use, useLayoutEffect, useMemo } from 'react';
 import { MeshBasicMaterial, type MeshStandardMaterial, type Object3D, Plane, Vector3 } from 'three';
-import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { RoomSetup, RoomState } from '@shared/types';
 import { scanFileUrl } from '../api';
 import { type Selection, useEditor } from '../state/store';
 import { wallCoordinates } from './floorPlan';
-import { GLTFLoader, withMeshopt } from './gltf';
+import { withMeshopt } from './gltf';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
 import { type ScanNodes, setupRoomNodes, splitScanStub } from './scanNodes';
 import { WallFader } from './WallFader';
@@ -46,25 +46,29 @@ function makeUnlit(root: Object3D) {
   });
 }
 
+// splitScan's margins (spec §9.4): an Original's box grows by 2 cm, and a Wall reaches 4 cm out.
+const ORIGINAL_MARGIN = 0.02;
+const WALL_REACH = 0.04;
+
 /**
  * What a click on the Scan selects: the Original whose box holds the point, else the Wall it lies
  * on, else nothing. The same tests that sort triangles in splitScan (spec §9.4, rules 1 and 4),
  * so they work on one unsplit mesh too.
  */
 function scanTargetAt({ x, y, z }: Vector3, setup: RoomSetup, originals: RoomState['originals']): Selection | null {
-  for (const { id, box } of setup.originals) {
-    if (!originals[id]?.visible) continue;
-    const { position: [bx, by, bz], size: [width, height, depth], rotationY } = box;
+  for (const { id, box: { size: [width, height, depth] } } of setup.originals) {
+    const original = originals[id];
+    if (!original?.visible) continue;
+    const { position: [bx, by, bz], rotationY } = original.placement;
     const [cos, sin] = [Math.cos(rotationY), Math.sin(rotationY)];
     const across = (x - bx) * cos - (z - bz) * sin;
     const deep = (x - bx) * sin + (z - bz) * cos;
-    if (Math.abs(across) <= width / 2 + 0.02 && Math.abs(deep) <= depth / 2 + 0.02 && y - by > 0.02 && y - by <= height + 0.02) {
-      return { kind: 'original', id };
-    }
+    const inside = Math.abs(across) <= width / 2 + ORIGINAL_MARGIN && Math.abs(deep) <= depth / 2 + ORIGINAL_MARGIN;
+    if (inside && y - by > ORIGINAL_MARGIN && y - by <= height + ORIGINAL_MARGIN) return { kind: 'original', id };
   }
   for (const wall of setup.walls) {
     const { along, into, length } = wallCoordinates([x, z], wall);
-    if (Math.abs(into) < 0.04 && along >= 0 && along <= length && y <= wall.height) return { kind: 'wall', id: wall.id };
+    if (Math.abs(into) < WALL_REACH && along >= 0 && along <= length && y <= wall.height) return { kind: 'wall', id: wall.id };
   }
   return null;
 }

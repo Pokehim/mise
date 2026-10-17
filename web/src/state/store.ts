@@ -17,8 +17,8 @@
  *                              roomState placement, and committed as one move Edit when the drag ends.
  *
  *   load(designId)             Fetches the Design, its Scan's manifest and setup, and the Catalog.
- *   applyEdit(edit, by?)       Stamps the Edit's id, time and actor ('mover' by default), appends it,
- *                              recomputes roomState and sets dirty. Returns the stamped Edit.
+ *   applyEdit(edit)            Stamps the Edit's id, time and actor (the Mover), appends it, recomputes
+ *                              roomState and sets dirty.
  *   setEdits(edits)            Replaces the whole Edit list (undo, deleting from History). applyEdit uses it.
  *   select(selection), setView(view), setPreview(preview)
  *
@@ -26,7 +26,7 @@
  */
 import { create } from 'zustand';
 import { newId } from '@shared/ids';
-import type { Actor, Catalog, CatalogItem, Design, Edit, Placement, RoomSetup, RoomState, ScanManifest } from '@shared/types';
+import type { Catalog, CatalogItem, Design, Edit, Placement, RoomSetup, RoomState, ScanManifest } from '@shared/types';
 import { listScans, loadCatalog, loadDesign, loadSetup } from '../api';
 import { replay } from './core';
 
@@ -51,7 +51,7 @@ interface EditorState {
   view: View;
   preview: Preview | null;
   load(designId: string): Promise<void>;
-  applyEdit(edit: NewEdit, by?: Actor): Edit;
+  applyEdit(edit: NewEdit): void;
   setEdits(edits: Edit[]): void;
   select(selection: Selection | null): void;
   setView(view: View): void;
@@ -100,10 +100,9 @@ export const useEditor = create<EditorState>()((set, get) => ({
     }
   },
 
-  applyEdit(edit, by = 'mover') {
-    const stamped = { ...edit, id: newId('ed'), at: new Date().toISOString(), by } satisfies Edit;
+  applyEdit(edit) {
+    const stamped = { ...edit, id: newId('ed'), at: new Date().toISOString(), by: 'mover' } satisfies Edit;
     get().setEdits([...get().design!.edits, stamped]);
-    return stamped;
   },
 
   setEdits(edits) {

@@ -1,4 +1,4 @@
-# Room Reimagining
+# Mise
 
 A Mover scans a real room with an iPhone and then reimagines it: they try out furniture, colors, and materials in a photorealistic copy of the room before they buy or move anything.
 
@@ -43,3 +43,19 @@ _Avoid_: Action, operation, command, mutation
 **Brief**:
 What the Mover asks for when they ask Claude to generate Designs: a free-text description of what they want, optionally narrowed by style and budget.
 _Avoid_: Prompt, query, request
+
+**Refine**:
+A follow-up instruction from the Mover asking Claude to adjust one existing Design.
+_Avoid_: Regenerate, edit (an Edit is a single change, not an instruction)
+
+**Kept**:
+Describes an Original the Mover has marked as staying, such as a dorm-provided bed. A Kept Original may be recolored but never moved, replaced, or removed.
+_Avoid_: Locked, pinned, fixed
+
+**Lift**:
+Separating an Original from the rest of the Scan so it can be moved or changed on its own.
+_Avoid_: Extract, cut out, segment
+
+**Patch**:
+The generated fill that covers the spot an Original used to occupy, after it has been lifted away or removed.
+_Avoid_: Hole fill, inpaint (that is how a Patch is made, not what it is)

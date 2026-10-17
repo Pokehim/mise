@@ -74,6 +74,7 @@
   background: white;
 }
 .card img { width: 56px; height: 56px; object-fit: contain; }
+.card .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 
 .inspector {
   grid-area: inspector;

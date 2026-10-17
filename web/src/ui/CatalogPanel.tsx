@@ -34,7 +34,7 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
           <li key={item.id} className="card">
             <img src={item.thumbnail} alt="" />
             <div>
-              <div>{item.title}</div>
+              <div className="title" title={item.title}>{item.title}</div>
               <div className="muted">≈ ${item.priceEstimateUsd} (est.)</div>
             </div>
             <button onClick={() => onAdd(item)}>Add</button>

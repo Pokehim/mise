@@ -9,33 +9,29 @@ import { floorHit, liesFlat, onWall, snapToWall } from './placement';
 
 /** How high a hit must be to count as a furniture top rather than the floor (spec §9.4 uses 3 cm too). */
 const FLOOR_TOLERANCE = 0.03;
-const DOWN = new Vector3(0, -1, 0);
 
 const facesUp = ({ face, object }: Intersection) =>
   !!face && face.normal.clone().transformDirection(object.matrixWorld).y > 0.8;
 
 /**
- * Where the pointer puts a floor item (spec §10.3). The pointer picks the level: the upward-facing
- * surface under it, such as a desk top, or the floor. The Piece lands at the pointer plus the grab
- * offset, inside the room, on whatever is at that spot no higher than that level, and snaps to a
- * wall it is backed up against.
+ * Where the pointer puts a floor item (spec §10.3): on the upward-facing surface under the pointer,
+ * such as a desk top, with its base right at the pointer, so it can't hang off the edge; else on
+ * the floor, keeping the grabbed point under the pointer and the Piece inside the room. Either
+ * way it snaps to a wall it is backed up against.
  */
 function onFloorOrSurface(
   raycaster: Raycaster, surfaces: Object3D[], item: CatalogItem, start: Placement, offset: Vec2, setup: RoomSetup,
 ): Placement | null {
   const hit = raycaster.intersectObjects(surfaces, true).find(isDrawn);
-  const level = hit && facesUp(hit) ? hit.point.y : 0;
-  const pointer: Vec2 | null = hit && facesUp(hit) ? [hit.point.x, hit.point.z] : floorHit(raycaster.ray);
-  if (!pointer) return null;
-  const [x, z] = keepInside([pointer[0] + offset[0], pointer[1] + offset[1]], setup, 0.001);
-
-  let y = 0;
-  if (!liesFlat(item)) {
-    raycaster.set(new Vector3(x, level + 0.05, z), DOWN);
-    const support = raycaster.intersectObjects(surfaces, true).find((h) => isDrawn(h) && facesUp(h));
-    if (support && support.point.y > FLOOR_TOLERANCE) y = support.point.y;
+  let placement: Placement;
+  if (hit && facesUp(hit) && hit.point.y > FLOOR_TOLERANCE && !liesFlat(item)) {
+    placement = { position: hit.point.toArray(), rotationY: start.rotationY, mount: 'surface' };
+  } else {
+    const pointer = floorHit(raycaster.ray);
+    if (!pointer) return null;
+    const [x, z] = keepInside([pointer[0] + offset[0], pointer[1] + offset[1]], setup, 0.001);
+    placement = { position: [x, 0, z], rotationY: start.rotationY, mount: 'floor' };
   }
-  const placement: Placement = { position: [x, y, z], rotationY: start.rotationY, mount: y > 0 ? 'surface' : 'floor' };
   return snapToWall(placement, item.size[2], setup.walls) ?? placement;
 }
 

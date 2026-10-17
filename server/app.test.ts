@@ -1,0 +1,217 @@
+import { cp, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import fixtureDesign from '../data/designs/ds_fixture1.json';
+import fixtureSetup from '../data/scans/fixture/setup.json';
+import type { Design, ScanManifest } from '../shared/types';
+import { app } from './app';
+
+let dataDir: string;
+
+// Each test gets its own copy of the fixture Scan and Design.
+beforeEach(async () => {
+  dataDir = await mkdtemp(join(tmpdir(), 'mise-data-'));
+  await cp(new URL('../data/scans/fixture', import.meta.url), join(dataDir, 'scans/fixture'), { recursive: true });
+  await cp(new URL('../data/designs/ds_fixture1.json', import.meta.url), join(dataDir, 'designs/ds_fixture1.json'));
+  vi.stubEnv('DATA_DIR', dataDir);
+});
+
+afterEach(async () => {
+  vi.unstubAllEnvs();
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+const send = (method: string, path: string, body: unknown) =>
+  app.request(path, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+const getJson = async (path: string) => (await app.request(path)).json();
+
+const writeJson = async (path: string, value: unknown) => {
+  await mkdir(dirname(join(dataDir, path)), { recursive: true });
+  await writeFile(join(dataDir, path), JSON.stringify(value));
+};
+
+describe('GET /api/scans', () => {
+  it('lists the manifest of every Scan', async () => {
+    await writeJson('scans/dorm-v1/manifest.json', {
+      version: 1, id: 'dorm-v1', name: 'Maple Hall 412', mesh: 'room.glb', meshTransform: { position: [0, 0, 0], rotationY: 0 },
+    } satisfies ScanManifest);
+    await mkdir(join(dataDir, 'scans/still-importing'));
+
+    const res = await app.request('/api/scans');
+
+    expect(res.status).toBe(200);
+    const scans: ScanManifest[] = await res.json();
+    expect(scans.map((scan) => [scan.id, scan.name]).sort()).toEqual([
+      ['dorm-v1', 'Maple Hall 412'],
+      ['fixture', 'Sample room (4 × 3 m)'],
+    ]);
+  });
+});
+
+describe('PUT /api/scans/:id/setup', () => {
+  it('saves setup.json, which /data then serves', async () => {
+    const setup = { ...fixtureSetup, ceilingHeight: 2.4 };
+
+    const res = await send('PUT', '/api/scans/fixture/setup', setup);
+
+    expect(res.status).toBe(200);
+    expect(await getJson('/data/scans/fixture/setup.json')).toEqual(setup);
+  });
+
+  it('404s for a Scan that does not exist', async () => {
+    const res = await send('PUT', '/api/scans/no-such-scan/setup', fixtureSetup);
+    expect(res.status).toBe(404);
+  });
+
+  it('400s for a body that is not JSON', async () => {
+    const res = await app.request('/api/scans/fixture/setup', { method: 'PUT', body: '{ not json' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /data/*', () => {
+  it('serves files from the data folder, uncached because saves change them', async () => {
+    const res = await app.request('/data/designs/ds_fixture1.json');
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('no-cache');
+    expect(await res.json()).toEqual(fixtureDesign);
+  });
+});
+
+describe('PUT /api/scans/:id/manifest', () => {
+  it('saves manifest.json, which GET /api/scans then lists', async () => {
+    const manifest: ScanManifest = {
+      version: 1, id: 'fixture', name: 'Sample room (4 × 3 m)', mesh: 'room.glb',
+      meshTransform: { position: [0, -0.02, 0], rotationY: 0.1 },
+    };
+
+    const res = await send('PUT', '/api/scans/fixture/manifest', manifest);
+
+    expect(res.status).toBe(200);
+    expect(await getJson('/api/scans')).toEqual([manifest]);
+  });
+});
+
+describe('GET /api/designs', () => {
+  beforeEach(async () => {
+    await writeJson('designs/ds_dorm0001.json', {
+      ...fixtureDesign, id: 'ds_dorm0001', scanId: 'dorm-v1', createdAt: '2026-10-17T20:00:00.000Z',
+    });
+  });
+
+  it('lists every Design, oldest first', async () => {
+    const res = await app.request('/api/designs');
+
+    expect(res.status).toBe(200);
+    const designs: Design[] = await res.json();
+    expect(designs.map((design) => design.id)).toEqual(['ds_dorm0001', 'ds_fixture1']);
+  });
+
+  it('lists only the Designs of the Scan given as scanId', async () => {
+    const designs: Design[] = await getJson('/api/designs?scanId=fixture');
+    expect(designs.map((design) => design.id)).toEqual(['ds_fixture1']);
+  });
+});
+
+describe('GET /api/designs/:id', () => {
+  it('returns one Design', async () => {
+    const res = await app.request('/api/designs/ds_fixture1');
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(fixtureDesign);
+  });
+
+  it('404s for a Design that does not exist', async () => {
+    expect((await app.request('/api/designs/ds_missing1')).status).toBe(404);
+  });
+});
+
+describe('POST /api/designs', () => {
+  it('creates an empty Design for a Scan, with a new id', async () => {
+    const res = await send('POST', '/api/designs', { scanId: 'fixture' });
+
+    expect(res.status).toBe(201);
+    const created: Design = await res.json();
+    expect(created.id).toMatch(/^ds_[a-z0-9]{8}$/);
+    expect(created).toMatchObject({ version: 1, scanId: 'fixture', name: 'New Design', origin: 'mover', edits: [] });
+    expect(await getJson(`/api/designs/${created.id}`)).toEqual(created);
+  });
+
+  it('404s for a Scan that does not exist', async () => {
+    expect((await send('POST', '/api/designs', { scanId: 'no-such-scan' })).status).toBe(404);
+  });
+
+  it('duplicates a Design: a new id with the same Edits, leaving the source Design unchanged', async () => {
+    const res = await send('POST', '/api/designs', { duplicateOf: 'ds_fixture1' });
+
+    expect(res.status).toBe(201);
+    const copy: Design = await res.json();
+    expect(copy.id).toMatch(/^ds_[a-z0-9]{8}$/);
+    expect(copy).toMatchObject({ scanId: 'fixture', name: 'Sample Design (copy)', edits: fixtureDesign.edits });
+    expect(await getJson(`/api/designs/${copy.id}`)).toEqual(copy);
+    expect(await getJson('/api/designs/ds_fixture1')).toEqual(fixtureDesign);
+  });
+
+  it("copies only the Edits of Claude's Design: the copy is the Mover's", async () => {
+    await writeJson('designs/ds_claude01.json', {
+      ...fixtureDesign, id: 'ds_claude01', origin: 'claude', brief: { text: 'cozy Japandi' }, rationale: 'Warm woods',
+    });
+
+    const copy: Design = await (await send('POST', '/api/designs', { duplicateOf: 'ds_claude01' })).json();
+
+    expect(copy).toMatchObject({ origin: 'mover', edits: fixtureDesign.edits });
+    expect(copy).not.toHaveProperty('brief');
+    expect(copy).not.toHaveProperty('rationale');
+  });
+
+  it('404s for a Design to duplicate that does not exist', async () => {
+    expect((await send('POST', '/api/designs', { duplicateOf: 'ds_missing1' })).status).toBe(404);
+  });
+
+  it('400s without a scanId or duplicateOf', async () => {
+    expect((await send('POST', '/api/designs', {})).status).toBe(400);
+  });
+});
+
+describe('PUT /api/designs/:id', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('saves the whole Design and stamps updatedAt', async () => {
+    vi.setSystemTime(new Date('2026-10-18T09:00:00.000Z'));
+    const edited = { ...fixtureDesign, name: 'Sage and walnut', edits: fixtureDesign.edits.slice(0, 2) };
+
+    const res = await send('PUT', '/api/designs/ds_fixture1', edited);
+
+    expect(res.status).toBe(200);
+    const saved: Design = await res.json();
+    expect(saved).toEqual({ ...edited, updatedAt: '2026-10-18T09:00:00.000Z' });
+    expect(await getJson('/api/designs/ds_fixture1')).toEqual(saved);
+  });
+
+  it('400s when the body is a different Design', async () => {
+    const res = await send('PUT', '/api/designs/ds_fixture1', { ...fixtureDesign, id: 'ds_other001' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('POST /api/generate', () => {
+  it('is not built until Phase 4 (501)', async () => {
+    const res = await send('POST', '/api/generate', { scanId: 'fixture', brief: { text: 'cozy Japandi, under $400' } });
+    expect(res.status).toBe(501);
+  });
+});
+
+describe('ids', () => {
+  it('400s for a Design id in the path that could reach outside the data folder', async () => {
+    const res = await send('PUT', '/api/designs/..%2F..%2Fescaped', { ...fixtureDesign, id: '../../escaped' });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'Not a valid id: ../../escaped' });
+  });
+
+  it('400s for an id in the body that could reach outside the data folder', async () => {
+    expect((await send('POST', '/api/designs', { duplicateOf: '../designs/ds_fixture1' })).status).toBe(400);
+  });
+});

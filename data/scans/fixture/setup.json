@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "scanId": "fixture",
+  "ceilingHeight": 2.6,
+  "floor": {
+    "polygon": [[-2, -1.5], [2, -1.5], [2, 1.5], [-2, 1.5]]
+  },
+  "walls": [
+    { "id": "wl_1", "name": "North wall", "start": [-2, -1.5], "end": [2, -1.5], "normal": [0, 1], "height": 2.6 },
+    { "id": "wl_2", "name": "East wall", "start": [2, -1.5], "end": [2, 1.5], "normal": [-1, 0], "height": 2.6 },
+    { "id": "wl_3", "name": "South wall", "start": [2, 1.5], "end": [-2, 1.5], "normal": [0, -1], "height": 2.6 },
+    { "id": "wl_4", "name": "West wall", "start": [-2, 1.5], "end": [-2, -1.5], "normal": [1, 0], "height": 2.6 }
+  ],
+  "openings": [
+    { "id": "op_1", "kind": "door", "wallId": "wl_3", "offset": 0.3, "width": 0.9, "bottom": 0, "height": 2.03, "swing": "in-right" },
+    { "id": "op_2", "kind": "window", "wallId": "wl_1", "offset": 1.4, "width": 1.2, "bottom": 0.9, "height": 1.2 }
+  ],
+  "originals": [
+    {
+      "id": "og_bed",
+      "label": "Bed",
+      "category": "bed",
+      "box": { "position": [-1.505, 0, -0.485], "size": [0.99, 0.6, 2.03], "rotationY": 0 },
+      "kept": true,
+      "floorColor": "#a89f91"
+    },
+    {
+      "id": "og_desk",
+      "label": "Desk",
+      "category": "desk",
+      "box": { "position": [1.7, 0, -0.6], "size": [1.07, 0.76, 0.6], "rotationY": -1.5707963267948966 },
+      "kept": false,
+      "floorColor": "#a89f91"
+    }
+  ]
+}

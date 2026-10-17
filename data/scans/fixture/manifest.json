@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "id": "fixture",
+  "name": "Sample room (4 × 3 m)",
+  "mesh": "room.glb",
+  "meshTransform": { "position": [0, 0, 0], "rotationY": 0 }
+}

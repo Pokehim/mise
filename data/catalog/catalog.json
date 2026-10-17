@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "placeholder-chair",
+      "source": "generated",
+      "title": "Placeholder Desk Chair",
+      "category": "chair",
+      "mount": "floor",
+      "size": [0.6, 0.9, 0.6],
+      "model": "/data/catalog/models/placeholder-chair.glb",
+      "thumbnail": "/data/catalog/thumbs/placeholder-chair.svg",
+      "colors": ["Black"],
+      "colorHex": "#2b2b2b",
+      "materials": ["Plastic"],
+      "styleTags": ["Modern"],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/s?k=desk+chair",
+      "attribution": "Mise placeholder box model"
+    },
+    {
+      "id": "placeholder-desk",
+      "source": "generated",
+      "title": "Placeholder Writing Desk",
+      "category": "desk",
+      "mount": "floor",
+      "size": [1.2, 0.75, 0.6],
+      "model": "/data/catalog/models/placeholder-desk.glb",
+      "thumbnail": "/data/catalog/thumbs/placeholder-desk.svg",
+      "colors": ["Walnut"],
+      "colorHex": "#5c4033",
+      "materials": ["Wood"],
+      "styleTags": ["Mid-Century Modern"],
+      "priceEstimateUsd": 180,
+      "url": "https://www.amazon.com/s?k=writing+desk",
+      "attribution": "Mise placeholder box model"
+    },
+    {
+      "id": "placeholder-rug",
+      "source": "generated",
+      "title": "Placeholder 5×7 Rug",
+      "category": "rug",
+      "mount": "floor",
+      "size": [1.52, 0.01, 2.13],
+      "model": "/data/catalog/models/placeholder-rug.glb",
+      "thumbnail": "/data/catalog/thumbs/placeholder-rug.svg",
+      "colors": ["Gray"],
+      "colorHex": "#8a8d91",
+      "materials": ["Polyester"],
+      "styleTags": ["Contemporary"],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/s?k=5x7+rug",
+      "attribution": "Mise placeholder box model"
+    }
+  ]
+}

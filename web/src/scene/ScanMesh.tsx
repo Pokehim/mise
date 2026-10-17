@@ -1,11 +1,13 @@
 import { Bvh } from '@react-three/drei';
 import { use, useLayoutEffect, useMemo } from 'react';
-import { type Material, type Mesh, MeshBasicMaterial, type MeshStandardMaterial, type Object3D, Plane, Vector3 } from 'three';
+import { MeshBasicMaterial, type MeshStandardMaterial, type Object3D, Plane, Vector3 } from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { scanFileUrl } from '../api';
 import { useEditor } from '../state/store';
 import { GLTFLoader, withMeshopt } from './gltf';
+import { forEachMaterial } from './objects';
 import { type ScanNodes, setupRoomNodes, splitScanStub } from './scanNodes';
+import { WallFader } from './WallFader';
 
 const scanLoads = new Map<string, Promise<GLTF | null>>();
 
@@ -26,26 +28,15 @@ function loadScanMesh(url: string) {
 
 const nodesOf = (nodes: ScanNodes) => [nodes.shell, nodes.floor, nodes.ceiling, ...Object.values(nodes.walls), ...Object.values(nodes.originals)];
 
-function forEachMaterial(root: Object3D, visit: (material: Material, mesh: Mesh, index: number) => void) {
-  root.traverse((object) => {
-    const mesh = object as Mesh;
-    if (!mesh.isMesh) return;
-    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    materials.forEach((material, index) => visit(material, mesh, index));
-  });
-}
-
 /** Scan textures already hold the room's real lighting, so they render unlit and untouched (spec §10.6). */
 function makeUnlit(root: Object3D) {
-  forEachMaterial(root, (material, mesh, index) => {
+  forEachMaterial(root, (material) => {
     if ((material as MeshBasicMaterial).isMeshBasicMaterial) {
       material.toneMapped = false;
       return;
     }
     const { map, color, vertexColors, side, transparent, alphaTest } = material as MeshStandardMaterial;
-    const unlit = new MeshBasicMaterial({ map, color, vertexColors, side, transparent, alphaTest, toneMapped: false });
-    if (Array.isArray(mesh.material)) mesh.material[index] = unlit;
-    else mesh.material = unlit;
+    return new MeshBasicMaterial({ map, color, vertexColors, side, transparent, alphaTest, toneMapped: false });
   });
 }
 
@@ -67,7 +58,11 @@ export function ScanMesh() {
   // The Dollhouse looks in from above, so it clips everything near the ceiling (spec §10.2).
   const ceilingClip = useMemo(() => new Plane(new Vector3(0, -1, 0)), []);
   useLayoutEffect(() => {
-    for (const node of nodesOf(nodes)) forEachMaterial(node, (material) => (material.clippingPlanes = [ceilingClip]));
+    for (const node of nodesOf(nodes)) {
+      forEachMaterial(node, (material) => {
+        material.clippingPlanes = [ceilingClip];
+      });
+    }
   }, [nodes, ceilingClip]);
   useLayoutEffect(() => {
     ceilingClip.constant = view === 'dollhouse' ? setup.ceilingHeight - 0.05 : 1e6;
@@ -84,6 +79,7 @@ export function ScanMesh() {
           <primitive key={id} object={node} visible={originals[id]?.visible !== false} />
         ))}
       </Bvh>
+      <WallFader walls={setup.walls} nodes={nodes.walls} />
     </group>
   );
 }

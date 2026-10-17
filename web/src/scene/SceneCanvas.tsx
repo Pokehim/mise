@@ -9,6 +9,7 @@ import { isShown } from './objects';
 import { PieceNode } from './PieceNode';
 import { ScanMesh } from './ScanMesh';
 import { SelectionOutline } from './SelectionOutline';
+import { WalkControls } from './WalkControls';
 
 /** Renders nothing in place of children that fail to load, so one bad asset can't blank the editor. */
 class Optional extends Component<{ what: string; children: ReactNode }, { failed: boolean }> {
@@ -67,7 +68,7 @@ export function SceneCanvas({ cameraRef }: { cameraRef: RefObject<Camera | null>
         </Suspense>
         <Pieces />
         <SelectionOutline />
-        {view === 'dollhouse' && <DollhouseCamera />}
+        {view === 'dollhouse' ? <DollhouseCamera /> : <WalkControls />}
         {debug && <Stats parent={container} className="stats" />}
       </Canvas>
     </div>

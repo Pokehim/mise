@@ -3,6 +3,7 @@ import {
   ShapeGeometry, type Side, Vector2, Vector3,
 } from 'three';
 import type { RoomSetup, ScanManifest, Wall } from '@shared/types';
+import { floorGeometry } from './floorPlan';
 
 /** The Scan mesh as separate nodes in the room frame: the shape that splitScan (#8) returns. */
 export interface ScanNodes {
@@ -30,8 +31,7 @@ const matte = (color: string, side: Side) => new MeshStandardMaterial({ color, s
  * Unlike a real Scan it has no baked lighting, so it keeps lit materials.
  */
 export function setupRoomNodes(setup: RoomSetup): ScanNodes {
-  // The shape is drawn as (x, -z), so turning it flat puts it at (x, 0, z), facing up.
-  const plan = new ShapeGeometry(new Shape(setup.floor.polygon.map(([x, z]) => new Vector2(x, -z)))).rotateX(-Math.PI / 2);
+  const plan = floorGeometry(setup);
   const floor = new Mesh(plan, matte('#cbbfa9', DoubleSide));
   const ceiling = new Mesh(plan, matte('#f2efe9', BackSide));
   ceiling.position.y = setup.ceilingHeight;

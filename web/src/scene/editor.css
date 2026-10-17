@@ -39,6 +39,10 @@
   border-bottom: 1px solid var(--line);
 }
 .topbar .spacer { flex: 1; }
+.topbar .views { display: flex; }
+.topbar .views button { border-radius: 0; }
+.topbar .views button:first-child { border-radius: 6px 0 0 6px; }
+.topbar .views button:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
 
 .catalog {
   grid-area: catalog;

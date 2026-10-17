@@ -1,4 +1,4 @@
-import { Box3, Vector3 } from 'three';
+import { Box3, Shape, ShapeGeometry, Vector2, Vector3 } from 'three';
 import type { RoomSetup, Vec2, Wall } from '@shared/types';
 
 /** The room as a box: its floor polygon, from the floor up to the ceiling. */
@@ -8,6 +8,12 @@ export function roomBounds(setup: RoomSetup) {
     box.expandByPoint(new Vector3(x, 0, z)).expandByPoint(new Vector3(x, setup.ceilingHeight, z));
   }
   return box;
+}
+
+/** The floor polygon as a flat geometry at y = 0, facing up. */
+export function floorGeometry(setup: RoomSetup) {
+  // The shape is drawn as (x, -z), so turning it flat puts it at (x, 0, z).
+  return new ShapeGeometry(new Shape(setup.floor.polygon.map(([x, z]) => new Vector2(x, -z)))).rotateX(-Math.PI / 2);
 }
 
 /** Whether a floor point is inside the room's floor polygon. */

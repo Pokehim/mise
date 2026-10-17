@@ -1,29 +1,60 @@
-import { Grid, OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
-import { BackSide } from 'three';
+import { useEffect, useRef } from 'react';
+import type { Camera } from 'three';
 import { Link } from 'wouter';
+import { useEditor } from '../state/store';
+import { CatalogPanel } from '../ui/CatalogPanel';
+import { Inspector } from '../ui/Inspector';
+import { TopBar } from '../ui/TopBar';
+import { addPiece, removePiece, rotatePiece } from './pieceEdits';
+import { SceneCanvas } from './SceneCanvas';
+import './editor.css';
 
-// Placeholder until #7 builds the editor: a grid and a 4 × 3 m box room.
-export function EditorPage({ params }: { params: { designId: string } }) {
+/** Editor shortcuts (spec §10.3): Esc deselects, R / Shift+R rotate the selected Piece, Delete removes it. */
+function useEditorKeys() {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) return;
+      const { selection, preview, select } = useEditor.getState();
+      if (event.key === 'Escape') select(null);
+      if (selection?.kind !== 'piece' || preview || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key.toLowerCase() === 'r') rotatePiece(selection.id, event.shiftKey ? -1 : 1);
+      // Backspace is the key labeled "delete" on a Mac.
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        removePiece(selection.id);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+}
+
+/** The editor at /d/:designId (spec §10.1). */
+export function EditorPage({ params: { designId } }: { params: { designId: string } }) {
+  const ready = useEditor((s) => s.status === 'ready' && s.design?.id === designId);
+  const error = useEditor((s) => s.error);
+  const camera = useRef<Camera>(null);
+  useEditorKeys();
+
+  useEffect(() => {
+    void useEditor.getState().load(designId);
+  }, [designId]);
+
+  if (error) return <main>Could not open Design {designId}: {error} <Link href="/">← Scans</Link></main>;
+  if (!ready) return <main>Loading…</main>;
   return (
-    <>
-      <Canvas camera={{ position: [4, 4, 5], fov: 50 }}>
-        <color attach="background" args={['#f4f1ea']} />
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[3, 5, 2]} intensity={1.5} />
-        <Grid
-          infiniteGrid cellSize={0.5} sectionSize={1} cellColor="#d9d2c5" sectionColor="#b3a892" position={[0, -0.001, 0]}
-        />
-        {/* 2.6 m high, with its floor at y = 0. BackSide shows the inside, like a dollhouse. */}
-        <mesh position={[0, 1.3, 0]}>
-          <boxGeometry args={[4, 2.6, 3]} />
-          <meshStandardMaterial color="#e8e2d6" side={BackSide} />
-        </mesh>
-        <OrbitControls target={[0, 1, 0]} />
-      </Canvas>
-      <nav style={{ position: 'absolute', top: 12, left: 12 }}>
-        <Link href="/">← Scans</Link> · Design {params.designId}
-      </nav>
-    </>
+    <div className="editor">
+      <TopBar />
+      <CatalogPanel onAdd={(item) => camera.current && addPiece(item, camera.current)} />
+      <SceneCanvas
+        cameraRef={camera}
+        onDropItem={(itemId, at) => {
+          const item = useEditor.getState().catalog!.items.find(({ id }) => id === itemId);
+          if (item && camera.current) addPiece(item, camera.current, at);
+        }}
+      />
+      <Inspector />
+      <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
+    </div>
   );
 }

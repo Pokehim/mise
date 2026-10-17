@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { distanceToWall, footprint, type OrientedRect, pointInPolygon, rectCorners, rectsOverlap, wallPoint } from './geometry';
+import {
+  distanceToWall, footprint, type OrientedRect, overlapLength, pointInPolygon, rectCorners, rectInPolygon, rectsOverlap, wallPoint,
+} from './geometry';
 import { setup } from './test-room';
 import type { Vec2, Wall } from './types';
 
@@ -87,5 +89,35 @@ describe('distanceToWall', () => {
     expect(distanceToWall([0, -1.6], north)).toBeCloseTo(-0.1);
     expect(distanceToWall([0, 1], slanted)).toBeCloseTo(0.6);
     expect(distanceToWall([30, 40], slanted)).toBeCloseTo(0); // the plane goes on past the wall's ends
+  });
+});
+
+describe('rectInPolygon', () => {
+  const room: Vec2[] = [[-2, -1.5], [2, -1.5], [2, 1.5], [-2, 1.5]];
+
+  // A corner exactly on an edge may count as in or out, which is one reason Fit rules use a tolerance.
+  it('lets a rectangle stand flush against the edges, or reach past them by the tolerance', () => {
+    expect(rectInPolygon(rect(1.6, 0, 0.6, 0.6), room)).toBe(true);
+    expect(rectInPolygon(rect(1.705, 0, 0.6, 0.6), room)).toBe(false);
+    expect(rectInPolygon(rect(1.7, 0, 0.6, 0.6), room, 0.01)).toBe(true);
+    expect(rectInPolygon(rect(1.705, 0, 0.6, 0.6), room, 0.01)).toBe(true);
+    expect(rectInPolygon(rect(1.72, 0, 0.6, 0.6), room, 0.01)).toBe(false);
+  });
+
+  it('catches an inner corner of a polygon cutting into a rectangle whose corners are all inside', () => {
+    const lShaped: Vec2[] = [[0, 0], [2, 0], [2, 2], [4, 2], [4, 4], [0, 4]]; // missing x 2–4, z 0–2
+    const diamond = rect(1.95, 2.05, 0.4, 0.4, Math.PI / 4); // its points reach 0.28 from its center
+
+    expect(rectCorners(diamond).every((corner) => pointInPolygon(corner, lShaped))).toBe(true);
+    expect(rectInPolygon(diamond, lShaped)).toBe(false);
+    expect(rectInPolygon(rect(1, 3, 0.4, 0.4, Math.PI / 4), lShaped)).toBe(true);
+  });
+});
+
+describe('overlapLength', () => {
+  it('is the length two intervals share, or how far apart they are as a negative', () => {
+    expect(overlapLength([0, 2], [1, 5])).toBe(1);
+    expect(overlapLength([0, 2], [0.5, 1])).toBe(0.5);
+    expect(overlapLength([0, 2], [3, 5])).toBe(-1);
   });
 });

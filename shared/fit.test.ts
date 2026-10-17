@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { checkFit } from './fit';
 import { replay } from './replay';
-import { catalog, edit, onFloor, setup, withLampAndMirror } from './test-room';
+import { catalog, edit, onFloor, place, setup, withLampAndMirror } from './test-room';
 import type { Edit, Opening, Placement, Vec2 } from './types';
 
 // The room's floor is x −2 to 2, z −1.5 to 1.5. The bed covers x −2 to −1.01, z −1.5 to 0.53;
 // the desk x 1.4 to 2, z −1.135 to −0.065. The chair is 0.6 × 0.6 m, the lamp 0.2 × 0.2 m.
-const place = (pieceId: string, catalogId: string, placement: Placement) =>
-  edit(`ed_${pieceId}`, { type: 'place', pieceId, catalogId, placement });
 
 /** The Fit violations of the room after these Edits. */
 const fitAfter = (edits: Edit[], subjectIds?: string[], room = setup) =>

@@ -68,11 +68,16 @@ export const catalog: Catalog = {
   ],
 };
 
-// Omit applied to each member of the Edit union, so each Edit type keeps its own fields.
-type EditFields = Edit extends infer E ? (E extends Edit ? Omit<E, 'id' | 'at' | 'by'> : never) : never;
+/** Omit applied to each member of a union, so each member keeps its own fields. */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 /** An Edit by the Mover. Every Edit gets the same time: replay goes by list order, never by `at`. */
-export const edit = (id: string, fields: EditFields): Edit => ({ id, at: '2026-10-17T21:00:00.000Z', by: 'mover', ...fields });
+export const edit = (id: string, fields: DistributiveOmit<Edit, 'id' | 'at' | 'by'>): Edit =>
+  ({ id, at: '2026-10-17T21:00:00.000Z', by: 'mover', ...fields });
+
+/** A place Edit, with the id "ed_<pieceId>" unless given one. */
+export const place = (pieceId: string, catalogId: string, placement: Placement, editId = `ed_${pieceId}`) =>
+  edit(editId, { type: 'place', pieceId, catalogId, placement });
 
 /** A floor Placement at x, z. */
 export const onFloor = (x: number, z: number, rotationY = 0): Placement => ({ position: [x, 0, z], rotationY, mount: 'floor' });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { replay } from './replay';
-import { catalog, edit, onFloor, setup, withLampAndMirror } from './test-room';
+import { catalog, edit, onFloor, place, setup, withLampAndMirror } from './test-room';
 
 describe('replay', () => {
   it('starts from the Scan: every Original visible at its Room Setup box, no Pieces, no Finishes', () => {
@@ -32,7 +32,7 @@ describe('replay', () => {
   describe('place', () => {
     it('adds the Piece, with no colors', () => {
       const state = replay(setup, catalog, [
-        edit('ed_1', { type: 'place', pieceId: 'pc_chair', catalogId: 'chair-ergo', placement: onFloor(0, 0) }),
+        place('pc_chair', 'chair-ergo', onFloor(0, 0), 'ed_1'),
       ]);
 
       expect(state.pieces).toEqual({ pc_chair: { catalogId: 'chair-ergo', placement: onFloor(0, 0), partColors: {} } });
@@ -41,9 +41,9 @@ describe('replay', () => {
 
     it('skips a pieceId that is already taken, by a Piece or an Original', () => {
       const state = replay(setup, catalog, [
-        edit('ed_1', { type: 'place', pieceId: 'pc_chair', catalogId: 'chair-ergo', placement: onFloor(0, 0) }),
-        edit('ed_2', { type: 'place', pieceId: 'pc_chair', catalogId: 'desk-walnut', placement: onFloor(1, 1) }),
-        edit('ed_3', { type: 'place', pieceId: 'og_desk', catalogId: 'desk-walnut', placement: onFloor(1, 1) }),
+        place('pc_chair', 'chair-ergo', onFloor(0, 0), 'ed_1'),
+        place('pc_chair', 'desk-walnut', onFloor(1, 1), 'ed_2'),
+        place('og_desk', 'desk-walnut', onFloor(1, 1), 'ed_3'),
       ]);
 
       expect(state.pieces).toEqual({ pc_chair: { catalogId: 'chair-ergo', placement: onFloor(0, 0), partColors: {} } });
@@ -55,7 +55,7 @@ describe('replay', () => {
 
     it('skips a catalogId that is not in the Catalog', () => {
       const state = replay(setup, catalog, [
-        edit('ed_1', { type: 'place', pieceId: 'pc_sofa', catalogId: 'no-such-item', placement: onFloor(0, 0) }),
+        place('pc_sofa', 'no-such-item', onFloor(0, 0), 'ed_1'),
       ]);
 
       expect(state.pieces).toEqual({});
@@ -64,7 +64,7 @@ describe('replay', () => {
   });
 
   describe('move', () => {
-    const placeChair = edit('ed_1', { type: 'place', pieceId: 'pc_chair', catalogId: 'chair-ergo', placement: onFloor(0, 0) });
+    const placeChair = place('pc_chair', 'chair-ergo', onFloor(0, 0), 'ed_1');
 
     it('sets the placement of a Piece', () => {
       const state = replay(setup, catalog, [
@@ -111,7 +111,7 @@ describe('replay', () => {
   describe('remove', () => {
     it('deletes a Piece', () => {
       const state = replay(setup, catalog, [
-        edit('ed_1', { type: 'place', pieceId: 'pc_chair', catalogId: 'chair-ergo', placement: onFloor(0, 0) }),
+        place('pc_chair', 'chair-ergo', onFloor(0, 0), 'ed_1'),
         edit('ed_2', { type: 'remove', targetId: 'pc_chair' }),
       ]);
 
@@ -143,7 +143,7 @@ describe('replay', () => {
   });
 
   describe('swap', () => {
-    const placeChair = edit('ed_1', { type: 'place', pieceId: 'pc_1', catalogId: 'chair-ergo', placement: onFloor(0, 0) });
+    const placeChair = place('pc_1', 'chair-ergo', onFloor(0, 0), 'ed_1');
 
     it('changes the catalog item and the placement of a Piece', () => {
       const state = replay(setup, catalog, [
@@ -220,7 +220,7 @@ describe('replay', () => {
 
     it('skips a pieceId that is already taken, leaving the Original in place', () => {
       const state = replay(setup, catalog, [
-        edit('ed_1', { type: 'place', pieceId: 'pc_1', catalogId: 'chair-ergo', placement: onFloor(0, 0) }),
+        place('pc_1', 'chair-ergo', onFloor(0, 0), 'ed_1'),
         replaceDesk('ed_2', 'pc_1'),
       ]);
 
@@ -242,7 +242,7 @@ describe('replay', () => {
   });
 
   describe('recolor', () => {
-    const placeChair = edit('ed_1', { type: 'place', pieceId: 'pc_1', catalogId: 'chair-ergo', placement: onFloor(0, 0) });
+    const placeChair = place('pc_1', 'chair-ergo', onFloor(0, 0), 'ed_1');
 
     it('sets the color of one Part of a Piece', () => {
       const state = replay(setup, catalog, [

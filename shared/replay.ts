@@ -66,7 +66,7 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
         if (!piece) return 'missing-target';
         if (!item) return 'unknown-catalog';
         // Every color is on a Part of the old item, so keeping the new item's Parts keeps those in both.
-        const parts = partsFor(item.category).map((part) => part.id);
+        const parts = partIds(item.category);
         piece.partColors = Object.fromEntries(Object.entries(piece.partColors).filter(([partId]) => parts.includes(partId)));
         piece.catalogId = edit.catalogId;
         piece.placement = edit.placement;
@@ -87,11 +87,11 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
       }
       case 'recolor': {
         const piece = pieceAt(edit.targetId);
-        const original = originalAt(edit.targetId);
-        const target = piece ?? (original?.visible ? original : undefined);
-        const category = piece ? items.get(piece.catalogId)?.category : scanned.get(edit.targetId)?.category;
-        if (!target || !category) return 'missing-target';
-        return putParts(target.partColors, category, edit.partId, edit.color);
+        // place, swap and replace only ever give a Piece a catalogId that is in the Catalog.
+        if (piece) return putParts(piece.partColors, items.get(piece.catalogId)!.category, edit.partId, edit.color);
+        const original = scanned.get(edit.targetId);
+        if (!original || !state.originals[original.id].visible) return 'missing-target';
+        return putParts(state.originals[original.id].partColors, original.category, edit.partId, edit.color);
       }
       case 'finish': {
         const { target } = edit;
@@ -124,19 +124,23 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
 
 /** A box whose bottom is higher than this, in meters, isn't on the floor. Room Setup's auto-box starts at 3 cm. */
 const ABOVE_FLOOR = 0.1;
+/** The categories that hang on walls, as in the Catalog (§8.1). */
+const WALL_CATEGORIES: Category[] = ['wall_art', 'mirror'];
 
 /**
  * Where an Original starts: at its Room Setup box. One whose box is off the floor hangs on its
- * nearest wall if its category goes on walls (as in the Catalog, §8.1), or else stands on furniture.
+ * nearest wall if its category goes on walls, or else stands on furniture.
  */
 function startPlacement({ box: { position, rotationY }, category }: Original, walls: Wall[]): Placement {
   if (position[1] <= ABOVE_FLOOR) return { position, rotationY, mount: 'floor' };
-  if (category !== 'wall_art' && category !== 'mirror') return { position, rotationY, mount: 'surface' };
+  if (!WALL_CATEGORIES.includes(category)) return { position, rotationY, mount: 'surface' };
   const point: Vec2 = [position[0], position[2]];
   const gap = (wall: Wall) => Math.abs(distanceToWall(point, wall));
-  const nearest = walls.reduce<Wall | undefined>((best, wall) => (best && gap(best) <= gap(wall) ? best : wall), undefined);
+  const [nearest] = walls.toSorted((a, b) => gap(a) - gap(b));
   return { position, rotationY, mount: 'wall', wallId: nearest?.id };
 }
+
+const partIds = (category: Category) => partsFor(category).map((part) => part.id);
 
 /** Sets a key, or deletes it when the value is null. */
 function put<V>(record: Record<string, V>, key: string, value: V | null) {
@@ -146,7 +150,7 @@ function put<V>(record: Record<string, V>, key: string, value: V | null) {
 
 /** Puts a value on one Part of the category, or on every Part when partId is '*'. */
 function putParts<V>(values: Record<string, V>, category: Category, partId: string, value: V | null): SkipReason | undefined {
-  const parts = partsFor(category).map((part) => part.id);
+  const parts = partIds(category);
   if (partId !== '*' && !parts.includes(partId)) return 'unknown-part';
   for (const id of partId === '*' ? parts : [partId]) put(values, id, value);
 }

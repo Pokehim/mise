@@ -13,7 +13,7 @@ export function footprint({ position: [x, , z], rotationY }: Pick<Box, 'position
   return { center: [x, z], size: [width, depth], rotationY };
 }
 
-/** The four corners of a rectangle, in order around it. */
+/** The four corners of a rectangle, in order around it: the first two are its back edge (−Z), the last two its front (+Z). */
 export function rectCorners({ center: [cx, cz], size: [width, depth], rotationY }: OrientedRect): Vec2[] {
   const [cos, sin] = [Math.cos(rotationY), Math.sin(rotationY)];
   return ([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([sx, sz]): Vec2 => {
@@ -27,40 +27,32 @@ export function rectsOverlap(a: OrientedRect, b: OrientedRect, tolerance = 0): b
   return polygonsOverlap(rectCorners(a), rectCorners(b), tolerance);
 }
 
-/** True when two convex polygons, each given as its corners in order, overlap by more than `tolerance` meters. */
-export function polygonsOverlap(a: Vec2[], b: Vec2[], tolerance = 0): boolean {
-  return overlapDepth(a, b) > tolerance;
-}
-
 /**
- * How far two convex polygons overlap: the shortest distance one must move to clear the other,
- * or ≤ 0 when they don't overlap. By the separating axis theorem, it's the smallest overlap of
- * their shadows across the normals of their edges.
+ * True when two convex polygons, each given as its corners in order, overlap by more than `tolerance`
+ * meters. By the separating axis theorem, they do unless their shadows on the normal of some edge
+ * overlap by no more than that.
  */
-function overlapDepth(a: Vec2[], b: Vec2[]): number {
-  let depth = Infinity;
+export function polygonsOverlap(a: Vec2[], b: Vec2[], tolerance = 0): boolean {
   for (const polygon of [a, b]) {
     for (let i = 0; i < polygon.length; i++) {
       const [[px, pz], [qx, qz]] = [polygon[i], polygon[(i + 1) % polygon.length]];
       const length = Math.hypot(qx - px, qz - pz);
       if (length === 0) continue;
-      const axis: Vec2 = [(pz - qz) / length, (qx - px) / length];
-      const [[minA, maxA], [minB, maxB]] = [shadow(a, axis), shadow(b, axis)];
-      depth = Math.min(depth, Math.min(maxA, maxB) - Math.max(minA, minB));
+      const [ax, az] = [(pz - qz) / length, (qx - px) / length];
+      if (overlapLength(shadow(a, ax, az), shadow(b, ax, az)) <= tolerance) return false;
     }
   }
-  return depth;
+  return true;
 }
 
-/** How far a floor point is from a wall's plane: positive inside the room, negative behind the wall. */
-export function distanceToWall([x, z]: Vec2, { start: [sx, sz], normal: [nx, nz] }: Wall): number {
-  return (x - sx) * nx + (z - sz) * nz;
-}
-
-/** The floor point `along` meters from a wall's start toward its end, and `out` meters from the wall into the room. */
-export function wallPoint({ start: [sx, sz], end: [ex, ez], normal: [nx, nz] }: Wall, along: number, out = 0): Vec2 {
-  const length = Math.hypot(ex - sx, ez - sz);
-  return [sx + ((ex - sx) / length) * along + nx * out, sz + ((ez - sz) / length) * along + nz * out];
+/**
+ * True when a rectangle lies inside a polygon, such as a room's floor, which need not be convex.
+ * The rectangle may reach `tolerance` meters past the polygon's edges.
+ */
+export function rectInPolygon({ center, size: [width, depth], rotationY }: OrientedRect, polygon: Vec2[], tolerance = 0): boolean {
+  const corners = rectCorners({ center, size: [Math.max(0, width - 2 * tolerance), Math.max(0, depth - 2 * tolerance)], rotationY });
+  // Corners inside aren't enough when the polygon isn't convex: one of its inner corners can cut into the rectangle.
+  return corners.every((corner) => pointInPolygon(corner, polygon)) && !polygon.some((corner) => pointInPolygon(corner, corners));
 }
 
 /** True when a point is inside a polygon, such as a room's floor; the polygon need not be convex. */
@@ -74,8 +66,29 @@ export function pointInPolygon([x, z]: Vec2, polygon: Vec2[]): boolean {
   return inside;
 }
 
-/** The interval a polygon covers along a unit axis. */
-function shadow(polygon: Vec2[], [ax, az]: Vec2): [number, number] {
-  const distances = polygon.map(([x, z]) => x * ax + z * az);
-  return [Math.min(...distances), Math.max(...distances)];
+/** How far a floor point is from a wall's plane: positive inside the room, negative behind the wall. */
+export function distanceToWall([x, z]: Vec2, { start: [sx, sz], normal: [nx, nz] }: Wall): number {
+  return (x - sx) * nx + (z - sz) * nz;
+}
+
+/** The floor point `along` meters from a wall's start toward its end, and `out` meters from the wall into the room. */
+export function wallPoint({ start: [sx, sz], end: [ex, ez], normal: [nx, nz] }: Wall, along: number, out = 0): Vec2 {
+  const length = Math.hypot(ex - sx, ez - sz);
+  return [sx + ((ex - sx) / length) * along + nx * out, sz + ((ez - sz) / length) * along + nz * out];
+}
+
+/** How much two intervals [start, end] overlap: their shared length, or ≤ 0 when they don't. */
+export function overlapLength([a0, a1]: [number, number], [b0, b1]: [number, number]): number {
+  return Math.min(a1, b1) - Math.max(a0, b0);
+}
+
+/** The interval a polygon covers along the unit axis [ax, az]. */
+function shadow(polygon: Vec2[], ax: number, az: number): [number, number] {
+  let [min, max] = [Infinity, -Infinity];
+  for (const [x, z] of polygon) {
+    const distance = x * ax + z * az;
+    min = Math.min(min, distance);
+    max = Math.max(max, distance);
+  }
+  return [min, max];
 }

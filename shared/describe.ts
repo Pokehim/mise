@@ -1,5 +1,5 @@
 import { partsFor } from './parts';
-import type { Catalog, Edit, Hex, RoomSetup } from './types';
+import type { Catalog, Category, Edit, Hex, RoomSetup } from './types';
 
 /** The History text for one Edit (spec §6), such as "Painted North wall · Sage". */
 export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string {
@@ -13,7 +13,8 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
   const parts = (targetId: string, partId: string) => {
     const owner = yours(targetId);
     if (partId === '*') return owner ?? 'all Parts';
-    return [owner, PART_NAMES.get(partId) ?? partId].filter(Boolean).join(' ');
+    const part = PART_NAMES.get(partId) ?? partId;
+    return owner ? `${owner} ${part}` : part;
   };
 
   switch (edit.type) {
@@ -55,10 +56,15 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
   }
 }
 
-// One category per §7 rule: together they name every Part.
-const PART_NAMES = new Map((['desk', 'chair', 'bed', 'dresser', 'sofa'] as const)
-  .flatMap((category) => partsFor(category))
-  .map(({ id, name }) => [id, name.toLowerCase()]));
+// Every category, so the names cover every Part: typing the keys as Record<Category, true> makes
+// the compiler reject a list that misses one. A Piece's category isn't known here, only its Part id.
+const CATEGORIES = Object.keys({
+  chair: true, desk: true, table: true, nightstand: true, bed: true, sofa: true,
+  dresser: true, wardrobe: true, shelf: true, storage: true,
+  rug: true, lamp: true, wall_art: true, mirror: true, plant: true, decor: true,
+} satisfies Record<Category, true>) as Category[];
+
+const PART_NAMES = new Map(CATEGORIES.flatMap(partsFor).map(({ id, name }) => [id, name.toLowerCase()]));
 
 // Interior colors for History text. A color gets the name nearest to it, so any color picked
 // or proposed by Claude still reads as a word ("#1a1a1a" → Black).
@@ -72,14 +78,19 @@ const COLOR_NAMES: [string, Hex][] = [
   ['Powder Blue', '#a9c4de'], ['Lavender', '#b5a6cf'], ['Plum', '#6b3a5b'],
 ];
 
-const rgb = (color: Hex) => [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+type RGB = [number, number, number];
+
+const rgb = (color: Hex): RGB => [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16)) as RGB;
+
+const PALETTE = COLOR_NAMES.map(([name, hex]): [string, RGB] => [name, rgb(hex)]);
 
 /** Squared "redmean" distance: plain RGB distance, weighted to follow the eye more closely. */
-function colorDistance(a: Hex, b: Hex) {
-  const [[r1, g1, b1], [r2, g2, b2]] = [rgb(a), rgb(b)];
+function colorDistance([r1, g1, b1]: RGB, [r2, g2, b2]: RGB) {
   const r = (r1 + r2) / 2;
   return (2 + r / 256) * (r1 - r2) ** 2 + 4 * (g1 - g2) ** 2 + (2 + (255 - r) / 256) * (b1 - b2) ** 2;
 }
 
-const colorName = (color: Hex) =>
-  COLOR_NAMES.reduce((best, entry) => (colorDistance(color, entry[1]) < colorDistance(color, best[1]) ? entry : best))[0];
+function colorName(color: Hex) {
+  const target = rgb(color);
+  return PALETTE.reduce((best, entry) => (colorDistance(target, entry[1]) < colorDistance(target, best[1]) ? entry : best))[0];
+}

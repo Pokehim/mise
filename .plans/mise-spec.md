@@ -120,6 +120,8 @@ Hono server (localhost:$API_PORT, default 8787)
    GET  /data/*                  static: scans, catalog, materials
    GET  /api/scans               list ScanManifests
    PUT  /api/scans/:id/setup     save Room Setup
+   PUT  /api/scans/:id/manifest  save meshTransform (Room Setup step 1) and splatTransform (Phase 3)
+   PUT  /api/scans/:id/files/:name   Phase 2: save baked Patch PNGs into the scan folder
    GET  /api/designs?scanId=     list Designs
    GET  /api/designs/:id         one Design
    POST /api/designs             create (empty, or duplicate of an existing Design)

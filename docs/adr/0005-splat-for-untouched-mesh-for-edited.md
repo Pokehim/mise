@@ -12,5 +12,5 @@ We chose this over editing splats directly (no surfaces for materials, no shadow
 ## Consequences
 
 - Edited objects show a visible step down in realism compared with their surroundings.
-- The splat must be aligned to the mesh. The transform between them is tuned by hand and stored with the Scan. The starting guess is the fixed offset that Polycam's Unity guide describes between its splat and mesh exports (a 180° rotation about Y and a ×100 scale), verified against the actual files.
+- The splat must be aligned to the mesh. The transform between them is tuned by hand and stored with the Scan. A Polycam splat comes from a separate cloud reconstruction, so the fit is done in two steps. First, level the splat offline in SuperSplat. Then click 3–4 matching points on the splat and on the mesh to solve for yaw, scale, and translation.
 - If the splat fails, the fallback is mesh-only rendering, and the editor and Edits don't change at all.

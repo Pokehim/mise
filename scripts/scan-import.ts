@@ -9,12 +9,20 @@ import { parseArgs } from 'node:util';
 import { type Document, Logger, NodeIO, Primitive } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import {
-  dedup, flatten, getBounds, instance, join as joinPrimitives, meshopt, palette, prune, simplify, sparse, textureCompress,
-  unpartition, weld,
+  dedup, flatten, getBounds, getGLPrimitiveCount, instance, join as joinPrimitives, meshopt, palette, prune, simplify, sparse,
+  textureCompress, unpartition, weld,
 } from '@gltf-transform/functions';
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
 import sharp from 'sharp';
 import type { ScanManifest, Vec3 } from '../shared/types';
+
+/** Spec §2.3: the room mesh is at most 300k triangles, with 2K WebP textures. */
+const MAX_TRIANGLES = 300_000;
+const TEXTURE_SIZE = 2048;
+/** A room's height, in meters. A Y extent outside it usually means +Y isn't up, or the units aren't meters. */
+const ROOM_HEIGHT = { min: 2.0, max: 3.5 };
+export const SCANS_DIR = fileURLToPath(new URL('../data/scans', import.meta.url));
+const MODEL = /\.(gltf|glb)$/i;
 
 const HELP = `
 Turns a Polycam glTF export into a Scan folder that the editor can load: data/scans/<scanId>/.
@@ -40,18 +48,12 @@ What it does:
   2. Optimizes it like "gltf-transform optimize --texture-compress webp --texture-size 2048", and
      simplifies it further while it has more than 300,000 triangles.
   3. Writes room.glb, and manifest.json with an identity meshTransform (Room Setup step 1 sets it).
-  4. Prints a summary. Check that the sizes are in meters and +Y is up: a room's Y extent is 2.0–3.5 m.
+  4. Prints a summary. Check that the sizes are in meters and +Y is up: a room's Y extent is ${ROOM_HEIGHT.min.toFixed(1)}–${ROOM_HEIGHT.max.toFixed(1)} m.
 
 Examples:
   npx tsx scripts/scan-import.ts ~/Downloads/venue.glb venue-test --name "Venue test"
   npx tsx scripts/scan-import.ts ~/Downloads/dorm.zip dorm-v1 --raw ~/Downloads/dorm-raw.zip --name "Maple Hall 412"
 `.trim();
-
-/** Spec §2.3: the room mesh is at most 300k triangles, with 2K WebP textures. */
-export const MAX_TRIANGLES = 300_000;
-const TEXTURE_SIZE = 2048;
-const ROOM_HEIGHT = { min: 2.0, max: 3.5 };
-const SCANS_DIR = fileURLToPath(new URL('../data/scans', import.meta.url));
 
 // Registering the extensions also teaches gltf-transform to read WebP image sizes.
 export const io = new NodeIO()
@@ -101,16 +103,16 @@ export async function importScan({ input, scanId, name = scanId, raw, force = fa
 
 /** The path of the model to import: the input itself, or the one model inside the folder or .zip. */
 async function locateModel(input: string, unzipDir: string): Promise<string> {
-  if (/\.(gltf|glb)$/i.test(input)) return input;
-  let dir = input;
+  if (MODEL.test(input)) return input;
   if (/\.zip$/i.test(input)) {
+    // Check the zip's index first: extracting the Raw Data zip by mistake would take minutes.
+    const model = findModel(listZip(input));
     unzip(input, unzipDir);
-    dir = unzipDir;
-  } else if (!statSync(input).isDirectory()) {
-    throw new Error(`Expected a .glb or .gltf file, a .zip, or a folder: ${input}`);
+    return join(unzipDir, model);
   }
-  const files = await readdir(dir, { recursive: true });
-  return join(dir, findModel(files.map((file) => file.split('\\').join('/'))));
+  if (!statSync(input).isDirectory()) throw new Error(`Expected a .glb or .gltf file, a .zip, or a folder: ${input}`);
+  const files = await readdir(input, { recursive: true });
+  return join(input, findModel(files.map((file) => file.replaceAll('\\', '/'))));
 }
 
 /** The model file among the paths of an unzipped Polycam export. */
@@ -119,7 +121,7 @@ export function findModel(files: string[]): string {
     throw new Error('This is the Raw Data export (it has keyframes/). Pass the glTF export here, and this one with --raw.');
   }
   // Zips made on a Mac also hold "__MACOSX/" and "._name" copies of each file.
-  const models = files.filter((file) => /\.(gltf|glb)$/i.test(file) && !/(^|\/)(__MACOSX\/|\._)/.test(file));
+  const models = files.filter((file) => MODEL.test(file) && !/(^|\/)(__MACOSX\/|\._)/.test(file));
   if (models.length === 0) throw new Error('No .gltf or .glb file in the export');
   if (models.length > 1) {
     throw new Error(`The export has ${models.length} models (${models.join(', ')}). Pass the one to import instead of the whole export.`);
@@ -132,7 +134,6 @@ async function unpackRaw(raw: string, rawDir: string) {
   await rm(rawDir, { recursive: true, force: true });
   if (/\.zip$/i.test(raw)) unzip(raw, rawDir);
   else await cp(raw, rawDir, { recursive: true });
-  await rm(join(rawDir, '__MACOSX'), { recursive: true, force: true });
   const entries = await readdir(rawDir);
   if (entries.length === 1 && (await stat(join(rawDir, entries[0]))).isDirectory()) {
     await rename(rawDir, `${rawDir}.unpacking`);
@@ -141,12 +142,16 @@ async function unpackRaw(raw: string, rawDir: string) {
   }
 }
 
-const unzip = (zip: string, dir: string) => execFileSync('unzip', ['-q', '-o', zip, '-d', dir], { stdio: ['ignore', 'ignore', 'inherit'] });
+// unzip's output is captured, which hides its notes about patterns that matched nothing; a failure still throws with it.
+const runUnzip = (args: string[]) => execFileSync('unzip', args, { encoding: 'utf8', stdio: 'pipe' });
+const listZip = (zip: string) => runUnzip(['-Z1', zip]).split('\n');
+/** Extracts a zip, leaving out the "__MACOSX/" and "._name" copies that zips made on a Mac carry. */
+const unzip = (zip: string, dir: string) => runUnzip(['-q', '-o', zip, '-d', dir, '-x', '__MACOSX/*', '._*', '*/._*']);
 
 /**
  * Does what `gltf-transform optimize --texture-compress webp --texture-size 2048` does, with the CLI's
- * defaults (v4.5), in process. While the mesh has more than maxTriangles, it adds simplify passes that
- * allow more error each time. Scans have no animation, so the CLI's resample step is left out.
+ * defaults (v4.5), in process. If the mesh still has more than maxTriangles, one more simplify pass
+ * targets that count. Scans have no animation, so the CLI's resample step is left out.
  */
 export async function optimizeScan(document: Document, maxTriangles = MAX_TRIANGLES) {
   await Promise.all([MeshoptSimplifier.ready, MeshoptEncoder.ready]);
@@ -154,9 +159,10 @@ export async function optimizeScan(document: Document, maxTriangles = MAX_TRIANG
     dedup(), instance(), palette(), flatten(), joinPrimitives(), weld(),
     simplify({ simplifier: MeshoptSimplifier, error: 0.0001 }),
   );
-  // error is a fraction of the mesh's extent: 0.001 is 5 mm on a 5 m room.
-  for (let error = 0.001; countTriangles(document) > maxTriangles && error <= 1; error *= 2) {
-    await document.transform(simplify({ simplifier: MeshoptSimplifier, ratio: maxTriangles / countTriangles(document), error }));
+  // meshoptimizer collapses the cheapest edges first, so with no error limit it stops at the target count.
+  const triangles = countTriangles(document);
+  if (triangles > maxTriangles) {
+    await document.transform(simplify({ simplifier: MeshoptSimplifier, ratio: maxTriangles / triangles, error: 1 }));
   }
   await document.transform(
     prune(), sparse(),
@@ -169,8 +175,7 @@ function countTriangles(document: Document) {
   let triangles = 0;
   for (const mesh of document.getRoot().listMeshes()) {
     for (const primitive of mesh.listPrimitives()) {
-      if (primitive.getMode() !== Primitive.Mode.TRIANGLES) continue;
-      triangles += (primitive.getIndices() ?? primitive.getAttribute('POSITION')!).getCount() / 3;
+      if (primitive.getMode() === Primitive.Mode.TRIANGLES) triangles += getGLPrimitiveCount(primitive);
     }
   }
   return triangles;
@@ -205,8 +210,9 @@ export function measureScan(document: Document): ScanStats {
 
 const formatBytes = (bytes: number) =>
   bytes < 1e3 ? `${bytes} B` : bytes < 1e6 ? `${Math.round(bytes / 1e3)} KB` : `${(bytes / 1e6).toFixed(1)} MB`;
-// Scan noise puts the floor a hair below 0; "-0.00" would read as a problem.
-const formatPoint = (point: Vec3) => `(${point.map((value) => value.toFixed(2).replace(/^-(0\.00)$/, '$1')).join(', ')})`;
+// signDisplay: 'negative' prints scan noise just below 0 as "0.00", not "-0.00".
+const meters = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'negative' }).format;
+const formatPoint = (point: Vec3) => `(${point.map(meters).join(', ')})`;
 
 /** The summary printed after an import. */
 export function formatSummary({ triangles, textures, bounds: { min, max } }: ScanStats): string {
@@ -218,14 +224,14 @@ export function formatSummary({ triangles, textures, bounds: { min, max } }: Sca
     `Mesh      ${triangles.toLocaleString('en-US')} triangles`,
     `Textures  ${textures.length}: ${textureList}`,
     `Bounds    min ${formatPoint(min)} m, max ${formatPoint(max)} m`,
-    `Size      X ${sx.toFixed(2)} m, Y ${sy.toFixed(2)} m (up), Z ${sz.toFixed(2)} m`,
+    `Size      X ${meters(sx)} m, Y ${meters(sy)} m (up), Z ${meters(sz)} m`,
   ];
   if (triangles > MAX_TRIANGLES) {
     lines.push(`⚠ ${triangles.toLocaleString('en-US')} triangles is over the limit of ${MAX_TRIANGLES.toLocaleString('en-US')}.`);
   }
-  // A room is 2.0–3.5 m tall. Anything else usually means another axis is up, or the units aren't meters.
   if (sy < ROOM_HEIGHT.min || sy > ROOM_HEIGHT.max) {
-    lines.push(`⚠ The Y extent is ${sy.toFixed(2)} m, outside 2.0–3.5 m for a room. Check that +Y is up and the units are meters.`);
+    const range = `${ROOM_HEIGHT.min.toFixed(1)}–${ROOM_HEIGHT.max.toFixed(1)} m`;
+    lines.push(`⚠ The Y extent is ${meters(sy)} m, outside ${range} for a room. Check that +Y is up and the units are meters.`);
   }
   return lines.join('\n');
 }

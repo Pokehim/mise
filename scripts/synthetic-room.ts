@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Document, type TypedArray } from '@gltf-transform/core';
 import { PNG } from 'pngjs';
-import type { Hex, Opening, Original, RoomSetup, Vec2, Vec3, Wall } from '../shared/types';
+import type { Box, Hex, Opening, Original, RoomSetup, Vec2, Vec3, Wall } from '../shared/types';
 import { formatSummary, importScan, io } from './scan-import';
 
 const SCAN_ID = 'synthetic';
@@ -22,7 +22,7 @@ const TEXTURE_SIZE = 128;
 type Rgb = [r: number, g: number, b: number];
 
 /** A Scan surface or Original Part: one primitive, with its own noise texture. */
-interface Surface { name: string; color: Rgb; positions: number[]; uvs: number[]; indices: number[] }
+interface Surface { name: string; texture: PNG; positions: number[]; uvs: number[]; indices: number[] }
 
 /** Deterministic random numbers in [0, 1), so re-running gives the same files (mulberry32). */
 function random(seed: number) {
@@ -72,7 +72,7 @@ function addGrid(surface: Surface, corner: Vec3, u: Vec3, v: Vec3, holes: [numbe
 }
 
 /** Adds the outside of the box min–max, given in an Original's frame, placed by its Box. */
-function addBox(surface: Surface, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { position, rotationY }: Original['box'], bottom = true) {
+function addBox(surface: Surface, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { position, rotationY }: Box, raised = false) {
   const [dx, dy, dz] = [x1 - x0, y1 - y0, z1 - z0];
   const faces: [Vec3, Vec3, Vec3][] = [
     [[x0, y1, z1], [dx, 0, 0], [0, 0, -dz]], // top
@@ -81,8 +81,8 @@ function addBox(surface: Surface, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { posi
     [[x1, y0, z1], [0, 0, -dz], [0, dy, 0]], // right
     [[x0, y0, z0], [0, 0, dz], [0, dy, 0]], // left
   ];
-  // A box that rests on something has no bottom, as a scanner never sees it.
-  if (bottom) faces.push([[x0, y0, z0], [dx, 0, 0], [0, 0, dz]]);
+  // Only a raised box has a bottom: a scanner never sees the bottom of one that rests on something.
+  if (raised) faces.push([[x0, y0, z0], [dx, 0, 0], [0, 0, dz]]);
   for (const [corner, u, v] of faces) addGrid(surface, add(rotateY(corner, rotationY), position), rotateY(u, rotationY), rotateY(v, rotationY));
 }
 
@@ -104,13 +104,13 @@ const openings: Opening[] = [
 /** An Original, with its Parts as boxes in its own frame: bottom-center origin, +Z front. */
 interface Furniture {
   original: Omit<Original, 'floorColor'>;
-  parts: { name: string; color: Rgb; boxes: [Vec3, Vec3][]; bottom?: boolean }[];
+  parts: { name: string; color: Rgb; boxes: [Vec3, Vec3][]; raised?: boolean }[];
 }
 
 /** Four legs of a square section, inset from a w × d footprint. */
 const legs = (w: number, d: number, side: number, height: number): [Vec3, Vec3][] =>
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz]) => {
-    const [x, z] = [(sx * (w - side)) / 2 - (sx * 0.02), (sz * (d - side)) / 2 - (sz * 0.02)];
+    const [x, z] = [sx * ((w - side) / 2 - 0.02), sz * ((d - side) / 2 - 0.02)];
     return [[x - side / 2, 0, z - side / 2], [x + side / 2, height, z + side / 2]];
   });
 
@@ -122,8 +122,8 @@ const furniture: Furniture[] = [
       box: { position: [-1.27, 0, -1.045], size: [1, 0.6, 2.05], rotationY: 0 },
     },
     parts: [
-      { name: 'Bed frame', color: [107, 79, 58], boxes: [[[-0.5, 0, -1.025], [0.5, 0.4, 1.025]]], bottom: false },
-      { name: 'Mattress', color: [196, 208, 222], boxes: [[[-0.495, 0.4, -1.015], [0.495, 0.6, 1.015]]], bottom: false },
+      { name: 'Bed frame', color: [107, 79, 58], boxes: [[[-0.5, 0, -1.025], [0.5, 0.4, 1.025]]] },
+      { name: 'Mattress', color: [196, 208, 222], boxes: [[[-0.495, 0.4, -1.015], [0.495, 0.6, 1.015]]] },
     ],
   },
   {
@@ -132,8 +132,8 @@ const furniture: Furniture[] = [
       box: { position: [0.6, 0, -1.77], size: [1.2, 0.75, 0.6], rotationY: 0 },
     },
     parts: [
-      { name: 'Desk top', color: [190, 150, 105], boxes: [[[-0.6, 0.72, -0.3], [0.6, 0.75, 0.3]]] },
-      { name: 'Desk legs', color: [60, 60, 64], boxes: legs(1.2, 0.6, 0.04, 0.72), bottom: false },
+      { name: 'Desk top', color: [190, 150, 105], boxes: [[[-0.6, 0.72, -0.3], [0.6, 0.75, 0.3]]], raised: true },
+      { name: 'Desk legs', color: [60, 60, 64], boxes: legs(1.2, 0.6, 0.04, 0.72) },
     ],
   },
   {
@@ -143,9 +143,9 @@ const furniture: Furniture[] = [
       box: { position: [0.6, 0, -1.145], size: [0.45, 0.9, 0.45], rotationY: Math.PI },
     },
     parts: [
-      { name: 'Chair seat', color: [60, 84, 120], boxes: [[[-0.225, 0.4, -0.225], [0.225, 0.45, 0.225]]] },
-      { name: 'Chair back', color: [70, 94, 130], boxes: [[[-0.225, 0.45, -0.225], [0.225, 0.9, -0.195]]], bottom: false },
-      { name: 'Chair legs', color: [48, 48, 52], boxes: legs(0.45, 0.45, 0.03, 0.4), bottom: false },
+      { name: 'Chair seat', color: [60, 84, 120], boxes: [[[-0.225, 0.4, -0.225], [0.225, 0.45, 0.225]]], raised: true },
+      { name: 'Chair back', color: [70, 94, 130], boxes: [[[-0.225, 0.45, -0.225], [0.225, 0.9, -0.195]]] },
+      { name: 'Chair legs', color: [48, 48, 52], boxes: legs(0.45, 0.45, 0.03, 0.4) },
     ],
   },
   {
@@ -154,13 +154,14 @@ const furniture: Furniture[] = [
       id: 'og_dresser', label: 'Dresser', category: 'dresser', kept: true,
       box: { position: [1.52, 0, 0], size: [0.8, 0.75, 0.5], rotationY: -Math.PI / 2 },
     },
-    parts: [{ name: 'Dresser', color: [120, 88, 62], boxes: [[[-0.4, 0, -0.25], [0.4, 0.75, 0.25]]], bottom: false }],
+    parts: [{ name: 'Dresser', color: [120, 88, 62], boxes: [[[-0.4, 0, -0.25], [0.4, 0.75, 0.25]]] }],
   },
 ];
 
 /* ───────────── Geometry and textures ───────────── */
 
-const surface = (name: string, color: Rgb): Surface => ({ name, color, positions: [], uvs: [], indices: [] });
+let seed = 0;
+const surface = (name: string, color: Rgb): Surface => ({ name, texture: noiseTexture(color, ++seed), positions: [], uvs: [], indices: [] });
 
 function buildSurfaces(): Surface[] {
   const floor = surface('Floor', [176, 141, 106]);
@@ -183,9 +184,9 @@ function buildSurfaces(): Surface[] {
   });
 
   const partSurfaces = furniture.flatMap(({ original, parts }) =>
-    parts.map(({ name, color, boxes, bottom }) => {
+    parts.map(({ name, color, boxes, raised }) => {
       const partSurface = surface(name, color);
-      for (const [min, max] of boxes) addBox(partSurface, min, max, original.box, bottom);
+      for (const [min, max] of boxes) addBox(partSurface, min, max, original.box, raised);
       return partSurface;
     }));
   return [floor, ceiling, ...wallSurfaces, ...partSurfaces];
@@ -206,21 +207,21 @@ function noiseTexture(color: Rgb, seed: number): PNG {
   return png;
 }
 
-function buildDocument(surfaces: Surface[], textures: PNG[]): Document {
+function buildDocument(surfaces: Surface[]): Document {
   const document = new Document();
   const buffer = document.createBuffer();
   const scene = document.createScene('Room');
-  surfaces.forEach(({ name, positions, uvs, indices }, i) => {
-    const accessor = (type: 'VEC3' | 'VEC2' | 'SCALAR', array: TypedArray) =>
-      document.createAccessor().setType(type).setArray(array).setBuffer(buffer);
-    const texture = document.createTexture(name).setImage(PNG.sync.write(textures[i])).setMimeType('image/png');
+  const accessor = (type: 'VEC3' | 'VEC2' | 'SCALAR', array: TypedArray) =>
+    document.createAccessor().setType(type).setArray(array).setBuffer(buffer);
+  for (const { name, texture: png, positions, uvs, indices } of surfaces) {
+    const texture = document.createTexture(name).setImage(PNG.sync.write(png)).setMimeType('image/png');
     const primitive = document.createPrimitive()
       .setAttribute('POSITION', accessor('VEC3', new Float32Array(positions)))
       .setAttribute('TEXCOORD_0', accessor('VEC2', new Float32Array(uvs)))
       .setIndices(accessor('SCALAR', new Uint32Array(indices)))
       .setMaterial(document.createMaterial(name).setBaseColorTexture(texture).setMetallicFactor(0).setRoughnessFactor(1));
     scene.addChild(document.createNode(name).setMesh(document.createMesh(name).addPrimitive(primitive)));
-  });
+  }
   return document;
 }
 
@@ -228,7 +229,7 @@ function buildDocument(surfaces: Surface[], textures: PNG[]): Document {
  * The average floor color within 15 cm of an Original's footprint, as Room Setup's Bake step measures it.
  * The floor's texture spans the room: u runs with +X, v with +Z.
  */
-function floorColor({ box: { position, size, rotationY } }: Furniture['original'], floorTexture: PNG): Hex {
+function floorColor({ position, size, rotationY }: Box, floorTexture: PNG): Hex {
   const sum = [0, 0, 0];
   let count = 0;
   for (let x = -W / 2; x <= W / 2; x += 0.01) {
@@ -245,7 +246,7 @@ function floorColor({ box: { position, size, rotationY } }: Furniture['original'
 }
 
 const surfaces = buildSurfaces();
-const textures = surfaces.map(({ color }, i) => noiseTexture(color, i + 1));
+const floorTexture = surfaces.find((s) => s.name === 'Floor')!.texture;
 const setup: RoomSetup = {
   version: 1,
   scanId: SCAN_ID,
@@ -253,12 +254,12 @@ const setup: RoomSetup = {
   floor: { polygon: corners },
   walls,
   openings,
-  originals: furniture.map(({ original }) => ({ ...original, floorColor: floorColor(original, textures[0]) })),
+  originals: furniture.map(({ original }) => ({ ...original, floorColor: floorColor(original.box, floorTexture) })),
 };
 
 const raw = await mkdtemp(join(tmpdir(), 'synthetic-room-'));
 try {
-  await io.write(join(raw, 'synthetic.glb'), buildDocument(surfaces, textures));
+  await io.write(join(raw, 'synthetic.glb'), buildDocument(surfaces));
   const { dir, stats } = await importScan({ input: join(raw, 'synthetic.glb'), scanId: SCAN_ID, name: NAME, force: true });
   await writeFile(join(dir, 'setup.json'), `${JSON.stringify(setup, null, 2)}\n`);
   console.log(`Wrote ${dir}: room.glb, manifest.json, and setup.json\n\n${formatSummary(stats)}`);

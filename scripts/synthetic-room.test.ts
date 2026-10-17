@@ -1,21 +1,16 @@
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { RoomSetup } from '../shared/types';
-import { io, measureScan } from './scan-import';
+import { io, measureScan, SCANS_DIR, scanManifest } from './scan-import';
 
 // data/scans/synthetic/ is committed output of scripts/synthetic-room.ts, which #7 and #8 build against.
-const scanFile = (file: string) => fileURLToPath(new URL(`../data/scans/synthetic/${file}`, import.meta.url));
+const scanFile = (file: string) => join(SCANS_DIR, 'synthetic', file);
 
 describe('the synthetic Scan', () => {
   it('has the manifest that scan-import writes', async () => {
-    expect(JSON.parse(await readFile(scanFile('manifest.json'), 'utf8'))).toEqual({
-      version: 1,
-      id: 'synthetic',
-      name: 'Synthetic dorm (3.6 × 4.2 m)',
-      mesh: 'room.glb',
-      meshTransform: { position: [0, 0, 0], rotationY: 0 },
-    });
+    const manifest = JSON.parse(await readFile(scanFile('manifest.json'), 'utf8'));
+    expect(manifest).toEqual(scanManifest('synthetic', 'Synthetic dorm (3.6 × 4.2 m)'));
   });
 
   it('has a room.glb that fills the room its setup.json describes, in meters with +Y up and the floor at y = 0', async () => {

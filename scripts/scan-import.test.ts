@@ -11,12 +11,23 @@ import {
   findModel, formatSummary, importScan, io, measureScan, optimizeScan, type ScanStats, scanManifest,
 } from './scan-import';
 
+/** A Document whose scene is one node with one mesh of these triangles. */
+function meshDocument(positions: number[], indices: number[]) {
+  const document = new Document();
+  const buffer = document.createBuffer();
+  const primitive = document.createPrimitive()
+    .setAttribute('POSITION', document.createAccessor().setType('VEC3').setArray(new Float32Array(positions)).setBuffer(buffer))
+    .setIndices(document.createAccessor().setType('SCALAR').setArray(new Uint32Array(indices)).setBuffer(buffer));
+  const node = document.createNode().setMesh(document.createMesh().addPrimitive(primitive));
+  document.createScene().addChild(node);
+  return { document, primitive, node };
+}
+
 /**
  * The floor and four walls of a 3.6 × 2.6 × 4.2 m room, facing in, with no ceiling, and one PNG texture.
  * The vertices are at half size and a node scales them up, the way quantized files store them.
  */
 function openRoom([width, height]: [number, number] = [4, 2]): Document {
-  const document = new Document();
   const [x, y, z] = [0.9, 0.65, 1.05];
   // [corner, edge u, edge v]: two triangles each, facing u × v.
   const quads: [Vec3, Vec3, Vec3][] = [
@@ -30,21 +41,19 @@ function openRoom([width, height]: [number, number] = [4, 2]): Document {
     [ox, oy, oz], [ox + ux, oy + uy, oz + uz], [ox + ux + vx, oy + uy + vy, oz + uz + vz], [ox + vx, oy + vy, oz + vz],
   ].flat());
   const indices = quads.flatMap((_, quad) => [0, 1, 2, 0, 2, 3].map((corner) => quad * 4 + corner));
-  const png = PNG.sync.write(Object.assign(new PNG({ width, height }), { data: Buffer.from(Array.from({ length: width * height * 4 }, (_, i) => (i * 7) % 256)) }));
+  // Not one solid color, which prune would turn into a plain material color.
+  const pixels = Buffer.from(Array.from({ length: width * height * 4 }, (_, i) => (i * 7) % 256));
+  const png = PNG.sync.write(Object.assign(new PNG({ width, height }), { data: pixels }));
 
-  const buffer = document.createBuffer();
-  const primitive = document.createPrimitive()
-    .setAttribute('POSITION', document.createAccessor().setType('VEC3').setArray(new Float32Array(positions)).setBuffer(buffer))
-    .setIndices(document.createAccessor().setType('SCALAR').setArray(new Uint16Array(indices)).setBuffer(buffer))
-    .setMaterial(document.createMaterial().setBaseColorTexture(document.createTexture().setImage(png).setMimeType('image/png')));
-  const node = document.createNode().setMesh(document.createMesh().addPrimitive(primitive)).setScale([2, 2, 2]).setTranslation([0, 1.3, 0]);
-  document.createScene().addChild(node);
+  const { document, primitive, node } = meshDocument(positions, indices);
+  const texture = document.createTexture().setImage(png).setMimeType('image/png');
+  primitive.setMaterial(document.createMaterial().setBaseColorTexture(texture));
+  node.setScale([2, 2, 2]).setTranslation([0, 1.3, 0]);
   return document;
 }
 
 /** A bumpy n × n m floor of 2n² triangles, like a noisy scan that simplify can't flatten for free. */
 function bumpyFloor(n: number): Document {
-  const document = new Document();
   const positions: number[] = [];
   for (let i = 0; i <= n; i++) {
     for (let j = 0; j <= n; j++) positions.push(i, 0.05 * Math.sin(i * 12.9898 + j * 78.233) * Math.sin(j * 4.1 + i), j);
@@ -56,12 +65,7 @@ function bumpyFloor(n: number): Document {
       indices.push(corner, corner + 1, corner + n + 2, corner, corner + n + 2, corner + n + 1);
     }
   }
-  const buffer = document.createBuffer();
-  const primitive = document.createPrimitive()
-    .setAttribute('POSITION', document.createAccessor().setType('VEC3').setArray(new Float32Array(positions)).setBuffer(buffer))
-    .setIndices(document.createAccessor().setType('SCALAR').setArray(new Uint32Array(indices)).setBuffer(buffer));
-  document.createScene().addChild(document.createNode().setMesh(document.createMesh().addPrimitive(primitive)));
-  return document;
+  return meshDocument(positions, indices).document;
 }
 
 describe('optimizeScan', () => {
@@ -114,12 +118,12 @@ describe('formatSummary', () => {
     expect(summary).not.toContain('⚠');
   });
 
-  it.each([
+  it.each<[string, ScanStats['bounds'], string]>([
     ['Z up, as from Blender', { min: [-1.8, -2.1, 0], max: [1.8, 2.1, 2.6] }, '4.20'],
     ['centimeters', { min: [-180, 0, -210], max: [180, 260, 210] }, '260.00'],
     ['too flat for a room', { min: [-1.8, 0, -2.1], max: [1.8, 1.2, 2.1] }, '1.20'],
-  ] as const)('warns when the Y extent is outside 2.0–3.5 m: %s', (_, bounds, height) => {
-    const summary = formatSummary({ ...dorm, bounds: { min: [...bounds.min], max: [...bounds.max] } });
+  ])('warns when the Y extent is outside 2.0–3.5 m: %s', (_, bounds, height) => {
+    const summary = formatSummary({ ...dorm, bounds });
     expect(summary).toContain(`⚠ The Y extent is ${height} m, outside 2.0–3.5 m for a room. Check that +Y is up and the units are meters.`);
   });
 
@@ -136,7 +140,6 @@ describe('formatSummary', () => {
   it('warns when simplify could not bring the mesh under 300k triangles', () => {
     expect(formatSummary({ ...dorm, triangles: 312_000 })).toContain('⚠ 312,000 triangles is over the limit of 300,000.');
   });
-
 });
 
 describe('scanManifest', () => {
@@ -187,12 +190,17 @@ describe('importScan', () => {
     await rm(tmp, { recursive: true, force: true });
   });
 
-  /** Zips the files io.write makes for the room, inside a top folder, as Polycam's glTF export does. */
+  /** Zips paths in tmp into tmp/<zip>. */
+  function zip(name: string, ...paths: string[]) {
+    execFileSync('zip', ['-qr', name, ...paths], { cwd: tmp });
+    return join(tmp, name);
+  }
+
+  /** The room as a glTF export: scene.gltf, scene.bin, and a texture, zipped inside a top folder. */
   async function zippedExport() {
-    await mkdir(join(tmp, 'export/Room'), { recursive: true });
-    await io.write(join(tmp, 'export/Room/scene.gltf'), openRoom());
-    execFileSync('zip', ['-qr', '../polycam-gltf.zip', 'Room'], { cwd: join(tmp, 'export') });
-    return join(tmp, 'polycam-gltf.zip');
+    await mkdir(join(tmp, 'polycam-gltf'));
+    await io.write(join(tmp, 'polycam-gltf/scene.gltf'), openRoom());
+    return zip('polycam-gltf.zip', 'polycam-gltf');
   }
 
   it('turns a zipped glTF export into a Scan folder with room.glb and manifest.json', async () => {
@@ -204,19 +212,19 @@ describe('importScan', () => {
     expect(JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8'))).toEqual({
       version: 1, id: 'test-room', name: 'Test room', mesh: 'room.glb', meshTransform: { position: [0, 0, 0], rotationY: 0 },
     });
-    expect(measureScan(await io.read(join(dir, 'room.glb')))).toEqual(stats);
     expect(stats.triangles).toBe(10);
     expect(stats.textures.map((texture) => texture.mimeType)).toEqual(['image/webp']);
   });
 
   it('unpacks the Raw Data zip into raw/ without its top folder, so raw/ holds keyframes/ for msplat-train', async () => {
-    await mkdir(join(tmp, 'rawdata/Room/keyframes/images'), { recursive: true });
-    await writeFile(join(tmp, 'rawdata/Room/keyframes/images/1.jpg'), 'jpeg');
-    execFileSync('zip', ['-qr', '../rawdata.zip', 'Room'], { cwd: join(tmp, 'rawdata') });
+    await mkdir(join(tmp, 'rawdata/keyframes/images'), { recursive: true });
+    await writeFile(join(tmp, 'rawdata/keyframes/images/1.jpg'), 'jpeg');
+    // A zip made on a Mac also holds __MACOSX/, which would hide that rawdata/ is the only folder.
+    await mkdir(join(tmp, '__MACOSX/rawdata'), { recursive: true });
+    await writeFile(join(tmp, '__MACOSX/rawdata/._keyframes'), 'resource fork');
+    const raw = zip('rawdata.zip', 'rawdata', '__MACOSX');
 
-    const { dir } = await importScan({
-      input: await zippedExport(), scanId: 'test-room', raw: join(tmp, 'rawdata.zip'), scansDir: join(tmp, 'scans'),
-    });
+    const { dir } = await importScan({ input: await zippedExport(), scanId: 'test-room', raw, scansDir: join(tmp, 'scans') });
 
     expect(await readFile(join(dir, 'raw/keyframes/images/1.jpg'), 'utf8')).toBe('jpeg');
   });

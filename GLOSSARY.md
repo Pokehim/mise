@@ -9,8 +9,16 @@ The person the product serves: someone about to move into, or who has just moved
 _Avoid_: User (too generic), customer, designer
 
 **Scan**:
-The captured copy of one real room: it looks like the room, and it knows the room's walls, floor, openings, and furniture with their real-world dimensions. A Scan is made once and never changes.
+The captured copy of one real room: it looks like the room, and it knows the room's walls, floor, Openings, and furniture with their real-world dimensions. A Scan is made once, by a capture plus Room Setup, and is never changed by Designs.
 _Avoid_: Model, capture, room (when you mean the digital copy)
+
+**Room Setup**:
+The one-time step that turns a raw capture into a usable Scan by marking its floor, walls, Openings, and Originals.
+_Avoid_: Annotation, labeling, calibration
+
+**Opening**:
+A door or window in a wall of a Scan.
+_Avoid_: Aperture, gap, hole
 
 **Design**:
 One reimagining of a Scan: the full set of Edits applied on top of it. A Scan has many Designs, and each can be customized and shared on its own.
@@ -51,6 +59,26 @@ _Avoid_: Regenerate, edit (an Edit is a single change, not an instruction)
 **Kept**:
 Describes an Original the Mover has marked as staying, such as a dorm-provided bed. A Kept Original may be recolored but never moved, replaced, or removed.
 _Avoid_: Locked, pinned, fixed
+
+**Finish**:
+The look applied to a Surface, an Original, or a Part: either a paint color or a material from the Material Library. A Finish keeps the room's real lighting and shadows.
+_Avoid_: Texture, skin, material (when you mean what was applied)
+
+**Material Library**:
+The curated set of materials, such as woods, stones, fabrics, metals, and paints, that a Finish can use.
+_Avoid_: Texture pack, swatches
+
+**Part**:
+A distinct region of an Original or a Piece, such as a table's top or its legs, that can be recolored on its own. Parts of an Original can also take a Finish.
+_Avoid_: Component, sub-mesh, segment
+
+**Fit rule**:
+A spatial rule every Design is checked against, such as keeping a door's swing clear or not overlapping another item.
+_Avoid_: Constraint, validation, collision
+
+**Anchor**:
+A placement described by its relationship to the room, such as "against the north wall" or "beside the bed", instead of by coordinates.
+_Avoid_: Slot, snap point, position
 
 **Lift**:
 Separating an Original from the rest of the Scan so it can be moved or changed on its own.

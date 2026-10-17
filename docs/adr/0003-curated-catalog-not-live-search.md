@@ -5,5 +5,5 @@ The Catalog is a hand-picked set of roughly 100–200 furniture and decor items,
 ## Consequences
 
 - ABO has no prices, so any cost shown is a clearly labeled estimate.
-- 99.4% of ABO models have a single baked material, so recoloring a Piece tints the whole object, and changing a Piece's material means swapping it for a similar item.
+- 99.4% of ABO models have a single baked material. Parts on Pieces therefore come from our own geometry rules (ADR-0006), and changing a Piece's material means swapping it for a similar item.
 - The Catalog needs ABO attribution in the app.

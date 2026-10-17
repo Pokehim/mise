@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0004
+---
+
 # A Scan combines a Polycam capture with a separate RoomPlan scan, aligned once
 
 A Scan is assembled from two captures of the same room:

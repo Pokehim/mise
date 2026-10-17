@@ -33,13 +33,17 @@ export function snapCorner([x, z]: Vec2, polygon: Vec2[]): Vec2 {
   return [mm(snap(x, 0)), mm(snap(z, 1))];
 }
 
-/** The setup with a new floor polygon and its Walls. A Wall whose edge didn't change keeps its name. */
+/**
+ * The setup with a new floor polygon and its Walls. A Wall the Mover renamed keeps its name while
+ * its edge is unchanged; every other Wall is named afresh, since a new corner can turn the room.
+ */
 export function withPolygon(setup: RoomSetup, polygon: Vec2[]): RoomSetup {
   const walls = polygon.length >= 3 ? wallsFromPolygon(polygon, setup.ceilingHeight) : [];
+  const autoNames = new Map(wallsFromPolygon(setup.floor.polygon, setup.ceilingHeight).map((w) => [w.id, w.name]));
   const same = (a: Vec2, b: Vec2) => a[0] === b[0] && a[1] === b[1];
   const named = walls.map((wall) => {
     const old = setup.walls.find((w) => w.id === wall.id && same(w.start, wall.start) && same(w.end, wall.end));
-    return old ? { ...wall, name: old.name } : wall;
+    return old && old.name !== autoNames.get(old.id) ? { ...wall, name: old.name } : wall;
   });
   const ids = new Set(named.map((w) => w.id));
   return { ...setup, floor: { polygon }, walls: named, openings: setup.openings.filter((o) => ids.has(o.wallId)) };

@@ -28,6 +28,13 @@ describe('autoBox', () => {
       .toEqual({ position: [0, 0, -0.75], size: [0.8, 0.75, 0.5], rotationY: 0 });
   });
 
+  it('does not grow across a bumpy floor, as a LiDAR scan\'s is', () => {
+    const table = box([-0.4, 0, -1], [0.4, 0.75, -0.5]);
+    const bump = horizontal([-1, -1.4], [1, 0.5], 0.045);
+    expect(autoBox(mergeMeshes([shell, bump, table]), [0.1, 0.75, -0.7], room))
+      .toEqual({ position: [0, 0, -0.75], size: [0.8, 0.75, 0.5], rotationY: 0 });
+  });
+
   it('grows across a piece made of separate touching parts, such as a desk on legs', () => {
     const legs = [-0.35, 0.35].flatMap((x) => [-0.95, -0.55].map((z) => box([x - 0.02, 0, z - 0.02], [x + 0.02, 0.72, z + 0.02])));
     const top = box([-0.4, 0.72, -1], [0.4, 0.75, -0.5]);

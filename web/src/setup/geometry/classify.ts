@@ -13,7 +13,11 @@ export const SPLIT = {
   originalMinY: 0.02,
   originalWallGap: 0.02,
   ceilingBand: 0.05,
-  floorBand: 0.03,
+  /**
+   * Spec §9.4 says 3 cm. Tuned on the venue test scan, whose floor is bumpy: ±3 cm around its
+   * median height holds 48% of its up-facing floor area, ±6 cm holds 85%.
+   */
+  floorBand: 0.06,
   floorNormalY: 0.8,
   wallBand: 0.04,
   wallNormalDot: 0.7,
@@ -58,9 +62,13 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
     return Math.abs(depth) <= band && along >= 0 && along <= wall.length;
   });
 
+  const floorLike = (cx: number, cy: number, cz: number, ny: number) =>
+    Math.abs(cy) < SPLIT.floorBand && ny > SPLIT.floorNormalY && insidePolygon(polygon, cx, cz);
+
   function classify({ cx, cy, cz, nx, ny, nz }: TriangleInfo): number {
-    // 1. Inside an Original's box, grown by 2 cm, above the floor and away from the walls.
-    if (cy > SPLIT.originalMinY) {
+    // 1. Inside an Original's box, grown by 2 cm, above the floor and away from the walls. Added to
+    //    spec §9.4: never a triangle rule 3 would call floor, so a bumpy floor stays under a hidden Original.
+    if (cy > SPLIT.originalMinY && !floorLike(cx, cy, cz, ny)) {
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
         const dx = cx - b.px;
@@ -76,7 +84,7 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
     // 2. Ceiling.
     if (cy > setup.ceilingHeight - SPLIT.ceilingBand) return CEILING;
     // 3. Floor.
-    if (Math.abs(cy) < SPLIT.floorBand && ny > SPLIT.floorNormalY && insidePolygon(polygon, cx, cz)) return FLOOR;
+    if (floorLike(cx, cy, cz, ny)) return FLOOR;
     // 4. A Wall, unless the triangle is inside one of its Openings.
     for (let i = 0; i < walls.length; i++) {
       const wall = walls[i];

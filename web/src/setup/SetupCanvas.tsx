@@ -20,7 +20,8 @@ export function SetupCanvas() {
 function StepView() {
   const step = useSetup((s) => s.step);
   const ceilingHeight = useSetup((s) => s.setup!.ceilingHeight);
-  const bounds = useRoomBounds();
+  // While corners are being clicked, frame the whole scan, not the polygon so far.
+  const bounds = useRoomBounds(step !== 'corners');
   const scanRef = useRef<Group>(null);
   useCeilingClip(step === 'level' || step === 'ceiling' ? null : ceilingHeight - 0.05);
   return (
@@ -40,10 +41,10 @@ function StepView() {
   );
 }
 
-/** The room's extent on the floor: the floor polygon once it exists, otherwise the scan's bounds. */
+/** The room's extent on the floor: the floor polygon once it exists (and `usePolygon`), otherwise the scan's bounds. */
 export interface RoomBounds { minX: number; maxX: number; minZ: number; maxZ: number; maxY: number }
 
-function useRoomBounds(): RoomBounds {
+function useRoomBounds(usePolygon: boolean): RoomBounds {
   const scene = useSetup((s) => s.scene!);
   const meshTransform = useSetup((s) => s.manifest!.meshTransform);
   const polygon = useSetup((s) => s.setup!.floor.polygon);
@@ -57,14 +58,14 @@ function useRoomBounds(): RoomBounds {
       b.minZ = Math.min(b.minZ, positions[i + 2]);
       b.maxZ = Math.max(b.maxZ, positions[i + 2]);
     }
-    if (polygon.length >= 3) {
+    if (usePolygon && polygon.length >= 3) {
       b.minX = Math.min(...polygon.map(([x]) => x));
       b.maxX = Math.max(...polygon.map(([x]) => x));
       b.minZ = Math.min(...polygon.map(([, z]) => z));
       b.maxZ = Math.max(...polygon.map(([, z]) => z));
     }
     return b;
-  }, [scene, meshTransform, polygon]);
+  }, [scene, meshTransform, polygon, usePolygon]);
 }
 
 /** Corners looks straight down with North (−Z) up; Openings faces the selected wall; the rest orbit from above. */

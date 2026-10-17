@@ -1,5 +1,6 @@
 // Room Setup step 5 (spec §9.3): click a piece of furniture, get a box around it.
 import type { Box, RoomSetup, Vec3 } from '@shared/types';
+import { SPLIT } from './classify';
 import type { TriangleMesh } from './mesh';
 import { wallAxis } from './walls';
 
@@ -26,7 +27,8 @@ export type Facing = 'away-from-wall' | 'length';
  *
  * The triangles' surfaces are sampled every half voxel, not only their vertices, because a
  * simplified scan has few vertices on its flat tops. Samples within `radius` (horizontally) of the
- * click, above `minY`, below the ceiling and more than `wallGap` from every wall are voxelized, and
+ * click, above `minY`, below the ceiling and more than `wallGap` from every wall are voxelized
+ * (leaving out the floor's bumps: up-facing triangles the split would call floor), and
  * the voxels touching the click's voxel are grown into a region. The region's bounds, in the room
  * frame (whose axes the walls already follow after step 1), become the box. Its front faces as
  * `facing` says.
@@ -48,8 +50,8 @@ export function autoBox(
       return Math.abs(rx * wall.normal[0] + rz * wall.normal[1]) <= AUTO_BOX.wallGap && along >= 0 && along <= wall.length;
     });
   };
-  const addSample = (x: number, y: number, z: number) => {
-    if (!keep(x, y, z)) return;
+  const addSample = (x: number, y: number, z: number, facesUp: boolean) => {
+    if ((facesUp && y < SPLIT.floorBand) || !keep(x, y, z)) return;
     const key = voxelKey(Math.floor(x / AUTO_BOX.voxel), Math.floor(y / AUTO_BOX.voxel), Math.floor(z / AUTO_BOX.voxel));
     const b = voxels.get(key);
     if (!b) voxels.set(key, Float64Array.of(x, y, z, x, y, z));
@@ -71,6 +73,7 @@ export function autoBox(
     if (Math.hypot(dx, dz) > AUTO_BOX.radius) continue;
     const edge = Math.max(distance(p, a, b), distance(p, b, c), distance(p, c, a));
     const n = Math.max(1, Math.ceil(edge / spacing));
+    const facesUp = upNormalY(p, a, b, c) > SPLIT.floorNormalY;
     for (let i = 0; i <= n; i++) {
       for (let j = 0; i + j <= n; j++) {
         const u = i / n;
@@ -79,6 +82,7 @@ export function autoBox(
           p[a] + u * (p[b] - p[a]) + v * (p[c] - p[a]),
           p[a + 1] + u * (p[b + 1] - p[a + 1]) + v * (p[c + 1] - p[a + 1]),
           p[a + 2] + u * (p[b + 2] - p[a + 2]) + v * (p[c + 2] - p[a + 2]),
+          facesUp,
         );
       }
     }
@@ -194,6 +198,14 @@ function frontAlongLength(walls: AxisWall[], [x0, , z0, x1, , z1]: number[]) {
   }
   const headAtLowZ = nearestWall(walls, cx, z0).distance <= nearestWall(walls, cx, z1).distance;
   return headAtLowZ ? 0 : Math.PI;
+}
+
+/** The y component of a triangle's unit normal. */
+function upNormalY(p: Float32Array, a: number, b: number, c: number) {
+  const [abx, aby, abz] = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
+  const [acx, acy, acz] = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+  const ny = abz * acx - abx * acz;
+  return ny / (Math.hypot(aby * acz - abz * acy, ny, abx * acy - aby * acx) || 1);
 }
 
 const distance = (p: Float32Array, a: number, b: number) => Math.hypot(p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]);

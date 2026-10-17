@@ -58,6 +58,11 @@ describe('triangleClassifier, rule 1: Originals', () => {
     expect(groupOf([-1.5, 0.015, -0.5], UP)).toEqual({ kind: 'floor' });
   });
 
+  it("leaves a bump of a bumpy floor to the Floor, even inside an Original's box", () => {
+    expect(groupOf([-1.5, 0.045, -0.5], UP)).toEqual({ kind: 'floor' });
+    expect(groupOf([-1.5, 0.045, -0.5], [1, 0, 0])).toEqual(original('og_bed'));
+  });
+
   it('leaves the wall behind an Original to that Wall', () => {
     expect(groupOf([-1.99, 0.3, -0.5], [1, 0, 0])).toEqual(wall('wl_4'));
   });
@@ -76,13 +81,14 @@ describe('triangleClassifier, rule 2: Ceiling', () => {
 });
 
 describe('triangleClassifier, rule 3: Floor', () => {
-  it('sends a triangle that faces up within 3 cm of y = 0, inside the floor polygon, to the Floor', () => {
-    expect(groupOf([0, 0.025, 0], [0, 0.85, 0.527])).toEqual({ kind: 'floor' });
-    expect(groupOf([0, -0.025, 0], UP)).toEqual({ kind: 'floor' });
+  // Spec §9.4 says within 3 cm; a real LiDAR floor is bumpier than that, so 6 cm (see SPLIT).
+  it('sends a triangle that faces up within 6 cm of y = 0, inside the floor polygon, to the Floor', () => {
+    expect(groupOf([0, 0.055, 0], [0, 0.85, 0.527])).toEqual({ kind: 'floor' });
+    expect(groupOf([0, -0.055, 0], UP)).toEqual({ kind: 'floor' });
   });
 
   it('leaves out triangles that are too high, tilted, facing down, or outside the polygon', () => {
-    expect(groupOf([0, 0.035, 0], UP)).toEqual({ kind: 'shell' });
+    expect(groupOf([0, 0.065, 0], UP)).toEqual({ kind: 'shell' });
     expect(groupOf([0, 0, 0], [0, 0.75, 0.661])).toEqual({ kind: 'shell' });
     expect(groupOf([0, 0, 0], [0, -1, 0])).toEqual({ kind: 'shell' });
     expect(groupOf([1.2, 0, 1.6], UP)).toEqual({ kind: 'shell' });

@@ -14,6 +14,11 @@ describe('detectFloorHeight', () => {
     expect(detectFloorHeight(mergeMeshes([room, deskTop]))).toBeCloseTo(0.8, 2);
   });
 
+  it('takes the middle of a bumpy floor, as a LiDAR scan\'s is', () => {
+    const bumps = [0.76, 0.78, 0.8, 0.82, 0.84].map((y, i) => horizontal([3 + 0.8 * i, 1], [3.8 + 0.8 * i, 4], y));
+    expect(detectFloorHeight(mergeMeshes(bumps))).toBeCloseTo(0.8, 2);
+  });
+
   it('ignores a small patch of noise below the floor', () => {
     const noise = horizontal([5, 2], [5.1, 2.1], 0.5);
     expect(detectFloorHeight(mergeMeshes([room, noise]))).toBeCloseTo(0.8, 2);
@@ -44,6 +49,11 @@ describe('detectYaw', () => {
   it('finds walls that are just off the axes on either side of 0°', () => {
     expect(detectYaw(rotateY(room, degrees(0.3)))).toBeCloseTo(degrees(-0.3), 3);
     expect(detectYaw(rotateY(room, degrees(-0.3)))).toBeCloseTo(degrees(0.3), 3);
+  });
+
+  it('finds the middle of walls whose normals are noisy, as a LiDAR scan\'s are', () => {
+    const noisy = mergeMeshes([-0.6, -0.3, 0, 0.3, 0.6].map((d) => rotateY(room, degrees(20 + d))));
+    expect(detectYaw(noisy)).toBeCloseTo(degrees(-20), 3);
   });
 
   it('follows the wall with the most area over a smaller one at another angle', () => {

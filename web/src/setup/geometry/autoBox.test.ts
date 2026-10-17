@@ -41,6 +41,13 @@ describe('autoBox', () => {
       .toEqual({ position: [1.7, 0, -0.6], size: [1.07, 0.76, 0.6], rotationY: -Math.PI / 2 });
   });
 
+  it("turns a bed's front to its foot: along its length, away from the wall at its head", () => {
+    // Along the West wall with its head in the North-West corner, like a dorm bed.
+    const bed = box([-2, 0, -1.5], [-1.01, 0.6, 0.4]);
+    expect(autoBox(mergeMeshes([shell, bed]), [-1.5, 0.6, -0.55], room, 'length'))
+      .toEqual({ position: [-1.505, 0, -0.55], size: [0.99, 0.6, 1.9], rotationY: 0 });
+  });
+
   it('keeps the bottom of something mounted on a wall, such as a shelf', () => {
     const shelf = box([-0.5, 1.2, -1.5], [0.5, 1.5, -1.25]);
     expect(autoBox(mergeMeshes([shell, shelf]), [0, 1.5, -1.4], room))

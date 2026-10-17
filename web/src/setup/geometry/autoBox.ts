@@ -16,16 +16,24 @@ export const AUTO_BOX = {
 };
 
 /**
+ * Which way a new box's front (+Z) faces: away from the nearest wall, or, for a bed, along its
+ * length and away from the wall at its head.
+ */
+export type Facing = 'away-from-wall' | 'length';
+
+/**
  * A box around the furniture under the click, or null when the click is on the bare floor or a wall.
  *
  * The triangles' surfaces are sampled every half voxel, not only their vertices, because a
  * simplified scan has few vertices on its flat tops. Samples within `radius` (horizontally) of the
  * click, above `minY`, below the ceiling and more than `wallGap` from every wall are voxelized, and
  * the voxels touching the click's voxel are grown into a region. The region's bounds, in the room
- * frame (whose axes the walls already follow after step 1), become the box. Its front faces away
- * from the nearest wall.
+ * frame (whose axes the walls already follow after step 1), become the box. Its front faces as
+ * `facing` says.
  */
-export function autoBox(mesh: TriangleMesh, click: Vec3, room: Pick<RoomSetup, 'walls' | 'ceilingHeight'>): Box | null {
+export function autoBox(
+  mesh: TriangleMesh, click: Vec3, room: Pick<RoomSetup, 'walls' | 'ceilingHeight'>, facing: Facing = 'away-from-wall',
+): Box | null {
   const walls = room.walls.map((wall) => ({ ...wall, ...wallAxis(wall) }));
   const voxels = new Map<number, Float64Array>();   // voxel key → [minX, minY, minZ, maxX, maxY, maxZ]
   const [clickX, , clickZ] = click;
@@ -96,7 +104,9 @@ export function autoBox(mesh: TriangleMesh, click: Vec3, room: Pick<RoomSetup, '
 
   const [x0, y0, z0, x1, y1, z1] = bounds;
   const center = [(x0 + x1) / 2, (z0 + z1) / 2] as const;
-  const rotationY = frontAwayFromNearestWall(walls, center[0], center[1]);
+  const rotationY = facing === 'length'
+    ? frontAlongLength(walls, bounds)
+    : frontAwayFromNearestWall(walls, center[0], center[1]);
   const sideways = Math.abs(Math.sin(rotationY)) > 0.5;   // front along ±X: width runs along Z
   return {
     position: [mm(center[0]), mm(y0), mm(center[1])],
@@ -152,19 +162,38 @@ function growRegion(voxels: Map<number, Float64Array>, seed: number): number[] {
   return bounds;
 }
 
-/** The rotationY that turns a box's +Z front to the inward normal of the nearest wall, snapped to an axis. */
-function frontAwayFromNearestWall(walls: (RoomSetup['walls'][number] & ReturnType<typeof wallAxis>)[], x: number, z: number) {
-  let front: [number, number] = [0, 1];
-  let nearest = Infinity;
+type AxisWall = RoomSetup['walls'][number] & ReturnType<typeof wallAxis>;
+
+/** The nearest wall whose extent the point is beside, and the point's distance from its plane. */
+function nearestWall(walls: AxisWall[], x: number, z: number) {
+  let nearest: AxisWall | undefined;
+  let distance = Infinity;
   for (const wall of walls) {
     const rx = x - wall.start[0];
     const rz = z - wall.start[1];
     const along = rx * wall.dx + rz * wall.dz;
     const depth = Math.abs(rx * wall.normal[0] + rz * wall.normal[1]);
-    if (along >= 0 && along <= wall.length && depth < nearest) [front, nearest] = [wall.normal, depth];
+    if (along >= 0 && along <= wall.length && depth < distance) [nearest, distance] = [wall, depth];
   }
+  return { wall: nearest, distance };
+}
+
+/** The rotationY that turns a box's +Z front to the inward normal of the nearest wall, snapped to an axis. */
+function frontAwayFromNearestWall(walls: AxisWall[], x: number, z: number) {
+  const front = nearestWall(walls, x, z).wall?.normal ?? [0, 1];
   const [fx, fz] = Math.abs(front[0]) > Math.abs(front[1]) ? [Math.sign(front[0]), 0] : [0, Math.sign(front[1])];
   return Math.atan2(fx, fz);
+}
+
+/** The rotationY that turns a box's +Z front along its longer side, toward the end farther from a wall. */
+function frontAlongLength(walls: AxisWall[], [x0, , z0, x1, , z1]: number[]) {
+  const [cx, cz] = [(x0 + x1) / 2, (z0 + z1) / 2];
+  if (x1 - x0 > z1 - z0) {
+    const headAtLowX = nearestWall(walls, x0, cz).distance <= nearestWall(walls, x1, cz).distance;
+    return Math.atan2(headAtLowX ? 1 : -1, 0);
+  }
+  const headAtLowZ = nearestWall(walls, cx, z0).distance <= nearestWall(walls, cx, z1).distance;
+  return headAtLowZ ? 0 : Math.PI;
 }
 
 const distance = (p: Float32Array, a: number, b: number) => Math.hypot(p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]);

@@ -1,5 +1,6 @@
+import { distanceToWall } from './geometry';
 import { partsFor } from './parts';
-import type { Catalog, Category, Edit, RoomSetup, RoomState, SkipReason } from './types';
+import type { Catalog, Category, Edit, Original, Placement, RoomSetup, RoomState, SkipReason, Vec2, Wall } from './types';
 
 /**
  * The room a Design shows: its Scan, with the Edits applied in list order (spec §6, ADR-0001).
@@ -7,9 +8,8 @@ import type { Catalog, Category, Edit, RoomSetup, RoomState, SkipReason } from '
  */
 export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomState {
   const state: RoomState = {
-    originals: Object.fromEntries(setup.originals.map(({ id, box: { position, rotationY } }) => [id, {
-      visible: true, moved: false, partColors: {}, partFinishes: {},
-      placement: { position, rotationY, mount: 'floor' },
+    originals: Object.fromEntries(setup.originals.map((original) => [original.id, {
+      visible: true, moved: false, partColors: {}, partFinishes: {}, placement: startPlacement(original, setup.walls),
     }])),
     pieces: {},
     surfaces: { walls: {} },
@@ -120,6 +120,22 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
     if (reason) state.skipped.push({ editId: edit.id, reason });
   }
   return state;
+}
+
+/** A box whose bottom is higher than this, in meters, isn't on the floor. Room Setup's auto-box starts at 3 cm. */
+const ABOVE_FLOOR = 0.1;
+
+/**
+ * Where an Original starts: at its Room Setup box. One whose box is off the floor hangs on its
+ * nearest wall if its category goes on walls (as in the Catalog, §8.1), or else stands on furniture.
+ */
+function startPlacement({ box: { position, rotationY }, category }: Original, walls: Wall[]): Placement {
+  if (position[1] <= ABOVE_FLOOR) return { position, rotationY, mount: 'floor' };
+  if (category !== 'wall_art' && category !== 'mirror') return { position, rotationY, mount: 'surface' };
+  const point: Vec2 = [position[0], position[2]];
+  const gap = (wall: Wall) => Math.abs(distanceToWall(point, wall));
+  const nearest = walls.reduce<Wall | undefined>((best, wall) => (best && gap(best) <= gap(wall) ? best : wall), undefined);
+  return { position, rotationY, mount: 'wall', wallId: nearest?.id };
 }
 
 /** Sets a key, or deletes it when the value is null. */

@@ -33,6 +33,23 @@ export const setup: RoomSetup = {
   ],
 };
 
+/** The room with two more Originals that aren't on the floor: a lamp on the desk, and a mirror over the bed. */
+export const withLampAndMirror: RoomSetup = {
+  ...setup,
+  originals: [
+    ...setup.originals,
+    {
+      id: 'og_lamp', label: 'Lamp', category: 'lamp', kept: false, floorColor: '#a89f91',
+      box: { position: [1.7, 0.76, -0.6], size: [0.2, 0.45, 0.2], rotationY: 0 },
+    },
+    {
+      // On the West wall, facing east: x −2 to −1.97.
+      id: 'og_mirror', label: 'Mirror', category: 'mirror', kept: true, floorColor: '#a89f91',
+      box: { position: [-1.985, 1, 0], size: [0.5, 0.8, 0.03], rotationY: Math.PI / 2 },
+    },
+  ],
+};
+
 const item = (id: string, category: Category, title: string, size: Vec3, details: Partial<CatalogItem>): CatalogItem => ({
   id, source: 'abo', title, category, mount: 'floor', size,
   model: `/data/catalog/models/${id}.glb`, thumbnail: `/data/catalog/thumbs/${id}.jpg`,

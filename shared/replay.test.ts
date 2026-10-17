@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { replay } from './replay';
-import { catalog, edit, onFloor, setup } from './test-room';
+import { catalog, edit, onFloor, setup, withLampAndMirror } from './test-room';
 
 describe('replay', () => {
   it('starts from the Scan: every Original visible at its Room Setup box, no Pieces, no Finishes', () => {
@@ -20,6 +20,13 @@ describe('replay', () => {
       patches: [],
       skipped: [],
     });
+  });
+
+  it('starts an Original above the floor on a surface, or on its nearest wall if it hangs on walls', () => {
+    const { originals } = replay(withLampAndMirror, catalog, []);
+
+    expect(originals.og_lamp.placement).toEqual({ position: [1.7, 0.76, -0.6], rotationY: 0, mount: 'surface' });
+    expect(originals.og_mirror.placement).toEqual({ position: [-1.985, 1, 0], rotationY: Math.PI / 2, mount: 'wall', wallId: 'wl_west' });
   });
 
   describe('place', () => {

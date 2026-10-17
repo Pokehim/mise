@@ -1,7 +1,7 @@
 import { Environment, Stats } from '@react-three/drei';
 import { Canvas, events } from '@react-three/fiber';
-import { Component, type ReactNode, Suspense, useRef } from 'react';
-import { NeutralToneMapping } from 'three';
+import { Component, type ReactNode, type RefObject, Suspense, useRef } from 'react';
+import { type Camera, NeutralToneMapping } from 'three';
 import { useShallow } from 'zustand/react/shallow';
 import { useEditor } from '../state/store';
 import { DollhouseCamera } from './DollhouseCamera';
@@ -39,8 +39,8 @@ function Pieces() {
 
 const debug = new URLSearchParams(location.search).has('debug');
 
-/** The 3D view: the Scan, the Pieces, and the camera for the current view. */
-export function SceneCanvas() {
+/** The 3D view: the Scan, the Pieces, and the camera for the current view, which it shares through cameraRef. */
+export function SceneCanvas({ cameraRef }: { cameraRef: RefObject<Camera | null> }) {
   const view = useEditor((s) => s.view);
   const container = useRef<HTMLDivElement>(null!);
   return (
@@ -51,6 +51,9 @@ export function SceneCanvas() {
         // Hidden objects, such as faded walls and replaced Originals, must not catch clicks.
         events={(store) => ({ ...events(store), filter: (hits) => hits.filter((hit) => isShown(hit.object)) })}
         onPointerMissed={() => useEditor.getState().select(null)}
+        onCreated={({ camera }) => {
+          cameraRef.current = camera;
+        }}
       >
         <color attach="background" args={['#f4f1ea']} />
         <hemisphereLight args={['#ffffff', '#d9cfbf', 0.6]} />

@@ -1,7 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import type { Camera } from 'three';
 import { Link } from 'wouter';
 import { useEditor } from '../state/store';
+import { CatalogPanel } from '../ui/CatalogPanel';
 import { TopBar } from '../ui/TopBar';
+import { addPiece } from './pieceEdits';
 import { SceneCanvas } from './SceneCanvas';
 import './editor.css';
 
@@ -21,6 +24,7 @@ function useEditorKeys() {
 export function EditorPage({ params: { designId } }: { params: { designId: string } }) {
   const ready = useEditor((s) => s.status === 'ready' && s.design?.id === designId);
   const error = useEditor((s) => s.error);
+  const camera = useRef<Camera>(null);
   useEditorKeys();
 
   useEffect(() => {
@@ -32,7 +36,8 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
   return (
     <div className="editor">
       <TopBar />
-      <SceneCanvas />
+      <CatalogPanel onAdd={(item) => camera.current && addPiece(item, camera.current)} />
+      <SceneCanvas cameraRef={camera} />
       <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
     </div>
   );

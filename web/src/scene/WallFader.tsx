@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect } from 'react';
 import type { Object3D } from 'three';
 import type { Wall } from '@shared/types';
+import { faces } from './floorPlan';
 import { forEachMaterial } from './objects';
 
 const FADE_SECONDS = 0.15;
@@ -19,10 +20,10 @@ export function WallFader({ walls, nodes }: { walls: Wall[]; nodes: Record<strin
   }, [nodes]);
 
   useFrame(({ camera }, delta) => {
-    for (const { id, start: [sx, sz], normal: [nx, nz] } of walls) {
-      const node = nodes[id];
+    for (const wall of walls) {
+      const node = nodes[wall.id];
       if (!node) continue;
-      const target = (camera.position.x - sx) * nx + (camera.position.z - sz) * nz < 0 ? 0 : 1;
+      const target = faces(wall, [camera.position.x, camera.position.z]) ? 1 : 0;
       const opacity: number = node.userData.opacity ?? 1;
       if (opacity === target) continue;
       const step = delta / FADE_SECONDS;

@@ -21,23 +21,36 @@ export function insideFloor([x, z]: Vec2, polygon: Vec2[]) {
   return inside;
 }
 
-/** Where a floor point lands on a wall's line: how far along it, and how far into the room. */
+export const wallLength = ({ start, end }: Wall) => Math.hypot(end[0] - start[0], end[1] - start[1]);
+
+/** Where a floor point lands on a wall's line: how far along it from its start, and how far into the room. */
 export function wallCoordinates([x, z]: Vec2, wall: Wall) {
   const [sx, sz] = wall.start;
-  const length = Math.hypot(wall.end[0] - sx, wall.end[1] - sz);
+  const length = wallLength(wall);
   const along = ((x - sx) * (wall.end[0] - sx) + (z - sz) * (wall.end[1] - sz)) / length;
   const into = (x - sx) * wall.normal[0] + (z - sz) * wall.normal[1];
   return { along, into, length };
 }
 
-/** The floor point `along` a wall and `into` the room from it. */
+/** The floor point `along` a wall from its start and `into` the room from it. */
 export function wallPoint(wall: Wall, along: number, into: number): Vec2 {
   const [sx, sz] = wall.start;
-  const length = Math.hypot(wall.end[0] - sx, wall.end[1] - sz);
+  const length = wallLength(wall);
   return [
     sx + ((wall.end[0] - sx) * along) / length + wall.normal[0] * into,
     sz + ((wall.end[1] - sz) * along) / length + wall.normal[1] * into,
   ];
+}
+
+/** The wall nearest a floor point, the nearest point on it, and how far away that is. */
+export function nearestWall(point: Vec2, walls: Wall[]) {
+  return walls
+    .map((wall) => {
+      const { along, length } = wallCoordinates(point, wall);
+      const onWall = wallPoint(wall, Math.min(Math.max(along, 0), length), 0);
+      return { wall, onWall, distance: Math.hypot(point[0] - onWall[0], point[1] - onWall[1]) };
+    })
+    .reduce((a, b) => (b.distance < a.distance ? b : a));
 }
 
 /** The nearest floor point at least `margin` inside every wall: the point itself when it already is. */
@@ -45,16 +58,12 @@ export function keepInside(point: Vec2, setup: RoomSetup, margin: number): Vec2 
   let p = point;
   // A point pushed off one wall can land too close to the next one in a corner, so repeat.
   for (let i = 0; i < 3; i++) {
-    const nearest = setup.walls
-      .map((wall) => {
-        const { along, length } = wallCoordinates(p, wall);
-        const onWall = wallPoint(wall, Math.min(Math.max(along, 0), length), 0);
-        return { wall, onWall, distance: Math.hypot(p[0] - onWall[0], p[1] - onWall[1]) };
-      })
-      .reduce((a, b) => (b.distance < a.distance ? b : a));
-    if (nearest.distance >= margin && insideFloor(p, setup.floor.polygon)) return p;
-    const [nx, nz] = nearest.wall.normal;
-    p = [nearest.onWall[0] + nx * margin, nearest.onWall[1] + nz * margin];
+    const { wall, onWall, distance } = nearestWall(p, setup.walls);
+    if (distance >= margin && insideFloor(p, setup.floor.polygon)) return p;
+    p = [onWall[0] + wall.normal[0] * margin, onWall[1] + wall.normal[1] * margin];
   }
   return p;
 }
+
+/** Whether a wall's inside faces a point, such as the camera: the walls the Dollhouse view shows. */
+export const faces = ({ start, normal }: Wall, [x, z]: Vec2) => (x - start[0]) * normal[0] + (z - start[1]) * normal[1] >= 0;

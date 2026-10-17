@@ -116,7 +116,7 @@ Browser (Vite + React + TypeScript + React Three Fiber + drei)
                       RoomState = replay(setup, catalog, design.edits)   ← pure function (shared/)
                       render RoomState; UI actions create Edits → append → save
 
-Hono server (localhost:8787)
+Hono server (localhost:$API_PORT, default 8787)
    GET  /data/*                  static: scans, catalog, materials
    GET  /api/scans               list ScanManifests
    PUT  /api/scans/:id/setup     save Room Setup
@@ -193,7 +193,12 @@ There's one `package.json` at the root, so there's no workspace tooling to confi
 
 **Running it:**
 
-- `npm run dev` runs Vite (port 5173) and `tsx watch server/index.ts` (port 8787) together. Vite proxies `/api` and `/data` to 8787.
+- `npm run dev` runs `concurrently "npm:dev:web" "npm:dev:api"`:
+  - `dev:web` is `vite --port ${PORT:-5173} --strictPort`.
+  - `dev:api` is `tsx watch server/index.ts`, which listens on `process.env.API_PORT ?? 8787`.
+  - Vite proxies `/api` and `/data` to `http://localhost:${API_PORT ?? 8787}`.
+- **Superset ports:** each Superset workspace gets its own port block, and its Run button (`.superset/run.sh`) exports `PORT` and `API_PORT`. Never hard-code 5173 or 8787 anywhere else. Keep the word `vite` out of the `dev` script itself: if it appears there, `run.sh` appends `--port` to `concurrently` instead of to Vite.
+- **Secrets:** put `.env` (with `ANTHROPIC_API_KEY` in Phase 4) in the main checkout. `.superset/setup.sh` copies it into every new workspace.
 - **Git:** commit everything except `data/scans/*/raw/`. The GLBs and SPZ are small enough for GitHub, and committing them lets both laptops run the same data.
 - **Tests:** `vitest` on the pure modules (`replay`, `fit`, `catalog-search`, `parts`) only. They're small, and they are the code Claude will depend on in Phase 4.
 

@@ -1,9 +1,10 @@
-import { Bvh, Shadow } from '@react-three/drei';
+import { Bvh, Shadow, useCursor } from '@react-three/drei';
 import { createPortal, useLoader } from '@react-three/fiber';
-import { Fragment, useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import type { Mesh } from 'three';
 import type { Vec3 } from '@shared/types';
 import { useEditor } from '../state/store';
+import { useDragPiece } from './DragControls';
 import { GLTFLoader, withMeshopt } from './gltf';
 import { Outline } from './SelectionOutline';
 
@@ -42,6 +43,9 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
     return piece && s.catalog!.items.find(({ id }) => id === piece.catalogId);
   });
   const selected = useEditor((s) => s.selection?.kind === 'piece' && s.selection.id === pieceId);
+  const onPointerDown = useDragPiece(pieceId);
+  const [hovered, setHovered] = useState(false);
+  useCursor(hovered, 'grab');
   if (!placement || !item) return null;
 
   return (
@@ -49,10 +53,14 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
       name={pieceId}
       position={placement.position}
       rotation-y={placement.rotationY}
-      onClick={(event) => {
+      onPointerDown={onPointerDown}
+      // Selecting happened on pointerdown; keep the click from reaching the Scan behind.
+      onClick={(event) => event.stopPropagation()}
+      onPointerOver={(event) => {
         event.stopPropagation();
-        if (event.delta <= 2) useEditor.getState().select({ kind: 'piece', id: pieceId });
+        setHovered(true);
       }}
+      onPointerOut={() => setHovered(false)}
     >
       <PieceModel url={item.model} selected={selected} />
       {placement.mount === 'floor' && item.category !== 'rug' && <BlobShadow size={item.size} />}

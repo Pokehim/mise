@@ -38,8 +38,8 @@ const SNAP_DISTANCE = 0.1;
 const SNAP_ANGLE = (20 * Math.PI) / 180;
 
 /**
- * If the Piece's back is within 10 cm of a wall and it faces within 20° of the wall's normal, the
- * placement that puts it flush against that wall, squared up (spec §10.3); otherwise null.
+ * If the Piece's back is within 10 cm of a wall, or pushed into it, and the Piece faces within 20°
+ * of the wall's normal: the placement that puts it flush against that wall, squared up (spec §10.3).
  */
 export function snapToWall(placement: Placement, depth: number, walls: Wall[]): Placement | null {
   const [x, y, z] = placement.position;
@@ -49,7 +49,7 @@ export function snapToWall(placement: Placement, depth: number, walls: Wall[]): 
   for (const wall of walls) {
     if (front[0] * wall.normal[0] + front[1] * wall.normal[1] < Math.cos(SNAP_ANGLE)) continue;
     const { along, into, length } = wallCoordinates(back, wall);
-    if (Math.abs(into) > SNAP_DISTANCE || along < 0 || along > length) continue;
+    if (into > SNAP_DISTANCE || into < -depth || along < 0 || along > length) continue;
     if (!best || Math.abs(into) < best.gap) best = { wall, along, gap: Math.abs(into) };
   }
   if (!best) return null;

@@ -4,16 +4,24 @@ import { Link } from 'wouter';
 import { useEditor } from '../state/store';
 import { CatalogPanel } from '../ui/CatalogPanel';
 import { TopBar } from '../ui/TopBar';
-import { addPiece } from './pieceEdits';
+import { addPiece, removePiece, rotatePiece } from './pieceEdits';
 import { SceneCanvas } from './SceneCanvas';
 import './editor.css';
 
-/** Editor shortcuts (spec §10.3). Keys typed into a field are left alone. */
+/** Editor shortcuts (spec §10.3): Esc deselects, R / Shift+R rotate the selected Piece, Delete removes it. */
 function useEditorKeys() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) return;
-      if (event.key === 'Escape') useEditor.getState().select(null);
+      const { selection, preview, select } = useEditor.getState();
+      if (event.key === 'Escape') select(null);
+      if (selection?.kind !== 'piece' || preview || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key.toLowerCase() === 'r') rotatePiece(selection.id, event.shiftKey ? -1 : 1);
+      // Backspace is the key labeled "delete" on a Mac.
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        removePiece(selection.id);
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);

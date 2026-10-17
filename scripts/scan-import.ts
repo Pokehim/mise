@@ -39,7 +39,8 @@ Arguments:
 
 Options:
   --raw <rawdata>  The Polycam Raw Data export (Developer Mode), as a .zip or a folder. It is
-                   unpacked into data/scans/<scanId>/raw/, which git ignores, for splat training.
+                   unpacked into data/scans/<scanId>/raw/, which git ignores. The fallback splat
+                   (msplat-train) is trained from it.
   --name <name>    The name the editor shows, such as "Maple Hall 412". Defaults to <scanId>.
   --force          Replace a Scan that already exists. This resets its meshTransform, so redo
                    Room Setup step 1 afterwards.
@@ -54,7 +55,7 @@ What it does:
 
 Examples:
   npx tsx scripts/scan-import.ts ~/Downloads/venue.glb venue-test --name "Venue test"
-  npx tsx scripts/scan-import.ts ~/Downloads/dorm.zip dorm-v1 --raw ~/Downloads/dorm-raw.zip --name "Maple Hall 412"
+  npx tsx scripts/scan-import.ts ~/Downloads/dorm.glb dorm-v1 --raw ~/Downloads/dorm-raw.zip --name "Maple Hall 412"
 `.trim();
 
 // Registering the extensions also teaches gltf-transform to read WebP image sizes.

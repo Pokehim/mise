@@ -89,7 +89,9 @@ describe('describe', () => {
     expect(history({ type: 'place', pieceId: 'pc_1', catalogId: 'B0GONE', placement: onFloor(0, 0) })).toBe('Placed B0GONE');
     expect(history({ type: 'swap', pieceId: 'pc_1', catalogId: 'B0GONE', placement: onFloor(0, 0), via: 'resize' }))
       .toBe('Resized a Piece → B0GONE');
-    expect(history({ type: 'replace', originalId: 'og_gone', pieceId: 'pc_1', catalogId: 'desk-walnut', placement: onFloor(0, 0), via: 'replace' }))
+    expect(history({
+      type: 'replace', originalId: 'og_gone', pieceId: 'pc_1', catalogId: 'desk-walnut', placement: onFloor(0, 0), via: 'replace',
+    }))
       .toBe('Replaced an Original with 30″ Walnut Desk');
     expect(history({ type: 'finish', target: { kind: 'wall', wallId: 'wl_gone' }, finish: { kind: 'paint', color: '#9caf88' } }))
       .toBe('Painted a wall · Sage');

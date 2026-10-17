@@ -10,7 +10,7 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
     return original && `your ${original.label.toLowerCase()}`;
   };
   /** "your bed frame", "your bed" ('*'), "legs" or "all Parts" for a Piece. */
-  const parts = (targetId: string, partId: string) => {
+  const whichParts = (targetId: string, partId: string) => {
     const owner = yours(targetId);
     if (partId === '*') return owner ?? 'all Parts';
     const part = PART_NAMES.get(partId) ?? partId;
@@ -36,21 +36,21 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
     }
     case 'recolor':
       return edit.color
-        ? `Recolored ${parts(edit.targetId, edit.partId)} · ${colorName(edit.color)}`
-        : `Cleared the color of ${parts(edit.targetId, edit.partId)}`;
+        ? `Recolored ${whichParts(edit.targetId, edit.partId)} · ${colorName(edit.color)}`
+        : `Cleared the color of ${whichParts(edit.targetId, edit.partId)}`;
     case 'finish': {
       const { target, finish } = edit;
-      const surface = target.kind === 'wall' ? setup.walls.find(({ id }) => id === target.wallId)?.name ?? 'a wall'
+      const targetName = target.kind === 'wall' ? setup.walls.find(({ id }) => id === target.wallId)?.name ?? 'a wall'
         : target.kind === 'floor' ? 'the floor'
-        : parts(target.originalId, target.partId);
+        : whichParts(target.originalId, target.partId);
       switch (finish.kind) {
         case 'paint':
-          return `Painted ${surface} · ${colorName(finish.color)}`;
+          return `Painted ${targetName} · ${colorName(finish.color)}`;
         case 'material':
           // The Material Library isn't an input, so its name comes from the id: "oak" → "Oak".
-          return `Finished ${surface} · ${finish.materialId[0].toUpperCase()}${finish.materialId.slice(1)}`;
+          return `Finished ${targetName} · ${finish.materialId[0].toUpperCase()}${finish.materialId.slice(1)}`;
         case 'none':
-          return `Reset ${surface} to scanned`;
+          return `Reset ${targetName} to scanned`;
       }
     }
   }

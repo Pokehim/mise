@@ -62,7 +62,9 @@ export const catalog: Catalog = {
   version: 1,
   items: [
     item('chair-ergo', 'chair', 'Ergo Mesh Chair', [0.6, 0.95, 0.6], { colors: ['Black'], colorHex: '#1c1c1c', styleTags: ['Modern'] }),
-    item('desk-walnut', 'desk', '30″ Walnut Desk', [0.76, 0.75, 0.5], { colors: ['Walnut'], colorHex: '#5c4033', styleTags: ['Mid-Century Modern'] }),
+    item('desk-walnut', 'desk', '30″ Walnut Desk', [0.76, 0.75, 0.5], {
+      colors: ['Walnut'], colorHex: '#5c4033', styleTags: ['Mid-Century Modern'],
+    }),
     item('rug-gray', 'rug', 'Mainstays 5×7 Rug', [1.52, 0.01, 2.13], { colors: ['Light Gray'], styleTags: ['Contemporary'] }),
     item('lamp-brass', 'lamp', 'Brass Desk Lamp', [0.2, 0.45, 0.2], { colors: ['Brass'], colorHex: '#b5a642', styleTags: ['Industrial'] }),
   ],

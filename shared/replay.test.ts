@@ -186,7 +186,10 @@ describe('replay', () => {
 
   describe('replace', () => {
     const replaceDesk = (id: string, pieceId = 'pc_desk', catalogId = 'desk-walnut') =>
-      edit(id, { type: 'replace', originalId: 'og_desk', pieceId, catalogId, placement: onFloor(1.75, -0.6, -Math.PI / 2), via: 'replace' });
+      edit(id, {
+        type: 'replace', originalId: 'og_desk', pieceId, catalogId, via: 'replace',
+        placement: onFloor(1.75, -0.6, -Math.PI / 2),
+      });
 
     it('hides the Original, adds a Patch where it stood, and adds the Piece that replaces it', () => {
       const state = replay(setup, catalog, [replaceDesk('ed_1')]);
@@ -203,8 +206,12 @@ describe('replay', () => {
 
     it('skips a Kept Original, and an Original that is gone or no longer visible', () => {
       const state = replay(setup, catalog, [
-        edit('ed_1', { type: 'replace', originalId: 'og_bed', pieceId: 'pc_1', catalogId: 'desk-walnut', placement: onFloor(0, 0), via: 'replace' }),
-        edit('ed_2', { type: 'replace', originalId: 'og_gone', pieceId: 'pc_2', catalogId: 'desk-walnut', placement: onFloor(0, 0), via: 'replace' }),
+        edit('ed_1', {
+          type: 'replace', originalId: 'og_bed', pieceId: 'pc_1', catalogId: 'desk-walnut', placement: onFloor(0, 0), via: 'replace',
+        }),
+        edit('ed_2', {
+          type: 'replace', originalId: 'og_gone', pieceId: 'pc_2', catalogId: 'desk-walnut', placement: onFloor(0, 0), via: 'replace',
+        }),
         replaceDesk('ed_3', 'pc_3'),
         replaceDesk('ed_4', 'pc_4'),
       ]);
@@ -383,7 +390,8 @@ describe('replay', () => {
     it('leaves the spot empty, with its Patch, when the Piece that replaced an Original is removed', () => {
       const state = replay(setup, catalog, [
         edit('ed_1', {
-          type: 'replace', originalId: 'og_desk', pieceId: 'pc_desk', catalogId: 'desk-walnut', placement: onFloor(1.75, -0.6), via: 'replace',
+          type: 'replace', originalId: 'og_desk', pieceId: 'pc_desk', catalogId: 'desk-walnut', via: 'replace',
+          placement: onFloor(1.75, -0.6),
         }),
         edit('ed_2', { type: 'remove', targetId: 'pc_desk' }),
       ]);

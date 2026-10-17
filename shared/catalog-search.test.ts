@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { search, type SearchQuery } from './catalog-search';
 import { catalog } from './test-room';
+import type { Vec3 } from './types';
 
 // The test Catalog, [w, h, d] in meters: chair-ergo [0.6, 0.95, 0.6], desk-walnut [0.76, 0.75, 0.5],
 // rug-gray [1.52, 0.01, 2.13], lamp-brass [0.2, 0.45, 0.2].
@@ -35,17 +36,21 @@ describe('search', () => {
 
   describe('size closeness, for Swap and Resize', () => {
     // score = max(|w−W|/W, |d−D|/D): the larger relative miss in width or depth.
-    it('labels the items within 15% "fits", closest first, and leaves out the rest', () => {
+    it('ranks the items closest first, labeling those within 15% "fits" and the rest "closest"', () => {
       const results = search(catalog, { targetSize: [0.7, 0.9, 0.55] });
 
-      expect(results.map(({ item, label }) => [item.id, label])).toEqual([['desk-walnut', 'fits'], ['chair-ergo', 'fits']]);
+      expect(results.map(({ item, label }) => [item.id, label])).toEqual([
+        ['desk-walnut', 'fits'], ['chair-ergo', 'fits'], ['lamp-brass', 'closest'], ['rug-gray', 'closest'],
+      ]);
       expect(results[0].score).toBeCloseTo(0.0909); // depth: |0.5 − 0.55| / 0.55
       expect(results[1].score).toBeCloseTo(0.1429); // width: |0.6 − 0.7| / 0.7
-      expect(ids({ targetSize: [0.65, 0.9, 0.55] })).toEqual(['chair-ergo']); // the desk is 17% too wide
+      expect(search(catalog, { targetSize: [0.65, 0.9, 0.55], limit: 2 }).map(({ item, label }) => [item.id, label]))
+        .toEqual([['chair-ergo', 'fits'], ['desk-walnut', 'closest']]); // the desk is 17% too wide
     });
 
-    it('falls back to the 3 closest items, labeled "closest", when none fits', () => {
-      const results = search(catalog, { targetSize: [0.5, 0.5, 0.35] });
+    // Resize shows up to 3 candidates (§10.5): 3 that fit or, failing that, the 3 closest.
+    it('gives Resize the 3 closest items, labeled "closest", when none fits', () => {
+      const results = search(catalog, { targetSize: [0.5, 0.5, 0.35], limit: 3 });
 
       expect(results.map(({ item, label }) => [item.id, label])).toEqual([
         ['desk-walnut', 'closest'], // 0.52
@@ -53,6 +58,13 @@ describe('search', () => {
         ['chair-ergo', 'closest'], // 0.71; the rug, at 5.1, is the 4th
       ]);
       expect(results.map((result) => result.score)).toEqual([expect.closeTo(0.52), expect.closeTo(0.6), expect.closeTo(0.714, 3)]);
+    });
+
+    it('gives Swap every item of the category, closest first', () => {
+      const chairs = [0.5, 0.9, 0.62, 0.2].map((width, i) => ({ ...catalog.items[0], id: `chair-${i}`, size: [width, 0.9, 0.6] as Vec3 }));
+
+      expect(search({ ...catalog, items: chairs }, { category: 'chair', targetSize: [0.6, 0.9, 0.6] }).map(({ item }) => item.id))
+        .toEqual(['chair-2', 'chair-0', 'chair-1', 'chair-3']);
     });
 
     it('counts the height too when lockHeight is on', () => {

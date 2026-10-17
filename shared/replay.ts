@@ -16,7 +16,7 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
     patches: [],
     skipped: [],
   };
-  const items = new Map(catalog.items.map((item) => [item.id, item]));
+  const catalogItems = new Map(catalog.items.map((item) => [item.id, item]));
   const scanned = new Map(setup.originals.map((original) => [original.id, original]));
   const isKept = (originalId: string) => scanned.get(originalId)?.kept;
   // hasOwn, so that an id like "constructor" can't find something on the object prototype.
@@ -31,7 +31,7 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
     switch (edit.type) {
       case 'place':
         if (isTaken(edit.pieceId)) return 'duplicate-id';
-        if (!items.has(edit.catalogId)) return 'unknown-catalog';
+        if (!catalogItems.has(edit.catalogId)) return 'unknown-catalog';
         state.pieces[edit.pieceId] = { catalogId: edit.catalogId, placement: edit.placement, partColors: {} };
         return;
       case 'move': {
@@ -62,7 +62,7 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
       }
       case 'swap': {
         const piece = pieceAt(edit.pieceId);
-        const item = items.get(edit.catalogId);
+        const item = catalogItems.get(edit.catalogId);
         if (!piece) return 'missing-target';
         if (!item) return 'unknown-catalog';
         // Every color is on a Part of the old item, so keeping the new item's Parts keeps those in both.
@@ -77,7 +77,7 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
         if (!original?.visible) return 'missing-target';
         if (isKept(edit.originalId)) return 'kept';
         if (isTaken(edit.pieceId)) return 'duplicate-id';
-        if (!items.has(edit.catalogId)) return 'unknown-catalog';
+        if (!catalogItems.has(edit.catalogId)) return 'unknown-catalog';
         original.visible = false;
         addPatch(edit.originalId);
         state.pieces[edit.pieceId] = {
@@ -88,7 +88,7 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
       case 'recolor': {
         const piece = pieceAt(edit.targetId);
         // place, swap and replace only ever give a Piece a catalogId that is in the Catalog.
-        if (piece) return putParts(piece.partColors, items.get(piece.catalogId)!.category, edit.partId, edit.color);
+        if (piece) return putParts(piece.partColors, catalogItems.get(piece.catalogId)!.category, edit.partId, edit.color);
         const original = scanned.get(edit.targetId);
         if (!original || !state.originals[original.id].visible) return 'missing-target';
         return putParts(state.originals[original.id].partColors, original.category, edit.partId, edit.color);
@@ -110,8 +110,14 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
             if (!original) return 'missing-target';
             return putParts(state.originals[original.id].partFinishes, original.category, target.partId, finish);
           }
+          default:
+            target satisfies never; // a new FinishTarget kind needs a case
+            return;
         }
       }
+      default:
+        edit satisfies never; // a new Edit type needs a case
+        return;
     }
   }
 
@@ -135,8 +141,8 @@ function startPlacement({ box: { position, rotationY }, category }: Original, wa
   if (position[1] <= ABOVE_FLOOR) return { position, rotationY, mount: 'floor' };
   if (!WALL_CATEGORIES.includes(category)) return { position, rotationY, mount: 'surface' };
   const point: Vec2 = [position[0], position[2]];
-  const gap = (wall: Wall) => Math.abs(distanceToWall(point, wall));
-  const [nearest] = walls.toSorted((a, b) => gap(a) - gap(b));
+  const distance = (wall: Wall) => Math.abs(distanceToWall(point, wall));
+  const [nearest] = walls.toSorted((a, b) => distance(a) - distance(b));
   return { position, rotationY, mount: 'wall', wallId: nearest?.id };
 }
 

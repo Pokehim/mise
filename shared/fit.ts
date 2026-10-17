@@ -62,18 +62,26 @@ function floorChecks(subject: Item, setup: RoomSetup, zones: Zone[]): FitViolati
 /** Rugs lie flat: furniture stands on them and doors sweep over them, so they only collide with other rugs. */
 const liesFlat = (item: Item) => item.category === 'rug';
 
-/** Whether two items can be in each other's way. Wall items meet only wall items on the same wall; items standing on furniture meet nothing. */
+/**
+ * Whether two items can be in each other's way: only items with the same mount can. On the floor,
+ * rugs meet only rugs; on walls, only items on the same wall meet.
+ */
 function collide(a: Item, b: Item) {
-  if (a.placement.mount === 'wall' && b.placement.mount === 'wall') {
-    return a.placement.wallId !== undefined && a.placement.wallId === b.placement.wallId;
+  if (a.placement.mount !== b.placement.mount) return false;
+  switch (a.placement.mount) {
+    case 'floor':
+      return liesFlat(a) === liesFlat(b);
+    case 'wall':
+      return a.placement.wallId !== undefined && a.placement.wallId === b.placement.wallId;
+    case 'surface':
+      return true;
   }
-  return a.placement.mount === 'floor' && b.placement.mount === 'floor' && liesFlat(a) === liesFlat(b);
 }
 
-/** Whether two items take up the same room. Wall items can hang one above another, so their heights count too. */
+/** Whether two items take up the same room. Off the floor, one can be above another, so their heights count too. */
 function overlap(a: Item, b: Item) {
   if (!polygonsOverlap(a.corners, b.corners, TOLERANCE)) return false;
-  return a.placement.mount !== 'wall' || overlapLength(a.heights, b.heights) > TOLERANCE;
+  return a.placement.mount === 'floor' || overlapLength(a.heights, b.heights) > TOLERANCE;
 }
 
 function openingZones(setup: RoomSetup): Zone[] {

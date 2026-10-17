@@ -52,7 +52,8 @@ describe('checkFit', () => {
 
     it('ignores an Original that is no longer visible: the desk a Piece replaced', () => {
       expect(fitAfter([edit('ed_1', {
-        type: 'replace', originalId: 'og_desk', pieceId: 'pc_desk', catalogId: 'desk-walnut', placement: onFloor(1.75, -0.6, -Math.PI / 2), via: 'replace',
+        type: 'replace', originalId: 'og_desk', pieceId: 'pc_desk', catalogId: 'desk-walnut', via: 'replace',
+        placement: onFloor(1.75, -0.6, -Math.PI / 2),
       })])).toEqual([]);
     });
 
@@ -62,9 +63,21 @@ describe('checkFit', () => {
       expect(fitAfter([place('pc_lamp', 'lamp-brass', onDesk)])).toEqual([]);
     });
 
+    it('still reports two items standing in the same spot on furniture', () => {
+      const onDesk = (z: number): Placement => ({ position: [1.7, 0.76, z], rotationY: 0, mount: 'surface' });
+
+      const lamps = (z1: number, z2: number) => [place('pc_lamp', 'lamp-brass', onDesk(z1)), place('pc_lamp2', 'lamp-brass', onDesk(z2))];
+
+      expect(fitAfter(lamps(-0.6, -0.5), ['pc_lamp2'])).toEqual([
+        { rule: 'overlap', subjectId: 'pc_lamp2', otherId: 'pc_lamp', message: 'Overlaps Brass Desk Lamp' },
+      ]);
+      expect(fitAfter(lamps(-0.8, -0.4))).toEqual([]);
+    });
+
     describe('wall items, such as a lamp hung as a sconce', () => {
       /** On the North wall (z = −1.5), x along it, y up from the floor. The lamp is 0.2 deep. */
-      const onNorthWall = (x: number, y: number): Placement => ({ position: [x, y, -1.4], rotationY: 0, mount: 'wall', wallId: 'wl_north' });
+      const onNorthWall = (x: number, y: number): Placement =>
+        ({ position: [x, y, -1.4], rotationY: 0, mount: 'wall', wallId: 'wl_north' });
 
       it('meets only wall items on the same wall: not the bed below', () => {
         expect(fitAfter([

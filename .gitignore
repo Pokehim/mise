@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Local env files (.superset/setup.sh copies these into new workspaces)
+.env
+.env.*
+!.env.example
+
+# Personal Superset overrides
+.superset/config.local.json

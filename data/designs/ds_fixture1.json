@@ -2,14 +2,14 @@
   "version": 1,
   "id": "ds_fixture1",
   "scanId": "fixture",
-  "name": "Fixture Design",
+  "name": "Sample Design",
   "createdAt": "2026-10-17T21:15:00.000Z",
   "updatedAt": "2026-10-17T21:19:00.000Z",
   "origin": "mover",
   "edits": [
     {
       "id": "ed_1", "at": "2026-10-17T21:16:00.000Z", "by": "mover",
-      "type": "place", "pieceId": "pc_1", "catalogId": "fixture-chair",
+      "type": "place", "pieceId": "pc_1", "catalogId": "placeholder-chair",
       "placement": { "position": [1.05, 0, -0.6], "rotationY": 1.5707963267948966, "mount": "floor" }
     },
     {
@@ -22,7 +22,7 @@
     },
     {
       "id": "ed_4", "at": "2026-10-17T21:19:00.000Z", "by": "mover",
-      "type": "replace", "originalId": "og_desk", "pieceId": "pc_2", "catalogId": "fixture-desk",
+      "type": "replace", "originalId": "og_desk", "pieceId": "pc_2", "catalogId": "placeholder-desk",
       "placement": { "position": [1.7, 0, -0.6], "rotationY": -1.5707963267948966, "mount": "floor" },
       "via": "replace"
     }

@@ -5,11 +5,13 @@ import designJson from '../data/designs/ds_fixture1.json';
 import manifestJson from '../data/scans/fixture/manifest.json';
 import setupJson from '../data/scans/fixture/setup.json';
 import type {
-  Box, Catalog, CatalogItem, Category, Design, Edit, Opening, Original, Placement, RoomSetup, ScanManifest, Wall,
+  Actor, Box, Catalog, CatalogItem, Category, Design, Edit, Finish, FinishTarget, Opening, Original, Placement,
+  RoomSetup, ScanManifest, Wall,
 } from './types';
 
 // Compile time: a JSON import widens literals ('door' → string) and tuples
 // ([x, z] → number[]), so each fixture is checked against its type widened the same way.
+// The runtime checks below cover what that hides: literal values and tuple lengths.
 type Json<T> = T extends string ? string
   : T extends number ? number
   : T extends readonly (infer U)[] ? Json<U>[]
@@ -21,20 +23,22 @@ const setup: Json<RoomSetup> = setupJson;
 const catalog: Json<Catalog> = catalogJson;
 const design: Json<Design> = designJson;
 
-// Run time: every key a type requires. Record<RequiredKey<T>, true> makes the
-// compiler reject a list that misses a required key or names an extra one.
+// Run time: a type's required keys, or a union's values, as lists. Typing them as
+// Record<…, true> makes the compiler reject a list that misses or adds one.
 type RequiredKey<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
 const required = <T>(keys: Record<RequiredKey<T>, true>) => Object.keys(keys);
+const oneOf = <T extends string>(values: Record<T, true>) => Object.keys(values);
 
 function expectRequired(value: object, keys: string[]) {
   expect(Object.keys(value)).toEqual(expect.arrayContaining(keys));
 }
 
-const CATEGORIES = Object.keys({
+const CATEGORIES = oneOf<Category>({
   chair: true, desk: true, table: true, nightstand: true, bed: true, sofa: true,
   dresser: true, wardrobe: true, shelf: true, storage: true,
   rug: true, lamp: true, wall_art: true, mirror: true, plant: true, decor: true,
-} satisfies Record<Category, true>);
+});
+const ACTORS = oneOf<Actor>({ mover: true, claude: true });
 const HEX = /^#[0-9a-f]{6}$/;
 
 describe('fixture Scan', () => {
@@ -49,19 +53,27 @@ describe('fixture Scan', () => {
       version: true, scanId: true, ceilingHeight: true, floor: true, walls: true, openings: true, originals: true,
     }));
     expect(setup).toMatchObject({ version: 1, scanId: 'fixture' });
+    for (const corner of setup.floor.polygon) expect(corner).toHaveLength(2);
     for (const wall of setup.walls) {
       expectRequired(wall, required<Wall>({ id: true, name: true, start: true, end: true, normal: true, height: true }));
+      for (const point of [wall.start, wall.end, wall.normal]) expect(point).toHaveLength(2);
     }
     for (const opening of setup.openings) {
       expectRequired(opening, required<Opening>({
         id: true, kind: true, wallId: true, offset: true, width: true, bottom: true, height: true,
       }));
+      expect(oneOf<Opening['kind']>({ door: true, window: true })).toContain(opening.kind);
+      if (opening.swing !== undefined) {
+        expect(oneOf<NonNullable<Opening['swing']>>({ 'in-left': true, 'in-right': true, none: true })).toContain(opening.swing);
+      }
     }
     for (const original of setup.originals) {
       expectRequired(original, required<Original>({
         id: true, label: true, category: true, box: true, kept: true, floorColor: true,
       }));
       expectRequired(original.box, required<Box>({ position: true, size: true, rotationY: true }));
+      expect(original.box.position).toHaveLength(3);
+      expect(original.box.size).toHaveLength(3);
       expect(CATEGORIES).toContain(original.category);
       expect(original.floorColor).toMatch(HEX);
     }
@@ -85,8 +97,11 @@ describe('fixture Catalog', () => {
         id: true, source: true, title: true, category: true, mount: true, size: true, model: true,
         thumbnail: true, colors: true, materials: true, styleTags: true, priceEstimateUsd: true, url: true, attribution: true,
       }));
+      expect(oneOf<CatalogItem['source']>({ abo: true, polyhaven: true, generated: true })).toContain(item.source);
+      expect(oneOf<CatalogItem['mount']>({ floor: true, wall: true })).toContain(item.mount);
       expect(CATEGORIES).toContain(item.category);
       expect(item.size).toHaveLength(3);
+      if (item.colorHex !== undefined) expect(item.colorHex).toMatch(HEX);
     }
   });
 
@@ -120,10 +135,24 @@ describe('fixture Design', () => {
       version: true, id: true, scanId: true, name: true, createdAt: true, updatedAt: true, origin: true, edits: true,
     }));
     expect(design).toMatchObject({ version: 1, id: 'ds_fixture1', scanId: manifest.id });
-    for (const edit of design.edits) {
+    expect(ACTORS).toContain(design.origin);
+    // Edit is a union keyed by type, so check the type first, then narrow on it.
+    for (const edit of design.edits as Edit[]) {
       expect(Object.keys(EDIT_KEYS)).toContain(edit.type);
-      expectRequired(edit, EDIT_KEYS[edit.type as Edit['type']]);
-      if ('placement' in edit) expectRequired(edit.placement, required<Placement>({ position: true, rotationY: true, mount: true }));
+      expectRequired(edit, EDIT_KEYS[edit.type]);
+      expect(ACTORS).toContain(edit.by);
+      if ('placement' in edit) {
+        expectRequired(edit.placement, required<Placement>({ position: true, rotationY: true, mount: true }));
+        expect(edit.placement.position).toHaveLength(3);
+        expect(oneOf<Placement['mount']>({ floor: true, wall: true, surface: true })).toContain(edit.placement.mount);
+      }
+      if (edit.type === 'swap' || edit.type === 'replace') expect([edit.type, 'resize']).toContain(edit.via);
+      if (edit.type === 'recolor' && edit.color !== null) expect(edit.color).toMatch(HEX);
+      if (edit.type === 'finish') {
+        expect(oneOf<FinishTarget['kind']>({ wall: true, floor: true, original: true })).toContain(edit.target.kind);
+        expect(oneOf<Finish['kind']>({ paint: true, material: true, none: true })).toContain(edit.finish.kind);
+        if (edit.finish.kind === 'paint') expect(edit.finish.color).toMatch(HEX);
+      }
     }
   });
 });

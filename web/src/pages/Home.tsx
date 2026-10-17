@@ -5,16 +5,16 @@ import { listDesigns, listScans } from '../api';
 
 // Placeholder until #11 builds the Home page: each Scan with its Designs.
 export function Home() {
-  const [data, setData] = useState<[ScanManifest[], Design[]]>();
+  const [loaded, setLoaded] = useState<[ScanManifest[], Design[]]>();
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    Promise.all([listScans(), listDesigns()]).then(setData, (err: Error) => setError(err.message));
+    Promise.all([listScans(), listDesigns()]).then(setLoaded, (err: Error) => setError(err.message));
   }, []);
 
   if (error) return <main>Could not load the Scans: {error}</main>;
-  if (!data) return <main>Loading…</main>;
-  const [scans, designs] = data;
+  if (!loaded) return <main>Loading…</main>;
+  const [scans, designs] = loaded;
   return (
     <main>
       <h1>Mise</h1>

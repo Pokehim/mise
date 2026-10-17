@@ -38,8 +38,8 @@ const readBody = <T>(c: Context) => c.req.json<T>().catch(() => fail(400, 'The b
 // Ids become file and folder names, so they may only use letters, digits, "_" and "-".
 const checkId = (id: string) => (/^[\w-]+$/.test(id) ? id : fail(400, `Not a valid id: ${id}`));
 
-/** The folder of a Scan that exists. */
-function scanDir(id: string) {
+/** The folder of a Scan, which must exist. */
+function requireScan(id: string) {
   const dir = join(dataDir(), 'scans', checkId(id));
   return existsSync(dir) ? dir : fail(404, `No Scan ${id}`);
 }
@@ -70,7 +70,7 @@ app.get('/api/scans', async (c) => c.json(await readAll<ScanManifest>('scans/*/m
 /** Saves the request body as one JSON file in an existing Scan's folder. */
 const saveScanFile = (file: string) => async (c: Context) => {
   const body = await readBody(c);
-  await writeJson(join(scanDir(c.req.param('id')!), file), body);
+  await writeJson(join(requireScan(c.req.param('id')!), file), body);
   return c.json(body);
 };
 
@@ -87,21 +87,21 @@ app.get('/api/designs', async (c) => {
 
 app.get('/api/designs/:id', async (c) => c.json(await readDesign(c.req.param('id'))));
 
+// New and Duplicate are the Mover's: a duplicate copies only the Edits (spec §10.8).
 app.post('/api/designs', async (c) => {
   const { scanId, duplicateOf } = await readBody<{ scanId?: string; duplicateOf?: string }>(c);
-  const now = new Date().toISOString();
-  let design: Design;
+  let start: Pick<Design, 'scanId' | 'name' | 'edits'>;
   if (duplicateOf) {
     const source = await readDesign(duplicateOf);
-    design = { ...source, id: newId('ds'), name: `${source.name} (copy)`, createdAt: now, updatedAt: now };
+    start = { scanId: source.scanId, name: `${source.name} (copy)`, edits: source.edits };
   } else if (scanId) {
-    scanDir(scanId); // 404s for an unknown Scan
-    design = {
-      version: 1, id: newId('ds'), scanId, name: 'New Design', createdAt: now, updatedAt: now, origin: 'mover', edits: [],
-    };
+    requireScan(scanId);
+    start = { scanId, name: 'New Design', edits: [] };
   } else {
     fail(400, 'Send {scanId} or {duplicateOf}');
   }
+  const now = new Date().toISOString();
+  const design: Design = { version: 1, id: newId('ds'), ...start, createdAt: now, updatedAt: now, origin: 'mover' };
   await writeJson(designPath(design.id), design);
   return c.json(design, 201);
 });

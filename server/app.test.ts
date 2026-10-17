@@ -45,7 +45,7 @@ describe('GET /api/scans', () => {
     const scans: ScanManifest[] = await res.json();
     expect(scans.map((scan) => [scan.id, scan.name]).sort()).toEqual([
       ['dorm-v1', 'Maple Hall 412'],
-      ['fixture', 'Fixture room (4 × 3 m)'],
+      ['fixture', 'Sample room (4 × 3 m)'],
     ]);
   });
 });
@@ -84,7 +84,7 @@ describe('GET /data/*', () => {
 describe('PUT /api/scans/:id/manifest', () => {
   it('saves manifest.json, which GET /api/scans then lists', async () => {
     const manifest: ScanManifest = {
-      version: 1, id: 'fixture', name: 'Fixture room (4 × 3 m)', mesh: 'room.glb',
+      version: 1, id: 'fixture', name: 'Sample room (4 × 3 m)', mesh: 'room.glb',
       meshTransform: { position: [0, -0.02, 0], rotationY: 0.1 },
     };
 
@@ -150,9 +150,21 @@ describe('POST /api/designs', () => {
     expect(res.status).toBe(201);
     const copy: Design = await res.json();
     expect(copy.id).toMatch(/^ds_[a-z0-9]{8}$/);
-    expect(copy).toMatchObject({ scanId: 'fixture', name: 'Fixture Design (copy)', edits: fixtureDesign.edits });
+    expect(copy).toMatchObject({ scanId: 'fixture', name: 'Sample Design (copy)', edits: fixtureDesign.edits });
     expect(await getJson(`/api/designs/${copy.id}`)).toEqual(copy);
     expect(await getJson('/api/designs/ds_fixture1')).toEqual(fixtureDesign);
+  });
+
+  it("copies only the Edits of Claude's Design: the copy is the Mover's", async () => {
+    await writeJson('designs/ds_claude01.json', {
+      ...fixtureDesign, id: 'ds_claude01', origin: 'claude', brief: { text: 'cozy Japandi' }, rationale: 'Warm woods',
+    });
+
+    const copy: Design = await (await send('POST', '/api/designs', { duplicateOf: 'ds_claude01' })).json();
+
+    expect(copy).toMatchObject({ origin: 'mover', edits: fixtureDesign.edits });
+    expect(copy).not.toHaveProperty('brief');
+    expect(copy).not.toHaveProperty('rationale');
   });
 
   it('404s for a Design to duplicate that does not exist', async () => {

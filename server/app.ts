@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs';
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { existsSync, globSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
@@ -9,6 +9,11 @@ import type { Design, ScanManifest } from '../shared/types';
 
 // Read per request, so tests can point DATA_DIR at a temporary folder.
 const dataDir = () => process.env.DATA_DIR ?? './data';
+
+/** Ends the request with an error status; app.onError sends it as { error }. */
+function fail(status: 400 | 404, message: string): never {
+  throw new HTTPException(status, { message });
+}
 
 /** Parsed JSON, or undefined when the file doesn't exist. */
 async function readJson<T>(path: string): Promise<T | undefined> {
@@ -20,50 +25,52 @@ async function readJson<T>(path: string): Promise<T | undefined> {
   }
 }
 
+/** Every file in the data folder that matches the glob pattern, parsed. */
+const readAll = <T>(pattern: string): Promise<T[]> =>
+  Promise.all(globSync(pattern, { cwd: dataDir() }).map(async (file) => JSON.parse(await readFile(join(dataDir(), file), 'utf8'))));
+
 async function writeJson(path: string, value: unknown) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-/** Names of the entries in a data subfolder, or [] when it doesn't exist yet. */
-async function list(dir: string, keep: (entry: { name: string; isDirectory(): boolean }) => boolean) {
-  const entries = await readdir(join(dataDir(), dir), { withFileTypes: true }).catch(() => []);
-  return entries.filter(keep).map((entry) => entry.name);
-}
+const readBody = <T>(c: Context) => c.req.json<T>().catch(() => fail(400, 'The body must be JSON'));
 
 // Ids become file and folder names, so they may only use letters, digits, "_" and "-".
-function checkId(id: string) {
-  if (!/^[\w-]+$/.test(id)) throw new HTTPException(400, { message: `Not a valid id: ${id}` });
-  return id;
-}
-const scanDir = (id: string) => join(dataDir(), 'scans', checkId(id));
-const designPath = (id: string) => join(dataDir(), 'designs', `${checkId(id)}.json`);
+const checkId = (id: string) => (/^[\w-]+$/.test(id) ? id : fail(400, `Not a valid id: ${id}`));
 
-async function listDesigns() {
-  const files = await list('designs', (entry) => entry.name.endsWith('.json'));
-  const designs = await Promise.all(files.map((file) => readJson<Design>(join(dataDir(), 'designs', file))));
-  return designs
-    .filter((design) => design !== undefined)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+/** The folder of a Scan that exists. */
+function scanDir(id: string) {
+  const dir = join(dataDir(), 'scans', checkId(id));
+  return existsSync(dir) ? dir : fail(404, `No Scan ${id}`);
 }
+
+const designPath = (id: string) => join(dataDir(), 'designs', `${checkId(id)}.json`);
+const readDesign = async (id: string) => (await readJson<Design>(designPath(id))) ?? fail(404, `No Design ${id}`);
 
 export const app = new Hono();
 
-app.use('/data/*', (c, next) =>
-  serveStatic({ root: dataDir(), rewriteRequestPath: (path) => path.slice('/data'.length) })(c, next),
+app.onError((err, c) => {
+  if (err instanceof HTTPException) return c.json({ error: err.message }, err.status);
+  console.error(err);
+  return c.json({ error: 'Internal server error' }, 500);
+});
+
+app.use(
+  '/data/*',
+  // Saves change these files, so browsers must check back instead of reusing a cached copy.
+  async (c, next) => {
+    c.header('Cache-Control', 'no-cache');
+    await next();
+  },
+  serveStatic({ rewriteRequestPath: (path) => join(dataDir(), path.slice('/data'.length)) }),
 );
 
-app.get('/api/scans', async (c) => {
-  const ids = await list('scans', (entry) => entry.isDirectory());
-  const manifests = await Promise.all(ids.map((id) => readJson<ScanManifest>(join(dataDir(), 'scans', id, 'manifest.json'))));
-  return c.json(manifests.filter((manifest) => manifest !== undefined));
-});
+app.get('/api/scans', async (c) => c.json(await readAll<ScanManifest>('scans/*/manifest.json')));
 
 /** Saves the request body as one JSON file in an existing Scan's folder. */
 const saveScanFile = (file: string) => async (c: Context) => {
-  const dir = scanDir(c.req.param('id')!);
-  if (!existsSync(dir)) return c.json({ error: 'No such Scan' }, 404);
-  const body = await c.req.json();
-  await writeJson(join(dir, file), body);
+  const body = await readBody(c);
+  await writeJson(join(scanDir(c.req.param('id')!), file), body);
   return c.json(body);
 };
 
@@ -72,30 +79,28 @@ app.put('/api/scans/:id/manifest', saveScanFile('manifest.json'));
 
 app.get('/api/designs', async (c) => {
   const scanId = c.req.query('scanId');
-  const designs = await listDesigns();
-  return c.json(scanId ? designs.filter((design) => design.scanId === scanId) : designs);
+  const designs = await readAll<Design>('designs/*.json');
+  return c.json(designs
+    .filter((design) => !scanId || design.scanId === scanId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
 });
 
-app.get('/api/designs/:id', async (c) => {
-  const design = await readJson<Design>(designPath(c.req.param('id')));
-  return design ? c.json(design) : c.json({ error: 'No such Design' }, 404);
-});
+app.get('/api/designs/:id', async (c) => c.json(await readDesign(c.req.param('id'))));
 
 app.post('/api/designs', async (c) => {
-  const { scanId, duplicateOf } = await c.req.json<{ scanId?: string; duplicateOf?: string }>();
+  const { scanId, duplicateOf } = await readBody<{ scanId?: string; duplicateOf?: string }>(c);
   const now = new Date().toISOString();
   let design: Design;
   if (duplicateOf) {
-    const source = await readJson<Design>(designPath(duplicateOf));
-    if (!source) return c.json({ error: 'No such Design' }, 404);
+    const source = await readDesign(duplicateOf);
     design = { ...source, id: newId('ds'), name: `${source.name} (copy)`, createdAt: now, updatedAt: now };
   } else if (scanId) {
-    if (!existsSync(scanDir(scanId))) return c.json({ error: 'No such Scan' }, 404);
+    scanDir(scanId); // 404s for an unknown Scan
     design = {
       version: 1, id: newId('ds'), scanId, name: 'New Design', createdAt: now, updatedAt: now, origin: 'mover', edits: [],
     };
   } else {
-    return c.json({ error: 'Send {scanId} or {duplicateOf}' }, 400);
+    fail(400, 'Send {scanId} or {duplicateOf}');
   }
   await writeJson(designPath(design.id), design);
   return c.json(design, 201);
@@ -103,8 +108,8 @@ app.post('/api/designs', async (c) => {
 
 app.put('/api/designs/:id', async (c) => {
   const id = c.req.param('id');
-  const design = await c.req.json<Design>();
-  if (design.id !== id) return c.json({ error: `The body is Design ${design.id}, not ${id}` }, 400);
+  const design = await readBody<Design>(c);
+  if (design.id !== id) fail(400, `The body is Design ${design.id}, not ${id}`);
   const saved = { ...design, updatedAt: new Date().toISOString() };
   await writeJson(designPath(id), saved);
   return c.json(saved);

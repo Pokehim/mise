@@ -1,6 +1,6 @@
 import { cp, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fixtureDesign from '../data/designs/ds_fixture1.json';
 import fixtureSetup from '../data/scans/fixture/setup.json';
@@ -25,8 +25,10 @@ afterEach(async () => {
 const send = (method: string, path: string, body: unknown) =>
   app.request(path, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
+const getJson = async (path: string) => (await app.request(path)).json();
+
 const writeJson = async (path: string, value: unknown) => {
-  await mkdir(join(dataDir, path, '..'), { recursive: true });
+  await mkdir(dirname(join(dataDir, path)), { recursive: true });
   await writeFile(join(dataDir, path), JSON.stringify(value));
 };
 
@@ -55,12 +57,27 @@ describe('PUT /api/scans/:id/setup', () => {
     const res = await send('PUT', '/api/scans/fixture/setup', setup);
 
     expect(res.status).toBe(200);
-    expect(await (await app.request('/data/scans/fixture/setup.json')).json()).toEqual(setup);
+    expect(await getJson('/data/scans/fixture/setup.json')).toEqual(setup);
   });
 
   it('404s for a Scan that does not exist', async () => {
     const res = await send('PUT', '/api/scans/no-such-scan/setup', fixtureSetup);
     expect(res.status).toBe(404);
+  });
+
+  it('400s for a body that is not JSON', async () => {
+    const res = await app.request('/api/scans/fixture/setup', { method: 'PUT', body: '{ not json' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /data/*', () => {
+  it('serves files from the data folder, uncached because saves change them', async () => {
+    const res = await app.request('/data/designs/ds_fixture1.json');
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('no-cache');
+    expect(await res.json()).toEqual(fixtureDesign);
   });
 });
 
@@ -74,7 +91,7 @@ describe('PUT /api/scans/:id/manifest', () => {
     const res = await send('PUT', '/api/scans/fixture/manifest', manifest);
 
     expect(res.status).toBe(200);
-    expect(await (await app.request('/api/scans')).json()).toEqual([manifest]);
+    expect(await getJson('/api/scans')).toEqual([manifest]);
   });
 });
 
@@ -94,7 +111,7 @@ describe('GET /api/designs', () => {
   });
 
   it('lists only the Designs of the Scan given as scanId', async () => {
-    const designs: Design[] = await (await app.request('/api/designs?scanId=fixture')).json();
+    const designs: Design[] = await getJson('/api/designs?scanId=fixture');
     expect(designs.map((design) => design.id)).toEqual(['ds_fixture1']);
   });
 });
@@ -120,7 +137,7 @@ describe('POST /api/designs', () => {
     const created: Design = await res.json();
     expect(created.id).toMatch(/^ds_[a-z0-9]{8}$/);
     expect(created).toMatchObject({ version: 1, scanId: 'fixture', name: 'New Design', origin: 'mover', edits: [] });
-    expect(await (await app.request(`/api/designs/${created.id}`)).json()).toEqual(created);
+    expect(await getJson(`/api/designs/${created.id}`)).toEqual(created);
   });
 
   it('404s for a Scan that does not exist', async () => {
@@ -134,8 +151,8 @@ describe('POST /api/designs', () => {
     const copy: Design = await res.json();
     expect(copy.id).toMatch(/^ds_[a-z0-9]{8}$/);
     expect(copy).toMatchObject({ scanId: 'fixture', name: 'Fixture Design (copy)', edits: fixtureDesign.edits });
-    expect(await (await app.request(`/api/designs/${copy.id}`)).json()).toEqual(copy);
-    expect(await (await app.request('/api/designs/ds_fixture1')).json()).toEqual(fixtureDesign);
+    expect(await getJson(`/api/designs/${copy.id}`)).toEqual(copy);
+    expect(await getJson('/api/designs/ds_fixture1')).toEqual(fixtureDesign);
   });
 
   it('404s for a Design to duplicate that does not exist', async () => {
@@ -151,7 +168,6 @@ describe('PUT /api/designs/:id', () => {
   afterEach(() => vi.useRealTimers());
 
   it('saves the whole Design and stamps updatedAt', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-18T09:00:00.000Z'));
     const edited = { ...fixtureDesign, name: 'Sage and walnut', edits: fixtureDesign.edits.slice(0, 2) };
 
@@ -160,7 +176,7 @@ describe('PUT /api/designs/:id', () => {
     expect(res.status).toBe(200);
     const saved: Design = await res.json();
     expect(saved).toEqual({ ...edited, updatedAt: '2026-10-18T09:00:00.000Z' });
-    expect(await (await app.request('/api/designs/ds_fixture1')).json()).toEqual(saved);
+    expect(await getJson('/api/designs/ds_fixture1')).toEqual(saved);
   });
 
   it('400s when the body is a different Design', async () => {
@@ -180,6 +196,7 @@ describe('ids', () => {
   it('400s for a Design id in the path that could reach outside the data folder', async () => {
     const res = await send('PUT', '/api/designs/..%2F..%2Fescaped', { ...fixtureDesign, id: '../../escaped' });
     expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'Not a valid id: ../../escaped' });
   });
 
   it('400s for an id in the body that could reach outside the data folder', async () => {

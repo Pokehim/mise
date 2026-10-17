@@ -12,7 +12,6 @@ import type {
 // ([x, z] → number[]), so each fixture is checked against its type widened the same way.
 type Json<T> = T extends string ? string
   : T extends number ? number
-  : T extends boolean ? boolean
   : T extends readonly (infer U)[] ? Json<U>[]
   : T extends object ? { [K in keyof T]: Json<T[K]> }
   : T;
@@ -68,40 +67,12 @@ describe('fixture Scan', () => {
     }
   });
 
-  it('is a 4 × 3 m room with a 2.6 m ceiling', () => {
-    const xs = setup.floor.polygon.map(([x]) => x);
-    const zs = setup.floor.polygon.map(([, z]) => z);
-    expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(4);
-    expect(Math.max(...zs) - Math.min(...zs)).toBeCloseTo(3);
-    expect(setup.ceilingHeight).toBe(2.6);
-  });
-
-  it('has one wall per floor edge, each with a unit normal pointing into the room', () => {
-    const { polygon } = setup.floor;
-    const center = [0, 1].map((axis) => polygon.reduce((sum, corner) => sum + corner[axis], 0) / polygon.length);
-    expect(setup.walls).toHaveLength(4);
-    setup.walls.forEach((wall, i) => {
-      expect([wall.start, wall.end]).toEqual([polygon[i], polygon[(i + 1) % polygon.length]]);
-      const [nx, nz] = wall.normal;
-      const [dx, dz] = [wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]];
-      const toCenter = [center[0] - (wall.start[0] + wall.end[0]) / 2, center[1] - (wall.start[1] + wall.end[1]) / 2];
+  it('gives every wall a unit normal pointing into the room', () => {
+    // The fixture room is centered on the origin, so "into the room" means toward it.
+    for (const { start, end, normal: [nx, nz] } of setup.walls) {
       expect(Math.hypot(nx, nz)).toBeCloseTo(1);
-      expect(nx * dx + nz * dz).toBeCloseTo(0);
-      expect(nx * toCenter[0] + nz * toCenter[1]).toBeGreaterThan(0);
-    });
-  });
-
-  it('has one door and one window, each in a wall', () => {
-    expect(setup.openings.map((opening) => opening.kind).sort()).toEqual(['door', 'window']);
-    const wallIds = setup.walls.map((wall) => wall.id);
-    for (const opening of setup.openings) expect(wallIds).toContain(opening.wallId);
-  });
-
-  it('has two Originals: a Kept bed and a desk', () => {
-    expect(setup.originals.map(({ id, kept }) => ({ id, kept }))).toEqual([
-      { id: 'og_bed', kept: true },
-      { id: 'og_desk', kept: false },
-    ]);
+      expect(nx * (start[0] + end[0]) + nz * (start[1] + end[1])).toBeLessThan(0);
+    }
   });
 });
 

@@ -56,7 +56,7 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
 }
 
 // One category per §7 rule: together they name every Part.
-const PART_NAMES = new Map((['desk', 'chair', 'bed'] as const)
+const PART_NAMES = new Map((['desk', 'chair', 'bed', 'dresser', 'sofa'] as const)
   .flatMap((category) => partsFor(category))
   .map(({ id, name }) => [id, name.toLowerCase()]));
 

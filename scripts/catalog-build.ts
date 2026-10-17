@@ -16,19 +16,19 @@ import { parseArgs, promisify } from 'node:util';
 import { gunzipSync } from 'node:zlib';
 import type { Catalog, CatalogItem, Category, Hex, Vec3 } from '../shared/types';
 
-type Text = { language_tag: string; value: string };
+type AboText = { language_tag: string; value: string };
 
 /** One line of ABO's listings/metadata/listings_<i>.json.gz (see its listings/README.md), with the keys this script reads. */
 export interface AboListing {
   item_id: string;                   // an ASIN
   domain_name?: string;              // "amazon.com"
-  item_name?: Text[];
-  brand?: Text[];
+  item_name?: AboText[];
+  brand?: AboText[];
   product_type?: { value: string }[];
-  color?: (Text & { standardized_values?: string[] })[];
+  color?: (AboText & { standardized_values?: string[] })[];  // unused standardized_values: some are wrong, such as "Beige" for walnut
   color_code?: string[];             // "#40474E"
-  material?: Text[];
-  style?: Text[];
+  material?: AboText[];
+  style?: AboText[];
   item_dimensions?: Partial<Record<'length' | 'width' | 'height', { normalized_value?: { value: number } }>>; // inches
   main_image_id?: string;
   '3dmodel_id'?: string;
@@ -90,14 +90,12 @@ const isCategory = (value: string): value is Category => Object.hasOwn(DEFAULT_P
 /** Every HTML entity in ABO's English text, such as the "&amp;" in 57 product names. */
 const ENTITIES: Record<string, string> = { amp: '&', quot: '"', apos: "'", nbsp: ' ', eacute: 'é' };
 
-/** The entries of a multilingual ABO field in en_US, or else in another English, such as en_GB, with entities decoded. */
-function english<T extends Text>(texts: T[] = []): T[] {
+/** The values of a multilingual ABO field in en_US, or else in another English, such as en_GB, with entities decoded. */
+function englishValues(texts: AboText[] = []): string[] {
   const us = texts.filter((text) => text.language_tag === 'en_US');
   return (us.length > 0 ? us : texts.filter((text) => text.language_tag.startsWith('en_')))
-    .map((text) => ({ ...text, value: text.value.replace(/&(\w+);/g, (entity, name) => ENTITIES[name] ?? entity) }));
+    .map((text) => text.value.replace(/&(\w+);/g, (entity, name) => ENTITIES[name] ?? entity));
 }
-
-const englishValues = (texts?: Text[]) => english(texts).map((text) => text.value);
 
 /** The English product name, without the "Amazon Brand – " that starts the house brands' names. */
 const titleOf = (listing: AboListing) =>
@@ -132,7 +130,7 @@ export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3
     size,
     model: `/data/catalog/models/${id}.glb`,
     thumbnail: `/data/catalog/thumbs/${id}.jpg`,
-    colors: tidy(english(listing.color).flatMap((color) => [color.value, ...(color.standardized_values ?? [])])),
+    colors: tidy(englishValues(listing.color)),
     colorHex: listing.color_code?.[0]?.toLowerCase() as Hex | undefined,
     materials: tidy(materials),
     styleTags: tidy(englishValues(listing.style)),
@@ -185,12 +183,18 @@ async function cached(key: string): Promise<string> {
   return file;
 }
 
+const readGzip = async (file: string) => gunzipSync(await readFile(file)).toString('utf8');
+
 /** The rows of one of ABO's gzipped CSV files, which have CRLF line endings. */
 async function readCsv(file: string): Promise<Record<string, string>[]> {
-  const [header, ...lines] = gunzipSync(await readFile(file)).toString('utf8').split(/\r?\n/).filter(Boolean);
+  const [header, ...lines] = (await readGzip(file)).split(/\r?\n/).filter(Boolean);
   const columns = csvFields(header);
   return lines.map((line) => Object.fromEntries(csvFields(line).map((value, i) => [columns[i], value])));
 }
+
+/** Each ABO image's path under images/original/ and images/small/, by image_id. */
+const loadImagePaths = async () =>
+  new Map((await readCsv(await cached('images/metadata/images.csv.gz'))).map((row) => [row.image_id, row.path]));
 
 /** Every ABO listing by item_id, joined to its 3D model. Of a listing on several Amazon sites, the amazon.com one wins. */
 async function loadListings(): Promise<Map<string, Listing>> {
@@ -204,7 +208,7 @@ async function loadListings(): Promise<Map<string, Listing>> {
   ]));
   const listings = new Map<string, Listing>();
   for (const shard of shards) {
-    for (const line of gunzipSync(await readFile(shard)).toString('utf8').split('\n')) {
+    for (const line of (await readGzip(shard)).split('\n')) {
       if (!line) continue;
       const json = JSON.parse(line);
       const listing = Object.fromEntries(LISTING_KEYS.filter((key) => key in json).map((key) => [key, json[key]])) as Listing;
@@ -252,8 +256,9 @@ async function buildPick(pick: CatalogPick, listing: Listing | undefined, imageP
 /** Builds every pick, skipping (and logging) the ones that fail, then writes catalog.json. */
 async function build() {
   const picks: CatalogPick[] = JSON.parse(await readFile(PICKS, 'utf8'));
-  const [listings, imagesCsv] = await Promise.all([loadListings(), cached('images/metadata/images.csv.gz')]);
-  const imagePaths = new Map((await readCsv(imagesCsv)).map((row) => [row.image_id, row.path]));
+  const file = join(CATALOG_DIR, 'catalog.json');
+  const previous: Catalog = JSON.parse(await readFile(file, 'utf8'));
+  const [listings, imagePaths] = await Promise.all([loadListings(), loadImagePaths()]);
   await mkdir(join(CACHE, 'build'), { recursive: true });
 
   // Four picks at a time, since each gltf-transform run keeps about one core busy. Items keep the picks' order.
@@ -267,7 +272,10 @@ async function build() {
         built[i] = item;
         console.log(`✓ ${pick.id} ${pick.category.padEnd(10)} ${item.size.join(' × ')} m  ${megabytes(bytes)} MB  ${item.title}`);
       } catch (error) {
-        console.error(`✗ ${pick.id} ${pick.category.padEnd(10)} skipped: ${error instanceof Error ? error.message : error}`);
+        // Keep the last good build, so that a failed download doesn't take the item out of Designs that use it.
+        built[i] = previous.items.find((item) => item.source === 'abo' && item.id === pick.id);
+        const kept = built[i] ? '; kept its previous build' : '';
+        console.error(`✗ ${pick.id} ${pick.category.padEnd(10)} skipped: ${error instanceof Error ? error.message : error}${kept}`);
       }
     }
   };
@@ -275,8 +283,6 @@ async function build() {
   const items = built.filter((item) => item !== undefined);
 
   // Items from other sources, such as the placeholder boxes, are built elsewhere: keep them.
-  const file = join(CATALOG_DIR, 'catalog.json');
-  const previous: Catalog = JSON.parse(await readFile(file, 'utf8'));
   const catalog: Catalog = { version: 1, items: [...items, ...previous.items.filter((item) => item.source !== 'abo')] };
   await writeFile(file, `${JSON.stringify(catalog, null, 2)}\n`);
 
@@ -293,13 +299,15 @@ async function build() {
 /** Prints the listings of a Category that contain the keywords, for picking. */
 async function find(category: string, keywords: string | undefined, limit: number) {
   if (!isCategory(category)) {
-    throw new Error(`Unknown category "${category}". Use one of: ${Object.keys(PRODUCT_TYPES).join(', ')}`);
+    throw new Error(`Unknown category "${category}". Use one of: ${Object.keys(DEFAULT_PRICE_USD).join(', ')}`);
   }
-  const found = findListings((await loadListings()).values(), category, keywords);
+  const [listings, imagePaths] = await Promise.all([loadListings(), loadImagePaths()]);
+  const found = findListings(listings.values(), category, keywords);
   const cm = (meters: number) => Math.round(meters * 100);
   const inches = ({ length, width, height }: NonNullable<AboListing['item_dimensions']>) =>
     [length, width, height].map((side) => side?.normalized_value?.value ?? '?').join('×');
-  console.log(['item_id', '3D model W×H×D', 'listed L×W×H', 'color', 'style', 'name'].join('\t'));
+  const thumbnail = (imageId = '') => (imagePaths.has(imageId) ? `${ABO}/images/small/${imagePaths.get(imageId)}` : '');
+  console.log(['item_id', '3D model W×H×D', 'listed L×W×H', 'color', 'style', 'name', 'thumbnail'].join('\t'));
   for (const listing of found.slice(0, limit)) {
     console.log([
       listing.item_id,
@@ -308,6 +316,7 @@ async function find(category: string, keywords: string | undefined, limit: numbe
       englishValues(listing.color).join(', '),
       englishValues(listing.style).join(', '),
       titleOf(listing),
+      thumbnail(listing.main_image_id),
     ].join('\t'));
   }
   const withModel = found.filter((listing) => listing.model).length;

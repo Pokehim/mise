@@ -33,7 +33,7 @@ describe('toCatalogItem', () => {
       size: [0.513, 0.804, 0.592],
       model: '/data/catalog/models/B07BWJCZJX.glb',
       thumbnail: '/data/catalog/thumbs/B07BWJCZJX.jpg',
-      colors: ['Denim', 'Blue'],
+      colors: ['Denim'],              // not ABO's standardized_values, which can be wrong: "Beige" for walnut
       colorHex: '#40474e',
       materials: ['Denim'],
       styleTags: ['Transitional'],
@@ -74,7 +74,7 @@ describe('toCatalogItem', () => {
     expect(toCatalogItem({ id: 'B07HPQ7HB5', category: 'sofa' }, sofa, [1.93, 0.86, 1.02])).toMatchObject({
       title: 'Alkove Elvas Hand-Crafted Leather Sofa, 2 Seater Maxi, 102 x 193 x 93cm, Taupe',
       brand: 'Alkove',
-      colors: ['Ecru', 'Ivory'],
+      colors: ['Ecru'],
       materials: ['Leather', 'Alloy Steel', 'Polyurethane'],
       styleTags: ['Modern'],
     });

@@ -1,5 +1,5 @@
 // Room Setup step 3 (spec §9.3): the floor polygon's edges become Walls.
-import type { Vec2, Wall } from '@shared/types';
+import type { RoomSetup, Vec2, Wall } from '@shared/types';
 
 // Eight compass names, counter-clockwise from East (+X) in 45° steps. North is −Z.
 const COMPASS = ['East', 'Northeast', 'North', 'Northwest', 'West', 'Southwest', 'South', 'Southeast'];
@@ -74,9 +74,28 @@ export function nearestWall(walls: AxisWall[], x: number, z: number) {
   return { wall: nearest, distance };
 }
 
-/** The floor polygon's bounds: [minX, minZ, maxX, maxZ]. */
-export function polygonBounds(polygon: Vec2[]): [number, number, number, number] {
+/** An extent on the floor plane. */
+export interface RoomBounds { minX: number; maxX: number; minZ: number; maxZ: number }
+
+export function polygonBounds(polygon: Vec2[]): RoomBounds {
   const xs = polygon.map(([x]) => x);
   const zs = polygon.map(([, z]) => z);
-  return [Math.min(...xs), Math.min(...zs), Math.max(...xs), Math.max(...zs)];
+  return { minX: Math.min(...xs), maxX: Math.max(...xs), minZ: Math.min(...zs), maxZ: Math.max(...zs) };
+}
+
+/**
+ * The setup with a new floor polygon and its Walls. A Wall the Mover renamed keeps its name while
+ * its edge is unchanged; every other Wall is named afresh, since a new corner can turn the room.
+ * Openings on Walls that no longer exist are dropped.
+ */
+export function withPolygon(setup: RoomSetup, polygon: Vec2[]): RoomSetup {
+  const walls = polygon.length >= 3 ? wallsFromPolygon(polygon, setup.ceilingHeight) : [];
+  const autoNames = new Map(wallsFromPolygon(setup.floor.polygon, setup.ceilingHeight).map((w) => [w.id, w.name]));
+  const same = (a: Vec2, b: Vec2) => a[0] === b[0] && a[1] === b[1];
+  const named = walls.map((wall) => {
+    const old = setup.walls.find((w) => w.id === wall.id && same(w.start, wall.start) && same(w.end, wall.end));
+    return old && old.name !== autoNames.get(old.id) ? { ...wall, name: old.name } : wall;
+  });
+  const ids = new Set(named.map((w) => w.id));
+  return { ...setup, floor: { polygon }, walls: named, openings: setup.openings.filter((o) => ids.has(o.wallId)) };
 }

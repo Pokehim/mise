@@ -5,6 +5,7 @@ import { useRef } from 'react';
 import { Plane, type Ray, Vector3 } from 'three';
 import type { Box } from '@shared/types';
 import { mm } from './geometry/mesh';
+import { ACCENT } from './ui';
 import { useSetup } from './store';
 
 type Handle = { kind: 'side'; axis: 0 | 2; sign: 1 | -1 } | { kind: 'top' } | { kind: 'move' };
@@ -83,7 +84,7 @@ export function BoxHandles({ originalId }: { originalId: string }) {
           <mesh key={i} position={at} rotation-x={handle.kind === 'move' ? -Math.PI / 2 : 0} renderOrder={20}
             onPointerDown={onDown(handle)} onPointerMove={onMove} onPointerUp={onUp} onClick={(e) => e.stopPropagation()}>
             {handle.kind === 'move' ? <ringGeometry args={[0.07, 0.11, 32]} /> : <sphereGeometry args={[0.045, 16, 8]} />}
-            <meshBasicMaterial color={handle.kind === 'move' ? '#ffffff' : '#e5b567'} depthTest={false} />
+            <meshBasicMaterial color={handle.kind === 'move' ? '#ffffff' : ACCENT} depthTest={false} />
           </mesh>
         );
       })}

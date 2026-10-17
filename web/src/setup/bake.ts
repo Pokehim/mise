@@ -19,8 +19,8 @@ export function bakeFloorColors(
   renderer: WebGLRenderer, gltfScene: Object3D, setup: RoomSetup, manifest: ScanManifest,
 ): Record<string, Hex> {
   const split = splitScan(gltfScene, setup, manifest);
-  const [x0, z0, x1, z1] = polygonBounds(setup.floor.polygon);
-  const [minX, maxX, minZ, maxZ] = [x0 - MARGIN, x1 + MARGIN, z0 - MARGIN, z1 + MARGIN];
+  const bounds = polygonBounds(setup.floor.polygon);
+  const [minX, maxX, minZ, maxZ] = [bounds.minX - MARGIN, bounds.maxX + MARGIN, bounds.minZ - MARGIN, bounds.maxZ + MARGIN];
   const pixel = Math.max(PIXEL, (maxX - minX) / MAX_PIXELS, (maxZ - minZ) / MAX_PIXELS);
   const width = Math.ceil((maxX - minX) / pixel);
   const height = Math.ceil((maxZ - minZ) / pixel);

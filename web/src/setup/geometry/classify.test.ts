@@ -27,6 +27,8 @@ const setup: RoomSetup = {
       box: { position: [1.7, 0, -0.6], size: [1.07, 0.76, 0.6], rotationY: -Math.PI / 2 } },
     { id: 'og_wardrobe', label: 'Wardrobe', category: 'wardrobe', kept: true, floorColor: '#a89f91',
       box: { position: [-0.8, 0, 1.2], size: [1, 2.6, 0.6], rotationY: Math.PI } },
+    { id: 'og_rug', label: 'Rug', category: 'rug', kept: false, floorColor: '#a89f91',
+      box: { position: [0.3, 0, 0.3], size: [1.2, 0.02, 0.8], rotationY: 0 } },
   ],
 };
 
@@ -73,6 +75,10 @@ describe('triangleClassifier, rule 1: Originals', () => {
 
   it("leaves the room's corner out of an Original in that corner", () => {
     expect(groupOf([-2.005, 0.3, -1.505], [0.7071, 0, 0.7071])).toEqual({ kind: 'shell' });
+  });
+
+  it('takes the floor-level top of a flat Original, such as a rug', () => {
+    expect(groupOf([0.3, 0.012, 0.3], UP)).toEqual(original('og_rug'));
   });
 
   it('comes before the Ceiling, for an Original as tall as the room', () => {
@@ -132,7 +138,7 @@ describe('triangleClassifier, rule 5: Shell', () => {
     expect(groups).toEqual([
       { kind: 'shell' }, { kind: 'floor' }, { kind: 'ceiling' },
       wall('wl_1'), wall('wl_2'), wall('wl_3'), wall('wl_4'),
-      original('og_bed'), original('og_desk'), original('og_wardrobe'),
+      original('og_bed'), original('og_desk'), original('og_wardrobe'), original('og_rug'),
     ]);
   });
 });

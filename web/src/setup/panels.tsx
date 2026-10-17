@@ -7,9 +7,8 @@ import {
   detectCeilingHeight, detectFloorHeight, detectYaw, type Histogram, heightHistogram, levelTransform, wrapAngle,
 } from './geometry/level';
 import { mm } from './geometry/mesh';
-import { wallAxis } from './geometry/walls';
+import { wallAxis, withPolygon } from './geometry/walls';
 import { CATEGORIES, CATEGORY_NAMES, UNBAKED_FLOOR_COLOR, defaultPartParams } from './originals';
-import { withPolygon } from './overlays';
 import { isLeveled, type StepId, scanTriangles, useSetup } from './store';
 
 export function StepPanel({ step }: { step: StepId }) {
@@ -70,13 +69,13 @@ function CeilingPanel() {
   const meshTransform = useSetup((s) => s.manifest!.meshTransform);
   const ceilingHeight = useSetup((s) => s.setup!.ceilingHeight);
   const updateSetup = useSetup((s) => s.updateSetup);
-  const room = scanTriangles(scene, meshTransform);
-  const histogram = useMemo(() => heightHistogram(room, 'down'), [room]);
+  const scan = scanTriangles(scene, meshTransform);
+  const histogram = useMemo(() => heightHistogram(scan, 'down'), [scan]);
   const setHeight = (height: number) => updateSetup((s) => ({
     ...s, ceilingHeight: height, walls: s.walls.map((w) => ({ ...w, height })),
   }));
   const detect = () => {
-    const found = detectCeilingHeight(room);
+    const found = detectCeilingHeight(scan);
     if (found) setHeight(mm(found));
   };
   return (

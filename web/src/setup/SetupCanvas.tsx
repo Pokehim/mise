@@ -1,13 +1,15 @@
 import { Grid, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import { Canvas, type RootState, type RootStore, type ThreeEvent, events, useThree } from '@react-three/fiber';
+import { Canvas, type RootState, type RootStore, events, useThree } from '@react-three/fiber';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Box3, Color, type Intersection, type Mesh, type MeshBasicMaterial, type Object3D, Plane, Vector3 } from 'three';
 import type { Vec3 } from '@shared/types';
 import { disposeSplit, splitNodes, splitScan } from '../scene/splitScan';
 import { SPLIT } from './geometry/classify';
-import { polygonBounds, wallAxis } from './geometry/walls';
-import { CeilingPlane, CornersOverlay, OpeningsOverlay, OriginalsOverlay, tagOriginalAt } from './overlays';
+import { type RoomBounds, polygonBounds, wallAxis } from './geometry/walls';
+import { tagOriginalAt } from './originals';
+import { CeilingPlane, CornersOverlay, OpeningsOverlay, OriginalsOverlay } from './overlays';
 import { scanTriangles, type StepId, useSetup } from './store';
+import { ACCENT, clickOnly } from './ui';
 
 // Memoized: the page re-renders on every store change, and the scene subscribes to what it needs.
 export const SetupCanvas = memo(function SetupCanvas() {
@@ -42,11 +44,7 @@ function StepView() {
   // While corners are being clicked, frame the whole scan, not the polygon so far.
   const bounds = useRoomBounds(step !== 'corners');
   useCeilingClip(step === 'level' || step === 'ceiling' ? null : ceilingHeight - SPLIT.ceilingBand);
-  const tagOnClick = (e: ThreeEvent<MouseEvent>) => {
-    if (e.delta > 4) return;   // the end of an orbit drag, not a click
-    e.stopPropagation();
-    tagOriginalAt(e.point.toArray());
-  };
+  const tagOnClick = clickOnly((e) => tagOriginalAt(e.point.toArray()));
   return (
     <>
       <StepCamera step={step} bounds={bounds} />
@@ -54,7 +52,7 @@ function StepView() {
         <ScanView />
       </group>
       {step === 'level' && (
-        <Grid infiniteGrid cellSize={0.25} sectionSize={1} cellColor="#6b7280" sectionColor="#e5b567" fadeDistance={40} position={[0, 0.001, 0]} />
+        <Grid infiniteGrid cellSize={0.25} sectionSize={1} cellColor="#6b7280" sectionColor={ACCENT} fadeDistance={40} position={[0, 0.001, 0]} />
       )}
       {step === 'ceiling' && <CeilingPlane bounds={bounds} />}
       {step === 'corners' && <CornersOverlay bounds={bounds} />}
@@ -65,8 +63,6 @@ function StepView() {
 }
 
 /** The room's extent on the floor: the floor polygon once it exists (and `usePolygon`), otherwise the scan's bounds. */
-export interface RoomBounds { minX: number; maxX: number; minZ: number; maxZ: number }
-
 function useRoomBounds(usePolygon: boolean): RoomBounds {
   const scene = useSetup((s) => s.scene!);
   const meshTransform = useSetup((s) => s.manifest!.meshTransform);
@@ -75,11 +71,7 @@ function useRoomBounds(usePolygon: boolean): RoomBounds {
     const { min, max } = new Box3().setFromArray(scanTriangles(scene, meshTransform).positions);
     return { minX: min.x, maxX: max.x, minZ: min.z, maxZ: max.z };
   }, [scene, meshTransform]);
-  return useMemo(() => {
-    if (!usePolygon || polygon.length < 3) return scanBounds;
-    const [minX, minZ, maxX, maxZ] = polygonBounds(polygon);
-    return { minX, maxX, minZ, maxZ };
-  }, [scanBounds, polygon, usePolygon]);
+  return useMemo(() => (usePolygon && polygon.length >= 3 ? polygonBounds(polygon) : scanBounds), [scanBounds, polygon, usePolygon]);
 }
 
 /** Corners looks straight down with North (−Z) up; Openings faces the selected wall; the rest orbit from above. */

@@ -57,7 +57,7 @@ interface SetupState {
   save(): Promise<void>;
 }
 
-let loads = 0;
+let latestLoad = 0;
 
 export const useSetup = create<SetupState>()((set, get) => ({
   status: 'loading',
@@ -69,7 +69,7 @@ export const useSetup = create<SetupState>()((set, get) => ({
   hiddenOriginals: {},
 
   async load(scanId) {
-    const token = ++loads;
+    const token = ++latestLoad;
     set({ status: 'loading', message: undefined, manifest: undefined, setup: undefined, scene: undefined, hiddenOriginals: {} });
     try {
       const manifest = listScans().then((scans) => scans.find((m) => m.id === scanId) ?? fail(`There is no Scan "${scanId}".`));
@@ -81,14 +81,14 @@ export const useSetup = create<SetupState>()((set, get) => ({
         }),
         manifest.then((m) => loadScene(scanFileUrl(scanId, m.mesh))),
       ]);
-      if (token !== loads) return;   // a later load (another Scan, or StrictMode's second run) wins
+      if (token !== latestLoad) return;   // a later load (another Scan, or StrictMode's second run) wins
       set({
         status: 'ready', manifest: await manifest, setup, scene,
         saved: { manifest: await manifest, setup },
         step: setup.walls.length > 0 ? 'originals' : 'level',
       });
     } catch (error) {
-      if (token === loads) set({ status: 'error', message: (error as Error).message });
+      if (token === latestLoad) set({ status: 'error', message: (error as Error).message });
     }
   },
 

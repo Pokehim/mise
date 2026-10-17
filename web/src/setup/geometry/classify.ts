@@ -47,6 +47,8 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
     px, py, pz, c: Math.cos(rotationY), s: Math.sin(rotationY),
     halfW: w / 2 + SPLIT.originalGrowth, halfD: d / 2 + SPLIT.originalGrowth,
     bottom: -SPLIT.originalGrowth, top: h + SPLIT.originalGrowth,
+    // A rug lies within the floor's band, so the floor-like triangles in its box are the rug.
+    flat: h <= SPLIT.floorBand,
   }));
   const polygon = setup.floor.polygon;
   const firstWall = 3;
@@ -56,8 +58,10 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
 
   function classify({ cx, cy, cz, nx, ny, nz }: TriangleInfo): number {
     // 1. Inside an Original's box, grown by 2 cm, above the floor and away from the walls. Added to
-    //    spec §9.4: never a triangle rule 3 would call floor, so the floor stays under a hidden Original.
-    if (cy > SPLIT.originalMinY && !floorLike(cx, cy, cz, ny)) {
+    //    spec §9.4: unless the Original is flat (a rug), never a triangle rule 3 would call floor, so
+    //    the floor stays under a hidden Original.
+    if (cy > SPLIT.originalMinY) {
+      const onTheFloor = floorLike(cx, cy, cz, ny);
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
         const dx = cx - b.px;
@@ -67,7 +71,7 @@ export function triangleClassifier(setup: RoomSetup): TriangleClassifier {
         const lx = b.c * dx - b.s * dz;
         const lz = b.s * dx + b.c * dz;
         if (Math.abs(lx) <= b.halfW && Math.abs(lz) <= b.halfD && ly >= b.bottom && ly <= b.top
-          && !nearAnyWall(walls, cx, cz, SPLIT.originalWallGap)) return firstOriginal + i;
+          && (b.flat || !onTheFloor) && !nearAnyWall(walls, cx, cz, SPLIT.originalWallGap)) return firstOriginal + i;
       }
     }
     // 2. Ceiling.

@@ -47,7 +47,7 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
   const started = performance.now();
   const { groups, classify } = triangleClassifier(setup);
   const primitives = roomFramePrimitives(gltfScene, manifest);
-  const pieces: Piece[][] = groups.map(() => []);
+  const slices: Slice[][] = groups.map(() => []);
   const info = newTriangleInfo();
   let total = 0;
 
@@ -72,7 +72,7 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
       filled[assigned[t]] = f + 3;
     }
     lists.forEach((list, group) => {
-      if (list.length > 0) pieces[group].push({ primitive, index: list });
+      if (list.length > 0) slices[group].push({ primitive, index: list });
     });
     total += count;
   }
@@ -80,11 +80,11 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
   const random = mulberry32(1);
   const nodes = groups.map((group, g) => {
     const { node, content } = emptyNode(group, setup);
-    for (const piece of pieces[g]) content.add(pieceMesh(piece));
+    for (const slice of slices[g]) content.add(sliceMesh(slice));
     const data: SplitNodeData = {
       kind: group.kind,
       ...('id' in group && { id: group.id }),
-      avgLuminance: averageLuminance(pieces[g], random),
+      avgLuminance: averageLuminance(slices[g], random),
     };
     node.userData = data;
     return node;
@@ -118,12 +118,12 @@ export function disposeSplit(split: SplitScan) {
 interface Primitive {
   mesh: TriangleMesh;
   material: Material;
-  /** Room-frame attributes, shared by every piece cut from this primitive. */
+  /** Room-frame attributes, shared by every slice cut from this primitive. */
   attributes: Record<string, BufferAttribute>;
 }
 
 /** The triangles of one primitive that went to one node. */
-interface Piece { primitive: Primitive; index: Uint32Array }
+interface Slice { primitive: Primitive; index: Uint32Array }
 
 function roomFramePrimitives(gltfScene: Object3D, { meshTransform }: ScanManifest): Primitive[] {
   const matrixOf = toFrame(gltfScene, meshTransform);
@@ -190,11 +190,11 @@ function emptyNode(group: SplitGroup, setup: RoomSetup): { node: Object3D; conte
   return { node, content: node };
 }
 
-function pieceMesh({ primitive, index }: Piece): Mesh {
+function sliceMesh({ primitive, index }: Slice): Mesh {
   const geometry = new BufferGeometry();
   for (const [name, attribute] of Object.entries(primitive.attributes)) geometry.setAttribute(name, attribute);
   geometry.setIndex(new BufferAttribute(index, 1));
-  // Bounds of this piece only; computeBoundingBox would measure every vertex of the shared attribute.
+  // Bounds of this slice only; computeBoundingBox would measure every vertex of the shared attribute.
   const p = primitive.mesh.positions;
   const min = new Vector3(Infinity, Infinity, Infinity);
   const max = new Vector3(-Infinity, -Infinity, -Infinity);
@@ -226,15 +226,15 @@ export function unlit(source: Material, vertexColors = source.vertexColors): Mes
 }
 
 /** The mean luminance at the UV centroids of up to LUMINANCE_SAMPLES random triangles of a node. */
-function averageLuminance(pieces: Piece[], random: () => number): number {
-  // Each piece's texture pixels, and the luminance of its material's color, which tints the texture.
-  const sources = pieces.map(({ primitive }) => {
+function averageLuminance(slices: Slice[], random: () => number): number {
+  // Each slice's texture pixels, and the luminance of its material's color, which multiplies the texture.
+  const sources = slices.map(({ primitive }) => {
     const { map, color } = primitive.material as Partial<MeshStandardMaterial>;
     map?.updateMatrix();
-    return { map, tint: color ? luminance(color.r, color.g, color.b) : 1, pixels: map ? texturePixels(map) : null };
+    return { map, colorLuminance: color ? luminance(color.r, color.g, color.b) : 1, pixels: map ? texturePixels(map) : null };
   });
   if (sources.some((source) => source.map && !source.pixels)) return FALLBACK_LUMINANCE;
-  const counts = pieces.map((piece) => piece.index.length / 3);
+  const counts = slices.map((slice) => slice.index.length / 3);
   const total = counts.reduce((a, b) => a + b, 0);
   let sum = 0;
   let samples = 0;
@@ -243,11 +243,11 @@ function averageLuminance(pieces: Piece[], random: () => number): number {
     let t = Math.floor(random() * total);
     let p = 0;
     while (t >= counts[p]) t -= counts[p++];
-    const { map, tint, pixels } = sources[p];
-    const uvs = pieces[p].primitive.attributes.uv;
-    let sample = tint;
+    const { map, colorLuminance, pixels } = sources[p];
+    const uvs = slices[p].primitive.attributes.uv;
+    let sample = colorLuminance;
     if (map && pixels && uvs) {
-      const { index } = pieces[p];
+      const { index } = slices[p];
       const [a, b, c] = [index[3 * t], index[3 * t + 1], index[3 * t + 2]];
       uv.set((uvs.getX(a) + uvs.getX(b) + uvs.getX(c)) / 3, (uvs.getY(a) + uvs.getY(b) + uvs.getY(c)) / 3);
       map.transformUv(uv);   // texture transform, wrapping, and flipY → image space, row 0 at the top

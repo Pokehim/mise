@@ -3,6 +3,7 @@ import type { Box, Category, Original, PartParams, RoomSetup, Vec3, Wall } from 
 import { autoBox } from './geometry/autoBox';
 import { type TriangleMesh, mm } from './geometry/mesh';
 import { nearestWall, wallCoordinates, withAxis } from './geometry/walls';
+import { scanTriangles, useSetup } from './store';
 
 export const CATEGORY_NAMES: Record<Category, string> = {
   bed: 'Bed', desk: 'Desk', chair: 'Chair', table: 'Table', nightstand: 'Nightstand', sofa: 'Sofa',
@@ -52,13 +53,25 @@ const HAND_SIZES: Partial<Record<Category, Vec3>> = {
   rug: [1.5, 0.02, 1], wall_art: [0.6, 0.6, 0.04], mirror: [0.5, 1, 0.04], lamp: [0.3, 1.5, 0.3], plant: [0.4, 0.8, 0.4],
 };
 
+/** Step 5: tag the furniture at a clicked point as an Original of the chosen category, and select it. */
+export function tagOriginalAt(point: Vec3) {
+  const { setup, manifest, scene, tagCategory, updateSetup } = useSetup.getState();
+  const { box, found } = boxForClick(tagCategory, scanTriangles(scene!, manifest!.meshTransform), point, setup!);
+  const original = newOriginal(tagCategory, box, setup!.originals);
+  updateSetup((s) => ({ ...s, originals: [...s.originals, original] }));
+  useSetup.setState({
+    selectedOriginalId: original.id,
+    notice: found ? undefined : 'Auto-box found no furniture there, so this box has a default size. Drag its handles to fit.',
+  });
+}
+
 /**
  * The box for a click on the scan while tagging a category, and whether auto-box found furniture
  * there. When it didn't, the box is the category's usual size at the click, for the Mover to fit.
  */
-export function boxForClick(category: Category, room: TriangleMesh, point: Vec3, setup: RoomSetup): { box: Box; found: boolean } {
+function boxForClick(category: Category, scan: TriangleMesh, point: Vec3, setup: RoomSetup): { box: Box; found: boolean } {
   if (!BY_HAND.includes(category)) {
-    const box = autoBox(room, point, setup, category === 'bed' ? 'length' : 'away-from-wall');
+    const box = autoBox(scan, point, setup, category === 'bed' ? 'length' : 'away-from-wall');
     if (box) return { box, found: true };
   }
   return { box: handPlacedBox(category, point, setup.walls), found: BY_HAND.includes(category) };

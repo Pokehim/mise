@@ -3,17 +3,14 @@ import { Edges, Line } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { memo, useMemo } from 'react';
 import { DoubleSide } from 'three';
-import type { Opening, Original, RoomSetup, Vec2, Vec3, Wall } from '@shared/types';
+import type { Opening, Original, Vec2, Vec3, Wall } from '@shared/types';
 import { BoxHandles } from './BoxHandles';
 import { mm } from './geometry/mesh';
 import { openingFromClicks } from './geometry/openings';
-import { wallAxis, wallsFromPolygon } from './geometry/walls';
+import { type RoomBounds, wallAxis, withPolygon } from './geometry/walls';
 import { Label } from './Label';
-import { boxForClick, newOriginal } from './originals';
-import type { RoomBounds } from './SetupCanvas';
-import { scanTriangles, useSetup } from './store';
-
-const ACCENT = '#e5b567';
+import { useSetup } from './store';
+import { ACCENT, clickOnly } from './ui';
 
 /** Step 2: the ceiling height as a translucent plane over the room. */
 export function CeilingPlane({ bounds }: { bounds: RoomBounds }) {
@@ -34,33 +31,15 @@ function snapCorner([x, z]: Vec2, polygon: Vec2[]): Vec2 {
   return [mm(snap(x, 0)), mm(snap(z, 1))];
 }
 
-/**
- * The setup with a new floor polygon and its Walls. A Wall the Mover renamed keeps its name while
- * its edge is unchanged; every other Wall is named afresh, since a new corner can turn the room.
- */
-export function withPolygon(setup: RoomSetup, polygon: Vec2[]): RoomSetup {
-  const walls = polygon.length >= 3 ? wallsFromPolygon(polygon, setup.ceilingHeight) : [];
-  const autoNames = new Map(wallsFromPolygon(setup.floor.polygon, setup.ceilingHeight).map((w) => [w.id, w.name]));
-  const same = (a: Vec2, b: Vec2) => a[0] === b[0] && a[1] === b[1];
-  const named = walls.map((wall) => {
-    const old = setup.walls.find((w) => w.id === wall.id && same(w.start, wall.start) && same(w.end, wall.end));
-    return old && old.name !== autoNames.get(old.id) ? { ...wall, name: old.name } : wall;
-  });
-  const ids = new Set(named.map((w) => w.id));
-  return { ...setup, floor: { polygon }, walls: named, openings: setup.openings.filter((o) => ids.has(o.wallId)) };
-}
-
 /** Step 3: click the room's corners on the floor, seen from above. */
 export function CornersOverlay({ bounds }: { bounds: RoomBounds }) {
   const { floor: { polygon }, walls, ceilingHeight } = useSetup((s) => s.setup!);
   const updateSetup = useSetup((s) => s.updateSetup);
   const y = ceilingHeight - 0.1;   // above the furniture, below the clipped-off ceiling
-  const onClick = (e: ThreeEvent<MouseEvent>) => {
-    if (e.delta > 4) return;
-    e.stopPropagation();
+  const onClick = clickOnly((e) => {
     const corner = e.nativeEvent.altKey ? ([mm(e.point.x), mm(e.point.z)] as Vec2) : snapCorner([e.point.x, e.point.z], polygon);
     updateSetup((s) => withPolygon(s, [...s.floor.polygon, corner]));
-  };
+  });
   const outline = polygon.length >= 3 ? [...polygon, polygon[0]] : polygon;
   return (
     <>
@@ -92,9 +71,7 @@ export function OpeningsOverlay() {
   const draft = useSetup((s) => s.openingDraft);
   const { selectWall, updateSetup } = useSetup.getState();
 
-  const onWallClick = (wall: Wall) => (e: ThreeEvent<MouseEvent>) => {
-    if (e.delta > 4) return;
-    e.stopPropagation();
+  const onWallClick = (wall: Wall) => clickOnly((e) => {
     if (wall.id !== selectedWallId) {
       selectWall(wall.id);
       return;
@@ -114,7 +91,7 @@ export function OpeningsOverlay() {
         ...(draft.kind === 'door' && { swing: draft.swing }),
       }],
     }));
-  };
+  });
 
   return (
     <>
@@ -179,18 +156,6 @@ function OpeningOutline({ wall, opening }: { wall: Wall; opening: Opening }) {
   );
 }
 
-/** Step 5: tag the furniture at a clicked point as an Original of the chosen category, and select it. */
-export function tagOriginalAt(point: Vec3) {
-  const { setup, manifest, scene, tagCategory, updateSetup } = useSetup.getState();
-  const { box, found } = boxForClick(tagCategory, scanTriangles(scene!, manifest!.meshTransform), point, setup!);
-  const original = newOriginal(tagCategory, box, setup!.originals);
-  updateSetup((s) => ({ ...s, originals: [...s.originals, original] }));
-  useSetup.setState({
-    selectedOriginalId: original.id,
-    notice: found ? undefined : 'Auto-box found no furniture there, so this box has a default size. Drag its handles to fit.',
-  });
-}
-
 /** Steps 5 and 6: the Originals' boxes. In step 5 a box can be selected, and the selected one has handles. */
 export function OriginalsOverlay({ editable }: { editable: boolean }) {
   const originals = useSetup((s) => s.setup!.originals);
@@ -210,11 +175,7 @@ const OriginalBox = memo(function OriginalBox({ original, selected, editable }: 
   const { position, size: [w, h, d], rotationY } = original.box;
   const color = selected ? ACCENT : original.kept ? '#a78bfa' : '#34d399';
   const front = useMemo((): Vec3[] => [[-w / 2, 0.01, d / 2], [w / 2, 0.01, d / 2]], [w, d]);
-  const select = (e: ThreeEvent<MouseEvent>) => {
-    if (e.delta > 4) return;
-    e.stopPropagation();
-    useSetup.setState({ selectedOriginalId: original.id, notice: undefined });
-  };
+  const select = clickOnly(() => useSetup.setState({ selectedOriginalId: original.id, notice: undefined }));
   return (
     <group position={position} rotation-y={rotationY}>
       <mesh position={[0, h / 2, 0]} onClick={editable ? select : undefined}>

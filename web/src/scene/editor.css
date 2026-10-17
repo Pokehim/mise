@@ -1,0 +1,52 @@
+/* The editor layout of spec §10.1: TopBar, Catalog panel | 3D view | Inspector, footer. */
+
+.editor {
+  --ink: #2b2722;
+  --muted: #8a8174;
+  --line: #e3ddd1;
+  --panel: #fbfaf7;
+  --accent: #1f7a6d;
+
+  display: grid;
+  grid-template: 'top top top' auto 'catalog view inspector' minmax(0, 1fr) 'foot foot foot' auto / 280px minmax(0, 1fr) 300px;
+  height: 100%;
+  color: var(--ink);
+  background: var(--panel);
+  font-size: 14px;
+}
+
+.editor .muted { color: var(--muted); }
+.editor a { color: var(--accent); }
+.editor button {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+}
+.editor button:hover:not(:disabled) { border-color: var(--accent); }
+.editor button:disabled { color: var(--muted); cursor: default; }
+.editor button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: white; }
+
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.topbar .spacer { flex: 1; }
+
+.view { grid-area: view; position: relative; min-height: 0; }
+.view .stats { position: absolute !important; }   /* stats.js pins itself to the window */
+
+.editor-footer {
+  grid-area: foot;
+  padding: 4px 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}

@@ -1,29 +1,26 @@
-import { Grid, OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
-import { BackSide } from 'three';
+import { useEffect } from 'react';
 import { Link } from 'wouter';
+import { useEditor } from '../state/store';
+import { TopBar } from '../ui/TopBar';
+import { SceneCanvas } from './SceneCanvas';
+import './editor.css';
 
-// Placeholder until #7 builds the editor: a grid and a 4 × 3 m box room.
-export function EditorPage({ params }: { params: { designId: string } }) {
+/** The editor at /d/:designId (spec §10.1). */
+export function EditorPage({ params: { designId } }: { params: { designId: string } }) {
+  const ready = useEditor((s) => s.status === 'ready' && s.design?.id === designId);
+  const error = useEditor((s) => s.error);
+
+  useEffect(() => {
+    void useEditor.getState().load(designId);
+  }, [designId]);
+
+  if (error) return <main>Could not open Design {designId}: {error} <Link href="/">← Scans</Link></main>;
+  if (!ready) return <main>Loading…</main>;
   return (
-    <>
-      <Canvas camera={{ position: [4, 4, 5], fov: 50 }}>
-        <color attach="background" args={['#f4f1ea']} />
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[3, 5, 2]} intensity={1.5} />
-        <Grid
-          infiniteGrid cellSize={0.5} sectionSize={1} cellColor="#d9d2c5" sectionColor="#b3a892" position={[0, -0.001, 0]}
-        />
-        {/* 2.6 m high, with its floor at y = 0. BackSide shows the inside, like a dollhouse. */}
-        <mesh position={[0, 1.3, 0]}>
-          <boxGeometry args={[4, 2.6, 3]} />
-          <meshStandardMaterial color="#e8e2d6" side={BackSide} />
-        </mesh>
-        <OrbitControls target={[0, 1, 0]} />
-      </Canvas>
-      <nav style={{ position: 'absolute', top: 12, left: 12 }}>
-        <Link href="/">← Scans</Link> · Design {params.designId}
-      </nav>
-    </>
+    <div className="editor">
+      <TopBar />
+      <SceneCanvas />
+      <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
+    </div>
   );
 }

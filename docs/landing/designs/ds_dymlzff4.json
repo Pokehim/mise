@@ -4,12 +4,12 @@
   "scanId": "lounge",
   "name": "Green Study",
   "createdAt": "2026-10-18T12:17:11.152Z",
-  "updatedAt": "2026-10-18T12:17:11.152Z",
+  "updatedAt": "2026-10-18T12:53:49.148Z",
   "origin": "claude",
   "brief": {
     "text": "a library: bookcases, deep reading chairs, warm lamps, dark academia"
   },
-  "rationale": "A dark academia library on a small budget: espresso bookcases on a forest-green wall, deep velvet reading chairs under warm brass lamps, and old masters over the study table.",
+  "rationale": "A dark academia library for the Brief: espresso ladder shelves full of leather-bound and mixed books on a forest-green wall, deep velvet reading chairs lit by a brass task lamp and a softly glowing paper lantern, and old masters over the study table.",
   "palette": {
     "wall": "#2f3b2f",
     "accents": [
@@ -396,6 +396,234 @@
       },
       "id": "ed_ysuf3yzg",
       "at": "2026-10-18T12:17:10.690Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_qg5lua2r",
+      "catalogId": "obj-books-leather-row",
+      "placement": {
+        "position": [
+          1.4850046031929325,
+          1.0325758881403304,
+          -0.6293599999999997
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_7zgkkkpl",
+      "at": "2026-10-18T12:53:46.196Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_wxomprb0",
+      "catalogId": "obj-books-mixed-row",
+      "placement": {
+        "position": [
+          1.4581577921544693,
+          0.7023114964116296,
+          -0.6293599999999997
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_c4022mva",
+      "at": "2026-10-18T12:53:46.196Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_2ifbod5u",
+      "catalogId": "obj-books-leather-row",
+      "placement": {
+        "position": [
+          1.4331475838832248,
+          0.3907912564542502,
+          -0.6291439290862093
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_6nhevxfp",
+      "at": "2026-10-18T12:53:46.197Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_p9civwyb",
+      "catalogId": "obj-books-mixed-row",
+      "placement": {
+        "position": [
+          1.4087315706249042,
+          0.09247835110231206,
+          -0.6293599999999997
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_h3us58ly",
+      "at": "2026-10-18T12:53:46.197Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_uy6yqjzv",
+      "catalogId": "obj-books-leather-row",
+      "placement": {
+        "position": [
+          1.4850046031929325,
+          1.0325758881403304,
+          0.0373456
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_mfvdtmsh",
+      "at": "2026-10-18T12:53:46.197Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_eas7itpw",
+      "catalogId": "ph-calathea-ebony",
+      "placement": {
+        "position": [
+          1.4581577921544693,
+          0.7023114964116296,
+          0.0373456
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_7to95z7l",
+      "at": "2026-10-18T12:53:46.198Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_2glkpgiu",
+      "catalogId": "obj-books-mixed-row",
+      "placement": {
+        "position": [
+          1.4331475838832248,
+          0.3907912564542502,
+          0.03756167091379045
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_j4nt1pso",
+      "at": "2026-10-18T12:53:46.198Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_fwuo2pux",
+      "catalogId": "obj-books-leather-row",
+      "placement": {
+        "position": [
+          1.4087315706249042,
+          0.09247835110231206,
+          0.03734560000000001
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_w3iiw35p",
+      "at": "2026-10-18T12:53:46.199Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_rt5kpeds",
+      "catalogId": "obj-books-mixed-row",
+      "placement": {
+        "position": [
+          1.4850046031929325,
+          1.0325758881403304,
+          0.7040512000000001
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_aroj9m3w",
+      "at": "2026-10-18T12:53:46.199Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_5v56aoqd",
+      "catalogId": "obj-books-leather-row",
+      "placement": {
+        "position": [
+          1.4581577921544693,
+          0.7023114964116296,
+          0.7040512000000001
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_pxjguoa9",
+      "at": "2026-10-18T12:53:46.199Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_w4svqpr8",
+      "catalogId": "obj-books-mixed-row",
+      "placement": {
+        "position": [
+          1.4331475838832248,
+          0.3907912564542502,
+          0.7042672709137905
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_i2x98jws",
+      "at": "2026-10-18T12:53:46.200Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_7348pbb2",
+      "catalogId": "obj-books-leather-row",
+      "placement": {
+        "position": [
+          1.4087315706249042,
+          0.09247835110231206,
+          0.7040512000000001
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_bbbwcimv",
+      "at": "2026-10-18T12:53:46.201Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_jubcpfff",
+      "id": "ed_r0tawjkq",
+      "at": "2026-10-18T12:53:46.201Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_4zhlnajz",
+      "catalogId": "obj-lamp-paper-lantern-floor",
+      "placement": {
+        "position": [
+          1.3958990000000004,
+          0,
+          2.128800000000001
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_xk6amdgs",
+      "at": "2026-10-18T12:53:46.203Z",
       "by": "claude"
     }
   ]

@@ -1,8 +1,8 @@
 /*
  * The reveal of a Claude Design (spec §13.1, step 6): opening a Design Claude made replays its Edits one
- * at a time, about 350 ms each, so the room assembles itself. Paint fades in, Pieces drop in from 0.3 m
- * above while they grow from 90% to full size, and replaced or removed Originals fade out. A Refine's
- * new Edits play the same way.
+ * at a time, about 350 ms each, so the room assembles itself; a bookcase's books come in together. Paint
+ * fades in, Pieces drop in from 0.3 m above while they grow from 90% to full size, and replaced or removed
+ * Originals fade out. A Refine's new Edits play the same way.
  *
  * The room is still replay(edits) (ADR-0001): while a reveal plays, the store's roomState is the replay of
  * the Edits shown so far, and the Design itself doesn't change, so nothing is saved. Any change to the
@@ -17,7 +17,9 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Group, type Material, type Mesh, type Object3D } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { create } from 'zustand';
-import type { Edit, Finish, LibraryMaterial, Placement, RoomState } from '@shared/types';
+import { roomItems } from '@shared/fit';
+import { pointInPolygon } from '@shared/geometry';
+import type { Catalog, Edit, Finish, LibraryMaterial, Placement, RoomSetup, RoomState } from '@shared/types';
 import { replay } from '../state/core';
 import { useEditor } from '../state/store';
 import { recolorParts } from './applyParts';
@@ -134,12 +136,22 @@ interface Stage {
 function step(run: RevealRun, stage: Stage) {
   const { setup, catalog, roomState: before } = useEditor.getState();
   let end = run.next + 1;
-  // A remodel's removals, made by one call, go together.
+  // A remodel's removals, made by one call, go together, and so do the books put inside one shelf.
   if (run.edits[run.next].type === 'remove') while (run.edits[end]?.type === 'remove') end++;
+  const shelf = shelfHolding(setup!, catalog!, before!, run.edits[run.next]);
+  if (shelf) while (run.edits[end] && shelfHolding(setup!, catalog!, before!, run.edits[end]) === shelf) end++;
   const after = replay(setup!, catalog!, run.edits.slice(0, end));
   const effects = run.edits.slice(run.next, end).flatMap((edit) => effectsOf(edit, before!, after, stage));
   useEditor.setState({ roomState: after });
   return { effects, run: end < run.edits.length ? { ...run, next: end } : null };
+}
+
+/** The shelf a placed Piece rests inside, on a level below its top, if it does: its id. */
+function shelfHolding(setup: RoomSetup, catalog: Catalog, state: RoomState, edit: Edit): string | undefined {
+  if (edit.type !== 'place' || edit.placement.mount !== 'surface') return undefined;
+  const [x, y, z] = edit.placement.position;
+  return roomItems(setup, catalog, state)
+    .find(({ category, corners, heights }) => category === 'shelf' && y < heights[1] - 0.01 && pointInPolygon([x, z], corners))?.id;
 }
 
 /** What one Edit looks like as it is shown. */

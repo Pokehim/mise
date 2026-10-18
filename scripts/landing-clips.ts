@@ -2,9 +2,10 @@
  * The landing page's room clips (web/src/pages/landing): each Design in docs/landing/designs recorded
  * assembling itself, as the editor's reveal (web/src/scene/Reveal.tsx) plays it from the door.
  *
- *   npx tsx scripts/landing-clips.ts [<designId> …]      (every Design in docs/landing/designs by default)
+ *   node scripts/landing-clips.ts [<designId> …]      (every Design in docs/landing/designs by default)
  *
- * Start the app first (./.superset/run.sh). BASE_URL defaults to http://localhost:$PORT. For each Design,
+ * Run it with node (Node 24 strips the types), not tsx: tsx renames functions with a helper that the
+ * page, where the recording code runs, doesn't have. Start the app first (./.superset/run.sh). BASE_URL defaults to http://localhost:$PORT. For each Design,
  * the script opens /d/<id>?shot=door, presses Replay, and records the 3D view from the empty lounge to
  * the finished room: a 4:3 band of it, at 640×480, as WebM. It saves <id>.webm, the last frame as
  * <id>.webp, and the first frame (the empty lounge, the same for every Design) as empty.webp. The editor

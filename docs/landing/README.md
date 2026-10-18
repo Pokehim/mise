@@ -5,8 +5,8 @@ The Designs behind the 16 rooms on the landing page (`web/src/pages/landing/room
 Each room on the landing page is a clip of its reveal (`web/src/scene/Reveal.tsx`): the empty lounge assembling itself Edit by Edit, from the door. To record the clips again, after changing a Design or the reveal, start the app and run:
 
 ```sh
-npx tsx scripts/landing-clips.ts            # every Design here
-npx tsx scripts/landing-clips.ts ds_x ds_y  # just these
+node scripts/landing-clips.ts            # every Design here
+node scripts/landing-clips.ts ds_x ds_y  # just these
 ```
 
 To open one of these Designs in the editor, copy it into `data/designs/`, then go to `/d/<id>`.

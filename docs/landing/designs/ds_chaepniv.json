@@ -4,12 +4,12 @@
   "scanId": "lounge",
   "name": "Quiet Wave Study",
   "createdAt": "2026-10-18T12:17:09.433Z",
-  "updatedAt": "2026-10-18T12:17:09.433Z",
+  "updatedAt": "2026-10-18T12:57:42.851Z",
   "origin": "claude",
   "brief": {
     "text": "a focused study room with good task lighting, quiet colors and room for four people to work"
   },
-  "rationale": "A focused study room for four: oak worktables with a task lamp at each seat, quiet sage walls, and calm Japanese prints hung as one group centered over the table.",
+  "rationale": "A focused study room for four with quiet colors: oak worktables with a task lamp at each seat, sage walls and Japanese prints over the table, plus a low oak bookcase of books under the whiteboard and coffee table books on the table to browse.",
   "palette": {
     "wall": "#c9cfc4",
     "accents": [
@@ -377,6 +377,108 @@
       },
       "id": "ed_25ovlcsi",
       "at": "2026-10-18T12:17:08.231Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_1lw21bbe",
+      "catalogId": "obj-bookcase-oak-low",
+      "placement": {
+        "position": [
+          1.4058990000000005,
+          0,
+          -0.2698799999999997
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_w4sm7p4z",
+      "at": "2026-10-18T12:57:38.900Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_yxbu6fp8",
+      "catalogId": "obj-books-modern-row",
+      "placement": {
+        "position": [
+          1.4058990000000005,
+          0.8000244366635872,
+          -0.2698799999999997
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_fx6omgx8",
+      "at": "2026-10-18T12:57:38.902Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_t5alf4m0",
+      "catalogId": "obj-books-mixed-row",
+      "placement": {
+        "position": [
+          1.3998929570964656,
+          0.44797510476309116,
+          -0.2698799999999997
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_hu2wwep6",
+      "at": "2026-10-18T12:57:38.903Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_jqlof1f7",
+      "catalogId": "obj-books-leather-row",
+      "placement": {
+        "position": [
+          1.3998929570964656,
+          0.0880153748920855,
+          -0.2698799999999997
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_wz6rh7ry",
+      "at": "2026-10-18T12:57:38.904Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_13kxueam",
+      "catalogId": "ph-iceplant-bowl",
+      "placement": {
+        "position": [
+          1.4058990000000005,
+          0.8,
+          0.13012000000000035
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_oitky32x",
+      "at": "2026-10-18T12:57:38.907Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_svjb61x5",
+      "catalogId": "obj-books-coffee-table-stack",
+      "placement": {
+        "position": [
+          -1.3028703873751981,
+          0.705,
+          -0.21098401622317567
+        ],
+        "rotationY": -0.02277,
+        "mount": "surface"
+      },
+      "id": "ed_y522e1q8",
+      "at": "2026-10-18T12:57:38.909Z",
       "by": "claude"
     }
   ]

@@ -4,12 +4,12 @@
   "scanId": "lounge",
   "name": "Quiet Sage Study",
   "createdAt": "2026-10-18T12:33:08.380Z",
-  "updatedAt": "2026-10-18T12:33:08.380Z",
+  "updatedAt": "2026-10-18T12:57:51.102Z",
   "origin": "claude",
   "brief": {
     "text": "a focused study room with good task lighting and room for four people to work, in a calm muted palette, no multicolor rugs"
   },
-  "rationale": "A focused study room for four or more: a task lamp at every table, a calm sage and putty palette, a single-tone braided jute rug instead of a multicolor one, and Japanese prints as the quiet focal point.",
+  "rationale": "A calm study room for four, with a task lamp at every table, sage and putty walls, a single-tone jute rug and Japanese prints as the focal point, plus a low oak bookcase of books under the whiteboard with a calathea on top.",
   "palette": {
     "wall": "#a3ab9a",
     "accents": [
@@ -266,6 +266,98 @@
       },
       "id": "ed_akz1r38x",
       "at": "2026-10-18T12:33:07.285Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_w8l3505v",
+      "catalogId": "obj-bookcase-oak-low",
+      "placement": {
+        "position": [
+          1.4058990000000005,
+          0,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_25yt6ty7",
+      "at": "2026-10-18T12:57:45.250Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ejj3yts5",
+      "catalogId": "obj-books-modern-row",
+      "placement": {
+        "position": [
+          1.4058990000000005,
+          0.8000244366635872,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_3dvbtwee",
+      "at": "2026-10-18T12:57:46.501Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_e0bia2s1",
+      "catalogId": "obj-books-mixed-row",
+      "placement": {
+        "position": [
+          1.3998929570964656,
+          0.44797510476309116,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_0jv4ro6p",
+      "at": "2026-10-18T12:57:46.501Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_sxtsae1r",
+      "catalogId": "obj-books-modern-row",
+      "placement": {
+        "position": [
+          1.3998929570964656,
+          0.0880153748920855,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_qnu07orw",
+      "at": "2026-10-18T12:57:46.502Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_bssbfzxv",
+      "catalogId": "ph-calathea-ebony",
+      "placement": {
+        "position": [
+          1.4058990000000005,
+          0.8000244366635872,
+          0.32960000000000034
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_47rd9cni",
+      "at": "2026-10-18T12:57:48.315Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_ejj3yts5",
+      "id": "ed_i8vz1b2y",
+      "at": "2026-10-18T12:57:49.683Z",
       "by": "claude"
     }
   ]

@@ -68,11 +68,11 @@ We build in this order. The order is the user's decision; see Round 7.
 
 | Area | Phase 1 | Later | Out (not this hackathon) |
 |---|---|---|---|
-| Capture | **Polycam Business** (every export unlocked): the Space Mode (LiDAR) mesh as GLB; a Polycam Gaussian splat (Splat PLY) built from the Space capture's uploaded video or a separate Object Mode capture; Developer Mode raw data as a fallback | Auto-setup (our own RoomPlan or AI detection) | Our own iOS app or video pipeline, RoomPlan, importing Polycam's floor plan (§18), capture from a phone webpage |
+| Capture | **Polycam Business** (every export unlocked): the Space Mode (LiDAR) mesh as GLB; a Polycam Gaussian splat (Splat PLY) built from the Space capture's uploaded video or a separate Object Mode capture; Developer Mode raw data as a fallback | **Fill Captures** with the furniture moved, for real Patches and the backs of moved Originals (P2, ADR-0007); auto-setup (our own RoomPlan or AI detection) | Our own iOS app or video pipeline, RoomPlan, importing Polycam's floor plan (§18), capture from a phone webpage |
 | Room meaning | Room Setup by hand: floor corners → walls, Openings, click-to-tag Originals with auto-box | Auto-setup by RoomPlan or AI | — |
 | Look | Polycam textured mesh | Splat + mesh hybrid, Realism levels (P3) | AI photo stills (dropped) |
 | Pieces | Place, Move, Rotate, Remove, Swap, Resize, Recolor per Part | Text-to-3D for categories the Catalog lacks (P4 stretch) | Live web product search |
-| Originals | Replace (with a simple Patch) | Move, Remove, Recolor and Finish per Part, inpainted Patch (P2) | Completing unseen sides with image-to-3D |
+| Originals | Replace (with a simple Patch) | Move, Remove, Recolor and Finish per Part; Patches from Fill Captures, with generated fill for gaps; backs of moved Originals from Fill Captures (P2) | Completing unseen sides with image-to-3D; undersides |
 | Surfaces | Paint walls (keeps real lighting) | Wallpaper, floor materials such as carpet or wood (P2) | Ceiling edits |
 | Catalog | ~20 → 60 ABO items | ~150 items (exact list decided later) | Real prices |
 | AI | — | Claude Generate and Refine (P4) | MCP server, Claude Desktop integration |
@@ -91,7 +91,7 @@ We build in this order. The order is the user's decision; see Round 7.
 | Live interactions | Drag, rotate, and orbit at **60 fps** on the M3 Pro and M3 Air in Chrome. Any Edit applied and visible in **under 100 ms**. Swap and Resize candidate lists in **under 200 ms**. |
 | Loading | Scan + Design interactive in **under 5 s** from localhost on first load |
 | Generation (P4) | 3 Designs in **under 30 s** |
-| Asset budgets | Room mesh ≤ 300k triangles with 2K WebP textures. Splat ≤ 1.5M splats as SPZ. Each Piece ≤ 2 MB (1K WebP, meshopt). At most 25 Pieces per Design. |
+| Asset budgets | Room mesh ≤ 500k triangles in total, Fill Captures included, with up to 4K WebP textures. Splat ≤ 1.5M splats as SPZ. Each Piece ≤ 2 MB (1K WebP, meshopt). At most 25 Pieces per Design. |
 | Demo machine | M3 Pro, Chrome, localhost. No phone required during judging. |
 
 ---
@@ -100,18 +100,19 @@ We build in this order. The order is the user's decision; see Round 7.
 
 ```
 iPhone 16 Pro ─ Polycam Business (Developer Mode ON)              ── AirDrop all exports to the M3 Pro
-   ├─ Space (LiDAR) mode            → mesh export (GLB)
+   ├─ Space (LiDAR) mode            → mesh export (GLB): the Main Capture, then Fill Captures (furniture moved)
    ├─ Gaussian splat (Polycam cloud, from the Space video) → Splat PLY, in its own frame
    └─ Raw Data (photos + poses)     → fallback only
 
 M3 Pro, offline (any duration)
-   scripts/scan-import.ts   ◄ mesh       → data/scans/<id>/room.glb + manifest.json
+   scripts/scan-import.ts   ◄ mesh       → data/scans/<id>/room.glb + manifest.json (--fill: captures/fill-<n>.glb)
+   scripts/scan-merge.ts    ◄ Main + Fill Captures + setup.json → room.glb with Patches (ADR-0007)
    scripts/splat.sh (P3)    ◄ Splat PLY  → splat-transform → data/scans/<id>/splat.spz
    msplat-train (fallback)  ◄ raw data   → a splat in the mesh's own coordinates
    scripts/catalog-build.ts              → data/catalog/catalog.json + models/*.glb
 
 Browser (Vite + React + TypeScript + React Three Fiber + drei)
-   /setup/:scanId   Room Setup tool  ──PUT──►  data/scans/<id>/setup.json
+   /setup/:scanId   Room Setup tool  ──PUT──►  data/scans/<id>/setup.json, manifest.json; ──POST merge──► room.glb
    /d/:designId     Editor
                       load Scan mesh → split into Shell / Floor / Walls / Originals (in memory)
                       load Catalog + Design
@@ -124,6 +125,7 @@ Hono server (localhost:$API_PORT, default 8787)
    PUT  /api/scans/:id/setup     save Room Setup
    PUT  /api/scans/:id/manifest  save meshTransform (Room Setup step 1) and splatTransform (Phase 3)
    PUT  /api/scans/:id/files/:name   Phase 2: save baked Patch PNGs into the scan folder
+   POST /api/scans/:id/merge     Phase 2: rebuild room.glb from the Main and Fill Captures (ADR-0007)
    GET  /api/designs?scanId=     list Designs
    GET  /api/designs/:id         one Design
    POST /api/designs             create (empty, or duplicate of an existing Design)
@@ -228,15 +230,32 @@ export type Category =
 
 export interface ScanManifest {
   version: 1;
-  id: string;                        // "dorm-v1"
+  id: string;                        // "lounge-v1"
   name: string;                      // "Maple Hall 412"
   mesh: string;                      // file in the scan folder: "room.glb"
   meshTransform: YawTransform;       // Polycam frame → room frame (set by Room Setup step 1)
   splat?: string;                    // Phase 3: "splat.spz"
   splatTransform?: YawTransform & { scale: number }; // Phase 3: splat frame → room frame
+  captures?: ScanCaptures;           // Phase 2 (ADR-0007): what room.glb was merged from
 }
 
 export interface YawTransform { position: Vec3; rotationY: number }
+
+export interface ScanCaptures {
+  main: string;                      // "captures/main.glb": the Main Capture as imported
+  fills: FillCapture[];
+}
+
+export interface FillCapture {
+  mesh: string;                      // "captures/fill-1.glb"
+  transform: YawTransform;           // this Capture's frame → the Main Capture's frame
+  moved: MovedOriginal[];            // Originals this Capture saw somewhere else
+}
+
+export interface MovedOriginal {
+  originalId: string;
+  transform: YawTransform;           // its copy here (in the Main Capture's frame) → where it stands in the Main Capture
+}
 
 export interface RoomSetup {
   version: 1;
@@ -279,10 +298,13 @@ export interface Original {
   label: string;                     // "Bed"
   category: Category;
   box: Box;
-  kept: boolean;                     // can't leave the real room (e.g. dorm-owned bed)
+  kept: boolean;                     // can't leave the real room (e.g. a building-owned sofa)
   partParams?: PartParams;           // overrides for the category Part rule (ADR-0006)
   floorColor: Hex;                   // average floor color around the footprint → simple Patch
-  patch?: string;                    // Phase 2: "patches/og_bed.png" inpainted floor decal
+  patch?: {                          // Phase 2: generated fill (Patch v2) for the spots no Capture saw
+    floor?: string;                  // "patches/og_sofa.floor.png"
+    walls?: Record<string, string>;  // wallId → "patches/og_sofa.wl_2.png"
+  };
 }
 
 export interface PartParams {
@@ -421,7 +443,7 @@ export interface FitViolation {
 | `wl_` | Wall |
 | `op_` | Opening |
 
-Scan IDs are slugs, such as `dorm-v1`.
+Scan IDs are slugs, such as `lounge-v1`.
 
 ---
 
@@ -556,7 +578,7 @@ ABO has no prices (ADR-0003). `priceEstimateUsd` defaults by category, can be ov
 
 ## 9. Scan import and Room Setup (Person A)
 
-### 9.1 Capture checklist (the dorm, **before 5 PM today**)
+### 9.1 Capture checklist (the lounge, **before 5 PM today**)
 
 We have **Polycam Business**, so every export format is unlocked, including Gaussian splats as Splat PLY. Polycam builds the splat in its cloud, so we don't train our own.
 
@@ -568,25 +590,27 @@ We have **Polycam Business**, so every export format is unlocked, including Gaus
 
   Either way the splat has its own coordinates and scale, and gets fitted to the mesh in Phase 3.
 - [ ] All lights on. Blinds in their final position, unchanged for the whole capture.
-- [ ] Dorm furniture stays in place; these become the Kept Originals. Personal clutter goes off the floor and desk.
+- [ ] The lounge's furniture stays in its usual places for the **Main Capture**; the pieces the building owns become Kept Originals. Personal clutter goes off the floor and tables.
 - [ ] Walk slowly, two loops at two heights. Get under the desk and behind the chair.
 - [ ] **Capture twice** (a backup).
+- [ ] **Fill Captures** (ADR-0007, `.plans/fill-captures-spec.md` §3): only after the Main Capture and every splat video. Move the furniture, keeping it upright: pull sofas off the walls, turn pieces so their backs face the room, move tables off their spots, and leave Kept pieces alone. Same lights. Include at least two room corners and walk around each moved piece. Every non-Kept Original's spot must be uncovered in at least one Fill Capture.
 - [ ] **Export:**
-  - the mesh as **GLB** (glTF also works)
+  - each Capture's mesh as **GLB** (glTF also works)
   - the splat as **Splat PLY**
   - the **Raw Data** zip, which must be exported *from the phone that captured it*
   - the floor-plan **PDF with measurements**, as a reference for checking dimensions in Room Setup
 
   AirDrop everything to the M3 Pro. The Splat PLY is large, so keep it out of git; only the compressed `splat.spz` is committed.
 
-Do a **10-minute test scan of the hackathon table area first**. It becomes the development fixture, and it tests export, scale, and up-axis before the dorm trip. Also upload its video as a splat, so the splat route gets tested early too.
+Do a **10-minute test scan of the hackathon table area first**. It becomes the development fixture, and it tests export, scale, and up-axis before the lounge capture. Also upload its video as a splat, so the splat route gets tested early too.
 
 ### 9.2 `scripts/scan-import.ts <polycam-export> <scanId>`
 
-1. Unzip. Convert to GLB with `gltf-transform copy`, then `gltf-transform optimize --texture-compress webp --texture-size 2048`. If the result is over 300k triangles, add `gltf-transform simplify`.
+1. Unzip. Convert to GLB with `gltf-transform copy`, then `gltf-transform optimize --texture-compress webp --texture-size 4096`. If the result is over 500k triangles, add `gltf-transform simplify`.
 2. Copy the raw data to `data/scans/<id>/raw/`.
 3. Write `manifest.json` with `meshTransform` set to identity. Room Setup step 1 fills it in.
 4. Print the triangle count, texture count, bounding box, and which axis is up. Polycam glTF should be +Y up and in meters; **verify this on the test scan.**
+5. `--fill` imports a Fill Capture into an existing Scan instead: `captures/fill-<n>.glb`, added to `manifest.captures` with an identity transform. The first one also keeps the Main Capture as `captures/main.glb`. It never touches `room.glb` or `meshTransform`.
 
 ### 9.3 Room Setup tool: `/setup/:scanId` (web)
 
@@ -596,10 +620,11 @@ It's a stepper. Each step saves into the same `RoomSetup` object, and **Save** s
 |---|---|---|
 | 1. Level | Confirm the floor height and the yaw | **Floor height:** a histogram of the y values of vertices whose normal points up (normal.y > 0.9); the lowest strong peak is the floor. **Yaw:** a histogram of horizontal normal angles, taken mod 90°; rotate so the walls line up with the X and Z axes. Writes `meshTransform`. |
 | 2. Ceiling | Confirm the ceiling height | A histogram of vertices whose normal points down; adjust with a slider |
-| 3. Corners | Click the room's corners in a top-down view (4 clicks for a rectangular dorm) | The polygon becomes `floor.polygon`. Each edge becomes a `Wall`, with its inward `normal` computed toward the polygon's centroid. Walls are auto-named by facing (North is −Z). |
+| 3. Corners | Click the room's corners in a top-down view (4 clicks for a rectangular room) | The polygon becomes `floor.polygon`. Each edge becomes a `Wall`, with its inward `normal` computed toward the polygon's centroid. Walls are auto-named by facing (North is −Z). |
 | 4. Openings | Pick a wall, then click two opposite corners of the door or window on the wall's surface; choose door or window and the swing | The clicks are projected onto the wall plane, giving `offset`, `width`, `bottom`, and `height` |
 | 5. Originals | Click on a piece of furniture | **Auto-box:** collect mesh vertices within 1.0 m of the click that are above the floor (y > 0.03) and more than 3 cm from every wall plane. Region-grow over a 5 cm voxel grid from the clicked voxel. Fit a box aligned with the room yaw. Then adjust it with handles, choose a category and label, and toggle **Kept**. The `partParams` default by category. |
-| 6. Bake | Click "Bake" | For each Original, compute `floorColor`: render a top-down orthographic view with Originals hidden, then average the floor pixels in a 15 cm ring around the footprint. *Phase 2:* inpainted `patches/<id>.png` (§11.2). |
+| 6. Fill Captures (Phase 2) | For each Fill Capture: click the same 3–4 floor-level corners in it and in the Main Capture; then click each moved piece in it and pick its Original. **Save** | Floor height found automatically; turn and position solved from the corners, then refined by ICP on the floor and walls. Moved pieces are auto-boxed and registered (4 starting turns, then ICP). Saving writes `manifest.captures` and rebuilds `room.glb` (`POST /api/scans/:id/merge`, ADR-0007). |
+| 7. Bake | Click "Bake" | For each Original, compute `floorColor`: render a top-down orthographic view with Originals hidden, then average the floor pixels in a 15 cm ring around the footprint. *Phase 2:* Patch v2 decals for the gaps no Capture saw (§11.2). |
 
 Lamps, wall art, plants, rugs, and anything else are tagged the same way, by clicking. Polycam doesn't detect furniture.
 
@@ -607,13 +632,14 @@ Lamps, wall art, plants, rugs, and anything else are tagged the same way, by cli
 
 Apply `meshTransform` first. Then, for each triangle, with `c` its centroid and `n` its normal, take the first rule that matches:
 
+0. *Phase 2:* from a primitive the merge tagged as fill (ADR-0007) → **that Original's Patch** (`kind: "patch"`, hidden until the Original is lifted or removed) or **that Original** (`kind: "completion"`).
 1. Inside an Original's box (grown by 2 cm), with c.y > 0.02 and more than 2 cm from every wall plane → **that Original**.
 2. c.y > ceilingHeight − 0.05 → **Ceiling**.
 3. \|c.y\| < 0.03, n.y > 0.8, and inside `floor.polygon` → **Floor**.
 4. Within 4 cm of wall *w*'s plane, inside *w*'s extent, \|n · w.normal\| > 0.7, and **not** inside any Opening rectangle → **Wall *w***.
 5. Everything else → **Shell**.
 
-Each group becomes its own mesh, sharing the original textures; Polycam may export several primitives and textures, so handle every primitive. For each node, also compute `avgLuminance`: sample the texture at the UV centroids of up to 2,000 random triangles, using an OffscreenCanvas and `getImageData`. **Target: under 300 ms for 300k triangles.**
+Each group becomes its own mesh, sharing the original textures; Polycam may export several primitives and textures, so handle every primitive. For each node, also compute `avgLuminance`: sample the texture at the UV centroids of up to 2,000 random triangles, using an OffscreenCanvas and `getImageData`. **Target: under 500 ms for 500k triangles.**
 
 ---
 
@@ -682,7 +708,7 @@ Moves create **one Edit when the drag ends**, not one per frame.
 
   Walls, Originals, and Piece Parts all use this. Because it divides by the *average*, dark → light works, for example walnut → white.
 - **Blob shadow:** a soft radial-gradient plane under each floor Piece, 110% of its footprint, at 35% opacity. Originals already have real shadows baked into the Scan.
-- **Simple Patch** (Phase 1, for `replace`): a rounded rectangle on the floor at y = 0.002, the size of the footprint plus 10 cm, in the Original's `floorColor`, with a feathered alpha edge.
+- **Simple Patch** (Phase 1, for `replace`): a rounded rectangle on the floor at y = 0.002, the size of the footprint plus 10 cm, in the Original's `floorColor`, with a feathered alpha edge. In Phase 2 it is only the fallback: an Original's captured Patch (from a Fill Capture) draws on top of the floor and wall, over Patch v2 decals for any gaps.
 - **Fit violations:** a red outline plus a short message chip ("Blocks the door"). **For manual edits they are warnings, never blocks.**
 
 ### 10.7 Shopping list (🛒)
@@ -704,19 +730,22 @@ It lists every Piece in the Design with its thumbnail, title, "≈ $X (est.)", a
 | Feature | Notes |
 |---|---|
 | **Move / rotate Originals** (Lift) | Originals are already separate nodes after the split, so they drag exactly like Pieces. Kept Originals show a lock and can't move. The old footprint gets a Patch. *Accepted flaw:* a moved Original keeps the lighting baked in at its old spot, and its unseen back or underside may show holes. |
-| **Remove Original** | Hides it and adds a Patch |
+| **Remove Original** | Hides it and shows its Patch |
 | **Recolor Original Parts** | The same shader, using the rules from §7 on the cut-out geometry |
 | **Finishes with materials** | **Material Library**: about 20 CC0 materials at 1K (ambientCG and Poly Haven): oak, walnut, maple, cherry, marble, concrete, linen, velvet, leather, brushed metal, and 3 carpets, 3 wallpapers, and 2 tiles. They're applied by **tri-planar projection** (custom GLSL in `onBeforeCompile`, because the TSL `triplanarTexture` needs node materials). The result is multiplied by `relLum` so the real lighting stays. Finishes can go on Walls (wallpaper), the Floor (carpet, wood, tile), and Original Parts ("oak top"). |
-| **Inpainted Patch** | See §11.2 |
+| **Patches from Fill Captures** (ADR-0007, `.plans/fill-captures-spec.md`) | The Fill Capture's floor and wall inside the Original's box grown by 10 cm, color-matched, shown once it's lifted or removed. Moved Originals also get their unseen backs and sides from the Fill Capture. Patch v2 (§11.2) covers only the gaps. |
 | **Catalog to about 60 items**, **Material Library build** | `scripts/materials-build.ts` |
 
-### 11.2 Patch v2: "simple context-based fill," baked during Room Setup
+### 11.2 Patch v2: generated fill for the gaps no Capture saw, baked during Room Setup
 
-1. For each Original, render a top-down orthographic view of the **Floor node only**, covering the footprint plus a 40 cm margin, at 512×512, with alpha.
-2. Pixels with **alpha = 0** are holes: floor the scanner never saw. Also mask the footprint plus 5 cm, to remove the Original's own contact shadow.
+Most of a Patch comes from a Fill Capture (§11.1, ADR-0007). Patch v2 fills only what no Capture saw, on the floor and on the walls behind the Original.
+
+1. For each non-Kept Original, render a top-down orthographic view covering the footprint plus a 40 cm margin, at 512×512, with alpha. Draw the **Floor node with the Patch region (the box grown by 10 cm) cut out**, then the Original's **captured Patch** node.
+2. Pixels with **alpha = 0** inside the region are the gaps. (Where there is no Fill Capture, that is the whole footprint, and the old mask of the footprint plus 5 cm still applies, to remove the contact shadow.)
 3. Fill the masked pixels in the browser with **push-pull diffusion**: average inward from the boundary across a few mip levels. This handles plain floors (carpet, vinyl, wood) well.
-4. *Optional upgrade:* send the same image and mask to an inpainting model on fal. Choose the model during the spike; this isn't required.
-5. Save `patches/<id>.png`. Render it as a floor decal at y = 0.002 with a feathered edge.
+4. Do the same for each wall within 10 cm of the grown box, with an orthographic camera facing the wall over the strip behind the Original.
+5. *Optional upgrade:* send the same image and mask to an inpainting model on fal. Choose the model during the spike; this isn't required.
+6. Save `patches/<id>.floor.png` and `patches/<id>.<wallId>.png`, and set `original.patch = { floor, walls }`. Render them as decals (floor at y = 0.002, walls 2 mm in front of their wall) with a feathered edge, under the captured Patch.
 
 ---
 
@@ -724,11 +753,11 @@ It lists every Piece in the Design with its thumbnail, title, "≈ $X (est.)", a
 
 | Step | Details |
 |---|---|
-| **Get the splat** (start Polycam's cloud processing **right after the dorm capture**, around 5 PM) | Upload the Space capture's video as a Gaussian Splat, or use a separate Object Mode splat capture (§9.1). Polycam builds it in its cloud, in a few minutes to an hour. Export it as **Splat PLY** to the M3 Pro. **Fallback**, if Polycam's splat looks poor indoors: train one from the Developer Mode raw data with msplat (`pip install "msplat[cli]"`, then `msplat-train data/scans/dorm-v1/raw -n 30000`; roughly 25–45 minutes on the M3 Pro, estimated). The raw data carries the LiDAR capture's own camera poses, so a msplat splat needs almost no fitting. It will likely look softer. |
+| **Get the splat** (start Polycam's cloud processing **right after the lounge capture**, around 5 PM) | Upload the Space capture's video as a Gaussian Splat, or use a separate Object Mode splat capture (§9.1). Polycam builds it in its cloud, in a few minutes to an hour. Export it as **Splat PLY** to the M3 Pro. **Fallback**, if Polycam's splat looks poor indoors: train one from the Developer Mode raw data with msplat (`pip install "msplat[cli]"`, then `msplat-train data/scans/lounge-v1/raw -n 30000`; roughly 25–45 minutes on the M3 Pro, estimated). The raw data carries the LiDAR capture's own camera poses, so a msplat splat needs almost no fitting. It will likely look softer. |
 | **Level, clean, and compress** | First, in SuperSplat:<br>• level the splat (its Orient tool fixes a tilted capture)<br>• set a rough real-world scale by measuring a known length, such as the door width<br>• remove floaters<br>• export a PLY<br>Then run `@playcanvas/splat-transform`:<br>• crop to the room box<br>• decimate to ≤ 1.5M splats (`-d`)<br>• strip the higher spherical-harmonic bands (`-H`)<br>• write `data/scans/<id>/splat.spz`<br>Add `"splat": "splat.spz"` to the manifest. |
 | **Align** | The editor's Align panel (#16):<br>• click the same 3–4 points on the splat and on the mesh (room corners at floor level work well)<br>• solve for yaw, uniform scale, and translation (the splat is already level)<br>• fine-tune with sliders<br>• save the result as `splatTransform` in the manifest<br>The "180° about Y, ×100 scale" step in Polycam's Unity guide fits a splat to *its own capture's* mesh inside Unity, so it doesn't apply here. |
 | **Render** | Spark 2.3.1 in R3F: `extend({ SparkRenderer, SplatMesh })`, a `<sparkRenderer args={[{ renderer: gl }]}>` with a `<splatMesh args={[{ url }]}>` inside. Use **Vite**: Spark's R3F examples break under Webpack. |
-| **Touched means mesh** (ADR-0005) | For every touched Original, Wall, or the Floor: add a `SplatEditSdf` of type BOX with **opacity 0** over its region, and show its mesh node with the change. A painted wall uses a thin box over the wall slab. **Verify in the spike** how to keep Opening splats visible: a second SDF with opacity 1 per Opening, or showing the Opening's mesh instead. |
+| **Touched means mesh** (ADR-0005) | For every touched Original, Wall, or the Floor: add a `SplatEditSdf` of type BOX with **opacity 0** over its region, and show its mesh node with the change. For a lifted or removed Original, the box is its box grown by 10 cm, the same region as its Patch. A painted wall uses a thin box over the wall slab. **Verify in the spike** how to keep Opening splats visible: a second SDF with opacity 1 per Opening, or showing the Opening's mesh instead. |
 | **Room lighting for Pieces** | A `CubeCamera` at the room center, 1.2 m high, renders the mesh look once, run through `PMREMGenerator`, and is used as the `envMap` for Piece materials only |
 | **Realism levels** (TopBar toggle) | **Quick:** mesh look plus blob shadows. **Real** (default when a splat exists): splat look, room environment lighting, and blob shadows. **Max:** Real plus a directional light from the largest window casting shadows onto a `ShadowMaterial` copy of the Shell, Floor, and Wall nodes. |
 | **Fallback** | If the splat isn't convincing by 4:00 AM, ship Quick only. The editor and Edits don't change. |
@@ -816,14 +845,14 @@ If the resolved Placement violates a Fit rule, the resolver **slides it along th
 |---|---|---|
 | 2:15–2:45 | **Both:** scaffold the repo, paste `shared/types.ts`, get `npm run dev` working | ← same |
 | 2:45–3:15 | Test scan of the venue table (mesh, Developer Mode ON; upload its video as a splat) → `scan-import` → fixture | ABO metadata download; pick 15 items; start `catalog-build` |
-| 3:15–5:00 | **Dorm capture ×2** (including travel) → AirDrop → `scan-import dorm-v1` | Editor shell: Canvas, fixture mesh, Dollhouse camera, hand-written fixture `setup.json`, Catalog panel, Add Piece |
+| 3:15–5:00 | **Lounge Main Capture ×2, then Fill Captures** (including travel) → AirDrop → `scan-import lounge-v1` | Editor shell: Canvas, fixture mesh, Dollhouse camera, hand-written fixture `setup.json`, Catalog panel, Add Piece |
 | 5:00–6:00 | Start Polycam's splat processing; it runs in Polycam's cloud. Room Setup steps 1–3 (level, ceiling, corners → walls). | Selection + Inspector; Move / Rotate drag, wall snap, drop onto surfaces; Remove |
 | 6:00–7:00 | Dinner | Dinner |
 | 7:00–8:30 | Room Setup steps 4–6 (Openings, auto-box Originals, Bake), Save; `splitScan` | `replay` + `describe` + History panel + Undo; Designs save and load through Hono |
 | 8:30–10:00 | Paint (`recolor.ts` + `avgLuminance`); `parts.ts` + per-Part Recolor; simple Patch + Replace | Swap; Resize flow; `fit.ts` (overlap, outside-floor, door-swing, blocks-window) with red highlight; Shopping list |
 | 10:00–10:30 | **Both:** submit the **Devpost draft**: both members with Discord names, and tracks (§15.3) | ← same |
-| **10:30 PM** | ✅ **Checkpoint 1: Phase 1 works end to end on the dorm Scan** | |
-| 10:30–2:00 | Phase 2: Material Library + tri-planar Finishes on walls, the floor, and Original Parts | Phase 2: Move and Remove Originals + Kept; Patch v2 bake; Catalog to about 60 items |
+| **10:30 PM** | ✅ **Checkpoint 1: Phase 1 works end to end on the lounge Scan** | |
+| 10:30–2:00 | Phase 2: Fill Captures (align, merge, captured Patches; ADR-0007); Material Library + tri-planar Finishes on walls, the floor, and Original Parts | Phase 2: Move and Remove Originals + Kept; Patch v2 bake; Catalog to about 60 items |
 | 2:00–4:00 | Phase 3: Spark splat look, alignment, touched-means-mesh | Phase 3: Realism toggle, room environment lighting, Max cast shadows |
 | **4:00 AM** | ⏱ **Time-box:** cut whatever isn't working in Phase 3. **Phase 4 starts.** | |
 | 4:00–7:30 | `anchors.ts`, the walkway Fit rule, the reveal animation, Refine | `/api/generate`: Room Summary, tools, 3 parallel loops, Brief dialog, Design cards |
@@ -839,9 +868,9 @@ Plan one staggered 90-minute nap each, during Phase 2 or Phase 3, where the sche
 ### 15.1 Demo script (about 3 minutes, on the M3 Pro)
 
 1. **Hook (15 s):** "Every freshman furnishes a dorm blind. Will this desk fit? Will this rug clash with the school's dresser? Mise lets you try it in *your* room first."
-2. **The Scan (20 s):** Walk view through the real dorm. "Scanned with an iPhone in two minutes."
+2. **The Scan (20 s):** Walk view through the real lounge. "Scanned with an iPhone in two minutes."
 3. **Customize (75 s):**
-   - Select the dorm chair → **Replace** it with an ABO chair.
+   - Select the lounge armchair → **Replace** it with an ABO chair.
    - **Recolor** its legs black.
    - **Paint** the accent wall sage; the real window light stays on the wall.
    - **Add** a rug and a desk lamp onto the desk.
@@ -877,13 +906,14 @@ Plan one staggered 90-minute nap each, during Phase 2 or Phase 3, where the sche
 |---|---|---|---|
 | 1 | The Polycam mesh export is too heavy, has many textures, or has an unexpected up-axis or scale | A, test scan, 2:45 PM: run `scan-import` and inspect the printout | `gltf-transform simplify`; fix the axis in `meshTransform` |
 | 2 | Polycam's splat looks poor indoors, or can't be fitted to the mesh closely enough | A, test scan: upload the Space video as a splat, export the Splat PLY, and try a 4-point fit against `room.glb` | Train from the raw data with msplat: it lines up with the mesh almost automatically, but looks softer. If that fails too, cut Phase 3 and ship the mesh look. |
-| 3 | Load-time split is too slow or misassigns triangles | A, ~7 PM, on the dorm mesh | Run the split once in Room Setup and save the per-Original index lists in `setup.json` |
+| 3 | Load-time split is too slow or misassigns triangles | A, ~7 PM, on the lounge mesh | Run the split once in Room Setup and save the per-Original index lists in `setup.json` |
 | 4 | Texture readback for `avgLuminance` fails (CORS, compressed textures) | A, ~8:30 PM | Use a fixed `avgLuminance` of 0.5 per node, tuned by eye |
 | 5 | Some ABO GLBs fail to optimize, or come out bigger than 2 MB | B, 2:45 PM, on 15 items | Drop those items; there are about 1,200 chairs to choose from |
 | 6 | The height rules for Parts look wrong on real items | A/B, ~9 PM | Tune `partParams` per item or Original |
 | 7 | Spark 2.x inside R3F (`extend`, `SplatEdit` BOX, Opening exclusion) | A, start of Phase 3 | Ship the Quick level only (ADR-0005 fallback) |
 | 8 | 3 Claude Designs take more than 30 s | B, early in Phase 4 | Fast mode; fewer Edits per Design; stream the cards in as each one finishes |
 | 9 | Too little sleep causes demo-day bugs | Both | Feature freeze at 7:30 AM is non-negotiable |
+| 10 | A Fill Capture doesn't line up within about 1 cm (each Capture drifts differently), or Captures are exposed differently | A, first Fill Capture: align it and check the residual and the Patch seams | Per-Patch color gain hides exposure; Patch v2 decals under the captured Patch hide small gaps; at worst, fall back to Patch v2 alone |
 
 ---
 
@@ -897,8 +927,9 @@ If behind, cut from the top of this list down.
 4. Room environment lighting
 5. Splat look (Phase 3 entirely). Ship the mesh look.
 6. Wallpaper and floor Finishes
-7. Patch v2. Keep the simple Patch.
-8. Move and Remove Originals
+7. Completing moved Originals from Fill Captures
+8. Patches from Fill Captures and Patch v2. Keep the simple Patch.
+9. Move and Remove Originals
 
 **Never cut:**
 

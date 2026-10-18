@@ -27,7 +27,7 @@ A LiDAR scan never sees what furniture hides: the floor under a sofa, the wall b
 | D9 | **Merging is server-side gltf-transform:** `scripts/scan-merge.ts` rebuilds `room.glb` from the Main and Fill Captures. **Saving the step triggers it** (`POST /api/scans/:id/merge`). | Keeps meshopt and WebP intact, can be re-run, and can also be run by hand. |
 | D10 | Fill triangles live **in `room.glb`, tagged** by Patch or completion. splitScan routes them by tag. | One mesh file, no new load path. |
 | D11 | **Contract:** add `ScanManifest.captures`. `Original.patch` becomes `{ floor?, walls? }`. | Explicit types instead of naming rules. Both are optional or unused today, so nothing breaks. **Person B must agree** (§5 of the main spec). |
-| D12 | **Budgets:** Main Capture ≤ **400k** triangles, fill triangles ≤ **75k** (so `room.glb` ≤ 475k), and room textures up to **4096**. | Agreed in the interview. Replaces §2.3's 300k and 2K. |
+| D12 | **Budget:** `room.glb` ≤ **500k triangles in total**, with no separate cap on the Main Capture or the fill. Room textures go up to **4096**. | Decided after the interview. Replaces §2.3's 300k and 2K. |
 | D13 | **Kept Originals get no Patch and no completion**, and stay put during Fill Captures. | They can never be moved or removed. |
 | D14 | All of this is **pre-processing before the demo**; Room Setup's UI only needs to be usable, not polished. | Judges never see setup (ADR-0004). |
 | D15 | **When:** take the Fill Captures today on the lounge trip; build in **Phase 2**, after Checkpoint 1. The simple Patch is the fallback until then. | Phase 1 is never cut. |
@@ -117,7 +117,7 @@ Every merged primitive carries `extras.mise.fill`:
 
 ### 5.1 `scripts/scan-import.ts` (amends §9.2)
 
-- The triangle cap goes from 300k to **400k**, and `--texture-size` from 2048 to **4096**.
+- The triangle cap goes from 300k to **500k** (the whole budget), and `--texture-size` from 2048 to **4096**.
 - **New `--fill`:** `npx tsx scripts/scan-import.ts lounge-fill-1.glb lounge-v1 --fill`. It runs the same optimize pipeline into `captures/fill-<n>.glb` and appends `{ mesh, transform: identity, moved: [] }` to `captures.fills`. It never touches `room.glb` or `meshTransform`, and needs no `--force`.
   - The first `--fill` on a Scan also copies `room.glb` to `captures/main.glb` and sets `captures.main`.
   - The summary adds a reminder: "Next: line it up in Room Setup → Fill Captures."
@@ -151,7 +151,7 @@ For each Fill Capture:
    - transform them to the Main pose
    - drop those within 2 cm of a Main triangle of the same Original
    - **Gain:** the same ratio, sampled on the surfaces both copies saw (the triangles that were dropped)
-4. **Budget:** if the fill triangles total more than 75k, simplify the fill primitives together (`ratio = 75k / total`, error 1). The Main Capture is never re-simplified.
+4. **Budget:** if the Main Capture plus the fill comes to more than 500k triangles, simplify every primitive with the same ratio (`500k / total`, error 1). Neither part has its own cap, and the merge always starts again from `captures/main.glb`, so nothing is simplified twice.
 5. **Write:** transform the fill back into the Main Capture's frame, append one primitive per Patch or completion (tagged, §4.3), dedup the textures, keep the meshopt and WebP pipeline, and write `room.glb`. Print a summary per Original: coverage, triangles and gain.
 
 The server gains a small route next to the others in `server/app.ts`: `POST /api/scans/:id/merge` → `mergeScan` → `{ summary }`.
@@ -166,7 +166,7 @@ Before rule 1:
   - untagged triangles → the existing rules 1–5
 - **Patch nodes:** `MeshBasicMaterial` with the map and the color factor (the gain). Set `polygonOffset` (factor −1, units −1) so they draw over the Main Capture's floor and wall at the same depth. Compute `avgLuminance` the same way as for other nodes.
 - The result gains `patches: Record<originalId, Object3D>`.
-- The timing target scales with the new budget: under 450 ms for 475k triangles.
+- The timing target scales with the new budget: under 500 ms for 500k triangles.
 
 ### 5.5 Rendering (amends §10.6, §11, #13)
 
@@ -219,27 +219,26 @@ The splat-hiding box for a lifted or removed Original is its box **grown by 10 c
    - it covers ≥ 95% of the region
    - its gain is about 1.11
 5. Completion adds the sofa's back and keeps no triangle within 2 cm of the Main copy.
-6. The budget holds: fill triangles ≤ 75k, and the Main Capture's triangle count is unchanged.
+6. The budget holds: a merge that would pass 500k triangles comes out at 500k or fewer.
 7. Kept Originals get no Patch and no completion.
 
 ## 7. Work breakdown
 
 | Where | Who / when | What |
 |---|---|---|
-| **New issue: "Fill Captures"** | Person A, Phase 2. Depends on #8 (Room Setup steps 1–5, auto-box) and #4. | Contract change (with Person B's OK); `scan-import --fill` and the new budgets; the Room Setup step 6 UI and alignment module; `scripts/scan-merge.ts` and `POST /api/scans/:id/merge`; the synthetic lounge and tests |
-| **Amend #8** | Person A | splitScan rule 0, Patch nodes (gain, polygonOffset), `patches` in the result; renumber the Room Setup steps (Bake → 7) |
+| **New issue: "Fill Captures"** | Person A, Phase 2. Depends on #8 (merged) and #4 (merged). | Contract change (with Person B's OK); `scan-import --fill` and the new budget; the Room Setup step 6 UI and alignment module; `scripts/scan-merge.ts` and `POST /api/scans/:id/merge`; splitScan rule 0, Patch nodes (gain, polygonOffset) and `patches` in its result, since #8 is already merged; showing a Patch node in `ScanMesh` while its Original is in `RoomState.patches`; the synthetic lounge and tests |
 | **Amend #13** | Phase 2 | Render captured Patch nodes plus floor and wall decals; Bake writes `patch = { floor, walls }`; remove the footprint mask |
 | **Amend #16** | Phase 3 | Grow the splat-hiding box by 10 cm |
 | **#2** | Today | Capture checklist ✅ (commented) |
 
-## 8. Main spec edits this implies (`.plans/mise-spec.md`)
+## 8. Main spec edits this implies (`.plans/mise-spec.md`) ✅ made with this plan
 
 - **dorm → lounge:** `dorm-v1` → `lounge-v1`, and update the examples: Kept examples become lounge pieces.
 - **§2.2 Capture row and §3 diagram:** add Fill Captures.
 - **§2.3:**
-  - room mesh ≤ 400k triangles plus ≤ 75k fill, with **4K** WebP textures
-  - splitScan target < 450 ms for 475k
-- **§9.1:** the capture order (§3 above). **§9.2:** `--fill`, 400k, 4096.
+  - room mesh ≤ 500k triangles in total, with **4K** WebP textures
+  - splitScan target < 500 ms for 500k
+- **§9.1:** the capture order (§3 above). **§9.2:** `--fill`, 500k, 4096.
 - **§9.3:** new step 6, Fill Captures; Bake becomes step 7, with Patch v2 for gaps on the floor and walls. **§9.4:** rule 0 and Patch nodes.
 - **§10.6 and §11.1–11.2:** the Patch is the captured Patch plus v2 decals for gaps; the simple Patch is only a fallback.
 - **§12:** the grown splat-hiding box.
@@ -251,7 +250,7 @@ The splat-hiding box for a lifted or removed Original is its box **grown by 10 c
 - [ ] On `lounge-v1`, removing the sofa shows the real floor and the wall behind it, with no contact shadow left behind and no visible step in brightness at the edge.
 - [ ] Moving the sofa 1 m off the wall shows its real back.
 - [ ] Spots no Capture saw show a Patch v2 decal, never a hole, including on walls.
-- [ ] The median alignment residual on the lounge is ≤ 1 cm, and `room.glb` is within 400k + 75k triangles and loads in three.js.
+- [ ] The median alignment residual on the lounge is ≤ 1 cm, and `room.glb` is within 500k triangles and loads in three.js.
 - [ ] Saving the Fill Captures step rebuilds `room.glb`, and running `npx tsx scripts/scan-merge.ts lounge-v1` gives the same file.
 - [ ] The synthetic-lounge tests pass.
 

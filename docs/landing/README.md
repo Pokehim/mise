@@ -12,3 +12,14 @@ node scripts/landing-clips.ts ds_x ds_y  # just these
 To open one of these Designs in the editor, copy it into `data/designs/`, then go to `/d/<id>`.
 
 The photo beside the rooms (`web/src/pages/landing/real-room.webp`) is the lounge as it really is, with its tables and chairs: a phone photo cropped square from below the ceiling, resized to 800 px, and saved as WebP without its metadata.
+
+## The scan
+
+Before the rooms assemble, the grid shows the lounge's scan building (`web/src/pages/landing/scan/scan.webm`): the point cloud of `data/scans/real-scans/POLYCAM_ROOM_SPLAT_1.ply`, swept from the door to the window in LiDAR colors (by height), then in true color. `counts.json` holds how many points the sweep has passed, ten times a second, for the counter on its slip. To render it again (about two minutes):
+
+```sh
+cd scripts/scan-renders
+uv run --with numpy --with pillow --with imageio-ffmpeg python gridclip.py
+```
+
+The same scripts render stills and a 10-second video for slides: `OUT=<dir> python final.py lidar-dollhouse color-dollhouse lidar-depth-eye color-points-eye lidar-plan three-passes` and `OUT=<dir> python anim.py`.

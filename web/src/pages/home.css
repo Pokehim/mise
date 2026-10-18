@@ -127,6 +127,20 @@
 @media (prefers-reduced-motion: reduce) {
   .room-label { translate: none; }
 }
+/* The scan, over the rooms until it's built: the lounge's point cloud on the dark of a scanner's screen,
+   with its count on a slip. Then it fades to the 16 empty lounges. */
+.room-stage { position: relative; }
+.room-scan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--r-2);
+  background: #0a0c10;
+  transition: opacity 600ms ease-out;
+}
+.room-scan[data-done] { opacity: 0; pointer-events: none; }
+.landing-rooms .room-scan video { width: 100%; height: 100%; object-fit: cover; outline: none; }
+.room-label.scan-label { inset: auto auto 10px 10px; opacity: 1; translate: 0 0; font-variant-numeric: tabular-nums; }
 .landing-demo figcaption { display: grid; gap: 2px; margin-top: var(--s-3); padding-top: var(--s-3); border-top: var(--line) solid var(--pencil); }
 .landing-title { font: 400 20px/1.2 var(--font-hand); }
 

@@ -23,7 +23,7 @@ export interface ScanManifest {
   floorPlan?: FloorPlanSource;       // ADR-0011: built from a Floor Plan; there are no Captures and no room.glb
 
   mine?: boolean;                    // the Mover's own: listed under "Your Scans" on Home
-  library?: LibraryEntry;            // a room of the floor plan library, which "Import from floor plan" searches
+  library?: LibraryEntry;            // a room of the floor plan library, which Home's "Import" searches
 }
 
 /** Who a library room is for, as the Mover would search for it. */

@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useSearch } from 'wouter';
 import type { Design, ScanManifest } from '@shared/types';
 import { listDesigns, listScans } from '../api';
-import { FloorPlanDialog } from '../plan/FloorPlanDialog';
 import { moveInLayoutId } from '../plan/library';
 import { count } from '../ui/format';
 import { ArrowRight, Plus } from '../ui/icons';
 import { useStartDesign } from '../ui/useStartDesign';
+import { ImportDialog } from './ImportDialog';
 import { ScanPlan } from './ScanPlan';
 import './home.css';
 
@@ -90,14 +90,14 @@ export function Home() {
       <main className="home-scans">
         <div className="home-heading-row">
           <h2 className="home-heading">{all ? 'Every Scan' : 'Your Scans'}</h2>
-          <FloorPlanDialog scans={scans} />
+          <ImportDialog scans={scans} />
         </div>
         {error && (
           <p className="error" role="alert">Could not load the Scans ({error}). Check that the API server is running, then reload.</p>
         )}
         {!loaded && !error && <Loading />}
         {loaded && !listed.length && (
-          <p className="empty"><b>No Scans yet.</b> Find your dorm with “Import from floor plan”, or import a Scan with <code>scripts/scan-import.ts</code>, then mark it up in Room Setup.</p>
+          <p className="empty"><b>No Scans yet.</b> Use “Import” to find your dorm, or to bring the scan you made of your room.</p>
         )}
         {listed.map((scan) => <ScanSection key={scan.id} scan={scan} designs={designsOf(scan)} />)}
       </main>

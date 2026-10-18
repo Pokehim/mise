@@ -71,7 +71,7 @@ const LOOKS: Record<string, { wallColor?: Hex; carpet?: string; wood?: string }>
 };
 
 /**
- * Each room in the floor plan library, as "Import from floor plan" finds it: its school's full name
+ * Each room in the floor plan library, as Home's "Import" finds it: its school's full name
  * and what students call it, and its hall and room. room.json's own school and hall carry notes
  * ("substitute for Harvard") that a search mustn't match.
  */

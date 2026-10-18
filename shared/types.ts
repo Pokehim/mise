@@ -104,7 +104,6 @@ export interface Original {
   kept: boolean;                     // can't leave the real room (e.g. a building-owned sofa)
   partParams?: PartParams;           // overrides for the category Part rule (ADR-0006)
   floorColor: Hex;                   // average floor color around the footprint → simple Patch
-  standInId?: string;                // ADR-0011: the Catalog item drawn in place of scanned geometry
   patch?: {                          // Phase 2: generated fill (Patch v2) for the spots no Capture saw
     floor?: string;                  // "patches/og_sofa.floor.png"
     walls?: Record<string, string>;  // wallId → "patches/og_sofa.wl_2.png"

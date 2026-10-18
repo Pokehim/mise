@@ -1,8 +1,9 @@
 // A room as the Mover corrected it on its Floor Plan (ADR-0011), built as a Room Setup: the plan's
 // pixels become meters with the top of the page as North (−Z), its corners become Walls, and its
-// Openings and furniture are placed on them. Pure, so Room Setup can rebuild it on every change.
-import type { DraftFurniture, DraftOpening, DraftPoint, DraftRoom } from '@shared/floor-plan';
-import type { Category, Opening, Original, RoomSetup, RoomSurfaces, Vec2, Wall } from '@shared/types';
+// Openings are placed on them. The room starts empty, with no Originals. Pure, so Room Setup can
+// rebuild it on every change.
+import type { DraftOpening, DraftPoint, DraftRoom } from '@shared/floor-plan';
+import type { Opening, RoomSetup, RoomSurfaces, Vec2, Wall } from '@shared/types';
 import { DEFAULT_SURFACES } from '../scene/room/buildRoom';
 import { wallsFromPolygon } from '../setup/geometry/walls';
 
@@ -10,8 +11,6 @@ import { wallsFromPolygon } from '../setup/geometry/walls';
 const SNAP_DEGREES = 4;
 /** Corners closer than this are one corner. */
 const MERGE = 0.05;
-/** How much nearer a wall must be to a piece's side than to its back for the piece to turn its back to it. */
-const CORNER_TIE = 0.05;
 /** How far an Opening's ends may be from its wall's line. */
 const OPENING_REACH = 0.3;
 /** A US ceiling: 8 ft. Plans seldom print one. */
@@ -19,29 +18,10 @@ export const DEFAULT_CEILING = 2.44;
 /** A door: 80 in high. A window: its sill 36 in up, 48 in high. */
 const DOOR_HEIGHT = 2.03;
 const WINDOW = { bottom: 0.91, height: 1.22 };
-/** How tall each kind of furniture is when its Stand-in doesn't say: a plan shows only its footprint. */
-export const FURNITURE_HEIGHT: Record<Category, number> = {
-  bed: 0.6, desk: 0.76, chair: 0.85, table: 0.76, nightstand: 0.6, dresser: 0.9, wardrobe: 1.9, shelf: 1.8,
-  storage: 0.8, sofa: 0.85, rug: 0.01, lamp: 1.5, wall_art: 0.6, mirror: 1, plant: 1, decor: 0.3,
-};
-
-/** What the Mover chose for one piece of the plan's furniture in Room Setup. */
-export interface PieceChoice {
-  kept?: boolean;
-  /** The Catalog item drawn in its place. */
-  standInId?: string;
-  /** Its height, usually its Stand-in's. */
-  height?: number;
-  /** Quarter turns the Mover gave it, on top of the way it faces by default. */
-  turns?: number;
-}
-
 export interface PlanBuild {
   metersPerPixel: number;
   ceilingHeight?: number;
   surfaces?: RoomSurfaces;
-  /** By the furniture's index in the draft room. */
-  pieces?: (PieceChoice | undefined)[];
 }
 
 /** Where a plan's pixel lands on the room's floor: centered on the room's corners, in meters, with +y down the page as +Z. */
@@ -140,101 +120,12 @@ function placeOpening(opening: DraftOpening, id: string, walls: Wall[], toRoom: 
   };
 }
 
-/* ───────────── Furniture ───────────── */
-
-/** How far from a point, along a direction on the floor, the first wall it heads out through is. */
-function distanceToWall([x, z]: Vec2, [dx, dz]: Vec2, walls: Wall[]) {
-  let nearest = Infinity;
-  for (const { start: [sx, sz], end: [ex, ez], normal: [nx, nz] } of walls) {
-    const toward = dx * nx + dz * nz;
-    if (toward > -1e-9) continue;
-    const t = ((x - sx) * nx + (z - sz) * nz) / -toward;
-    const [hx, hz] = [x + dx * t, z + dz * t];
-    const length = Math.hypot(ex - sx, ez - sz);
-    const along = ((hx - sx) * (ex - sx) + (hz - sz) * (ez - sz)) / length;
-    if (t >= 0 && along >= -1e-6 && along <= length + 1e-6) nearest = Math.min(nearest, t);
-  }
-  return nearest;
-}
-
-interface Footprint { center: Vec2; width: number; depth: number; across: Vec2; along: Vec2 }
-
-/** A piece's footprint in the room: its center, its size in meters, and its width and depth axes. */
-function footprintOf(piece: DraftFurniture, toRoom: (p: DraftPoint) => Vec2, metersPerPixel: number): Footprint {
-  const theta = (piece.rotation * Math.PI) / 180;
-  // Down the page is +Z, so clockwise on the page turns +X toward +Z.
-  const across: Vec2 = [Math.cos(theta), Math.sin(theta)];
-  return {
-    center: toRoom(piece.center), width: piece.width * metersPerPixel, depth: piece.depth * metersPerPixel,
-    across, along: [-across[1], across[0]],
-  };
-}
-
-/**
- * Which way a piece faces, as a unit vector on the floor: away from the wall its back is nearest
- * (a bed only toward its long ends, as its head goes against a wall), or, for a chair, toward the
- * desk or table it's drawn at.
- */
-function facing(piece: DraftFurniture, own: Footprint, others: { piece: DraftFurniture; footprint: Footprint }[], walls: Wall[]): Vec2 {
-  const { center, width, depth, across, along } = own;
-  const sides = [
-    { dir: along, extent: depth / 2 }, { dir: [-along[0], -along[1]] as Vec2, extent: depth / 2 },
-    { dir: across, extent: width / 2 }, { dir: [-across[0], -across[1]] as Vec2, extent: width / 2 },
-  ];
-  if (piece.category === 'chair') {
-    const desk = others
-      .filter(({ piece: other }) => other.category === 'desk' || other.category === 'table')
-      .map(({ footprint }) => ({ to: [footprint.center[0] - center[0], footprint.center[1] - center[1]] as Vec2 }))
-      .map(({ to }) => ({ to, distance: Math.hypot(...to) }))
-      .sort((a, b) => a.distance - b.distance)[0];
-    if (desk && desk.distance < 1.5) {
-      return sides.map(({ dir }) => dir).sort((a, b) => (b[0] * desk.to[0] + b[1] * desk.to[1]) - (a[0] * desk.to[0] + a[1] * desk.to[1]))[0];
-    }
-  }
-  const candidates = piece.category === 'bed' ? (depth >= width ? sides.slice(0, 2) : sides.slice(2)) : sides;
-  // In a corner, against two walls, its back is the one the plan draws as its depth.
-  const back = candidates
-    .map((side, i) => ({ ...side, gap: distanceToWall(center, side.dir, walls) - side.extent + (i >= 2 ? CORNER_TIE : 0) }))
-    .sort((a, b) => a.gap - b.gap)[0];
-  return [-back.dir[0], -back.dir[1]];
-}
-
-/** "Desk chair (north)" → "desk_chair_north". */
-const slug = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'item';
-
-/** The plan's furniture as Originals, each facing its way, drawn with its Stand-in. */
-function placeFurniture(room: DraftRoom, walls: Wall[], build: PlanBuild, toRoom: (p: DraftPoint) => Vec2): Original[] {
-  const footprints = room.furniture.map((piece) => ({ piece, footprint: footprintOf(piece, toRoom, build.metersPerPixel) }));
-  const used = new Set<string>();
-  return footprints.map(({ piece, footprint }, i) => {
-    const choice = build.pieces?.[i] ?? {};
-    let front = facing(piece, footprint, footprints.filter((_, j) => j !== i), walls);
-    for (let turn = 0; turn < (((choice.turns ?? 0) % 4) + 4) % 4; turn++) front = [-front[1], front[0]];
-    // The box's depth runs along the way it faces.
-    const alongFront = Math.abs(front[0] * footprint.along[0] + front[1] * footprint.along[1]) > 0.5;
-    const [width, depth] = alongFront ? [footprint.width, footprint.depth] : [footprint.depth, footprint.width];
-    let id = `og_${slug(piece.label)}`;
-    for (let n = 2; used.has(id); n++) id = `og_${slug(piece.label)}_${n}`;
-    used.add(id);
-    return {
-      id, label: piece.label, category: piece.category, kept: choice.kept ?? piece.builtIn,
-      box: {
-        position: [round(footprint.center[0]), 0, round(footprint.center[1])],
-        size: [round(width), choice.height ?? FURNITURE_HEIGHT[piece.category], round(depth)],
-        rotationY: Math.atan2(front[0], front[1]),
-      },
-      // A Floor Plan Scan never shows a Patch (nothing was hidden under its furniture), so any color does.
-      floorColor: '#8a8580',
-      ...(choice.standInId && { standInId: choice.standInId }),
-    };
-  });
-}
-
 const round = (v: number) => Math.round(v * 1000) / 1000;
 
 /**
- * The room as a Room Setup: its floor and walls from the plan's corners, its Openings on them, and
- * its furniture as Originals drawn with Stand-ins. `scanId` is the Floor Plan Scan's id.
+ * The room as a Room Setup: its floor and walls from the plan's corners, and its Openings on them.
+ * It starts empty: the Mover furnishes it from the Catalog, or asks Claude for Designs.
+ * `scanId` is the Floor Plan Scan's id.
  */
 export function planToSetup(scanId: string, room: DraftRoom, build: PlanBuild): RoomSetup {
   const ceilingHeight = build.ceilingHeight ?? DEFAULT_CEILING;
@@ -245,8 +136,7 @@ export function planToSetup(scanId: string, room: DraftRoom, build: PlanBuild): 
     .map((opening, i) => placeOpening(opening, `op_${i + 1}`, walls, toRoom))
     .filter((opening): opening is Opening => opening !== null);
   return {
-    version: 1, scanId, ceilingHeight, floor: { polygon }, walls, openings,
-    originals: walls.length ? placeFurniture(room, walls, build, toRoom) : [],
+    version: 1, scanId, ceilingHeight, floor: { polygon }, walls, openings, originals: [],
     surfaces: build.surfaces ?? DEFAULT_SURFACES,
   };
 }

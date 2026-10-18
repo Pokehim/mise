@@ -1,39 +1,31 @@
 // The seeded Floor Plan Scan for the demo (#68, ADR-0011): CMU's Donner House double, built from
-// its published plan as Room Setup would build it from Claude's reading. The reading is the
-// hand-checked draft web/src/plan/fixtures/cmu-draft.json, so the demo needs no API call, and
-// doubles as the backup if Claude is slow or offline.
+// its published plan as Room Setup would build it from Claude's reading, and empty, ready to
+// furnish. The reading is the hand-checked draft web/src/plan/fixtures/cmu-draft.json, so the demo
+// needs no API call, and doubles as the backup if Claude is slow or offline.
 //
 // Run: npx tsx scripts/plan-demo.ts
 import { copyFile, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { draftScale, type FloorPlanDraft } from '../shared/floor-plan';
-import { standInFor } from '../shared/stand-ins';
-import type { Catalog, Design, RoomSetup, ScanManifest } from '../shared/types';
-import { planToSetup, type PieceChoice } from '../web/src/plan/planToSetup';
+import type { Design, RoomSetup, ScanManifest } from '../shared/types';
+import { planToSetup } from '../web/src/plan/planToSetup';
 import { writeJson } from './scan-import';
 
 const SCAN_ID = 'plan-demo';
 
-/** The room as the plan builds it, with the Catalog item closest to each piece standing in for it. */
-export function demoSetup(draft: FloorPlanDraft, catalog: Catalog): { setup: RoomSetup; metersPerPixel: number } {
+/** The room as the plan builds it: carpet and off-white drywall, as CMU's room photos show. */
+export function demoSetup(draft: FloorPlanDraft): { setup: RoomSetup; metersPerPixel: number } {
   const [room] = draft.rooms;
   const metersPerPixel = draftScale(draft, room)!;
   const surfaces = { walls: 'drywall', wallColor: '#ece6da', floor: 'carpet-grey', ceiling: 'drywall', baseboard: 'rubber' } as const;
-  // Built once to learn each piece's footprint as it faces, then again with the Stand-ins that fit it.
-  const plain = planToSetup(SCAN_ID, room, { metersPerPixel, surfaces });
-  const pieces = plain.originals.map(({ label, category, box }): PieceChoice => {
-    const item = standInFor(catalog, { label, category, size: box.size });
-    return item ? { standInId: item.id, height: item.size[1] } : {};
-  });
-  return { setup: planToSetup(SCAN_ID, room, { metersPerPixel, surfaces, pieces }), metersPerPixel };
+  return { setup: planToSetup(SCAN_ID, room, { metersPerPixel, surfaces }), metersPerPixel };
 }
 
 async function main() {
   const root = join(import.meta.dirname, '..');
   const draft: FloorPlanDraft = JSON.parse(await readFile(join(root, 'web/src/plan/fixtures/cmu-draft.json'), 'utf8'));
-  const catalog: Catalog = JSON.parse(await readFile(join(root, 'data/catalog/catalog.json'), 'utf8'));
-  const { setup, metersPerPixel } = demoSetup(draft, catalog);
+  const { setup, metersPerPixel } = demoSetup(draft);
   const dir = join(root, 'data/scans', SCAN_ID);
   await mkdir(join(dir, 'plan'), { recursive: true });
   await copyFile(join(root, 'data/floor-plans/cmu/plan.png'), join(dir, 'plan/floor-plan.png'));
@@ -57,8 +49,7 @@ async function main() {
     ],
   };
   await writeJson(join(root, 'data/designs/ds_plan_demo.json'), design);
-  const standIns = setup.originals.filter(({ standInId }) => standInId).length;
-  console.log(`${SCAN_ID}: ${setup.walls.length} walls, ${setup.openings.length} openings, ${setup.originals.length} Originals (${standIns} with Stand-ins), ${metersPerPixel.toFixed(5)} m/px`);
+  console.log(`${SCAN_ID}: ${setup.walls.length} walls, ${setup.openings.length} openings, empty; ${metersPerPixel.toFixed(5)} m/px`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();

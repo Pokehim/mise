@@ -40,10 +40,11 @@ describe('draftScale', () => {
 });
 
 describe('FloorPlanDraftSchema', () => {
-  it('accepts an empty draft, and rejects furniture of a kind a plan never draws', () => {
+  it('accepts an empty draft, and leaves out furniture, which a room built from a plan starts without', () => {
     expect(FloorPlanDraftSchema.parse(emptyDraft())).toEqual(emptyDraft());
-    const lamp = { label: 'Lamp', category: 'lamp', center: { x: 1, y: 1 }, width: 1, depth: 1, rotation: 0, builtIn: false };
-    const draft = { ...emptyDraft(), rooms: [{ label: 'Room', corners: [], openings: [], furniture: [lamp] }] };
-    expect(FloorPlanDraftSchema.safeParse(draft).success).toBe(false);
+    const bed = { label: 'Bed', category: 'bed', center: { x: 1, y: 1 }, width: 1, depth: 1, rotation: 0, builtIn: false };
+    const room = { label: 'Room', corners: [], openings: [] };
+    const draft = { ...emptyDraft(), rooms: [{ ...room, furniture: [bed] }] };
+    expect(FloorPlanDraftSchema.parse(draft).rooms).toEqual([room]);
   });
 });

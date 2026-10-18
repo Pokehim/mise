@@ -9,9 +9,7 @@ const draft = cmu as FloorPlanDraft;
 /** A plan drawn at 100 px to the meter. */
 const S = 0.01;
 const room = (corners: [number, number][], extra: Partial<DraftRoom> = {}): DraftRoom =>
-  ({ label: 'Room', corners: corners.map(([x, y]) => ({ x, y })), openings: [], furniture: [], ...extra });
-const box = (label: string, category: DraftRoom['furniture'][number]['category'], [x, y]: [number, number], [width, depth]: [number, number], rotation = 0) =>
-  ({ label, category, center: { x, y }, width, depth, rotation, builtIn: false });
+  ({ label: 'Room', corners: corners.map(([x, y]) => ({ x, y })), openings: [], ...extra });
 const wallNamed = (setup: RoomSetup, name: string) => setup.walls.find((wall) => wall.name === name)!;
 
 describe('planToSetup', () => {
@@ -58,35 +56,6 @@ describe('planToSetup', () => {
     expect(setup.openings[0]).toMatchObject({ kind: 'door', offset: 0, width: 0.7, bottom: 0, height: 2.03, swing: 'in-left' });
   });
 
-  it('turns furniture away from the wall behind it, a bed by its head, and a chair to its desk', () => {
-    const plan = room([[0, 0], [400, 0], [400, 300], [0, 300]], {
-      furniture: [
-        // Along the West wall, its head against the North wall.
-        box('Bed', 'bed', [50, 100], [100, 200]),
-        // Against the West wall, drawn turned: its long side runs down the page.
-        box('Dresser', 'dresser', [25, 250], [80, 50], 90),
-        box('Desk', 'desk', [300, 30], [120, 60]),
-        box('Desk chair', 'chair', [300, 90], [45, 45]),
-      ],
-    });
-    const [bed, dresser, desk, chair] = planToSetup('f', plan, { metersPerPixel: S }).originals;
-    expect(bed.box.rotationY).toBeCloseTo(0);                // faces South, foot to the room
-    expect(bed.box.size).toEqual([1, 0.6, 2]);
-    expect(dresser.box.rotationY).toBeCloseTo(Math.PI / 2);  // faces East
-    expect(dresser.box.size).toEqual([0.8, 0.9, 0.5]);
-    expect(desk.box.rotationY).toBeCloseTo(0);                // faces South, away from the North wall
-    expect(Math.abs(chair.box.rotationY)).toBeCloseTo(Math.PI); // faces North, toward the desk
-  });
-
-  it("takes the Mover's choices: Kept, a Stand-in, its height, and quarter turns", () => {
-    const plan = room([[0, 0], [400, 0], [400, 300], [0, 300]], { furniture: [box('Desk', 'desk', [300, 30], [120, 60])] });
-    const [desk] = planToSetup('m', plan, {
-      metersPerPixel: S, pieces: [{ kept: true, standInId: 'B07QGFS4JC', height: 0.75, turns: 1 }],
-    }).originals;
-    expect(desk).toMatchObject({ kept: true, standInId: 'B07QGFS4JC' });
-    expect(desk.box.size).toEqual([0.6, 0.75, 1.2]);   // turned a quarter, so width and depth swap
-  });
-
   it("builds CMU's Donner double from its plan as printed: 13'-3⅛\" by 15'-11 1/16\"", () => {
     const [plan] = draft.rooms;
     const metersPerPixel = draftScale(draft, plan)!;
@@ -97,15 +66,9 @@ describe('planToSetup', () => {
     expect(Math.hypot(east.end[0] - east.start[0], east.end[1] - east.start[1])).toBeCloseTo(4.853, 1);
     expect(setup.openings.map(({ kind, wallId }) => [kind, setup.walls.find((w) => w.id === wallId)!.name]))
       .toEqual([['window', 'North wall'], ['door', 'South wall']]);
-    expect(setup.originals.map(({ id }) => id)).toEqual([
-      'og_bed_west', 'og_bed_east', 'og_desk', 'og_desk_chair', 'og_chair', 'og_dresser_west', 'og_dresser_east', 'og_closet_west', 'og_closet_east',
-    ]);
-    // The closets are built in, so Kept; they face North, away from the South wall.
-    const closet = setup.originals.find(({ id }) => id === 'og_closet_west')!;
-    expect(closet.kept).toBe(true);
-    expect(Math.abs(closet.box.rotationY)).toBeCloseTo(Math.PI);
-    // Every piece stands inside the room.
-    for (const { box: { position: [x, , z] } } of setup.originals) expect(pointInPolygon([x, z], setup.floor.polygon)).toBe(true);
+    // It starts empty: the Mover furnishes it.
+    expect(setup.originals).toEqual([]);
+    expect(setup.surfaces).toBeDefined();
   });
 
   it('maps a plan point to the room and back', () => {

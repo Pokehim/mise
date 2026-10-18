@@ -1,13 +1,11 @@
-// A Floor Plan, as Claude reads it (ADR-0011): the rooms it draws, each with its corners, Openings
-// and furniture, and the printed dimensions that give it a scale. Everything is in pixels of the
-// stored image: origin top-left, x right, y down. The server asks Claude for exactly this shape
-// (server/floor-plan/read.ts); Room Setup corrects it, and planToSetup builds the room from it.
+// A Floor Plan, as Claude reads it (ADR-0011): the rooms it draws, each with its corners and
+// Openings, and the printed dimensions that give it a scale. Furniture drawn on the plan isn't read,
+// as a room built from a plan starts empty. Everything is in pixels of the stored image: origin
+// top-left, x right, y down. The server asks Claude for exactly this shape (server/floor-plan/read.ts);
+// Room Setup corrects it, and planToSetup builds the room from it.
 import { z } from 'zod';
 
 const Point = z.object({ x: z.number(), y: z.number() });
-
-/** The kinds of furniture a plan draws on the floor. */
-export const FLOOR_CATEGORIES = ['bed', 'desk', 'chair', 'table', 'nightstand', 'dresser', 'wardrobe', 'shelf', 'storage', 'sofa'] as const;
 
 const DraftOpening = z.object({
   kind: z.enum(['door', 'window']),
@@ -18,26 +16,12 @@ const DraftOpening = z.object({
   swing: z.enum(['in-left', 'in-right', 'none']).nullable(),
 });
 
-const DraftFurniture = z.object({
-  label: z.string(),
-  category: z.enum(FLOOR_CATEGORIES),
-  center: Point,
-  /** Its size in pixels: width runs along `rotation`, depth across it. */
-  width: z.number(),
-  depth: z.number(),
-  /** Degrees clockwise on the page, from +x to the width axis. */
-  rotation: z.number(),
-  /** Drawn as part of the building, such as a closet or a built-in desk. */
-  builtIn: z.boolean(),
-});
-
 const DraftRoom = z.object({
   /** As printed: "Bedroom", "412". */
   label: z.string(),
   /** The room's interior wall faces, in order around it. */
   corners: z.array(Point),
   openings: z.array(DraftOpening),
-  furniture: z.array(DraftFurniture),
 });
 
 export const FloorPlanDraftSchema = z.object({
@@ -53,7 +37,6 @@ export const FloorPlanDraftSchema = z.object({
 export type FloorPlanDraft = z.infer<typeof FloorPlanDraftSchema>;
 export type DraftRoom = z.infer<typeof DraftRoom>;
 export type DraftOpening = z.infer<typeof DraftOpening>;
-export type DraftFurniture = z.infer<typeof DraftFurniture>;
 export type DraftPoint = z.infer<typeof Point>;
 
 /** A draft with nothing in it, for a plan Claude couldn't read, or wasn't asked to: the Mover traces it by hand. */

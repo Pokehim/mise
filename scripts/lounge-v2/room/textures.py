@@ -621,10 +621,73 @@ def wall_light(view):
     return np.where(band[..., None], membrane(M, good, band), membrane(M, good, ~band))
 
 
+# The paint's fine stipple (1-3 mm), from the closest look at a wall: ortho.py's 1 mm view of POLYCAM_CHAIR_1, which
+# caught the East wall's lower part at true scale. This strip has no holes and no outlets: u0, u1, y0, y1.
+STIPPLE_SRC = os.path.join(CACHE, 'ortho1mm', 'CHAIR_1', 'east.png')
+STIPPLE_RECT = (0.05, 2.80, 0.10, 0.38)
+STIPPLE_GAIN = 2.4   # the scan softened it; this brings it back to what's seen up close
+HD = 2               # the walls' final images are this many times finer: 1.25 mm per texel
+
+
+def stipple():
+    """The stipple as a luminance factor around 1, at the walls' final resolution."""
+    im = np.asarray(Image.open(STIPPLE_SRC).convert('RGB')).astype(np.float32) / 255
+    u0, u1, y0, y1 = STIPPLE_RECT
+    lum = im[int((H - y1) / 0.001):int((H - y0) / 0.001), int(u0 / 0.001):int(u1 / 0.001)].mean(axis=2)
+    # Only what's finer than 3 mm, so scuffs and marks (a centimetre and up) stay out; and nothing past three
+    # times its usual strength, so no single speck repeats where the strip tiles.
+    d = lum / np.maximum(cv2.GaussianBlur(lum, (0, 0), 3), 1e-3) - 1
+    sigma = 1.4826 * np.median(np.abs(d))
+    d = np.clip(d, -3 * sigma, 3 * sigma)
+    # Lines and marks (pencil, scuffs): anything strong and bigger than a stipple bump (5 mm² or 6 mm long) is
+    # flattened, with a little room around it.
+    for sign in (1, -1):
+        strong = (sign * d > 1.5 * sigma).astype(np.uint8)
+        n, lab, stats, _ = cv2.connectedComponentsWithStats(strong)
+        big = (stats[:, cv2.CC_STAT_AREA] > 5) | (stats[:, cv2.CC_STAT_WIDTH] > 6) | (stats[:, cv2.CC_STAT_HEIGHT] > 6)
+        big[0] = False
+        marks = cv2.dilate(big[lab].astype(np.uint8), np.ones((5, 5))).astype(bool)
+        d[marks] = 0
+    p_hd = P / HD
+    d = cv2.resize(d, (int(d.shape[1] * 0.001 / p_hd), int(d.shape[0] * 0.001 / p_hd)), interpolation=cv2.INTER_AREA)
+    return 1 + STIPPLE_GAIN * d
+
+
+def finish_wall(view, st):
+    """The wall's image at 1.25 mm per texel (tex/<view>.hd.png, which glb.py uses), with the stipple on the
+    paint only."""
+    img = np.asarray(Image.open(os.path.join(OUT, f'{view}.png')).convert('RGB')).astype(np.float32) / 255
+    h, w = img.shape[0] * HD, img.shape[1] * HD
+    big = np.clip(cv2.resize(img, (w, h), interpolation=cv2.INTER_CUBIC), 0, 1)
+    # Not paint: the glass and its frames, the door, the North sill, the baseboard, and anything that stands out
+    # from the wall around it (outlets, the heater, the sign).
+    g = GLASS.get(view, {})
+    rects = g.get('glass', []) + g.get('bars', []) + ([DOOR] if view == 'south' else [])
+    rects += [(0.45, 2.30, 0.80, 0.95)] if view == 'north' else []
+    rects += [(0, SIZE[view][0], 0, BASEBOARD + 0.004)]
+    other = rect_mask(img.shape, rects, view)
+    lum = img.mean(axis=2)
+    local = cv2.GaussianBlur(lum, (0, 0), 8)
+    other |= (np.abs(lum - local) > 0.10 * local) | (lum > 0.75)
+    other = cv2.dilate(other.astype(np.uint8), np.ones((5, 5))) > 0
+    paint = cv2.GaussianBlur((~other).astype(np.float32), (0, 0), 1.5)
+    paint = cv2.resize(paint, (w, h), interpolation=cv2.INTER_LINEAR)
+    rr = pingpong(np.arange(h), st.shape[0])
+    cc = pingpong(np.arange(w), st.shape[1])
+    factor = 1 + paint * (st[rr][:, cc] - 1)
+    out = np.clip(big * factor[..., None], 0, 1)
+    Image.fromarray((out * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, f'{view}.hd.png'))
+    print(view, 'hd', out.shape, f'paint {paint.mean():.0%}', flush=True)
+
+
 def main():
     views = sys.argv[1:] or ['north', 'south', 'west', 'east', 'floor', 'ceiling']
     for view in views:
         build(view)
+    st = stipple()
+    for view in views:
+        if view in ('north', 'south', 'east', 'west'):
+            finish_wall(view, st)
 
 
 if __name__ == '__main__':

@@ -268,7 +268,8 @@ class Builder:
                 extensions={'KHR_materials_unlit': {}}))
             self.mats[name] = len(self.g.materials) - 1
             return self.mats[name]
-        im = Image.open(os.path.join(TEX, f'{name}.png')).convert('RGB')
+        hd = os.path.join(TEX, f'{name}.hd.png')   # a wall's finished image, when textures.py made one
+        im = Image.open(hd if os.path.exists(hd) else os.path.join(TEX, f'{name}.png')).convert('RGB')
         buf = io.BytesIO()
         im.save(buf, 'JPEG', quality=JPEG_QUALITY, subsampling=0)
         self.g.images.append(gl.Image(bufferView=self.view(buf.getvalue()), mimeType='image/jpeg', name=name))

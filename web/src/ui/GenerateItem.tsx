@@ -3,6 +3,7 @@ import type { CatalogItem, Category, Vec3 } from '@shared/types';
 import type { Step } from '../../../server/generate-object/pipeline';
 import type { Job } from '../../../server/generate-object/routes';
 import { generateObject, getJob } from '../api';
+import { useServerConfig } from './useServerConfig';
 import { useEditor } from '../state/store';
 import './generate.css';
 
@@ -27,8 +28,9 @@ function addToCatalog(item: CatalogItem) {
  */
 export function GenerateItem({ query, category, targetSize }: { query: string; category: Category | null; targetSize?: Vec3 }) {
   const [run, setRun] = useState<Job & { startedAt: number }>();
+  const offered = useServerConfig()?.textTo3d;
   const text = query.trim();
-  if (!text) return null;
+  if (!text || !offered) return null;
 
   async function generate(inCategory: Category) {
     const startedAt = Date.now();

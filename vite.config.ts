@@ -10,4 +10,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@shared': fileURLToPath(new URL('./shared', import.meta.url)) } },
   server: { proxy: { '/api': api, '/data': api } },
+  // npm run build: the web app that npm start serves (#42).
+  build: { outDir: '../dist/web', emptyOutDir: true },
 });

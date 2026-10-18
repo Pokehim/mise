@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Camera } from 'three';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { editableDesignId } from '../api';
 import { redo, undo, useAutosave } from '../state/history';
 import { useEditor } from '../state/store';
 import { CatalogPanel } from '../ui/CatalogPanel';
@@ -51,8 +52,19 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
   useEditorKeys();
   useAutosave();
 
+  const [, navigate] = useLocation();
   useEffect(() => {
-    void useEditor.getState().load(designId);
+    let stale = false;
+    // In the public demo, a seed Design opens as the visitor's own copy (#42).
+    const open = (id: string) => {
+      if (stale) return;
+      if (id === designId) void useEditor.getState().load(designId);
+      else navigate(`/d/${id}${location.search}`, { replace: true });
+    };
+    editableDesignId(designId).then(open, () => open(designId));
+    return () => {
+      stale = true;
+    };
   }, [designId]);
   // ?shot= opens in its shot's View (SceneCanvas puts the camera there).
   useEffect(() => {

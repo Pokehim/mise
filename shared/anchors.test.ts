@@ -184,6 +184,29 @@ describe('resolveAnchor', () => {
       });
     });
 
+    describe('tucked', () => {
+      it('pushes the chair in toward the desk until it touches, still facing it: flush with a solid desk', () => {
+        expect(resolve(chair, { kind: 'beside', target_id: 'og_desk', side: 'front', tucked: true })).toEqual({
+          placement: { position: [closeTo(1.1), 0, closeTo(-0.6)], rotationY: closeTo(Math.PI / 2), mount: 'floor' },
+        });
+      });
+
+      it('slides along the front after the push, past a chair already there', () => {
+        // At z −1.2 to −0.6, so the middle of the front is taken.
+        const atDesk = place('pc_chair', 'chair-ergo', onFloor(1.1, -0.9, Math.PI / 2));
+
+        expect(resolve(chair, { kind: 'beside', target_id: 'og_desk', side: 'front', tucked: true }, [atDesk])).toEqual({
+          placement: { position: [closeTo(1.1), 0, closeTo(-0.3)], rotationY: closeTo(Math.PI / 2), mount: 'floor' },
+        });
+      });
+
+      it('is for the front only', () => {
+        expect(resolve(nightstand, { kind: 'beside', target_id: 'og_desk', side: 'right', tucked: true })).toEqual({
+          error: "tucked is for side 'front' only, not 'right'", violations: [],
+        });
+      });
+    });
+
     it('returns an error for a target that is not in the room, such as a removed Original', () => {
       const removeDesk = edit('ed_1', { type: 'remove', targetId: 'og_desk' });
 

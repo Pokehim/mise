@@ -1,20 +1,29 @@
 // Brief → 3 Designs (spec §13): three agent loops in parallel, one per direction, each designing in
 // its own in-memory Design through the tools, with the SDK's Tool Runner driving the loop.
+//
+// Built for speed. Claude designs a whole room in one reply of decorating moves (moves.ts), so a
+// Design usually takes one request instead of several. The reply streams, and each tool runs as soon
+// as its call is complete, while Claude writes the next one; every Edit goes out to the Mover as it
+// is made (onEvent). The request opens with what the three takes share (tools, system prompt, room
+// context), which is cached, and can be written to the cache before the Brief arrives (warmCache).
 import Anthropic from '@anthropic-ai/sdk';
-import { DIRECTIONS, type Direction, type GenerateResult, type LoopReport } from '../../shared/generate';
+import { DIRECTIONS, type Direction, type GenerateEvent, type GenerateResult, type LoopReport } from '../../shared/generate';
 import { newId } from '../../shared/ids';
 import { replay } from '../../shared/replay';
-import type { Design } from '../../shared/types';
-import { firstMessage, SYSTEM_PROMPT } from './prompt';
+import type { Catalog, Design, RoomSetup } from '../../shared/types';
+import { briefMessage, roomContext, SYSTEM_PROMPT } from './prompt';
 import { roomSummary } from './roomSummary';
 import { createSession, type DesignContext, type DesignSession } from './tools';
 
 const MODEL = 'claude-opus-5-5';
 /** How long one loop may take before it fails (spec §13.3). */
 const LOOP_TIMEOUT_MS = 45_000;
-/** The most requests one loop makes: a few turns of many tool calls each, and retries. */
-const MAX_REQUESTS = 10;
+/** The most requests one loop makes: one reply of moves, a turn of fixes, and room to spare. */
+const MAX_REQUESTS = 6;
 const NUDGE = 'Call finish_design now to finish this Design.';
+const FAST_MODE_BETA = 'fast-mode-2026-02-01';
+/** The text a note stands in with for work a reply was cut off before finishing. */
+const INTERRUPTED = 'This part of the response was interrupted before it finished.';
 
 let client: Anthropic | undefined;
 /**
@@ -34,13 +43,17 @@ export interface GenerateDesignsRequest extends DesignContext {
   /** Fast mode (spec §13.3): faster output at twice the price. */
   fast?: boolean;
   loopTimeoutMs?: number;
+  /** Called with each step as it happens: each Edit, and each Design finished or failed. */
+  onEvent?: (event: GenerateEvent) => void;
 }
 
 /** Turns a Brief into up to 3 Designs, one per direction. When a loop fails, the others are still returned (spec §13.1). */
 export async function generateDesigns(request: GenerateDesignsRequest): Promise<GenerateResult> {
   const started = performance.now();
-  const summary = roomSummary(request.setup, request.catalog, replay(request.setup, request.catalog, []));
-  const runs = await Promise.all(DIRECTIONS.map((direction) => designLoop(request, direction, firstMessage(request.brief, summary, request.catalog, direction))));
+  const shared = sharedRequest(request);
+  // The takes run side by side, and each needs a name of its own.
+  const takenNames = new Set<string>();
+  const runs = await Promise.all(DIRECTIONS.map((direction) => designLoop({ ...request, takenNames }, shared, direction)));
   return {
     designs: runs.flatMap(({ design }) => (design ? [design] : [])),
     failures: runs.flatMap(({ direction, error }) => (error ? [{ direction, error }] : [])),
@@ -49,22 +62,92 @@ export async function generateDesigns(request: GenerateDesignsRequest): Promise<
   };
 }
 
+/**
+ * Writes what every take of a Scan's Brief reads first (tools, system prompt, room context) to the
+ * prompt cache, so that the Designs start sooner: a request with max_tokens 0 runs no generation. Send
+ * it when the Mover starts writing a Brief.
+ */
+export async function warmCache(request: Pick<GenerateDesignsRequest, 'client' | 'setup' | 'catalog' | 'materials' | 'shelfLevels' | 'fast'>) {
+  const shared = sharedRequest(request);
+  const tools = createSession({ ...request, brief: { text: '' } }).tools.map(({ run, parse, ...definition }) => definition);
+  // A warm-up is worth little late: it isn't retried.
+  const response = await request.client.withOptions({ maxRetries: 0 }).beta.messages.create({
+    ...shared,
+    tools: tools as Anthropic.Beta.BetaToolUnion[],
+    max_tokens: 0,
+    messages: [{ role: 'user', content: 'warm up' }],
+  });
+  return response.usage;
+}
+
+/** The parts of a request every take of a Brief shares, in the order the cache reads them. */
+function sharedRequest({ setup, catalog, fast = false }: { setup: RoomSetup; catalog: Catalog; fast?: boolean }) {
+  const summary = roomSummary(setup, catalog, replay(setup, catalog, []));
+  return {
+    model: MODEL,
+    system: [
+      { type: 'text' as const, text: SYSTEM_PROMPT },
+      // The cache breakpoint: everything up to here is the same for the three takes, and for a warm-up.
+      { type: 'text' as const, text: roomContext(summary, catalog), cache_control: { type: 'ephemeral' as const } },
+    ],
+    tool_choice: { type: 'auto' as const },
+    // The notes Claude writes before its tool calls, its plan for the take, come back as thinking blocks: shown, its reasoning not.
+    thinking: { type: 'adaptive' as const, display: 'updates' as const },
+    output_config: { effort: 'low' as const },
+    fallbacks: 'default' as const,
+    betas: ['server-side-fallback-2026-07-01', 'thinking-display-updates-2026-08-18', ...(fast ? [FAST_MODE_BETA] : [])],
+    ...(fast && { speed: 'fast' as const }),
+  };
+}
+
+type SharedRequest = ReturnType<typeof sharedRequest>;
+
+/** Where a take's conversation stands: its messages so far, and how many Edits the Design had after the last reply's tools ran. */
+interface Conversation { messages: Anthropic.Beta.BetaMessageParam[]; edits: number }
+
+/** The same request at standard speed. */
+function standardSpeed({ speed, betas, ...params }: SharedRequest): SharedRequest {
+  return { ...params, betas: betas.filter((beta) => beta !== FAST_MODE_BETA) };
+}
+
 /** One agent loop: Claude designs in its own session until it calls finish_design, runs out of requests, or of time. */
-async function designLoop(request: GenerateDesignsRequest, direction: Direction, message: string) {
-  const { client, brief, fast = false, loopTimeoutMs = LOOP_TIMEOUT_MS } = request;
+async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest, direction: Direction) {
+  const { client, brief, loopTimeoutMs = LOOP_TIMEOUT_MS, onEvent } = request;
   const started = performance.now();
-  const session = createSession(request);
   const report: LoopReport = {
     direction, seconds: 0, requests: 0, toolCalls: 0,
     usage: { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
   };
+  const session = createSession({
+    ...request,
+    onEdit: (edit) => {
+      report.firstEditSeconds ??= seconds(started);
+      onEvent?.({ type: 'edit', direction, edit });
+    },
+  });
   const timeout = AbortSignal.timeout(loopTimeoutMs);
   try {
-    let messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: message }];
+    let messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: briefMessage(brief, direction) }];
+    let params = shared;
     // Claude sometimes ends its turn without finish_design: it gets asked once more.
     for (let attempt = 0; attempt < 2 && !session.finished && report.requests < MAX_REQUESTS; attempt++) {
-      if (attempt) messages = [...messages, { role: 'user', content: NUDGE }];
-      messages = await run(client, session, messages, report, { fast, signal: timeout });
+      // Asked once: a take that goes on at standard speed after a refusal has the question already.
+      if (attempt && messages.at(-1)?.content !== NUDGE) messages = [...messages, { role: 'user', content: NUDGE }];
+      const conversation: Conversation = { messages, edits: session.edits.length };
+      try {
+        messages = await run(client, params, session, conversation, report, {
+          started, signal: timeout, onText: (text) => onEvent?.({ type: 'plan', direction, text }),
+        });
+      } catch (error) {
+        // Fast mode has its own rate limit, and its requests aren't retried: refused, the take goes on at
+        // standard speed from where it was, as long as the refused request made no Edits.
+        const refused = error instanceof Anthropic.RateLimitError || error instanceof Anthropic.InternalServerError;
+        if (!refused || params.speed !== 'fast' || session.edits.length !== conversation.edits) throw error;
+        console.warn(`Generate (${direction}): fast mode refused (${error.message}), going on at standard speed`);
+        params = standardSpeed(params);
+        messages = [...conversation.messages];
+        attempt--;
+      }
     }
     if (!session.finished) throw new Error('Claude stopped without finishing the Design');
     const now = new Date().toISOString();
@@ -75,55 +158,72 @@ async function designLoop(request: GenerateDesignsRequest, direction: Direction,
     };
     await request.save(design);
     report.designId = design.id;
-    return { direction, design, report: finishReport(report, started, session) };
+    finishReport(report, started, session);
+    onEvent?.({ type: 'design', direction, design, report });
+    return { direction, design, report };
   } catch (error) {
     const why = timeout.aborted ? `Claude took longer than ${loopTimeoutMs / 1000} s` : (error as Error).message;
     console.error(`Generate (${direction}) failed: ${why}`);
-    return { direction, error: why, report: finishReport(report, started, session) };
+    finishReport(report, started, session);
+    onEvent?.({ type: 'failure', direction, error: why, report });
+    return { direction, error: why, report };
   }
 }
 
 /**
  * Runs the Tool Runner from these messages until Claude stops calling tools or finishes the Design,
- * and returns the conversation so far.
+ * and returns the conversation so far. Replies stream, and each tool runs as soon as its call is complete.
  */
 async function run(
-  client: Anthropic, session: DesignSession, messages: Anthropic.Beta.BetaMessageParam[], report: LoopReport,
-  { fast, signal }: { fast: boolean; signal: AbortSignal },
+  client: Anthropic, shared: SharedRequest, session: DesignSession, conversation: Conversation,
+  report: LoopReport, { started, signal, onText }: { started: number; signal: AbortSignal; onText: (text: string) => void },
 ) {
-  const runner = client.beta.messages.toolRunner({
-    model: MODEL,
+  // A fast request isn't retried: refused, it goes on at standard speed at once (designLoop), which is.
+  const runner = (shared.speed === 'fast' ? client.withOptions({ maxRetries: 0 }) : client).beta.messages.toolRunner({
+    ...shared,
     max_tokens: 16000,
     max_iterations: MAX_REQUESTS - report.requests,
-    system: SYSTEM_PROMPT,
-    messages,
+    messages: conversation.messages,
     tools: session.tools,
-    tool_choice: { type: 'auto' },
-    output_config: { effort: 'low' },
-    fallbacks: 'default',
-    // Each request resends the conversation so far: caching it makes the next turn read it back cheaply.
-    cache_control: { type: 'ephemeral' },
-    betas: ['server-side-fallback-2026-07-01', ...(fast ? ['fast-mode-2026-02-01' as const] : [])],
-    ...(fast && { speed: 'fast' as const }),
+    stream: true,
+    runToolsEagerly: true,
   }, { signal });
-  for await (const reply of runner) {
+  // The runner adds each reply and its tool results to these before it sends the next request.
+  conversation.messages = runner.params.messages;
+  for await (const stream of runner) {
     report.requests++;
+    let wrote = false;
+    for await (const event of stream) {
+      if (event.type === 'content_block_start') report.firstTokenSeconds ??= seconds(started);
+      // What Claude writes before its tool calls is its plan for the take: its notes, each its own block, a line each.
+      if (event.type === 'content_block_delta') {
+        const text = event.delta.type === 'text_delta' ? event.delta.text : event.delta.type === 'thinking_delta' ? event.delta.thinking : '';
+        if (text && text !== INTERRUPTED) onText(text);
+        wrote ||= !!text;
+      }
+      if (event.type === 'content_block_stop' && wrote) {
+        onText('\n');
+        wrote = false;
+      }
+    }
+    const reply = await stream.finalMessage();
     for (const key of Object.keys(report.usage) as (keyof LoopReport['usage'])[]) report.usage[key] += reply.usage[key] ?? 0;
     if (reply.stop_reason === 'refusal') throw new Error('Claude declined to design this room');
-    // Running the tools here, not at the end of the turn, lets a finished Design end the loop
-    // without one more request.
+    // Any call that hasn't run yet runs now, so that a finished Design ends the loop without one more request.
     await runner.generateToolResponse();
+    conversation.edits = session.edits.length;
     if (session.finished) break;
   }
   return runner.params.messages;
 }
 
-function finishReport(report: LoopReport, started: number, session: DesignSession): LoopReport {
+/** Fills in a loop's time and tool calls once it is over, and logs it. */
+function finishReport(report: LoopReport, started: number, session: DesignSession) {
   report.seconds = seconds(started);
   report.toolCalls = session.toolCalls;
-  console.log(`Generate (${report.direction}): ${report.seconds} s, ${report.requests} requests, ${report.toolCalls} tool calls, `
-    + `${report.usage.input_tokens} in (+${report.usage.cache_read_input_tokens} cached) / ${report.usage.output_tokens} out tokens`);
-  return report;
+  console.log(`Generate (${report.direction}): ${report.seconds} s (first word ${report.firstTokenSeconds} s, first Edit `
+    + `${report.firstEditSeconds} s), ${report.requests} requests, ${report.toolCalls} tool calls, ${report.usage.input_tokens} in `
+    + `(+${report.usage.cache_read_input_tokens} cached, ${report.usage.cache_creation_input_tokens} written) / ${report.usage.output_tokens} out tokens`);
 }
 
 const seconds = (since: number) => Math.round((performance.now() - since) / 100) / 10;

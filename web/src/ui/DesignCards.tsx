@@ -1,24 +1,27 @@
-import type { CSSProperties } from 'react';
+import { type CSSProperties, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useShallow } from 'zustand/react/shallow';
-import type { Direction, GenerateResult } from '@shared/generate';
-import type { Design } from '@shared/types';
-import { replay } from '../state/core';
+import { DIRECTIONS, type Direction } from '@shared/generate';
+import type { Catalog, Design, RoomSetup } from '@shared/types';
+import { describe, replay } from '../state/core';
+import { type Take, useGenerate } from '../state/generate';
 import { saveNow, shoppingList } from '../state/history';
 import { useEditor } from '../state/store';
 import { count, dollars, priceEstimate } from './format';
 import { ArrowRight } from './icons';
+import { PlanSketch } from './PlanSketch';
 
 /** What the cards call the three takes on a Brief (spec §13.1). */
-export const DIRECTION_NAMES: Record<Direction, string> = { literal: 'Literal', bolder: 'Bolder', budget: 'Budget-conscious' };
+const DIRECTION_NAMES: Record<Direction, string> = { literal: 'Literal', bolder: 'Bolder', budget: 'Budget-conscious' };
 
-/** Claude's Designs for a Brief as cards, side by side: clicking one opens it (spec §13.1, step 6). */
-export function DesignCards({ result: { designs, failures, loops, seconds }, onOpen, onBack }: {
-  result: GenerateResult; onOpen: () => void; onBack: () => void;
-}) {
+/**
+ * Claude's three takes on a Brief as cards, side by side (spec §13.1, step 6). Each draws its plan
+ * Edit by Edit while Claude makes it, and opens its Design once it is finished, while the others
+ * are still being drawn.
+ */
+export function DesignCards({ onOpen, onBack }: { onOpen: () => void; onBack: () => void }) {
   const [, navigate] = useLocation();
-  // Each loop reports the Design it made.
-  const directionOf = new Map(loops.flatMap(({ direction, designId }) => (designId ? [[designId, direction] as const] : [])));
+  const { status, takes, seconds } = useGenerate(useShallow(({ status, takes, seconds }) => ({ status, takes, seconds })));
 
   async function open(design: Design) {
     await saveNow();   // the open Design's latest change goes first
@@ -29,33 +32,65 @@ export function DesignCards({ result: { designs, failures, loops, seconds }, onO
   return (
     <div className="cards-step">
       <ul className="design-cards">
-        {designs.map((design, i) => (
-          <li key={design.id} style={{ '--i': i } as CSSProperties}>
-            <Card design={design} direction={directionOf.get(design.id)} onOpen={() => void open(design)} />
+        {DIRECTIONS.map((direction, i) => (
+          <li key={direction} style={{ '--i': i } as CSSProperties}>
+            <TakeCard direction={direction} take={takes[direction]} onOpen={(design) => void open(design)} />
           </li>
         ))}
       </ul>
-      {failures.map(({ direction, error }) => (
-        <p key={direction} className="error" role="alert">The {DIRECTION_NAMES[direction].toLowerCase()} take didn't finish: {error}</p>
-      ))}
       <footer>
-        <span className="muted">Made in {seconds} s · prices are estimates</span>
-        <button type="button" onClick={onBack}>Change the Brief</button>
+        {status === 'done'
+          ? <span className="muted">{seconds !== undefined && <>Made in <span className="seconds">{seconds} s</span> · </>}prices are estimates</span>
+          : <Elapsed />}
+        <button type="button" disabled={status !== 'done'} onClick={onBack}>Change the Brief</button>
       </footer>
     </div>
   );
 }
 
-function Card({ design, direction, onOpen }: { design: Design; direction?: Direction; onOpen: () => void }) {
-  const { setup, catalog } = useEditor(useShallow(({ setup, catalog }) => ({ setup, catalog })));
-  const { pieces, totalUsd } = shoppingList({ roomState: replay(setup!, catalog!, design.edits), setup, catalog });
+/**
+ * One take: its plan from above as Claude draws it, with Claude's plan in words and the step it is on;
+ * then its Design, or why it didn't finish.
+ * It is one button throughout, off until its Design is finished, so that the plan stays as it is drawn.
+ */
+function TakeCard({ direction, take: { plan, edits, design, report, error }, onOpen }: { direction: Direction; take: Take; onOpen: (design: Design) => void }) {
+  const { setup, catalog, openId } = useEditor(useShallow(({ setup, catalog, design }) => ({ setup: setup!, catalog: catalog!, openId: design?.id })));
+  const last = edits.at(-1);
+  const isOpen = design !== undefined && design.id === openId;
+  return (
+    <button
+      type="button"
+      className={`design-card${design ? '' : error ? ' failed' : ' drawing'}`}
+      disabled={!design}
+      aria-busy={!design && !error}
+      aria-current={isOpen}
+      onClick={() => design && onOpen(design)}
+    >
+      <span className="direction">{DIRECTION_NAMES[direction]}</span>
+      {/* While the take is drawn, the plan outlines the Piece the latest Edit put in the room. */}
+      <PlanSketch setup={setup} catalog={catalog} edits={edits} latest={!design && last && 'pieceId' in last ? last.pieceId : undefined} />
+      {design ? <Summary setup={setup} catalog={catalog} design={design} seconds={report?.seconds} isOpen={isOpen} />
+        : error ? <span className="error">This take didn't finish: {error}</span>
+        : (
+          <>
+            {plan && <span className="plan">{plan.trim().split('\n').filter(Boolean).map((line, i) => <span key={i}>{line}</span>)}</span>}
+            <span className="step" aria-live="polite">{last ? describe(last, setup, catalog) : plan ? 'Planning…' : 'Reading the room…'}</span>
+          </>
+        )}
+      {!design && <span className="counts">{count(edits.length, 'Edit')}</span>}
+    </button>
+  );
+}
+
+/** A finished take: its name, rationale and Palette, what it costs, and how long it took. */
+function Summary({ setup, catalog, design, seconds, isOpen }: { setup: RoomSetup; catalog: Catalog; design: Design; seconds?: number; isOpen: boolean }) {
+  const { pieces, totalUsd } = shoppingList({ roomState: replay(setup, catalog, design.edits), setup, catalog });
   const budget = design.brief?.budgetUsd;
   const swatches = design.palette ? [design.palette.wall, ...design.palette.accents] : [];
   return (
-    <button type="button" className="design-card" onClick={onOpen}>
-      {direction && <span className="direction">{DIRECTION_NAMES[direction]}</span>}
+    <>
       <h3>{design.name}</h3>
-      <p className="rationale">{design.rationale}</p>
+      <span className="rationale">{design.rationale}</span>
       {swatches.length > 0 && (
         <span className="swatches" aria-label={`Palette: ${swatches.join(', ')}`}>
           {swatches.map((color, i) => <span key={`${color}-${i}`} style={{ background: color }} />)}
@@ -63,9 +98,24 @@ function Card({ design, direction, onOpen }: { design: Design; direction?: Direc
       )}
       <span className="card-foot">
         <span className="total">{priceEstimate(totalUsd)}{budget !== undefined && ` of ${dollars(budget)}`}</span>
-        <span className="counts">{count(design.edits.length, 'Edit')} · {count(pieces.length, 'Piece')}</span>
+        <span className="counts">{count(design.edits.length, 'Edit')} · {count(pieces.length, 'Piece')}{seconds !== undefined && ` · ${seconds} s`}</span>
       </span>
-      <span className="open">Open <ArrowRight /></span>
-    </button>
+      <span className="open">{isOpen ? 'In the editor' : <>Open <ArrowRight /></>}</span>
+    </>
+  );
+}
+
+/** The seconds since the Brief was sent, while Claude designs. */
+function Elapsed() {
+  const since = useGenerate((s) => s.since ?? Date.now());
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <span className="muted" role="status">
+      Claude is decorating three takes · <span className="seconds">{((now - since) / 1000).toFixed(1)} s</span>
+    </span>
   );
 }

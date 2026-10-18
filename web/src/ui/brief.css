@@ -106,11 +106,12 @@
 @media (hover: hover) {
   .editor .design-card:hover:not(:disabled) { border-color: var(--ink); }
 }
+/* The take open in the editor: chosen, so the wash tint under it and an ink edge. */
+.editor .design-card[aria-current='true'] { border-color: var(--ink); background: var(--wash-tint); }
 .design-card h3 { margin: 0; font: 400 21px/1.2 var(--font-hand); }
 .design-card .rationale {
   display: -webkit-box;
   flex: 1;
-  margin: 0;
   overflow: hidden;
   font-size: 13px;
   line-height: 1.5;
@@ -129,22 +130,45 @@
   .design-card:hover .open .icon { translate: 3px 0; }
 }
 
-/* While Claude designs: an empty sheet per direction, hatched, with its first lines drawn on. */
-.working p { margin: var(--s-3) 0 0; }
-.working .muted { font-family: var(--font-mono); }
-.design-cards.placeholders li {
-  flex-direction: column;
-  gap: var(--s-2);
-  min-height: 120px;
-  padding: var(--s-3);
-  border: var(--line) dashed var(--pencil-strong);
-  border-radius: var(--r-3);
-  background: var(--hatching), var(--paper-raised);
-}
-.design-cards .stroke { width: 100%; height: 1px; background: var(--ink); transform-origin: left; }
-.design-cards .stroke.short { width: 60%; }
+/* While Claude designs a take, its card is a sheet still being drawn: dashed and hatched like any control
+   that's off (base.css), with the plan filling in and the step Claude is on under it. */
+.editor .design-card:disabled { color: var(--ink); }
+.editor .design-card.drawing { cursor: progress; }
+.editor .design-card.failed { cursor: default; }
+/* Claude's plan for the take, in its words, as it writes it: its concept, layout and decor, a few lines each. */
+.design-card .plan { display: grid; gap: var(--s-1); color: var(--ink); font-size: 12.5px; line-height: 1.45; }
+.design-card .plan > span { display: -webkit-box; max-height: calc(3 * 1.45em); overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.design-card .step { min-height: 2.9em; color: var(--graphite); font-size: 13px; line-height: 1.45; }
+.design-card .error { margin: 0; }
+.cards-step .seconds { font-family: var(--font-mono); }
+
+/* ───────────── The plan on each card: the take seen from above ───────────── */
+
+.plan-sketch { display: block; width: 100%; height: 160px; overflow: visible; }
+.plan-sketch :is(.wall, .window, .swing, .original, .piece > *) { vector-effect: non-scaling-stroke; }
+.plan-sketch .floor { fill: var(--paper-raised); }
+.plan-sketch .wall { stroke: var(--ink); stroke-width: var(--line-strong); stroke-linecap: square; }
+/* An Opening breaks its wall: a window is a thin box in it, a door its dashed swing. */
+.plan-sketch .window { fill: var(--paper-raised); stroke: var(--ink); stroke-width: var(--line); }
+.plan-sketch .swing { fill: none; stroke: var(--pencil-strong); stroke-width: var(--line); stroke-dasharray: 2 2; }
+/* The room's own furniture in pencil; filled only once the Design recolors it. */
+.plan-sketch .original { fill: none; stroke: var(--pencil-strong); stroke-width: var(--line); }
+.plan-sketch .original[style] { fill-opacity: 0.55; }
+/* What the Design adds, in its own color with an ink edge. */
+.plan-sketch .piece > * { fill: var(--color, var(--pencil-strong)); stroke: var(--ink); stroke-width: var(--line); }
+.plan-sketch .piece.rug > :first-child { fill-opacity: 0.5; stroke: var(--pencil-strong); }
+.plan-sketch .piece.rug .border { fill: none; stroke: var(--pencil-strong); }
+/* The Piece Claude just placed: the wash marks what's active. */
+.plan-sketch .piece.latest > * { stroke: var(--wash); stroke-width: var(--line-strong); }
+.plan-sketch .paint { stroke-linecap: butt; }
+
+/* Each mark settles in as it arrives; under reduced motion, it only fades in. */
+.plan-sketch :is(.piece, .paint) { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: no-preference) {
-  .design-cards .stroke { animation: draw var(--draw) var(--ease-out) both; }
-  .design-cards .stroke.short { animation-delay: 80ms; }
+  .plan-sketch :is(.piece, .paint) { animation: plan-in var(--draw) var(--ease-out) both; }
 }
-@keyframes draw { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .plan-sketch :is(.piece, .paint) { animation: plan-fade var(--draw) linear both; }
+}
+@keyframes plan-in { from { opacity: 0; transform: scale(0.8); } }
+@keyframes plan-fade { from { opacity: 0; } }

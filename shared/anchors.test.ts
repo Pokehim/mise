@@ -21,7 +21,9 @@ const cube = item('cube-storage', 'storage', 'Storage Cube', [0.5, 0.5, 0.5]);
 const wardrobe = item('wardrobe-white', 'wardrobe', 'White Wardrobe', [1, 1.8, 0.58]);
 const smallRug = item('rug-small', 'rug', 'Small Rug', [1.2, 0.01, 1]);
 const poster = item('poster-city', 'wall_art', 'City Poster', [0.4, 0.5, 0.02], { mount: 'wall' });
-const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant, cube, smallRug, wardrobe, poster] };
+const table = item('table-oak', 'table', 'Oak Table', [1.5, 0.75, 0.9]);
+const twinBed = item('bed-twin', 'bed', 'Twin XL Bed', [0.99, 0.6, 2.03]);
+const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant, cube, smallRug, wardrobe, poster, table, twinBed] };
 
 /** The room with nothing in it. */
 const empty: RoomSetup = { ...setup, originals: [] };
@@ -40,6 +42,31 @@ function placementOf(resolution: Resolution): Placement {
 const closeTo = (meters: number) => expect.closeTo(meters, 3);
 
 describe('resolveAnchor', () => {
+  describe('in_corner', () => {
+    it('lays a bed along the wall, its long side flush to it and its head in the corner, as a dorm bed goes', () => {
+      // The West wall runs from its left end at the South wall (z = 1.5) to the North wall. The bed's head
+      // is at the South wall, so its center is 1.015 m north of it, and 0.495 m off the West wall.
+      expect(resolve(twinBed, { kind: 'in_corner', wall_id: 'wl_west', end: 'left' }, [], empty)).toEqual({
+        placement: { position: [closeTo(-1.505), 0, closeTo(0.485)], rotationY: closeTo(Math.PI), mount: 'floor' },
+      });
+    });
+
+    it('stands anything but a bed with its back to the wall at that end', () => {
+      expect(resolve(chest, { kind: 'in_corner', wall_id: 'wl_north', end: 'right' }, [], empty))
+        .toEqual(resolve(chest, { kind: 'against_wall', wall_id: 'wl_north', along: 'right' }, [], empty));
+    });
+
+    it('slides out of the corner along the wall when something stands in it, and fails where it would block the door', () => {
+      // A storage cube fills the North wall's west corner to x = −1.5: slid half a meter east, the bed's head clears it.
+      const cubeInCorner = place('pc_cube', 'cube-storage', onFloor(-1.75, -1.25));
+      expect(resolve(twinBed, { kind: 'in_corner', wall_id: 'wl_north', end: 'left' }, [cubeInCorner], empty)).toEqual({
+        placement: { position: [closeTo(-0.485), 0, closeTo(-1.005)], rotationY: closeTo(Math.PI / 2), mount: 'floor' },
+      });
+      // The South wall's left end is the door's: no slide of a meter clears its swing.
+      expect(resolve(twinBed, { kind: 'in_corner', wall_id: 'wl_south', end: 'left' }, [], empty)).toMatchObject({ error: expect.stringContaining("doesn't fit") });
+    });
+  });
+
   describe('against_wall', () => {
     it('puts a desk against the middle of the North wall: back flush to it, facing into the room', () => {
       // 0.5 deep, so its center is 0.25 m off the wall at z = −1.5.
@@ -115,6 +142,12 @@ describe('resolveAnchor', () => {
   });
 
   describe('beside', () => {
+    it('goes to the other side when the side asked for is a wall, as by a bed in a corner', () => {
+      // The room's bed is in the north-west corner: its left, seen facing its front, is the West wall.
+      expect(resolve(nightstand, { kind: 'beside', target_id: 'og_bed', side: 'left' }))
+        .toEqual(resolve(nightstand, { kind: 'beside', target_id: 'og_bed', side: 'right' }));
+    });
+
     it('stands next to the target, backs in line: left and right are as seen facing its front', () => {
       // The bed faces south (+z), so its right is the room side, x > −1.01; its back is on the North wall.
       expect(resolve(nightstand, { kind: 'beside', target_id: 'og_bed', side: 'right' })).toEqual({
@@ -418,6 +451,15 @@ describe('resolveAnchor', () => {
   });
 
   describe('centered_under', () => {
+    it("centers a rug under a table, its long side along the table's, so the chairs around it stand on it too", () => {
+      // From #97. The table runs east–west, 1.5 × 0.9; the rug, 1.52 wide and 2.13 deep, turns a quarter to lie along it.
+      const tableMidRoom = place('pc_table', 'table-oak', onFloor(0, 0));
+
+      expect(resolve(rug, { kind: 'centered_under', target_id: 'pc_table' }, [tableMidRoom], empty)).toEqual({
+        placement: { position: [closeTo(0), 0, closeTo(0)], rotationY: closeTo(Math.PI / 2), mount: 'floor' },
+      });
+    });
+
     it('lays a rug centered under the target, its long side across it, with a third of it under the target', () => {
       // The sofa faces south from the North wall, z −1.5 to −0.6. Turned, the rug is 2.13 wide and 1.52 deep:
       // z −1.107 to 0.413, so 0.507 m of it is under the sofa.
@@ -483,6 +525,14 @@ describe('resolveAnchor', () => {
       const { position } = placementOf(resolve(plant, { kind: 'open_floor', near_id: 'og_bed' }));
 
       expect(gap(position, 0.4, [-2, -1.5, -1.01, 0.53])).toBeLessThan(0.1);
+    });
+
+    it('puts the item in the free spot nearest to a window, given its id: a reading corner by the window', () => {
+      // The window is x −0.6 to 0.6 on the North wall, z = −1.5. The 0.95 m chair keeps the 0.4 m in front
+      // of the 0.9 m sill clear, so the nearest free spot is beside the window, its edge within 10 cm of it.
+      const { position } = placementOf(resolve(chair, { kind: 'open_floor', near_id: 'op_window' }, [], empty));
+
+      expect(gap(position, 0.6, [-0.6, -1.5, 0.6, -1.5])).toBeLessThan(0.1);
     });
 
     it('passes over free spots that would block the walkway', () => {

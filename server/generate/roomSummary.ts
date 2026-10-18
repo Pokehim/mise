@@ -1,7 +1,7 @@
 import { BY_WALL, isFurniture, partParamsOf, restingHeight, wallBehind } from '../../shared/anchors';
 import { checkFit, type Item, roomItems } from '../../shared/fit';
 import {
-  distanceToWall, fromLeft, gapTo, isBy, overlapLength, pointInPolygon, polygonsOverlap, rectCorners, spanFromLeft, wallLength,
+  distanceToWall, fromLeft, gapTo, isBy, overlapLength, pointInPolygon, polygonsOverlap, rectCorners, spanFromLeft, wallLength, wallPoint,
 } from '../../shared/geometry';
 import type { Catalog, CatalogItem, Category, Placement, RoomSetup, RoomState, Vec2, Wall } from '../../shared/types';
 import { m } from './forClaude';
@@ -9,6 +9,8 @@ import { m } from './forClaude';
 /** The room as Claude reads it before it designs (spec §13.1, step 2), with where decor can go. */
 export interface RoomSummary {
   room: { width_m: number; depth_m: number; ceiling_height_m: number };
+  /** The parts of the floor: the main area furniture goes in, and the passages and alcoves off it. */
+  layout: Layout;
   walls: { id: string; name: string; length_m: number }[];
   openings: {
     id: string;
@@ -36,6 +38,24 @@ export interface RoomSummary {
   /** How many Catalog items each category has. */
   catalog: Partial<Record<Category, number>>;
   decor: { wall_spans: WallSpan[]; tops: Top[] };
+}
+
+/** The parts of the floor, from the room's shape alone. */
+interface Layout {
+  /** The largest rectangle of floor: where the furniture goes. */
+  main: Area;
+  /** Narrow parts of the floor with a door, such as an entry hall: the way in, kept clear of furniture. */
+  passages: (Area & { doors: string[] })[];
+  /** Any other part of the floor off the main area, such as a nook. */
+  alcoves: (Area & { doors: string[] })[];
+}
+
+/** A part of the floor: its size, square to the longest wall, and the stretches of wall along it. */
+interface Area {
+  width_m: number;
+  depth_m: number;
+  /** From each wall's left end, seen from inside the room; `along` is the same stretch as against_wall's 0 to 1. */
+  walls: { wall_id: string; from_left_m: number; to_left_m: number; along: [number, number] }[];
 }
 
 /** A stretch of wall that art can hang on, 1.0 to 2.0 m up, measured from the wall's left end seen from inside the room. */
@@ -78,8 +98,15 @@ const SMALLEST_ART = 0.3;
 const OPENING_MARGIN = 0.1;
 /** The narrowest wall span worth listing: about one small frame. */
 const MIN_SPAN = 0.4;
+/** A part of the floor this narrow or narrower, with a door, is a passage: the way in. */
+const PASSAGE_WIDTH = 1.8;
+/** Parts of the floor smaller than this, in square meters, or narrower than SLIVER, are left out: jogs in the walls. */
+const MIN_PART_AREA = 0.5;
+const SLIVER = 0.4;
+/** How far into the room a wall is probed for the part of the floor along it. */
+const WALL_PROBE = 0.2;
 /** What decor rests on top of. */
-const TOP_CATEGORIES: Category[] = ['bed', 'desk', 'table', 'nightstand', 'dresser', 'shelf', 'storage'];
+export const TOP_CATEGORIES: Category[] = ['bed', 'desk', 'table', 'nightstand', 'dresser', 'shelf', 'storage'];
 
 /** The Room Summary of a Scan in the state a Design has it (spec §13.1), for Claude's first message. */
 export function roomSummary(setup: RoomSetup, catalog: Catalog, state: RoomState): RoomSummary {
@@ -95,6 +122,7 @@ export function roomSummary(setup: RoomSetup, catalog: Catalog, state: RoomState
 
   return {
     room: { width_m: m(bounds.maxX - bounds.minX), depth_m: m(bounds.maxZ - bounds.minZ), ceiling_height_m: m(setup.ceilingHeight) },
+    layout: layout(setup),
     walls: setup.walls.map((wall) => ({ id: wall.id, name: wall.name, length_m: m(wallLength(wall)) })),
     openings: setup.openings.flatMap(({ id, kind, wallId, offset, width, bottom, height }) => {
       const wall = setup.walls.find((candidate) => candidate.id === wallId);
@@ -198,6 +226,90 @@ function subtract([start, end]: [number, number], taken: [number, number][]): [n
   }
   if (from < end) left.push([from, end]);
   return left.filter(([a, b]) => b > a);
+}
+
+/**
+ * The parts of a room's floor, from its shape alone: the main area is the largest rectangle of floor, and
+ * each other part is a passage when it's narrow and has a door, or else an alcove. Found on a CELL grid
+ * square to the longest wall, so that a room scanned at an angle still lines up with it.
+ */
+function layout(setup: RoomSetup): Layout {
+  const longest = setup.walls.reduce((best, wall) => (wallLength(wall) > wallLength(best) ? wall : best));
+  const angle = Math.atan2(longest.end[1] - longest.start[1], longest.end[0] - longest.start[0]);
+  const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
+  const square = ([x, z]: Vec2): Vec2 => [x * cos + z * sin, z * cos - x * sin];
+  const polygon = setup.floor.polygon.map(square);
+  const [minX, minZ] = [Math.min(...polygon.map(([x]) => x)), Math.min(...polygon.map(([, z]) => z))];
+  const cols = Math.round((Math.max(...polygon.map(([x]) => x)) - minX) / CELL);
+  const rows = Math.round((Math.max(...polygon.map(([, z]) => z)) - minZ) / CELL);
+  const floor = Array.from({ length: rows }, (_, row) =>
+    Array.from({ length: cols }, (_, col) => pointInPolygon([minX + (col + 0.5) * CELL, minZ + (row + 0.5) * CELL], polygon)));
+
+  // Each cell's part: 0 the main area, 1 on for the others, −1 off the floor.
+  const main = largestRectangle(floor)!;
+  const inMain = (row: number, col: number) => row >= main.row && row < main.row + main.rows && col >= main.col && col < main.col + main.cols;
+  const part = floor.map((cells, row) => cells.map((cell, col): number | undefined => (!cell ? -1 : inMain(row, col) ? 0 : undefined)));
+  const parts = [{ rows: main.rows, cols: main.cols, cells: main.rows * main.cols }];
+  part.forEach((cells, row) => cells.forEach((cell, col) => {
+    if (cell !== undefined) return;
+    // The cells next to each other that no part has yet are a new one.
+    const id = parts.length;
+    let [cells0, rowRange, colRange] = [0, [row, row], [col, col]];
+    const queue: [number, number][] = [[row, col]];
+    part[row][col] = id;
+    while (queue.length) {
+      const [r, c] = queue.pop()!;
+      cells0++;
+      rowRange = [Math.min(rowRange[0], r), Math.max(rowRange[1], r)];
+      colRange = [Math.min(colRange[0], c), Math.max(colRange[1], c)];
+      for (const [nr, nc] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]) {
+        if (part[nr]?.[nc] === undefined && nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+          part[nr][nc] = id;
+          queue.push([nr, nc]);
+        }
+      }
+    }
+    parts.push({ rows: rowRange[1] - rowRange[0] + 1, cols: colRange[1] - colRange[0] + 1, cells: cells0 });
+  }));
+  const partAt = (point: Vec2) => {
+    const [x, z] = square(point);
+    return part[Math.floor((z - minZ) / CELL)]?.[Math.floor((x - minX) / CELL)] ?? -1;
+  };
+
+  // The stretches of each wall along each part, found by probing the floor just in front of the wall.
+  const walls = parts.map((): Area['walls'] => []);
+  for (const wall of setup.walls) {
+    const length = wallLength(wall);
+    let run: { part: number; from: number } | undefined;
+    const close = (to: number) => {
+      if (!run || run.part < 0 || to - run.from < SLIVER) return;
+      const [from, toLeft] = fromLeft(wall, [run.from, to]);
+      walls[run.part].push({ wall_id: wall.id, from_left_m: m(from), to_left_m: m(toLeft), along: [m(from / length), m(toLeft / length)] });
+    };
+    for (let along = CELL / 2; along < length; along += CELL) {
+      const here = partAt(wallPoint(wall, along, WALL_PROBE));
+      if (here === run?.part) continue;
+      close(along - CELL / 2);
+      run = { part: here, from: Math.max(0, along - CELL / 2) };
+    }
+    close(length);
+  }
+  const doors = (id: number) => setup.openings.filter((opening) => {
+    const wall = setup.walls.find(({ id: wallId }) => wallId === opening.wallId);
+    return opening.kind === 'door' && wall && partAt(wallPoint(wall, opening.offset + opening.width / 2, WALL_PROBE)) === id;
+  }).map(({ id: openingId }) => openingId);
+
+  const area = (id: number): Area => ({ width_m: m(parts[id].cols * CELL), depth_m: m(parts[id].rows * CELL), walls: walls[id] });
+  const others = parts.flatMap(({ rows: partRows, cols: partCols, cells }, id) => {
+    if (!id || cells * CELL ** 2 < MIN_PART_AREA || Math.min(partRows, partCols) * CELL < SLIVER) return [];
+    const each = { ...area(id), doors: doors(id) };
+    return [{ each, passage: Math.min(partRows, partCols) * CELL <= PASSAGE_WIDTH && each.doors.length > 0 }];
+  });
+  return {
+    main: area(0),
+    passages: others.filter(({ passage }) => passage).map(({ each }) => each),
+    alcoves: others.filter(({ passage }) => !passage).map(({ each }) => each),
+  };
 }
 
 /** The box around the room's floor. */

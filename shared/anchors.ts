@@ -38,6 +38,8 @@ export type Along = 'left' | 'center' | 'right' | number;
 /** A placement described by its relationship to the room instead of by coordinates (spec §13.2). */
 export type Anchor =
   | { kind: 'against_wall'; wall_id: string; along: Along }
+  /** Snug in the corner at a wall's end: a bed along the wall, long side flush and head in the corner; anything else back to the wall there. */
+  | { kind: 'in_corner'; wall_id: string; end: 'left' | 'right' }
   | { kind: 'beside'; target_id: string; side: 'left' | 'right' | 'front' }
   | { kind: 'under_window'; opening_id: string }
   | { kind: 'on_wall'; wall_id: string; along: Along; center_height_m?: number }
@@ -203,6 +205,21 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       const centerHeight = anchor.kind === 'on_wall' ? anchor.center_height_m ?? CENTER_HEIGHT : undefined;
       return flushTo(wall, fromStart(wall, width, along), { centerHeight });
     }
+    case 'in_corner': {
+      const wall = wallOf(anchor.wall_id);
+      if (!wall) return noWall(anchor.wall_id);
+      // Only a bed lies along a wall: its long side flush to it and its head in the corner, as a dorm bed goes,
+      // which leaves a small room its floor. Anything else stands back to the wall at that end.
+      if (item.category !== 'bed' || depth <= width) return flushTo(wall, fromStart(wall, width, anchor.end));
+      const length = wallLength(wall);
+      if (depth > length + EPSILON) return { error: `${item.title} is longer than the ${wall.name}` };
+      // Its foot points along the wall away from the corner; out of the corner, it slides that way.
+      const atStart = (anchor.end === 'left') === startIsLeft(wall);
+      const [dx, dz] = direction(wall);
+      const away: Vec2 = atStart ? [dx, dz] : [-dx, -dz];
+      const [x, z] = wallPoint(wall, atStart ? depth / 2 : length - depth / 2, width / 2);
+      return sliding({ position: [x, 0, z], rotationY: facing(away), mount: 'floor' }, away, [0, MAX_SLIDE]);
+    }
     case 'under_window': {
       const opening = setup.openings.find(({ id }) => id === anchor.opening_id);
       if (!opening) return { error: `The room has no window "${anchor.opening_id}"` };
@@ -245,25 +262,31 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
       // Beside it, backs in line; in front of it, facing it. It slides along the side it is at, but
       // its center never past that side's ends, so that it stays next to the target.
-      const { across, out, turn, axis, min, max } = anchor.side === 'front'
-        ? {
-          across: 0,
-          out: targetDepth / 2 + depth / 2,
-          turn: Math.PI,
-          axis: rightOf(rotationY),
-          min: -targetWidth / 2,
-          max: targetWidth / 2,
-        }
-        : {
-          across: (anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2),
-          out: depth / 2 - targetDepth / 2,
-          turn: 0,
-          axis: frontOf(rotationY),
-          min: -depth / 2,
-          max: targetDepth - depth / 2,
-        };
-      const [x, z] = inFrameOf(target.placement, [across, out]);
-      return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, [min, max]);
+      const at = (side: 'left' | 'right' | 'front') => {
+        const { across, out, turn, axis, min, max } = side === 'front'
+          ? {
+            across: 0,
+            out: targetDepth / 2 + depth / 2,
+            turn: Math.PI,
+            axis: rightOf(rotationY),
+            min: -targetWidth / 2,
+            max: targetWidth / 2,
+          }
+          : {
+            across: (side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2),
+            out: depth / 2 - targetDepth / 2,
+            turn: 0,
+            axis: frontOf(rotationY),
+            min: -depth / 2,
+            max: targetDepth - depth / 2,
+          };
+        const [x, z] = inFrameOf(target.placement, [across, out]);
+        return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, [min, max]);
+      };
+      if (anchor.side === 'front') return at('front');
+      // The side asked for first; when nothing fits there, as when it's the wall a bed in a corner stands against, the other.
+      const asked = at(anchor.side);
+      return { ...asked, placements: [...asked.placements, ...at(anchor.side === 'right' ? 'left' : 'right').placements] };
     }
     case 'on_top_of': {
       const target = targetOf(anchor.target_id);
@@ -296,6 +319,14 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       const target = targetOf(anchor.target_id);
       if (!target) return noTarget(anchor.target_id);
       const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
+      if (target.category === 'table') {
+        // Under a table it's centered, its long side along the table's, so the chairs around it stand
+        // on it too; it slides a little either way to clear a wall (from #97).
+        const turn = (width >= depth) === (targetWidth >= targetDepth) ? 0 : Math.PI / 2;
+        const placement: Placement = { position: [target.placement.position[0], 0, target.placement.position[2]], rotationY: wrapped(rotationY + turn), mount: 'floor' };
+        const shifts = sliding(placement, rightOf(rotationY), [-0.3, 0.3]);
+        return { ...shifts, placements: shifts.placements.flatMap((shifted) => sliding(shifted, frontOf(rotationY), [-0.3, 0.3]).placements) };
+      }
       // Its long side runs across the target, as a rug goes under a bed or a sofa. A third of
       // how far it reaches out goes under the target's front, so its center is a sixth past it.
       const [reach, across, turn] = width >= depth ? [depth, width, 0] : [width, depth, Math.PI / 2];
@@ -309,8 +340,13 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       return { ...shifts, placements: shifts.placements.flatMap((shifted) => sliding(shifted, frontOf(rotationY), [-Infinity, reach / 6]).placements) };
     }
     case 'open_floor': {
-      const near = anchor.near_id === undefined ? undefined : targetOf(anchor.near_id);
-      if (anchor.near_id !== undefined && !near) return noTarget(anchor.near_id);
+      // Near an Original or a Piece, or near an Opening: by the window is where a reading chair goes.
+      const opening = setup.openings.find(({ id }) => id === anchor.near_id);
+      const openingWall = opening && wallOf(opening.wallId);
+      const near = openingWall
+        ? { rect: { center: wallPoint(openingWall, opening.offset + opening.width / 2), size: [opening.width, 0] as Vec2, rotationY: facing(openingWall.normal) } }
+        : anchor.near_id === undefined ? undefined : targetOf(anchor.near_id);
+      if (anchor.near_id !== undefined && !near) return { error: `The room has no Original, Piece or Opening "${anchor.near_id}"` };
       return { placements: openFloor(setup, inRoom, item, near), noFit: `No open floor fits ${item.title}` };
     }
   }
@@ -352,7 +388,7 @@ const SNAP_ANGLE = Math.PI / 9;
  * walls and furniture, or the nearest to `near`. Open floor is floor no furniture stands on, and
  * for a rug, no other rug lies on. The Fit rules, the walkway among them, then pick among them.
  */
-function openFloor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, near?: RoomItem): Placement[] {
+function openFloor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, near?: Pick<RoomItem, 'rect'>): Placement[] {
   const { polygon } = setup.floor;
   const obstacles = inRoom.filter(({ category, placement }) =>
     placement.mount === 'floor' && (category !== 'rug' || item.category === 'rug'));

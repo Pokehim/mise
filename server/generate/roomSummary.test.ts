@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { replay } from '../../shared/replay';
-import { catalog, item, onFloor, place, setup } from '../../shared/test-room';
+import { catalog, item, lShaped, onFloor, place, setup } from '../../shared/test-room';
 import type { Edit, RoomSetup } from '../../shared/types';
 import { roomSummary } from './roomSummary';
 
@@ -28,6 +28,48 @@ describe('roomSummary', () => {
         { id: 'wl_south', name: 'South wall', length_m: 4 },
         { id: 'wl_west', name: 'West wall', length_m: 3 },
       ],
+    });
+  });
+
+  describe('layout', () => {
+    it('takes a rectangular room as all main area, with every wall along it', () => {
+      expect(summarize().layout).toEqual({
+        main: {
+          width_m: 4, depth_m: 3,
+          walls: [
+            { wall_id: 'wl_north', from_left_m: 0, to_left_m: 4, along: [0, 1] },
+            { wall_id: 'wl_east', from_left_m: 0, to_left_m: 3, along: [0, 1] },
+            { wall_id: 'wl_south', from_left_m: 0, to_left_m: 4, along: [0, 1] },
+            { wall_id: 'wl_west', from_left_m: 0, to_left_m: 3, along: [0, 1] },
+          ],
+        },
+        passages: [],
+        alcoves: [],
+      });
+    });
+
+    it('tells the main area from the passage to the door, and which stretch of a wall runs along each', () => {
+      const { layout } = summarize([], lShaped);
+
+      expect(layout.main).toEqual({
+        width_m: 3, depth_m: 3,
+        walls: [
+          // Seen from inside, facing north, the North wall's left end is its west end.
+          { wall_id: 'wl_north', from_left_m: 0, to_left_m: 3, along: [0, 0.6] },
+          { wall_id: 'wl_east_2', from_left_m: 0, to_left_m: 2, along: [0, 1] },
+          { wall_id: 'wl_south_2', from_left_m: 0, to_left_m: 3, along: [0, 1] },
+          { wall_id: 'wl_west', from_left_m: 0, to_left_m: 3, along: [0, 1] },
+        ],
+      });
+      expect(layout.passages).toEqual([{
+        width_m: 2, depth_m: 1, doors: ['op_door'],
+        walls: [
+          { wall_id: 'wl_north', from_left_m: 3, to_left_m: 5, along: [0.6, 1] },
+          { wall_id: 'wl_east', from_left_m: 0, to_left_m: 1, along: [0, 1] },
+          { wall_id: 'wl_south', from_left_m: 0, to_left_m: 2, along: [0, 1] },
+        ],
+      }]);
+      expect(layout.alcoves).toEqual([]);
     });
   });
 

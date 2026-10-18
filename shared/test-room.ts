@@ -33,6 +33,26 @@ export const setup: RoomSetup = {
   ],
 };
 
+/**
+ * An empty L-shaped room entered down a passage, as the floor-plan dorms are: the main area is x −2 to 1,
+ * z −1.5 to 1.5; a passage 1 m wide runs east from it, x 1 to 3 and z −1.5 to −0.5, to the door at its
+ * end. The North wall runs along both.
+ */
+export const lShaped: RoomSetup = {
+  version: 1, scanId: 'l-shaped', ceilingHeight: 2.6,
+  floor: { polygon: [[-2, -1.5], [3, -1.5], [3, -0.5], [1, -0.5], [1, 1.5], [-2, 1.5]] },
+  walls: [
+    { id: 'wl_north', name: 'North wall', start: [-2, -1.5], end: [3, -1.5], normal: [0, 1], height: 2.6 },
+    { id: 'wl_east', name: 'East wall', start: [3, -1.5], end: [3, -0.5], normal: [-1, 0], height: 2.6 },
+    { id: 'wl_south', name: 'South wall', start: [3, -0.5], end: [1, -0.5], normal: [0, -1], height: 2.6 },
+    { id: 'wl_east_2', name: 'East wall 2', start: [1, -0.5], end: [1, 1.5], normal: [-1, 0], height: 2.6 },
+    { id: 'wl_south_2', name: 'South wall 2', start: [1, 1.5], end: [-2, 1.5], normal: [0, -1], height: 2.6 },
+    { id: 'wl_west', name: 'West wall', start: [-2, 1.5], end: [-2, -1.5], normal: [1, 0], height: 2.6 },
+  ],
+  openings: [{ id: 'op_door', kind: 'door', wallId: 'wl_east', offset: 0.05, width: 0.9, bottom: 0, height: 2.03, swing: 'none' }],
+  originals: [],
+};
+
 /** The room with two more Originals that aren't on the floor: a lamp on the desk, and a mirror over the bed. */
 export const withLampAndMirror: RoomSetup = {
   ...setup,

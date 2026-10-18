@@ -13,6 +13,11 @@ const ARC_SEGMENTS = 16;
 const CELL = 0.05;
 /** Half the width of someone walking: the walkway keeps their center this far from floor items and walls. */
 const WALKER_RADIUS = 0.3;
+/**
+ * The least floor, in square meters of where a walker's center can be, that counts as part of the room
+ * when it's cut off from the doors: about a 1.3 m square of floor. Less is a nook behind furniture.
+ */
+const POCKET_AREA = 0.5;
 /** How far from a target's edge the walker's center can be and still reach it: one cell past the WALKER_RADIUS it keeps. */
 const REACH = WALKER_RADIUS + CELL;
 /** What a walkway must reach the front of, from each door. */
@@ -126,17 +131,19 @@ function overlap(a: Item, b: Item) {
 
 /**
  * The walkway rule (spec §13.2): someone 0.6 m wide can walk in through each door to the front of
- * every bed, desk and dresser; a bed's long sides count as its front too. The search moves the
- * walker's center over a grid, so it keeps WALKER_RADIUS from every floor item but rugs, and from
- * the walls but their doorways. A subject breaks the rule when its own front can't be reached, or
- * when the path to another target opens without it.
+ * every bed, desk and dresser; a bed's long sides count as its front too. And to all of the room: no
+ * part of the open floor bigger than a nook may be shut off from the doors, as a bed across the end of
+ * an entry passage shuts off the room. The search moves the walker's center over a grid, so it keeps
+ * WALKER_RADIUS from every floor item but rugs, and from the walls but their doorways. A subject breaks
+ * the rule when its own front can't be reached, when the path to another target opens without it, or,
+ * failing those, when part of the room does.
  */
 function walkway(setup: RoomSetup, items: Item[], zones: Zone[], subjects: Item[]): FitViolation[] {
   const obstacles = items.filter((item) => item.placement.mount === 'floor' && !liesFlat(item));
   const targets = obstacles.filter(({ category }) => WALKWAY_TARGETS.includes(category));
   const doors = zones.filter(({ opening }) => opening.kind === 'door');
-  // Only an obstacle can block a path, and every target is one.
-  if (!doors.length || !targets.length || !subjects.some((subject) => obstacles.includes(subject))) return [];
+  // Only an obstacle can block a path.
+  if (!doors.length || !subjects.some((subject) => obstacles.includes(subject))) return [];
 
   const grid = floorGrid(setup, doors.map(({ opening }) => opening));
   const cells = new Map(obstacles.map((item) => [item, cellsNear(grid, item.rect, WALKER_RADIUS)]));
@@ -155,22 +162,40 @@ function walkway(setup: RoomSetup, items: Item[], zones: Zone[], subjects: Item[
   });
 
   const cut = cutOff(grid, doorways, goals);
-  if (!cut.size) return [];
+  const shutOff = shutOffFloor(grid, doorways);
+  if (!cut.size && !shutOff) return [];
   return subjects.flatMap((subject): FitViolation[] => {
     const own = cells.get(subject);
     if (!own) return [];
     const door = cut.get(subject);
     stamp(grid, own, -1);
     const without = cutOff(grid, doorways, goals);
+    const shutOffWithout = shutOff ? shutOffFloor(grid, doorways) : 0;
     stamp(grid, own, 1);
     const violation = (otherId: string, message: string): FitViolation => ({ rule: 'walkway', subjectId: subject.id, otherId, message });
-    return [
+    const paths = [
       ...(door ? [violation(door.id, 'No clear path from the door')] : []),
       ...[...cut.keys()]
         .filter((target) => target !== subject && !without.has(target))
         .map((target) => violation(target.id, `Blocks the path to ${target.name}`)),
     ];
+    // Shutting off a target says the most; the floor counts when the subject shuts off a part of the room on its own.
+    if (paths.length || shutOff - shutOffWithout < POCKET_AREA / CELL ** 2) return paths;
+    return [violation(doors[0].opening.id, 'Cuts off part of the room from the door')];
   });
+}
+
+/** How many cells of open floor no doorway reaches, counting only the parts of the room big enough to be one. */
+function shutOffFloor(grid: Grid, doorways: Doorway[]): number {
+  const reached = new Int32Array(grid.blockers.length).fill(-1);
+  for (const { cells } of doorways) for (const cell of cells) if (!grid.blockers[cell] && reached[cell] === -1) search(grid, cell, 0, reached);
+  let shut = 0;
+  for (let cell = 0, mark = 1; cell < reached.length; cell++) {
+    if (grid.blockers[cell] || reached[cell] !== -1) continue;
+    const size = search(grid, cell, mark++, reached);
+    if (size >= POCKET_AREA / CELL ** 2) shut += size;
+  }
+  return shut;
 }
 
 /** The targets the walkway in through some door doesn't reach, each with the first such door. */
@@ -190,8 +215,8 @@ function cutOff(grid: Grid, doorways: Doorway[], goals: Goal[]): Map<Item, Openi
   return cut;
 }
 
-/** Breadth-first search from a cell through the open cells next to each other, marking each with `mark`. */
-function search({ cols, rows, blockers }: Grid, start: number, mark: number, reached: Int32Array) {
+/** Breadth-first search from a cell through the open cells next to each other, marking each with `mark`: how many it marked. */
+function search({ cols, rows, blockers }: Grid, start: number, mark: number, reached: Int32Array): number {
   const queue = new Int32Array(blockers.length);
   let [head, tail] = [0, 0];
   const visit = (cell: number) => {
@@ -208,6 +233,7 @@ function search({ cols, rows, blockers }: Grid, start: number, mark: number, rea
     if (j > 0) visit(cell - cols);
     if (j < rows - 1) visit(cell + cols);
   }
+  return tail;
 }
 
 /** The grid over a room's floor, with the cells off the floor, or within WALKER_RADIUS of a wall, blocked. */

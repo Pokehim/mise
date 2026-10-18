@@ -6,7 +6,7 @@ import type { BetaRunnableTool } from '@anthropic-ai/sdk/lib/tools/BetaRunnableT
 import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError';
 import { z } from 'zod';
 import {
-  type AnchorOptions, CENTER_HEIGHT, GALLERY_GAP, inPlaceOf, MAX_SLIDE, placementViolations, type Resolution, resolveAnchor,
+  type Anchor, type AnchorOptions, CENTER_HEIGHT, GALLERY_GAP, inPlaceOf, MAX_SLIDE, placementViolations, type Resolution, resolveAnchor,
 } from '../../shared/anchors';
 import { search } from '../../shared/catalog-search';
 import { roomItems } from '../../shared/fit';
@@ -14,7 +14,9 @@ import { newId } from '../../shared/ids';
 import { partsFor } from '../../shared/parts';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, CatalogItem, Category, Edit, FitViolation, Hex, LibraryMaterial, Palette, Placement, RoomSetup, RoomState } from '../../shared/types';
-import { catalogEntry, m } from './forClaude';
+import { catalogEntry, m, offeredToClaude } from './forClaude';
+import { reviewFlags } from './review';
+import { type Draft, dressBed, hangGallery, layRug, makeCorner, styleTops } from './moves';
 
 export interface DesignContext extends AnchorOptions {
   setup: RoomSetup;
@@ -24,6 +26,12 @@ export interface DesignContext extends AnchorOptions {
   materials: LibraryMaterial[];
   /** The most tool calls Claude gets for this Design; finish_design always runs. */
   maxToolCalls?: number;
+  /** The most large furniture changes this Design may make. */
+  maxLargeChanges?: number;
+  /** Called with each Edit as soon as it is applied, so the Mover can watch the Design take shape. */
+  onEdit?: (edit: Edit) => void;
+  /** The names the Brief's finished takes have taken, shared by its sessions, so that each take has a name of its own. */
+  takenNames?: Set<string>;
 }
 
 /** One Design being made: its Edits, the room they make, and the tools that change it. */
@@ -37,12 +45,15 @@ export interface DesignSession {
   readonly tools: BetaRunnableTool[];
 }
 
-/** How many tool calls a Design gets: about 24 for 8 to 15 Edits, with searches and a few retries (spec §13.3, raised for decorating). */
-const MAX_TOOL_CALLS = 24;
-/** How many Edits a decorated Design has, at least and at most. */
-export const EDIT_RANGE: [min: number, max: number] = [8, 15];
-/** How many large furniture changes a Design may make: decorating comes first. */
-export const MAX_LARGE_CHANGES = 2;
+/** How many tool calls a Design gets: about 40 for 8 to 24 Edits, with searches and a few retries (spec §13.3, raised for decorating and remodels, as in #97). */
+const MAX_TOOL_CALLS = 40;
+/** How many Edits a Design has, at least and at most, not counting removals: a remodel clears what doesn't belong first. */
+export const EDIT_RANGE: [min: number, max: number] = [8, 24];
+/**
+ * How many large furniture changes a Design may make: enough to furnish an empty room, or to remodel, as a
+ * Brief that turns a lounge into a bedroom needs (from #97). Removing an Original doesn't count.
+ */
+export const MAX_LARGE_CHANGES = 8;
 /** The most Pieces a Design may have (spec §2.3). */
 const MAX_PIECES = 25;
 /** Categories that are always large furniture. Shelves, tables, storage and chairs are when they are big. */
@@ -50,9 +61,14 @@ const LARGE: Category[] = ['bed', 'sofa', 'desk', 'dresser', 'wardrobe'];
 const SIZEABLE: Category[] = ['shelf', 'table', 'storage', 'chair'];
 const SIZEABLE_AREA = 0.6;
 const SIZEABLE_HEIGHT = 1.2;
-/** What counts as a large furniture change, for the system prompt: the rule `isLarge` and the removed Originals count by. */
+/** What counts as a large furniture change, for the system prompt: the rule `isLarge` and the replaced or moved Originals count by. */
 export const LARGE_CHANGES = `placing a ${LARGE.join(', ')}, or a ${SIZEABLE.join(', ')} of ${SIZEABLE_AREA} m² or more or `
-  + `${SIZEABLE_HEIGHT} m or taller; or replacing or removing one of the room's Originals`;
+  + `${SIZEABLE_HEIGHT} m or taller; or replacing or moving one of the room's Originals (removing one doesn't count)`;
+/**
+ * The keys of a tool's input that name something in the room, which may be the Catalog id of a Piece placed earlier.
+ * Not make_corner's chair_id: a Catalog id there is a chair to place.
+ */
+const ROOM_ID_KEYS = ['target_id', 'near_id', 'over_id', 'under_id', 'bed_id', 'on_id'];
 /** How far a replacing Piece slides along its width to clear a Fit rule, each way, nearest first. */
 const REPLACE_SLIDES = [0, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3];
 
@@ -74,6 +90,9 @@ const color = z.string().describe('A hex color, "#rrggbb"');
 const anchorSchema = z.union([
   z.object({ kind: z.literal('against_wall'), wall_id: z.string(), along })
     .describe('Back flush to a wall, at that spot along it'),
+  z.object({ kind: z.literal('in_corner'), wall_id: z.string(), end: z.enum(['left', 'right']) })
+    .describe("Snug in the corner at a wall's left or right end: a bed lies along the wall, long side flush and head in the corner, "
+      + "which opens up a small room's floor; anything else stands back to the wall there"),
   z.object({ kind: z.literal('beside'), target_id: z.string(), side: z.enum(['left', 'right', 'front']) })
     .describe("Next to an Original or Piece, backs in line; left and right as seen facing the target's front. 'front' faces it, like a chair at a desk"),
   z.object({ kind: z.literal('under_window'), opening_id: z.string() }).describe('Centered below a window'),
@@ -111,18 +130,28 @@ const finishTarget = z.union([
 ]);
 
 /** A new Design session, with the 7 tools of spec §13.2 that change it. */
-export function createSession({ setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS }: DesignContext): DesignSession {
+export function createSession({
+  setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS, maxLargeChanges = MAX_LARGE_CHANGES, onEdit, takenNames,
+}: DesignContext): DesignSession {
   let edits: Edit[] = [];
   let state = replay(setup, catalog, edits);
   let finished: DesignSession['finished'];
   let toolCalls = 0;
+  // finish_design sends Claude back at most once for what the Design lacks, and once for a name another take has.
   let sentBack = false;
+  let renamed = false;
 
-  const catalogItem = (id: string) => catalog.items.find((candidate) => candidate.id === id);
+  const catalogItems = new Map(catalog.items.map((item) => [item.id, item]));
+  const catalogItem = (id: string) => catalogItems.get(id);
   const pieces = () => Object.values(state.pieces).map((piece) => ({ ...piece, item: catalogItem(piece.catalogId)! }));
   const totalUsd = () => pieces().reduce((total, { item }) => total + item.priceEstimateUsd, 0);
   /** Each Original replaced, removed or moved (Kept ones can't be), and each large Piece placed new. */
-  const largeChanges = () => state.patches.length + pieces().filter(({ item, replacesOriginalId }) => !replacesOriginalId && isLarge(item)).length;
+  /** Each Original replaced or moved (Kept ones can't be), and each large Piece placed new. Removing an Original doesn't count. */
+  const largeChanges = () => pieces().filter(({ replacesOriginalId }) => replacesOriginalId).length
+    + Object.values(state.originals).filter(({ moved }) => moved).length
+    + pieces().filter(({ item, replacesOriginalId }) => !replacesOriginalId && isLarge(item)).length;
+  /** The Edits that count toward EDIT_RANGE: all but removals. */
+  const counted = () => edits.filter(({ type }) => type !== 'remove').length;
   const original = (id: string) => setup.originals.find((candidate) => candidate.id === id);
   const inRoom = (id: string) => roomItems(setup, catalog, state).find((candidate) => candidate.id === id)
     ?? fail(`The room has no Original or Piece "${id}"`);
@@ -130,19 +159,30 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
 
   /** Appends an Edit by Claude and replays the Design, or fails with why replay would skip it. */
   function apply(fields: DistributiveOmit<Edit, 'id' | 'at' | 'by'>) {
-    if (edits.length >= EDIT_RANGE[1]) fail(`This Design has ${EDIT_RANGE[1]} Edits, the most it may have: call finish_design`);
+    if (fields.type !== 'remove' && counted() >= EDIT_RANGE[1]) fail(`This Design has ${EDIT_RANGE[1]} Edits, the most it may have: call finish_design`);
     const edit = { ...fields, id: newId('ed'), at: new Date().toISOString(), by: 'claude' } as Edit;
     const next = replay(setup, catalog, [...edits, edit]);
     const skipped = next.skipped.find(({ editId }) => editId === edit.id);
     if (skipped) fail(SKIPPED[skipped.reason]);
     edits = [...edits, edit];
     state = next;
+    onEdit?.(edit);
   }
+
+  /** Places a Piece of `item` where the Anchor says, with every check: its id, or a ToolError saying why not. */
+  function place(item: CatalogItem, anchor: Anchor): string {
+    checkRoomFor(item, isLarge(item));
+    const placement = resolved(resolveAnchor(setup, catalog, state, item, anchor, { shelfLevels }));
+    const pieceId = newId('pc');
+    apply({ type: 'place', pieceId, catalogId: item.id, placement });
+    return pieceId;
+  }
+  const draft: Draft = { setup, item: catalogItem, inRoom, items: () => roomItems(setup, catalog, state), place };
 
   /** Fails unless the Design can take one more large furniture change. */
   function checkLargeChange() {
-    if (largeChanges() >= MAX_LARGE_CHANGES) {
-      fail(`This Design already has ${MAX_LARGE_CHANGES} large furniture changes, the most it may have: decorate instead`);
+    if (largeChanges() >= maxLargeChanges) {
+      fail(`This Design already has ${maxLargeChanges} large furniture changes, the most it may have: decorate instead`);
     }
   }
   /** Fails unless the Design can still add `item`: within the budget and the Piece count, and a large change if it is one. */
@@ -161,6 +201,25 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
   });
 
   /**
+   * The id of something in the room that `id` names: itself, or for the Catalog id of a Piece placed
+   * earlier, that Piece: the latest of them, or with "#2", the second placed. Claude places furniture and
+   * decorates around it in one reply, before the Piece ids come back with the reply's results.
+   */
+  function roomId(id: string): string {
+    if (state.originals[id] || state.pieces[id] || setup.openings.some((opening) => opening.id === id)) return id;
+    const [, catalogId, nth] = /^(.+?)(?:#(\d+))?$/.exec(id)!;
+    const placed = Object.entries(state.pieces).filter(([, piece]) => piece.catalogId === catalogId);
+    return (nth ? placed[Number(nth) - 1] : placed.at(-1))?.[0] ?? id;
+  }
+  /** A tool's input with each id of something in the room as roomId reads it. */
+  function withRoomIds<T>(input: T): T {
+    if (Array.isArray(input)) return input.map(withRoomIds) as T;
+    if (!input || typeof input !== 'object') return input;
+    return Object.fromEntries(Object.entries(input).map(([key, value]) =>
+      [key, ROOM_ID_KEYS.includes(key) && typeof value === 'string' ? roomId(value) : withRoomIds(value)])) as T;
+  }
+
+  /**
    * A tool of the session: counted, closed once the Design is finished, and strict unless `strict` is
    * false. betaZodTool checks every input against its schema either way.
    */
@@ -174,7 +233,16 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
           if (finished) fail('The Design is finished');
           if (name !== 'finish_design' && toolCalls >= maxToolCalls) fail('No tool calls are left: call finish_design now');
           toolCalls++;
-          return JSON.stringify(run(input));
+          try {
+            const result = run(withRoomIds(input));
+            const { skipped } = result as { skipped?: unknown[] };
+            if (skipped?.length) console.warn(`[generate] ${name} skipped ${JSON.stringify(skipped)}`);
+            return JSON.stringify(result);
+          } catch (error) {
+            // Every failure goes back to Claude, and costs it a turn: worth seeing on the server too.
+            console.warn(`[generate] ${name} failed: ${(error as Error).message}`);
+            throw error;
+          }
         },
       }),
       ...(strict && { strict: true }),
@@ -182,6 +250,50 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
   }
 
   const tools = [
+    tool(
+      'hang_gallery',
+      `A gallery wall in one call: 1 to 4 frames or mirrors in a row over a bed, sofa or desk, the widest in the middle, `
+        + `${GALLERY_GAP} m apart, centered over it at ${CENTER_HEIGHT} m or higher to clear it. If the wall can't take them, it tries `
+        + 'another wall the target stands against. Reports what it hung, and what it skipped and why.',
+      z.object({
+        over_id: z.string().describe('The bed, sofa or desk to hang over'),
+        wall_id: z.string().describe('The wall behind it, from decor.wall_spans'),
+        catalog_ids: z.array(z.string()).describe('The frames, each a different Catalog item'),
+      }),
+      (input) => hangGallery(draft, input),
+    ),
+    tool(
+      'lay_rug',
+      'A rug under a bed or sofa, about a third of it under, or centered under a table so its chairs stand on it too; '
+        + 'or on the open floor nearest it when it can\'t go under.',
+      z.object({ catalog_id: z.string(), under_id: z.string() }),
+      (input) => layRug(draft, input),
+    ),
+    tool(
+      'make_corner',
+      'A reading corner, or any spot to sit, in one call: the chair on the open floor nearest near_id (a window\'s Opening id, '
+        + 'an Original or a Piece), the lamp beside it, and the side item on its other side. A table lamp goes on the side item '
+        + 'when that is a table; a floor lamp stands beside the chair. The chair can be one already in the room: it stays where it is.',
+      z.object({
+        chair_id: z.string().describe('A Catalog chair, or the id of a chair already in the room'),
+        lamp_id: z.string().describe('A lamp, or "" for none'),
+        side_id: z.string().describe('A side table, plant or decor, or "" for none'),
+        near_id: z.string().describe('A window\'s Opening id, or an Original or Piece'),
+      }),
+      (input) => makeCorner(draft, input),
+    ),
+    tool(
+      'dress_bed',
+      'Pillows and throws resting on a bed\'s bedding, against the headboard first.',
+      z.object({ bed_id: z.string(), catalog_ids: z.array(z.string()) }),
+      (input) => dressBed(draft, input),
+    ),
+    tool(
+      'style_tops',
+      'Decor, plants and table lamps resting on furniture tops from decor.tops: desks, dressers, nightstands and shelves.',
+      z.object({ items: z.array(z.object({ catalog_id: z.string(), on_id: z.string() })) }),
+      (input) => styleTops(draft, input),
+    ),
     tool(
       'search_catalog',
       'Search the Catalog of real items. Returns items with their id, title, size [width, height, depth] in meters, colors, '
@@ -197,7 +309,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       }),
       ({ category, text, color: colorName, max_width_m, max_depth_m, max_price_usd, limit = 10 }) => ({
         items: search(catalog, { category, text, color: colorName, maxSize: [max_width_m ?? Infinity, Infinity, max_depth_m ?? Infinity], limit: Infinity })
-          .filter(({ item }) => max_price_usd === undefined || item.priceEstimateUsd <= max_price_usd)
+          .filter(({ item }) => offeredToClaude(item) && (max_price_usd === undefined || item.priceEstimateUsd <= max_price_usd))
           .slice(0, limit)
           .map(({ item }) => catalogEntry(item)),
       }),
@@ -210,10 +322,8 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       z.object({ catalog_id: z.string(), anchor: anchorSchema }),
       ({ catalog_id, anchor }) => {
         const item = requireItem(catalog_id);
-        checkRoomFor(item, isLarge(item));
-        const placement = resolved(resolveAnchor(setup, catalog, state, item, anchor, { shelfLevels }));
-        const pieceId = newId('pc');
-        apply({ type: 'place', pieceId, catalogId: item.id, placement });
+        const pieceId = place(item, anchor);
+        const { placement } = state.pieces[pieceId];
         const levels = shelfLevels[item.id]?.map(({ height, clearance }, level) => ({
           level, height_m: m(height), ...(Number.isFinite(clearance) && { room_above_m: m(clearance) }),
         }));
@@ -295,15 +405,18 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
     ),
     tool(
       'remove',
-      "Remove a Piece, or an Original that isn't Kept. Removing an Original is a large furniture change.",
-      z.object({ target_id: z.string() }),
-      ({ target_id }) => {
-        const { name } = inRoom(target_id);
-        const scanned = original(target_id);
-        if (scanned?.kept) fail(keptMessage(name));
-        if (scanned) checkLargeChange();
-        apply({ type: 'remove', targetId: target_id });
-        return { ok: true, ...spent() };
+      "Remove Pieces, or Originals that aren't Kept: one or many in one call, as when a remodel clears the room. "
+        + "Removals don't count toward the Edit or large-change limits.",
+      z.object({ target_ids: z.array(z.string()) }),
+      ({ target_ids }) => {
+        const ids = [...new Set(target_ids)];
+        // Check them all before removing any, so a bad id leaves the Design as it was.
+        for (const id of ids) {
+          const { name } = inRoom(id);
+          if (original(id)?.kept) fail(keptMessage(name));
+        }
+        for (const id of ids) apply({ type: 'remove', targetId: id });
+        return { ok: true, removed: ids.length, ...spent() };
       },
     ),
     tool(
@@ -317,16 +430,28 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       ({ name, rationale, palette }) => {
         const words = name.trim().split(/\s+/).length;
         if (words > 3) fail(`The name "${name}" has ${words} words: use 3 or fewer`);
+        // What the room lacks, and what the review flags, go back together: one more turn at most.
         const lacking = missing();
-        if (lacking.length && !sentBack && toolCalls < maxToolCalls) {
+        const flags = reviewFlags(setup, catalog, state);
+        if ((lacking.length || flags.length) && !sentBack && toolCalls < maxToolCalls) {
           sentBack = true;
-          fail(`Not finished: ${lacking.join('. ')}. Add them, then call finish_design again`);
+          fail([
+            ...(lacking.length ? [`Not finished: ${lacking.join('. ')}. Add them.`] : []),
+            ...(flags.length ? [`Review: ${flags.join('. ')}. Fix each, or keep it on purpose.`] : []),
+            'Then call finish_design again',
+          ].join(' '));
+        }
+        const taken = [...(takenNames ?? [])].find((other) => other.toLowerCase() === name.trim().toLowerCase());
+        if (taken && !renamed) {
+          renamed = true;
+          fail(`Another take on this Brief is called "${taken}": give this one a name of its own`);
         }
         finished = {
           name: name.trim(),
           rationale: rationale.trim().split('\n')[0],
           palette: { wall: checkHex(palette.wall), accents: palette.accents.map(checkHex), materials: palette.materials },
         };
+        takenNames?.add(finished.name);
         return { ok: true };
       },
     ),
@@ -343,8 +468,8 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       !has('decor', 'plant').some(({ placement }) => placement.mount === 'surface') && 'decor on the bed or a furniture top',
     ].filter((need): need is string => !!need);
     return [
-      ...(edits.length < EDIT_RANGE[0]
-        ? [`this Design has ${edits.length} Edit${edits.length === 1 ? '' : 's'}, and needs ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]}`] : []),
+      ...(counted() < EDIT_RANGE[0]
+        ? [`this Design has ${counted()} Edit${counted() === 1 ? '' : 's'} besides removals, and needs ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]}`] : []),
       ...(needs.length ? [`It still needs ${needs.join(', ')}`] : []),
     ];
   }

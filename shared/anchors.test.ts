@@ -139,9 +139,12 @@ describe('resolveAnchor', () => {
       });
     });
 
-    it('is the only Anchor for an item that hangs on a wall', () => {
+    it('is the only Anchor for an item that hangs on a wall, and only for one', () => {
       expect(resolve(print, { kind: 'against_wall', wall_id: 'wl_west', along: 'center' })).toEqual({
         error: 'Fern Print hangs on a wall: use on_wall', violations: [],
+      });
+      expect(resolve(sofa, { kind: 'on_wall', wall_id: 'wl_west', along: 'center' })).toEqual({
+        error: 'Gray Sofa stands on the floor: on_wall is for wall items', violations: [],
       });
     });
 

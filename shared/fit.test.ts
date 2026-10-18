@@ -193,6 +193,7 @@ describe('checkFit', () => {
         item('sofa-gray', 'sofa', 'Gray Sofa', [2, 0.85, 0.9]),
         item('dresser-oak', 'dresser', 'Oak Dresser', [0.8, 0.8, 0.45]),
         item('nightstand-oak', 'nightstand', 'Oak Nightstand', [0.45, 0.6, 0.4]),
+        item('bench-storage', 'storage', 'Storage Bench', [2.45, 0.5, 0.9]),
       ],
     };
     const walkwayAfter = (edits: Edit[], subjectIds?: string[]) =>
@@ -209,6 +210,19 @@ describe('checkFit', () => {
       expect(walkwayAfter([sofa])).toEqual([
         { rule: 'walkway', subjectId: 'og_bed', otherId: 'op_door', message: 'No clear path from the door' },
         { rule: 'walkway', subjectId: 'pc_sofa', otherId: 'og_bed', message: 'Blocks the path to your bed' },
+      ]);
+    });
+
+    it("still counts an item in the door's swing, when people can come in past it", () => {
+      // Run north–south, the bench takes x 0 to 0.9 and z −1.05 to 1.4: its south end is in the swing, by the
+      // hinge at x = 0.8. It shuts the bed off from the door, and leaves 0.5 m in front of the desk.
+      // Past x = 1.2, the doorway is open.
+      const bench = place('pc_bench', 'bench-storage', onFloor(0.45, 0.175, Math.PI / 2));
+
+      expect(checkFit(setup, furniture, replay(setup, furniture, [bench]), ['pc_bench'])).toEqual([
+        { rule: 'door-swing', subjectId: 'pc_bench', otherId: 'op_door', message: 'Blocks the door' },
+        { rule: 'walkway', subjectId: 'pc_bench', otherId: 'og_bed', message: 'Blocks the path to your bed' },
+        { rule: 'walkway', subjectId: 'pc_bench', otherId: 'og_desk', message: 'Blocks the path to your desk' },
       ]);
     });
 
@@ -247,7 +261,7 @@ describe('checkFit', () => {
 
       expect(times.toSorted((a, b) => a - b)[10]).toBeLessThan(5);
     });
-  
+
     it('lets a chair stand pulled up to a desk: it gets pulled out to sit down', () => {
       expect(walkwayAfter([place('pc_chair', 'chair-ergo', onFloor(1.1, -0.6, Math.PI / 2))])).toEqual([]);
     });

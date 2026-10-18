@@ -1,6 +1,6 @@
-import { checkFit } from './fit';
-import { distanceToWall, footprint, type OrientedRect, pointInPolygon, rectInPolygon, rectsOverlap, wallPoint } from './geometry';
-import type { Catalog, CatalogItem, Category, FitViolation, Placement, RoomSetup, RoomState, Vec2, Vec3, Wall } from './types';
+import { checkFit, type Item, roomItems, TOLERANCE } from './fit';
+import { distanceToWall, footprint, type OrientedRect, polygonsOverlap, rectCorners, rectInPolygon, wallPoint } from './geometry';
+import type { Catalog, CatalogItem, FitViolation, Placement, RoomSetup, RoomState, Vec2, Wall } from './types';
 
 /** How far, in meters, each step slides a Placement that breaks a Fit rule; also the spacing of open-floor spots. */
 const STEP = 0.1;
@@ -14,8 +14,6 @@ const OPEN_FLOOR_TRIES = SLIDES.length;
 const OPEN_FLOOR_SPREAD = 0.5;
 /** How high the center of a wall item hangs unless the Anchor says otherwise: 57″, the gallery standard. */
 const CENTER_HEIGHT = 1.45;
-/** How far, in meters, open-floor spots may touch walls and furniture, as the Fit rules allow: so they can stand flush. */
-const TOLERANCE = 0.01;
 /** Slack for floating point when a slide is checked against how far it may go. */
 const EPSILON = 1e-9;
 
@@ -41,25 +39,23 @@ export type Resolution = { placement: Placement } | { error: string; violations:
 /** The Placements an Anchor allows, the one nearest to what it asks for first, and what to say when none fits. */
 interface Request { candidates: Placement[]; noFit: string }
 
-/** An Original or Piece in the room: where it stands now, and its [w, h, d] size. */
-interface Thing { id: string; category: Category; placement: Placement; size: Vec3 }
-
 /** The Placement an Anchor stands for, for a new Piece of `item` in the room (spec §13.2). */
 export function resolveAnchor(setup: RoomSetup, catalog: Catalog, state: RoomState, item: CatalogItem, anchor: Anchor): Resolution {
-  const request = requestFor(setup, thingsIn(setup, catalog, state), item, anchor);
+  const request = requestFor(setup, roomItems(setup, catalog, state), item, anchor);
   if ('error' in request) return { error: request.error, violations: [] };
   const withItem = { ...catalog, items: [...catalog.items, item] };
   // The new Piece goes by its Catalog id while it is checked, so that is how violations name it.
   const violations = (placement: Placement) => checkFit(setup, withItem, {
     ...state, pieces: { ...state.pieces, [item.id]: { catalogId: item.id, placement, partColors: {} } },
   }, [item.id]);
-  const placement = request.candidates.find((candidate) => !violations(candidate).length);
-  if (placement) return { placement };
-  const [asked] = request.candidates;
-  return { error: request.noFit, violations: asked ? violations(asked) : [] };
+  const [asked, ...slid] = request.candidates;
+  const askedViolations = asked ? violations(asked) : [];
+  if (asked && !askedViolations.length) return { placement: asked };
+  const placement = slid.find((candidate) => !violations(candidate).length);
+  return placement ? { placement } : { error: request.noFit, violations: askedViolations };
 }
 
-function requestFor(setup: RoomSetup, things: Thing[], item: CatalogItem, anchor: Anchor): Request | { error: string } {
+function requestFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anchor: Anchor): Request | { error: string } {
   const [width, height, depth] = item.size;
   /** The Placement and its slides along `axis`, a unit vector, up to `range` each way. */
   const sliding = (placement: Placement, [ax, az]: Vec2, [min, max] = [-Infinity, Infinity]): Request => ({
@@ -81,70 +77,68 @@ function requestFor(setup: RoomSetup, things: Thing[], item: CatalogItem, anchor
       : { position: [x, centerHeight - height / 2, z], rotationY, mount: 'wall', wallId: wall.id };
     return sliding(placement, direction(wall), [width / 2 - along, wallLength(wall) - width / 2 - along]);
   };
-  const thing = (id: string) => things.find((candidate) => candidate.id === id);
-  const noThing = (id: string) => ({ error: `The room has no Original or Piece "${id}"` });
+  const wallOf = (id: string) => setup.walls.find((wall) => wall.id === id);
+  const targetOf = (id: string) => inRoom.find((target) => target.id === id);
   const noWall = (id: string) => ({ error: `The room has no wall "${id}"` });
+  const noTarget = (id: string) => ({ error: `The room has no Original or Piece "${id}"` });
 
+  // A wall item only hangs, and only a wall item hangs.
   if (item.mount === 'wall' && anchor.kind !== 'on_wall') return { error: `${item.title} hangs on a wall: use on_wall` };
+  if (item.mount !== 'wall' && anchor.kind === 'on_wall') return { error: `${item.title} stands on the floor: on_wall is for wall items` };
   switch (anchor.kind) {
-    case 'against_wall': {
-      const wall = setup.walls.find(({ id }) => id === anchor.wall_id);
-      return wall ? flushTo(wall, fromStart(wall, width, anchor.along)) : noWall(anchor.wall_id);
-    }
+    case 'against_wall':
     case 'on_wall': {
-      const wall = setup.walls.find(({ id }) => id === anchor.wall_id);
-      return wall ? flushTo(wall, fromStart(wall, width, anchor.along), anchor.center_height_m ?? CENTER_HEIGHT) : noWall(anchor.wall_id);
+      const wall = wallOf(anchor.wall_id);
+      if (!wall) return noWall(anchor.wall_id);
+      return flushTo(wall, fromStart(wall, width, anchor.along), anchor.kind === 'on_wall' ? anchor.center_height_m ?? CENTER_HEIGHT : undefined);
     }
     case 'under_window': {
       const window = setup.openings.find(({ id }) => id === anchor.opening_id);
       if (!window) return { error: `The room has no window "${anchor.opening_id}"` };
       if (window.kind !== 'window') return { error: `${window.id} is a ${window.kind}, not a window` };
-      const wall = setup.walls.find(({ id }) => id === window.wallId);
+      const wall = wallOf(window.wallId);
       return wall ? flushTo(wall, window.offset + window.width / 2) : noWall(window.wallId);
     }
     case 'beside': {
-      const target = thing(anchor.target_id);
-      if (!target) return noThing(anchor.target_id);
-      const { placement: { rotationY }, size: [targetWidth, , targetDepth] } = target;
+      const target = targetOf(anchor.target_id);
+      if (!target) return noTarget(anchor.target_id);
+      const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
       // Beside it, backs in line; in front of it, facing it. Either way it slides along the target's width.
-      const [across, out] = anchor.side === 'front'
-        ? [0, targetDepth / 2 + depth / 2]
-        : [(anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2), depth / 2 - targetDepth / 2];
+      const [across, out, turn] = anchor.side === 'front'
+        ? [0, targetDepth / 2 + depth / 2, Math.PI]
+        : [(anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2), depth / 2 - targetDepth / 2, 0];
       const [x, z] = inFrameOf(target.placement, [across, out]);
-      const turn = anchor.side === 'front' ? Math.PI : 0;
       return sliding({ position: [x, 0, z], rotationY: turned(rotationY + turn), mount: 'floor' }, rightOf(rotationY));
     }
     case 'on_top_of': {
-      const target = thing(anchor.target_id);
-      if (!target) return noThing(anchor.target_id);
-      const { placement: { position: [x, y, z], rotationY }, size: [targetWidth, targetHeight, targetDepth] } = target;
+      const target = targetOf(anchor.target_id);
+      if (!target) return noTarget(anchor.target_id);
+      const { placement: { position: [x, , z], rotationY }, rect: { size: [targetWidth, targetDepth] }, heights: [, top] } = target;
       if (width > targetWidth + EPSILON || depth > targetDepth + EPSILON) {
         return { error: `${item.title} doesn't fit on top of ${anchor.target_id}` };
       }
       // Across the top, never off its sides.
       const room = (targetWidth - width) / 2;
-      return sliding({ position: [x, y + targetHeight, z], rotationY, mount: 'surface' }, rightOf(rotationY), [-room, room]);
+      return sliding({ position: [x, top, z], rotationY, mount: 'surface' }, rightOf(rotationY), [-room, room]);
     }
     case 'centered_under': {
       if (item.category !== 'rug') {
         return { error: `Only a rug goes centered under something: ${item.title} is a ${item.category.replace('_', ' ')}` };
       }
-      const target = thing(anchor.target_id);
-      if (!target) return noThing(anchor.target_id);
-      const { placement: { rotationY }, size: [, , targetDepth] } = target;
+      const target = targetOf(anchor.target_id);
+      if (!target) return noTarget(anchor.target_id);
+      const { placement: { rotationY }, rect: { size: [, targetDepth] } } = target;
       // Its long side runs across the target, as a rug goes under a bed or a sofa. A third of
       // how far it reaches out goes under the target's front, so its center is a sixth past it.
-      const longAcross = width >= depth;
-      const reach = longAcross ? depth : width;
+      const [reach, turn] = width >= depth ? [depth, 0] : [width, Math.PI / 2];
       const [x, z] = inFrameOf(target.placement, [0, targetDepth / 2 + reach / 6]);
-      const turn = longAcross ? 0 : Math.PI / 2;
       // It slides further under the target or out from it, staying centered.
       return sliding({ position: [x, 0, z], rotationY: turned(rotationY + turn), mount: 'floor' }, frontOf(rotationY));
     }
     case 'open_floor': {
-      const near = anchor.near_id === undefined ? undefined : thing(anchor.near_id);
-      if (anchor.near_id !== undefined && !near) return noThing(anchor.near_id);
-      return { candidates: openFloor(setup, things, item, near), noFit: `No open floor fits ${item.title}` };
+      const near = anchor.near_id === undefined ? undefined : targetOf(anchor.near_id);
+      if (anchor.near_id !== undefined && !near) return noTarget(anchor.near_id);
+      return { candidates: openFloor(setup, inRoom, item, near), noFit: `No open floor fits ${item.title}` };
     }
   }
 }
@@ -154,19 +148,15 @@ function requestFor(setup: RoomSetup, things: Thing[], item: CatalogItem, anchor
  * walls and furniture, or the nearest to `near`. Open floor is floor no furniture stands on, and
  * for a rug, no other rug lies on. The Fit rules, the walkway among them, then pick among them.
  */
-function openFloor(setup: RoomSetup, things: Thing[], item: CatalogItem, near?: Thing): Placement[] {
+function openFloor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, near?: Item): Placement[] {
   const { polygon } = setup.floor;
-  const obstacles = things
-    .filter(({ category, placement }) => placement.mount === 'floor' && (category !== 'rug' || item.category === 'rug'))
-    .map(({ placement, size }) => footprint(placement, size));
-  const nearRect = near && footprint(near.placement, near.size);
+  const obstacles = inRoom.filter(({ category, placement }) => placement.mount === 'floor' && (category !== 'rug' || item.category === 'rug'));
   const [minX, minZ] = [Math.min(...polygon.map(([x]) => x)), Math.min(...polygon.map(([, z]) => z))];
   const [cols, rows] = [Math.max(...polygon.map(([x]) => x)) - minX, Math.max(...polygon.map(([, z]) => z)) - minZ].map((extent) => Math.floor(extent / STEP));
   const spots: { placement: Placement; clearance: number; nearness: number }[] = [];
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       const point: Vec2 = [minX + (i + 0.5) * STEP, minZ + (j + 0.5) * STEP];
-      if (!pointInPolygon(point, polygon)) continue;
       // The walls it faces, by the distance to their planes: in a room with an inner corner, a
       // wall's plane can pass nearer than the wall itself, which only makes the spot look smaller.
       const walls = setup.walls.map((wall) => ({ wall, distance: distanceToWall(point, wall) })).filter(({ distance }) => distance >= 0);
@@ -174,9 +164,10 @@ function openFloor(setup: RoomSetup, things: Thing[], item: CatalogItem, near?: 
       const nearest = walls.reduce((a, b) => (b.distance < a.distance ? b : a));
       const placement: Placement = { position: [point[0], 0, point[1]], rotationY: facing(nearest.wall.normal), mount: 'floor' };
       const rect = footprint(placement, item.size);
-      if (!rectInPolygon(rect, polygon, TOLERANCE) || obstacles.some((obstacle) => rectsOverlap(rect, obstacle, TOLERANCE))) continue;
-      const clearance = Math.min(nearest.distance, ...obstacles.map((obstacle) => distanceToRect(point, obstacle)));
-      spots.push({ placement, clearance, nearness: nearRect ? distanceToRect(point, nearRect) : 0 });
+      const corners = rectCorners(rect);
+      if (!rectInPolygon(rect, polygon, TOLERANCE) || obstacles.some((obstacle) => polygonsOverlap(corners, obstacle.corners, TOLERANCE))) continue;
+      const clearance = Math.min(nearest.distance, ...obstacles.map((obstacle) => distanceToRect(point, obstacle.rect)));
+      spots.push({ placement, clearance, nearness: near ? distanceToRect(point, near.rect) : 0 });
     }
   }
   const tries: Placement[] = [];
@@ -186,20 +177,6 @@ function openFloor(setup: RoomSetup, things: Thing[], item: CatalogItem, near?: 
     if (tries.length === OPEN_FLOOR_TRIES) break;
   }
   return tries;
-}
-
-/** The visible Originals and the Pieces of a room. */
-function thingsIn(setup: RoomSetup, catalog: Catalog, state: RoomState): Thing[] {
-  const catalogItems = new Map(catalog.items.map((catalogItem) => [catalogItem.id, catalogItem]));
-  return [
-    ...setup.originals
-      .filter(({ id }) => state.originals[id]?.visible)
-      .map(({ id, category, box }) => ({ id, category, placement: state.originals[id].placement, size: box.size })),
-    ...Object.entries(state.pieces).flatMap(([id, { catalogId, placement }]) => {
-      const catalogItem = catalogItems.get(catalogId);
-      return catalogItem ? [{ id, category: catalogItem.category, placement, size: catalogItem.size }] : [];
-    }),
-  ];
 }
 
 /** The rotationY that turns an item's front (+Z) toward `direction`. */

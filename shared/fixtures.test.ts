@@ -97,7 +97,7 @@ describe('fixture Catalog', () => {
         id: true, source: true, title: true, category: true, mount: true, size: true, model: true,
         thumbnail: true, colors: true, materials: true, styleTags: true, priceEstimateUsd: true, url: true, attribution: true,
       }));
-      expect(oneOf<CatalogItem['source']>({ abo: true, polyhaven: true, gso: true, generated: true })).toContain(item.source);
+      expect(oneOf<CatalogItem['source']>({ abo: true, polyhaven: true, gso: true, generated: true, publicdomain: true })).toContain(item.source);
       expect(oneOf<CatalogItem['mount']>({ floor: true, wall: true })).toContain(item.mount);
       expect(CATEGORIES).toContain(item.category);
       expect(item.size).toHaveLength(3);

@@ -6,7 +6,7 @@ import type { BetaRunnableTool } from '@anthropic-ai/sdk/lib/tools/BetaRunnableT
 import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError';
 import { z } from 'zod';
 import {
-  type AnchorOptions, CENTER_HEIGHT, GALLERY_GAP, inPlaceOf, MAX_SLIDE, placementViolations, type Resolution, resolveAnchor,
+  type Anchor, type AnchorOptions, CENTER_HEIGHT, GALLERY_GAP, inPlaceOf, MAX_SLIDE, placementViolations, type Resolution, resolveAnchor,
 } from '../../shared/anchors';
 import { search } from '../../shared/catalog-search';
 import { roomItems } from '../../shared/fit';
@@ -67,42 +67,45 @@ const CATEGORIES = Object.keys({
 const isLarge = ({ category, size: [width, height, depth] }: CatalogItem) =>
   LARGE.includes(category) || (SIZEABLE.includes(category) && (width * depth >= SIZEABLE_AREA || height >= SIZEABLE_HEIGHT));
 
-const along = z.union([z.enum(['left', 'center', 'right']), z.number()])
-  .describe('Where along the wall, seen from inside the room facing it: "left", "center", "right", or a fraction from 0 (left end) to 1 (right end)');
+const along = z.number()
+  .describe('Where along the wall, seen from inside the room facing it: 0 is flush with its left end, 0.5 centered, 1 flush with its right end');
 const color = z.string().describe('A hex color, "#rrggbb"');
 
+// Every field is required: each optional one or union roughly doubles the grammar strict mode compiles,
+// and the whole set must stay under the API's limit. Claude writes the defaults the descriptions give.
 const anchorSchema = z.union([
   z.object({ kind: z.literal('against_wall'), wall_id: z.string(), along })
     .describe('Back flush to a wall, at that spot along it'),
   z.object({ kind: z.literal('beside'), target_id: z.string(), side: z.enum(['left', 'right', 'front']) })
     .describe("Next to an Original or Piece, backs in line; left and right as seen facing the target's front. 'front' faces it, like a chair at a desk"),
   z.object({ kind: z.literal('under_window'), opening_id: z.string() }).describe('Centered below a window'),
-  z.object({ kind: z.literal('on_wall'), wall_id: z.string(), along, center_height_m: z.number().optional() })
-    .describe(`Hung on a wall, its center ${CENTER_HEIGHT} m up unless center_height_m says otherwise`),
+  z.object({ kind: z.literal('on_wall'), wall_id: z.string(), along, center_height_m: z.number().describe(`${CENTER_HEIGHT} is the gallery standard`) })
+    .describe('Hung on a wall, its center that high'),
   z.object({
     kind: z.literal('on_wall_over'),
     target_id: z.string(),
-    wall_id: z.string().optional().describe("The wall to hang it on; by default the one the target's back is to"),
-    offset_m: z.number().optional().describe("How far right of the target's middle to center it, seen facing the wall; negative is left"),
-    center_height_m: z.number().optional().describe(`By default ${CENTER_HEIGHT} m, or higher to clear the target`),
-  }).describe('Hung on the wall centered over furniture standing against it, such as the first frame of a gallery wall over a bed'),
+    wall_id: z.string().describe('The wall the target stands against, from decor.wall_spans'),
+    offset_m: z.number().describe("How far right of the target's middle to center it, seen facing the wall; 0 centers it, negative is left"),
+  }).describe(`Hung on the wall over furniture standing against it, clear of it, at least ${CENTER_HEIGHT} m up at its center: the first frame of a gallery wall`),
   z.object({
     kind: z.literal('on_wall_beside'),
     target_id: z.string().describe('A wall item already hung, such as the first frame of a gallery wall'),
     side: z.enum(['left', 'right']).describe('Seen facing the wall'),
-    gap_m: z.number().optional().describe(`The gap between the two, ${GALLERY_GAP} m by default`),
-    center_height_m: z.number().optional().describe("By default, the target's center height"),
-  }).describe('Hung on the same wall beside another wall item, exactly the gap apart: the next frames of a gallery wall'),
-  z.object({
-    kind: z.literal('on_top_of'),
-    target_id: z.string(),
-    level: z.number().optional().describe('For a shelf: which of the shelf_levels place_piece gave, 0 at the bottom; without it, the top'),
-  }).describe('Resting on a furniture top: decor and plants on desks, dressers, nightstands and shelves; pillows on a bed rest on its bedding'),
+    gap_m: z.number().describe(`The gap between the two: ${GALLERY_GAP} m is usual`),
+  }).describe('Hung on the same wall beside another wall item, exactly the gap apart, centers level: the next frames of a gallery wall'),
+  z.object({ kind: z.literal('on_top_of'), target_id: z.string() })
+    .describe('Resting on a furniture top: decor and plants on desks, dressers, nightstands and shelves; pillows on a bed rest on its bedding'),
+  z.object({ kind: z.literal('on_shelf'), target_id: z.string(), level: z.number().describe('One of the shelf_levels place_piece gave for it, 0 at the bottom') })
+    .describe('Resting on one level of a shelf Piece'),
   z.object({ kind: z.literal('centered_under'), target_id: z.string() })
     .describe('A rug centered under a bed or sofa, about a third of it under'),
   z.object({ kind: z.literal('open_floor'), near_id: z.string().optional() })
     .describe('The largest free spot of floor, or the free spot nearest near_id'),
 ]);
+
+/** The shared Anchor a tool Anchor stands for: on_shelf is on_top_of at a level. */
+const toAnchor = (anchor: z.infer<typeof anchorSchema>): Anchor =>
+  (anchor.kind === 'on_shelf' ? { kind: 'on_top_of', target_id: anchor.target_id, level: anchor.level } : anchor);
 
 const finishTarget = z.union([
   z.object({ kind: z.literal('wall'), wall_id: z.string() }),
@@ -162,7 +165,9 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
 
   /**
    * A tool of the session: counted, closed once the Design is finished, and strict unless `strict` is
-   * false. betaZodTool checks every input against its schema either way.
+   * false. The API compiles every strict schema of a request into one grammar, and all 7 are over its
+   * size limit, so the strict ones are those whose input matters most. betaZodTool checks every input
+   * against its schema either way.
    */
   function tool<Input extends z.ZodObject>(name: string, description: string, inputSchema: Input, run: (input: z.infer<Input>) => object, strict = true) {
     return {
@@ -201,6 +206,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
           .slice(0, limit)
           .map(({ item }) => catalogEntry(item)),
       }),
+      false,
     ),
     tool(
       'place_piece',
@@ -211,7 +217,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       ({ catalog_id, anchor }) => {
         const item = requireItem(catalog_id);
         checkRoomFor(item, isLarge(item));
-        const placement = resolved(resolveAnchor(setup, catalog, state, item, anchor, { shelfLevels }));
+        const placement = resolved(resolveAnchor(setup, catalog, state, item, toAnchor(anchor), { shelfLevels }));
         const pieceId = newId('pc');
         apply({ type: 'place', pieceId, catalogId: item.id, placement });
         const levels = shelfLevels[item.id]?.map(({ height, clearance }, level) => ({
@@ -219,9 +225,6 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
         }));
         return { piece_id: pieceId, placement: placementForClaude(setup, placement, item), ...(levels && { shelf_levels: levels }), ...spent() };
       },
-      // Not strict: its Anchor union over the room's ids compiles to a grammar the API rejects as too
-      // large ("The compiled grammar is too large", 400 on every request).
-      false,
     ),
     tool(
       'replace_original',
@@ -266,6 +269,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
         apply({ type: 'recolor', targetId: target_id, partId: part_id, color: checkHex(hex) });
         return { ok: true };
       },
+      false,
     ),
     tool(
       'apply_finish',
@@ -292,6 +296,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
         apply({ type: 'finish', target: finishTargetOf(target), finish: { kind: 'material', materialId: material.id } });
         return { ok: true };
       },
+      false,
     ),
     tool(
       'remove',

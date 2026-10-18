@@ -33,11 +33,15 @@ async function call(session: DesignSession, name: string, input: unknown) {
 }
 
 describe('the Design tools', () => {
-  it('are the 7 tools of spec §13.2, each with a strict schema but place_piece, whose grammar is too large', () => {
+  it('are the 7 tools of spec §13.2: strict where the input matters most, as the API compiles no more', () => {
     expect(start().tools.map(({ name, strict }) => [name, strict])).toEqual([
-      ['search_catalog', true], ['place_piece', undefined], ['replace_original', true], ['recolor', true],
-      ['apply_finish', true], ['remove', true], ['finish_design', true],
+      ['search_catalog', undefined], ['place_piece', true], ['replace_original', true], ['recolor', undefined],
+      ['apply_finish', undefined], ['remove', true], ['finish_design', true],
     ]);
+  });
+
+  it('checks the input of a tool that is not strict against its schema all the same', async () => {
+    await expect(call(start(), 'recolor', { target_id: 'og_bed', part: 'bedding' })).rejects.toThrow();
   });
 
   describe('search_catalog', () => {
@@ -72,7 +76,7 @@ describe('the Design tools', () => {
       const session = start({ text: 'a sofa' });
 
       // The bed takes 2.03 m of the 3 m West wall, so a 2 m sofa against it always overlaps the bed.
-      await expect(call(session, 'place_piece', { catalog_id: 'sofa-gray', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 'center' } }))
+      await expect(call(session, 'place_piece', { catalog_id: 'sofa-gray', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 0.5 } }))
         .rejects.toThrow("Gray Sofa doesn't fit there, even slid up to 1 m either way. Fit violations: Overlaps your bed (overlap, og_bed)");
       expect(session.edits).toEqual([]);
     });
@@ -81,7 +85,7 @@ describe('the Design tools', () => {
       const session = start({ text: 'cozy', budgetUsd: 100 });
       await call(session, 'place_piece', { catalog_id: 'nightstand-oak', anchor: { kind: 'beside', target_id: 'og_bed', side: 'right' } });
 
-      await expect(call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall', wall_id: 'wl_south', along: 'right' } }))
+      await expect(call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall', wall_id: 'wl_south', along: 1, center_height_m: 1.45 } }))
         .rejects.toThrow('Fern Print (≈ $40) would take the estimated total to $110, and it must stay under the $100 budget: $30 is left');
     });
 
@@ -103,8 +107,8 @@ describe('the Design tools', () => {
       const levels = [0.17, 0.56, 0.95, 1.3, 1.59].map((height, i, all) => ({ height, center: [0, 0] as [number, number], size: [0.66, 0.36] as [number, number], clearance: (all[i + 1] ?? 1.89) - height - 0.02 }));
       const session = createSession({ setup, catalog: decorCatalog, brief: { text: 'books' }, materials, shelfLevels: { 'bookcase-tall': levels } });
 
-      const bookcase = await call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
-      const { piece_id } = await call(session, 'place_piece', { catalog_id: 'plant-fig', anchor: { kind: 'on_top_of', target_id: bookcase.piece_id, level: 1 } });
+      const bookcase = await call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 1 } });
+      const { piece_id } = await call(session, 'place_piece', { catalog_id: 'plant-fig', anchor: { kind: 'on_shelf', target_id: bookcase.piece_id, level: 1 } });
 
       expect(bookcase.shelf_levels).toEqual([
         { level: 0, height_m: 0.17, room_above_m: 0.37 }, { level: 1, height_m: 0.56, room_above_m: 0.37 }, { level: 2, height_m: 0.95, room_above_m: 0.33 },
@@ -117,7 +121,7 @@ describe('the Design tools', () => {
       const session = start();
 
       // The bed runs along the West wall from 0.97 to 3 m from its left (south) end: its middle is 1.985 m along.
-      const middle = await call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west' } });
+      const middle = await call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west', offset_m: 0 } });
       const next = await call(session, 'place_piece', {
         catalog_id: 'poster-city', anchor: { kind: 'on_wall_beside', target_id: middle.piece_id, side: 'left', gap_m: 0.08 },
       });
@@ -131,24 +135,22 @@ describe('the Design tools', () => {
       });
     });
 
-    it('hangs wall art clear of tall furniture, or fails saying what it would hang behind', async () => {
+    it('hangs wall art clear of tall furniture standing against the wall', async () => {
       const session = start({ text: 'storage' });
-      // The wardrobe takes the South wall's right end, x −2 to −1, 1.8 m up.
-      const wardrobe = await call(session, 'place_piece', { catalog_id: 'wardrobe-white', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
+      // The wardrobe takes the South wall's right end, x −2 to −1, 1.8 m up: the print slides east past it.
+      await call(session, 'place_piece', { catalog_id: 'wardrobe-white', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 1 } });
 
-      const slid = await call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall', wall_id: 'wl_south', along: 'right' } });
+      const slid = await call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall', wall_id: 'wl_south', along: 1, center_height_m: 1.45 } });
+
       expect(slid.placement.position_m[0]).toBeGreaterThanOrEqual(-0.75);
-      await expect(call(session, 'place_piece', {
-        catalog_id: 'poster-city', anchor: { kind: 'on_wall_over', target_id: wardrobe.piece_id, center_height_m: 1.2 },
-      })).rejects.toThrow(`Fit violations: Hangs behind White Wardrobe (overlap, ${wardrobe.piece_id})`);
     });
 
     it('allows at most 2 large furniture changes', async () => {
       const session = start({ text: 'cozy' });
-      await call(session, 'place_piece', { catalog_id: 'wardrobe-white', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
+      await call(session, 'place_piece', { catalog_id: 'wardrobe-white', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 1 } });
       await call(session, 'replace_original', { original_id: 'og_desk', catalog_id: 'desk-walnut' });
 
-      await expect(call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_east', along: 'right' } }))
+      await expect(call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_east', along: 1 } }))
         .rejects.toThrow('This Design already has 2 large furniture changes, the most it may have: decorate instead');
       // A reading chair isn't large furniture.
       await call(session, 'place_piece', { catalog_id: 'chair-reading', anchor: { kind: 'open_floor' } });
@@ -226,7 +228,7 @@ describe('the Design tools', () => {
     it('ends the Design with its name, rationale and Palette, once it decorates enough', async () => {
       const session = start({ text: 'cozy', budgetUsd: 400 });
       const place = (catalog_id: string, anchor: unknown) => call(session, 'place_piece', { catalog_id, anchor });
-      const middle = await place('print-fern', { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west' });
+      const middle = await place('print-fern', { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west', offset_m: 0 });
       await place('poster-city', { kind: 'on_wall_beside', target_id: middle.piece_id, side: 'right', gap_m: 0.06 });
       await place(rugs[0].id, { kind: 'open_floor' });
       await place('lamp-brass', { kind: 'on_top_of', target_id: 'og_desk' });

@@ -28,9 +28,9 @@ const decorate: Turn[] = [
   () => ({
     content: [
       // The bed takes 2.03 m of the 3 m West wall: a 2 m sofa against it can only overlap the bed.
-      use('toolu_sofa', 'place_piece', { catalog_id: 'sofa-gray', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 'center' } }),
+      use('toolu_sofa', 'place_piece', { catalog_id: 'sofa-gray', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 0.5 } }),
       use('toolu_paint', 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } }),
-      use('toolu_print', 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west' } }),
+      use('toolu_print', 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west', offset_m: 0 } }),
       use('toolu_rug', 'place_piece', { catalog_id: 'rug-gray', anchor: { kind: 'open_floor' } }),
       use('toolu_lamp', 'place_piece', { catalog_id: 'lamp-brass', anchor: { kind: 'on_top_of', target_id: 'og_desk' } }),
       use('toolu_pillow', 'place_piece', { catalog_id: 'pillow-navy', anchor: { kind: 'on_top_of', target_id: 'og_bed' } }),
@@ -40,7 +40,7 @@ const decorate: Turn[] = [
   }),
   (request) => ({
     content: [
-      use('toolu_poster', 'place_piece', { catalog_id: 'poster-city', anchor: { kind: 'on_wall_beside', target_id: pieceIdOf(request, 'toolu_print'), side: 'right' } }),
+      use('toolu_poster', 'place_piece', { catalog_id: 'poster-city', anchor: { kind: 'on_wall_beside', target_id: pieceIdOf(request, 'toolu_print'), side: 'right', gap_m: 0.08 } }),
       finish(request.direction === 'literal' ? 'Sage Nook' : 'Quiet Corner'),
     ],
   }),
@@ -87,13 +87,14 @@ describe('generateDesigns', () => {
     });
   });
 
-  it('asks Claude Opus 5.5 at low effort, with strict tools (but place_piece), auto tool choice and the default refusal fallback', async () => {
+  it('asks Claude Opus 5.5 at low effort, with auto tool choice, the default refusal fallback, and strict tools where they fit', async () => {
     const { client, requests } = fakeClaude({ literal: decorate });
     await generate(client).result;
 
     const [{ body, headers }] = requests;
     expect(body).toMatchObject({ model: 'claude-opus-5-5', output_config: { effort: 'low' }, tool_choice: { type: 'auto' }, fallbacks: 'default' });
-    expect(body.tools!.map((tool) => 'strict' in tool && tool.strict)).toEqual([true, false, true, true, true, true, true]);
+    expect(body.tools!.filter((tool) => 'strict' in tool && tool.strict).map((tool) => 'name' in tool && tool.name))
+      .toEqual(['place_piece', 'replace_original', 'remove', 'finish_design']);
     expect(headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
   });
 

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "oak",
+    "name": "Oak",
+    "kind": "wood",
+    "maps": {
+      "color": "/data/materials/oak.jpg"
+    },
+    "tileSize": 1.83,
+    "source": "Poly Haven oak_veneer_01 (CC0)"
+  },
+  {
+    "id": "walnut",
+    "name": "Walnut",
+    "kind": "wood",
+    "maps": {
+      "color": "/data/materials/walnut.jpg"
+    },
+    "tileSize": 1,
+    "source": "Poly Haven black_walnut_veneer_02 (CC0)"
+  },
+  {
+    "id": "maple",
+    "name": "Maple",
+    "kind": "wood",
+    "maps": {
+      "color": "/data/materials/maple.jpg"
+    },
+    "tileSize": 1,
+    "source": "Poly Haven white_maple_veneer (CC0)"
+  },
+  {
+    "id": "cherry",
+    "name": "Cherry",
+    "kind": "wood",
+    "maps": {
+      "color": "/data/materials/cherry.jpg"
+    },
+    "tileSize": 1,
+    "source": "Poly Haven lacquered_cherry_wood (CC0)"
+  },
+  {
+    "id": "marble",
+    "name": "Marble",
+    "kind": "stone",
+    "maps": {
+      "color": "/data/materials/marble.jpg"
+    },
+    "tileSize": 1.5,
+    "source": "ambientCG Marble005 (CC0)"
+  },
+  {
+    "id": "concrete",
+    "name": "Concrete",
+    "kind": "stone",
+    "maps": {
+      "color": "/data/materials/concrete.jpg"
+    },
+    "tileSize": 1.5,
+    "source": "ambientCG Concrete034 (CC0)"
+  },
+  {
+    "id": "linen",
+    "name": "Linen",
+    "kind": "fabric",
+    "maps": {
+      "color": "/data/materials/linen.jpg"
+    },
+    "tileSize": 0.27,
+    "source": "Poly Haven rough_linen (CC0)"
+  },
+  {
+    "id": "velvet",
+    "name": "Velvet",
+    "kind": "fabric",
+    "maps": {
+      "color": "/data/materials/velvet.jpg"
+    },
+    "tileSize": 0.28,
+    "source": "Poly Haven velour_velvet (CC0)"
+  },
+  {
+    "id": "leather",
+    "name": "Leather",
+    "kind": "fabric",
+    "maps": {
+      "color": "/data/materials/leather.jpg"
+    },
+    "tileSize": 0.4,
+    "source": "Poly Haven brown_leather (CC0)"
+  },
+  {
+    "id": "brushed-metal",
+    "name": "Brushed metal",
+    "kind": "metal",
+    "maps": {
+      "color": "/data/materials/brushed-metal.jpg"
+    },
+    "tileSize": 0.5,
+    "source": "ambientCG Metal009 (CC0)"
+  },
+  {
+    "id": "carpet-beige",
+    "name": "Beige carpet",
+    "kind": "carpet",
+    "maps": {
+      "color": "/data/materials/carpet-beige.jpg"
+    },
+    "tileSize": 0.8,
+    "source": "ambientCG Carpet014 (CC0)"
+  },
+  {
+    "id": "carpet-grey",
+    "name": "Grey carpet",
+    "kind": "carpet",
+    "maps": {
+      "color": "/data/materials/carpet-grey.jpg"
+    },
+    "tileSize": 1,
+    "source": "ambientCG Carpet001 (CC0)"
+  },
+  {
+    "id": "carpet-navy",
+    "name": "Navy carpet",
+    "kind": "carpet",
+    "maps": {
+      "color": "/data/materials/carpet-navy.jpg"
+    },
+    "tileSize": 0.6,
+    "source": "ambientCG Carpet012 (CC0)"
+  },
+  {
+    "id": "wallpaper-woodchip",
+    "name": "Woodchip wallpaper",
+    "kind": "wallpaper",
+    "maps": {
+      "color": "/data/materials/wallpaper-woodchip.jpg"
+    },
+    "tileSize": 1,
+    "source": "ambientCG Wallpaper001A (CC0)"
+  },
+  {
+    "id": "wallpaper-gingham",
+    "name": "Gingham wallpaper",
+    "kind": "wallpaper",
+    "maps": {
+      "color": "/data/materials/wallpaper-gingham.jpg"
+    },
+    "tileSize": 0.29,
+    "source": "Poly Haven gingham_check (CC0)"
+  },
+  {
+    "id": "wallpaper-striped",
+    "name": "Striped wallpaper",
+    "kind": "wallpaper",
+    "maps": {
+      "color": "/data/materials/wallpaper-striped.jpg"
+    },
+    "tileSize": 0.5,
+    "source": "ambientCG Fabric071 (CC0)"
+  },
+  {
+    "id": "tile-white",
+    "name": "White tile",
+    "kind": "tile",
+    "maps": {
+      "color": "/data/materials/tile-white.jpg"
+    },
+    "tileSize": 1,
+    "source": "ambientCG Tiles107 (CC0)"
+  },
+  {
+    "id": "tile-terracotta",
+    "name": "Terracotta tile",
+    "kind": "tile",
+    "maps": {
+      "color": "/data/materials/tile-terracotta.jpg"
+    },
+    "tileSize": 1.7,
+    "source": "Poly Haven brown_floor_tiles (CC0)"
+  }
+]

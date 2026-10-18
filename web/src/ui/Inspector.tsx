@@ -6,9 +6,9 @@ import { removePiece, rotatePiece } from '../scene/pieceEdits';
 import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget, targetBox } from '../scene/swapResize';
 import { closeResize, openResize, setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
+import { FinishPicker } from './inspector/FinishPicker';
 import { OriginalReplace } from './inspector/OriginalReplace';
 import { RecolorControl } from './inspector/RecolorControl';
-import { WallPaint } from './inspector/WallPaint';
 import './inspector.css';
 
 // The Inspector (spec §10.4): what is selected, and what can be done with it.
@@ -200,6 +200,7 @@ function OriginalInspector({ originalId }: { originalId: string }) {
         />
       )}
       <RecolorControl targetId={originalId} category={original.category} />
+      <FinishPicker target={{ kind: 'original', originalId, category: original.category }} />
     </>
   );
 }
@@ -211,7 +212,7 @@ function WallInspector({ wallId }: { wallId: string }) {
     <>
       <h2>{wall.name}</h2>
       <p className="muted">{wallLength(wall).toFixed(2)} m long, {wall.height.toFixed(2)} m high</p>
-      <WallPaint wallId={wallId} />
+      <FinishPicker target={{ kind: 'wall', wallId }} />
     </>
   );
 }
@@ -222,6 +223,7 @@ export function Inspector() {
   return (
     <aside className="inspector">
       {!selection && <p className="muted">Select a Piece, an Original, or a Wall.</p>}
+      {!selection && <><h2>Floor</h2><FinishPicker target={{ kind: 'floor' }} /></>}
       {selection?.kind === 'piece' && <PieceInspector key={selection.id} pieceId={selection.id} />}
       {selection?.kind === 'original' && <OriginalInspector key={selection.id} originalId={selection.id} />}
       {selection?.kind === 'wall' && <WallInspector key={selection.id} wallId={selection.id} />}

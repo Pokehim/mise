@@ -57,7 +57,8 @@ useEditor.subscribe((state, prev) => {
   if (run && state.design?.edits !== run.edits) useReveal.setState({ run: null });
   const opened = state.status === 'ready' && (prev.status !== 'ready' || prev.design?.id !== state.design?.id);
   // ?shot= is a screenshot of the finished room.
-  if (opened && state.design?.origin === 'claude' && !SHOT_NUMBER) reveal(0);
+  // One made on top of another Design reveals only its own Edits: the room it started from shows at once.
+  if (opened && state.design?.origin === 'claude' && !SHOT_NUMBER) reveal(state.design.startedFrom?.edits ?? 0);
 });
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

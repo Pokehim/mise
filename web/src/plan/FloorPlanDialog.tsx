@@ -144,7 +144,7 @@ function LibrarySearch({ inputRef, scans, query, onQuery, onWorking, onUpload }:
         </ul>
       ) : typed && (
         <div className="empty library-none" role="status">
-          <p><b>We don't have {typed} yet.</b> Upload its floor plan, and Claude reads the room from it.</p>
+          <p><b>We don't have {typed} yet.</b> Upload its floor plan, and AI reads the room from it.</p>
           <button type="button" className="primary" onClick={() => onUpload(typed)}>Upload its floor plan</button>
         </div>
       )}
@@ -198,7 +198,7 @@ function UploadForm({ initialName, onWorking, onBack }: { initialName: string; o
   return (
     <form onSubmit={submit}>
       <p>
-        Upload your room's floor plan, from your housing office or the building's website. Claude reads its walls, doors
+        Upload your room's floor plan, from your housing office or the building's website. AI reads its walls, doors
         and windows, you check them over the plan, and your room is built in 3D, empty and ready to furnish.
       </p>
       <label className="fp-dialog-field">

@@ -11,7 +11,7 @@ import { DIRECTIONS, type Direction, type GenerateEvent, type GenerateResult, ty
 import { newId } from '../../shared/ids';
 import { replay } from '../../shared/replay';
 import type { Catalog, Design, RoomSetup } from '../../shared/types';
-import { briefMessage, roomContext, SYSTEM_PROMPT } from './prompt';
+import { briefMessage, currentRoom, roomContext, SYSTEM_PROMPT } from './prompt';
 import { roomSummary } from './roomSummary';
 import { createSession, type DesignContext, type DesignSession } from './tools';
 
@@ -35,9 +35,11 @@ export function anthropic() {
   return (client ??= new Anthropic(workspace ? { defaultHeaders: { 'anthropic-workspace-id': workspace } } : {}));
 }
 
-export interface GenerateDesignsRequest extends DesignContext {
+export interface GenerateDesignsRequest extends Omit<DesignContext, 'edits' | 'startsFrom'> {
   client: Anthropic;
   scanId: string;
+  /** The Mover's current Design, which every take starts from; without it, they start from the Scan as it is. */
+  current?: Design;
   /** Saves a Design as soon as its loop finishes it. */
   save: (design: Design) => Promise<unknown>;
   /** Fast mode (spec §13.3): faster output at twice the price. */
@@ -53,7 +55,8 @@ export async function generateDesigns(request: GenerateDesignsRequest): Promise<
   const shared = sharedRequest(request);
   // The takes run side by side, and each needs a name of its own.
   const takenNames = new Set<string>();
-  const runs = await Promise.all(DIRECTIONS.map((direction) => designLoop({ ...request, takenNames }, shared, direction)));
+  const current = request.current && currentRoom(request.setup, request.catalog, request.current);
+  const runs = await Promise.all(DIRECTIONS.map((direction) => designLoop({ ...request, takenNames }, shared, direction, current)));
   return {
     designs: runs.flatMap(({ design }) => (design ? [design] : [])),
     failures: runs.flatMap(({ direction, error }) => (error ? [{ direction, error }] : [])),
@@ -111,7 +114,7 @@ function standardSpeed({ speed, betas, ...params }: SharedRequest): SharedReques
 }
 
 /** One agent loop: Claude designs in its own session until it calls finish_design, runs out of requests, or of time. */
-async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest, direction: Direction) {
+async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest, direction: Direction, current?: string) {
   const { client, brief, loopTimeoutMs = LOOP_TIMEOUT_MS, onEvent } = request;
   const started = performance.now();
   const report: LoopReport = {
@@ -120,6 +123,7 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
   };
   const session = createSession({
     ...request,
+    startsFrom: request.current?.edits,
     onEdit: (edit) => {
       report.firstEditSeconds ??= seconds(started);
       onEvent?.({ type: 'edit', direction, edit });
@@ -127,7 +131,7 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
   });
   const timeout = AbortSignal.timeout(loopTimeoutMs);
   try {
-    let messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: briefMessage(brief, direction) }];
+    let messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: briefMessage(brief, direction, current) }];
     let params = shared;
     // Claude sometimes ends its turn without finish_design: it gets asked once more.
     for (let attempt = 0; attempt < 2 && !session.finished && report.requests < MAX_REQUESTS; attempt++) {
@@ -149,12 +153,13 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
         attempt--;
       }
     }
-    if (!session.finished) throw new Error('Claude stopped without finishing the Design');
+    if (!session.finished) throw new Error('The AI stopped without finishing the Design');
     const now = new Date().toISOString();
     const { name, rationale, palette } = session.finished;
     const design: Design = {
       version: 1, id: newId('ds'), scanId: request.scanId, name, createdAt: now, updatedAt: now,
       origin: 'claude', brief, rationale, palette, edits: session.edits,
+      ...(request.current && { startedFrom: { designId: request.current.id, edits: request.current.edits.length } }),
     };
     await request.save(design);
     report.designId = design.id;
@@ -162,7 +167,7 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
     onEvent?.({ type: 'design', direction, design, report });
     return { direction, design, report };
   } catch (error) {
-    const why = timeout.aborted ? `Claude took longer than ${loopTimeoutMs / 1000} s` : (error as Error).message;
+    const why = timeout.aborted ? `The AI took longer than ${loopTimeoutMs / 1000} s` : (error as Error).message;
     console.error(`Generate (${direction}) failed: ${why}`);
     finishReport(report, started, session);
     onEvent?.({ type: 'failure', direction, error: why, report });
@@ -208,7 +213,7 @@ async function run(
     }
     const reply = await stream.finalMessage();
     for (const key of Object.keys(report.usage) as (keyof LoopReport['usage'])[]) report.usage[key] += reply.usage[key] ?? 0;
-    if (reply.stop_reason === 'refusal') throw new Error('Claude declined to design this room');
+    if (reply.stop_reason === 'refusal') throw new Error('The AI declined to design this room');
     // Any call that hasn't run yet runs now, so that a finished Design ends the loop without one more request.
     await runner.generateToolResponse();
     conversation.edits = session.edits.length;

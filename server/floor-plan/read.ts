@@ -76,17 +76,17 @@ export async function readFloorPlan(client: Anthropic | null, png: Buffer, size:
       fallbacks: 'default',
       betas: ['server-side-fallback-2026-07-01'],
     }, { timeout: TIMEOUT_MS });
-    if (message.stop_reason === 'refusal') throw new Error('Claude declined to read this plan');
+    if (message.stop_reason === 'refusal') throw new Error('The AI declined to read this plan');
     if (message.stop_reason === 'max_tokens') throw new Error('The reading was cut off');
     const text = message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('');
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);
     } catch {
-      throw new Error("Claude's reading isn't JSON");
+      throw new Error("The AI's reading isn't JSON");
     }
     const checked = FloorPlanDraftSchema.safeParse(parsed);
-    if (!checked.success) throw new Error(`Claude's reading doesn't fit the draft: ${checked.error.issues[0]?.message}`);
+    if (!checked.success) throw new Error(`The AI's reading doesn't fit the draft: ${checked.error.issues[0]?.message}`);
     const draft = cleanDraft(checked.data, size);
     console.log(`Floor plan read in ${seconds()} s: ${draft.rooms.length} rooms, ${draft.scaleHints.length} dimensions`);
     return { draft, read: 'ok', seconds: seconds() };

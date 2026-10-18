@@ -287,15 +287,19 @@ async function generateInputs(scanId: string, fast: boolean | undefined) {
 // it, every Design as it is finished or fails, then the result. Otherwise it answers once, with the result.
 app.post('/api/generate', async (c) => {
   limitGenerate(c);
-  const { scanId, brief, fast } = await readBody<{ scanId?: string; brief?: Partial<Brief>; fast?: boolean }>(c);
+  const { scanId, brief, fromDesignId, fast } = await readBody<{ scanId?: string; brief?: Partial<Brief>; fromDesignId?: string; fast?: boolean }>(c);
   const { text, styles } = brief ?? {};
-  if (!scanId || typeof text !== 'string' || !text.trim()) fail(400, 'Send {scanId, brief: {text, styles?, budgetUsd?}}');
+  if (!scanId || typeof text !== 'string' || !text.trim()) fail(400, 'Send {scanId, brief: {text, styles?, budgetUsd?}, fromDesignId?}');
   // A budget the Brief only names in its words ("under $400") is still its budget.
   const budgetUsd = brief?.budgetUsd ?? budgetInText(text);
   if (budgetUsd !== undefined && !(typeof budgetUsd === 'number' && budgetUsd > 0)) fail(400, 'budgetUsd must be a positive number');
+  // The takes start from this Design, the one open in the editor, instead of the Scan as it is.
+  const current = fromDesignId === undefined ? undefined : await readDesign(String(fromDesignId));
+  if (current && current.scanId !== scanId) fail(400, `Design ${current.id} is of another Scan`);
   const request = {
     ...(await generateInputs(scanId, fast)),
     scanId,
+    current,
     brief: { text: text.trim(), ...(styles?.length && { styles }), ...(budgetUsd !== undefined && { budgetUsd }) },
     save: (design: Design) => writeJson(designPath(design.id), design),
   };
@@ -309,7 +313,7 @@ app.post('/api/generate', async (c) => {
   }
   const result = await generateDesigns(request);
   if (!result.designs.length) {
-    return c.json({ error: `Claude made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
+    return c.json({ error: `The AI made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
   }
   return c.json(result);
 });
@@ -329,7 +333,7 @@ app.post('/api/designs/:id/refine', async (c) => {
     return c.json(result);
   } catch (error) {
     if (error instanceof HTTPException) throw error;
-    return c.json({ error: `Claude couldn't refine this Design: ${(error as Error).message}` }, 502);
+    return c.json({ error: `The AI couldn't refine this Design: ${(error as Error).message}` }, 502);
   }
 });
 

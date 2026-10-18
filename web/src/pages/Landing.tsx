@@ -23,7 +23,7 @@ export function Landing() {
         <Link href={DEMO} className="cta">Try the demo<ArrowRight /></Link>
       </header>
       <figure className="landing-demo">
-        <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms Claude made of the Oliver Hall 6th Floor Study Lounge">
+        <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms AI made of the Oliver Hall 6th Floor Study Lounge">
           <RoomGrid />
         </Link>
         {/* Labeled like a drawing, lettered under it. */}

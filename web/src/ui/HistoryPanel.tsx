@@ -6,7 +6,7 @@ import { useEditor } from '../state/store';
 import { count } from './format';
 import { Close, Redo, Undo } from './icons';
 
-const ACTORS: Record<Actor, string> = { mover: 'You', claude: 'Claude' };
+const ACTORS: Record<Actor, string> = { mover: 'You', claude: 'AI' };
 
 /**
  * The Design's Edits, oldest first (spec §6). Any of them can be deleted, and skipped ones are

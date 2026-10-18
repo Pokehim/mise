@@ -262,7 +262,7 @@ describe('generateDesigns', () => {
     const { designs, failures } = await generate(client, { loopTimeoutMs: 200 }).result;
 
     expect(designs).toHaveLength(2);
-    expect(failures).toEqual([{ direction: 'budget', error: 'Claude took longer than 0.2 s' }]);
+    expect(failures).toEqual([{ direction: 'budget', error: 'The AI took longer than 0.2 s' }]);
   });
 
   it('asks once more when Claude stops without calling finish_design', async () => {

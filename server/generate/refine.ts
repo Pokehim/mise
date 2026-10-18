@@ -2,12 +2,11 @@
 // Claude reads the Design as it stands and appends a few Edits through the same tools as Generate
 // (tools.ts), from the same cached system prompt and room context, so a Refine starts warm.
 import Anthropic from '@anthropic-ai/sdk';
-import { roomItems } from '../../shared/fit';
 import { budgetInText } from '../../shared/generate';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, Design, Edit, RoomSetup, RoomState } from '../../shared/types';
 import { sharedRequest } from './agent';
-import { catalogEntry, m } from './forClaude';
+import { designInWords } from './forClaude';
 import { roomSummary } from './roomSummary';
 import { createSession, type DesignContext, type DesignSession } from './tools';
 
@@ -73,12 +72,12 @@ export async function refineDesign(request: RefineRequest): Promise<RefineResult
   } catch (error) {
     if (!signal.aborted) throw error;
     // Out of time after some Edits: each passed every check when it was made, so they stand.
-    if (!made()) throw new Error(`Claude took longer than ${timeoutMs / 1000} s`);
+    if (!made()) throw new Error(`The AI took longer than ${timeoutMs / 1000} s`);
     console.warn(`Refine ${design.id}: out of time after ${made()} Edits, keeping them`);
   }
 
   const edits = session.edits.slice(design.edits.length);
-  if (!edits.length) throw new Error('Claude made no changes');
+  if (!edits.length) throw new Error('The AI made no changes');
   // Without finish_design, the Edits still count, and the Design keeps its name.
   const { name, rationale, palette } = session.finished ?? design;
   const refined: Design = { ...design, name, rationale, palette, edits: session.edits, updatedAt: new Date().toISOString() };
@@ -101,7 +100,7 @@ async function run(
     tools: session.tools,
   }, { signal });
   for await (const reply of runner) {
-    if (reply.stop_reason === 'refusal') throw new Error('Claude declined this Refine');
+    if (reply.stop_reason === 'refusal') throw new Error('The AI declined this Refine');
     // Any call that hasn't run yet runs now, so that a finished Refine ends without one more request.
     await runner.generateToolResponse();
     if (session.finished) break;
@@ -111,35 +110,7 @@ async function run(
 
 /** The first message of a Refine: the Design as it stands, and what the Mover asks of it. */
 export function refineMessage(setup: RoomSetup, catalog: Catalog, design: Design, brief: Brief, text: string, state: RoomState): string {
-  const walls = new Map(setup.walls.map((wall) => [wall.id, wall.name]));
-  const items = new Map(catalog.items.map((item) => [item.id, item]));
-  const standing = new Map(roomItems(setup, catalog, state).map((item) => [item.id, item]));
-  const pieces = Object.entries(state.pieces).flatMap(([id, { catalogId, placement, partColors, replacesOriginalId }]) => {
-    const item = items.get(catalogId);
-    if (!item) return [];
-    const { id: catalog_id, ...entry } = catalogEntry(item);
-    return [{
-      id, catalog_id, ...entry,
-      mount: placement.mount,
-      ...(placement.wallId && { wall: walls.get(placement.wallId) }),
-      position_m: placement.position.map(m),
-      ...(replacesOriginalId && { replaces: replacesOriginalId }),
-      ...(Object.keys(partColors).length && { part_colors: partColors }),
-    }];
-  });
-  const originals = Object.entries(state.originals).flatMap(([id, { visible, moved, partColors, partFinishes }]) => {
-    const changes = [
-      !visible && (Object.values(state.pieces).some(({ replacesOriginalId }) => replacesOriginalId === id) ? 'replaced' : 'removed'),
-      moved && standing.has(id) && 'moved',
-      Object.keys(partColors).length && `recolored ${JSON.stringify(partColors)}`,
-      Object.keys(partFinishes).length && `finished ${JSON.stringify(partFinishes)}`,
-    ].filter(Boolean);
-    return changes.length ? [{ id, changes }] : [];
-  });
-  const finishes = [
-    ...Object.entries(state.surfaces.walls).map(([id, finish]) => ({ target: walls.get(id) ?? id, wall_id: id, finish })),
-    ...(state.surfaces.floor ? [{ target: 'floor', finish: state.surfaces.floor }] : []),
-  ];
+  const { pieces, finishes, originals } = designInWords(setup, catalog, state);
   return [
     `This is a Refine of a Design that is already in the room, not a new Design.`,
     `The Design: "${design.name}", for the Brief "${brief.text}"${brief.styles?.length ? ` (${brief.styles.join(', ')})` : ''}.`,

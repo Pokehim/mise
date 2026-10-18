@@ -1,4 +1,4 @@
-import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -72,7 +72,7 @@ describe('POST /api/generate', () => {
     const res = await generate({ scanId: 'fixture', brief });
 
     expect(res.status).toBe(502);
-    expect((await res.json()).error).toMatch(/^Claude made no Designs: /);
+    expect((await res.json()).error).toMatch(/^The AI made no Designs: /);
   });
 
   it('takes the budget from the Brief text when it names one and budgetUsd is missing', async () => {
@@ -103,6 +103,40 @@ describe('POST /api/generate', () => {
     expect(of('budget')).toEqual(['edit', 'design']);
     const done = events.at(-1)!;
     expect(done.type === 'done' && done.result.designs.map(({ name }) => name)).toEqual(['Sage Nook', 'Thrifty Sage']);
+  });
+
+  /** Saves a Design of the Scan by PUT, as the editor's autosave does. */
+  async function saveDesign(scanId: string, edits: Design['edits'] = []) {
+    const at = '2026-10-18T12:00:00.000Z';
+    const design: Design = { version: 1, id: `ds_${scanId}0001`, scanId, name: 'Move-in layout', createdAt: at, updatedAt: at, origin: 'mover', edits };
+    await mkdir(join(dataDir, 'designs'), { recursive: true });
+    const res = await app.request(`/api/designs/${design.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(design) });
+    expect(res.ok).toBe(true);
+    return design;
+  }
+
+  it('starts every take from the Design fromDesignId names: its Edits first, and the room it has in the first message', async () => {
+    const current = await saveDesign('fixture', [{
+      id: 'ed_mover', at: '2026-10-18T12:00:00.000Z', by: 'mover', type: 'finish',
+      target: { kind: 'wall', wallId: 'wl_2' }, finish: { kind: 'paint', color: '#c46a3a' },
+    }]);
+    claude = fakeClaude({ literal: paintAndFinish('Sage Nook') });
+
+    const { designs } = await (await generate({ scanId: 'fixture', brief, fromDesignId: current.id })).json();
+
+    expect(designs[0].edits.slice(0, 1)).toEqual(current.edits);
+    expect(designs[0].edits).toHaveLength(2);
+    expect(designs[0].startedFrom).toEqual({ designId: current.id, edits: 1 });
+    const first = claude.requests.find(({ direction }) => direction === 'literal')!.body.messages[0].content as string;
+    expect(first).toContain(`Start from the Mover's current Design, "Move-in layout"`);
+    expect(first).toContain('#c46a3a');
+  });
+
+  it('answers 404 for a fromDesignId with no Design, and 400 for a Design of another Scan', async () => {
+    expect((await generate({ scanId: 'fixture', brief, fromDesignId: 'ds_nope' })).status).toBe(404);
+    await cp(new URL('../../data/scans/fixture', import.meta.url), join(dataDir, 'scans/other'), { recursive: true });
+    const other = await saveDesign('other');
+    expect((await generate({ scanId: 'fixture', brief, fromDesignId: other.id })).status).toBe(400);
   });
 
   it('uses fast mode unless the request or GENERATE_FAST_MODE=0 turns it off', async () => {

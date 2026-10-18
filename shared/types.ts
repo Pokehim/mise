@@ -215,6 +215,7 @@ export interface Design {
   brief?: Brief;                     // Phase 4
   rationale?: string;                // Phase 4: one line from Claude
   palette?: Palette;                 // Phase 4
+  startedFrom?: { designId: string; edits: number };  // Phase 4: made by Claude on top of that Design, from its first `edits` Edits
   edits: Edit[];
 }
 

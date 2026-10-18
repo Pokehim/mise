@@ -59,12 +59,12 @@ export function RefineBox() {
       {canRefine && (
         <form className="refine-box" onSubmit={(event) => void submit(event)} aria-busy={busy}>
           <Sparkle />
-          <label className="sr-only" htmlFor="refine-text">Refine this Design with Claude</label>
+          <label className="sr-only" htmlFor="refine-text">Refine this Design with AI</label>
           <input
             id="refine-text"
             name="refine"
             autoComplete="off"
-            placeholder={`Refine with Claude: ${EXAMPLE.toLowerCase()}`}
+            placeholder={`Refine with AI: ${EXAMPLE.toLowerCase()}`}
             value={text}
             onChange={(event) => setText(event.target.value)}
             disabled={busy}
@@ -73,7 +73,7 @@ export function RefineBox() {
         </form>
       )}
       <ReplayButton />
-      {error && <p className="error" role="alert">Claude couldn't refine it: {error}</p>}
+      {error && <p className="error" role="alert">The AI couldn't refine it: {error}</p>}
     </div>
   );
 }

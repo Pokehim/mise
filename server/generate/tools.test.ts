@@ -216,6 +216,24 @@ describe('the Design tools', () => {
       // A reading chair isn't large furniture.
       await call(session, 'place_piece', { catalog_id: 'chair-reading', anchor: { kind: 'open_floor' } });
     });
+
+    it("starts from another Design's Edits, whose Pieces count toward neither the budget nor the large furniture changes", async () => {
+      // The Mover's current Design: a wardrobe and a nightstand, $330.
+      const current = createSession({ setup, catalog: decorCatalog, brief: { text: 'move in' }, materials });
+      await call(current, 'place_piece', { catalog_id: 'wardrobe-white', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
+      await call(current, 'place_piece', { catalog_id: 'nightstand-oak', anchor: { kind: 'beside', target_id: 'og_bed', side: 'right' } });
+      const session = createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy', budgetUsd: 200 }, materials, startsFrom: current.edits, maxLargeChanges: 1 });
+
+      const print = await call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall', wall_id: 'wl_east', along: 'left' } });
+      expect(print).toMatchObject({ total_usd: 40, budget_left_usd: 160 });
+      await call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_east', along: 'right' } });
+      await expect(call(session, 'place_piece', { catalog_id: 'chair-reading', anchor: { kind: 'open_floor' } }))
+        .rejects.toThrow('would take the estimated total to $250, and it must stay under the $200 budget: $70 is left');
+
+      expect(session.edits.slice(0, 2)).toEqual(current.edits);
+      expect(session.edits).toHaveLength(4);
+      expect(Object.keys(session.state.pieces)).toEqual(expect.arrayContaining(Object.keys(current.state.pieces)));
+    });
   });
 
   describe('replace_original', () => {

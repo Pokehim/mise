@@ -151,7 +151,7 @@ describe('refineDesign', () => {
 
   it('fails when Claude makes no change', async () => {
     const { client } = scriptedClaude([]);
-    await expect(refine(client)).rejects.toThrow('Claude made no changes');
+    await expect(refine(client)).rejects.toThrow('The AI made no changes');
   });
 
   it('holds a Refine to a budget its words name', async () => {
@@ -216,7 +216,7 @@ describe('POST /api/designs/:id/refine', () => {
     expect((await post('ds_nope', { text: 'cozier' })).status).toBe(404);
     const res = await post(id, { text: 'cozier' });
     expect(res.status).toBe(502);
-    expect((await res.json()).error).toBe("Claude couldn't refine this Design: Claude made no changes");
+    expect((await res.json()).error).toBe("The AI couldn't refine this Design: The AI made no changes");
   });
 });
 

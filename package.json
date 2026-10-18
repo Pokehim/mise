@@ -13,6 +13,7 @@
     "@hono/node-server": "^2.1.5",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
+    "@sparkjsdev/spark": "2.3.1",
     "hono": "^4.13.13",
     "nanoid": "^6.0.2",
     "react": "^19.3.1",

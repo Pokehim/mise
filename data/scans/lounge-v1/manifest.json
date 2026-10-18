@@ -1,8 +1,7 @@
 {
   "version": 1,
   "id": "lounge-v1",
-  "name": "Oliver Hall 6th Floor Study Lounge",
-  "mine": true,
+  "name": "Study lounge v1 (outdated)",
   "mesh": "room.glb",
   "meshTransform": {
     "position": [

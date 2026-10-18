@@ -1,0 +1,62 @@
+/* The Refine box and Replay of a Claude Design (#20), laid on the bottom of the 3D view like the
+   Sketch lines toggle: controls on top of the room, never a tint over it (docs/design/sketch-style.md). */
+
+.editor .refine-bar {
+  grid-area: view;
+  align-self: end;
+  justify-self: center;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  box-sizing: border-box;
+  max-width: calc(100% - 2 * var(--s-3));
+  margin-bottom: var(--s-3);
+  /* Clear of the Sketch lines toggle in the view's bottom-left corner. */
+  padding-left: 120px;
+  pointer-events: none;
+}
+.editor .refine-bar > * { pointer-events: auto; }
+
+.editor .refine-box {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: min(460px, 100%);
+  padding: 4px 4px 4px 10px;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--grain), var(--paper-raised);
+}
+.editor .refine-box > .icon { flex: none; color: var(--graphite); }
+.editor .refine-box:focus-within { border-color: var(--wash); }
+.editor .refine-box:focus-within > .icon { color: var(--wash); }
+.editor .refine-box input {
+  flex: 1;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+}
+.editor .refine-box input:focus-visible { outline: none; }
+.editor .refine-box button { flex: none; }
+
+.editor .refine-bar .replay { padding: 5px 10px 5px 8px; border-color: var(--pencil-strong); font-size: 13px; }
+.editor .refine-bar .replay .icon { color: var(--graphite); }
+.editor .refine-bar .progress { color: var(--graphite); font-size: 12px; }
+
+.editor .refine-bar .error {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  color: var(--red-pencil);
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .editor .refine-bar { padding-left: 0; }
+}

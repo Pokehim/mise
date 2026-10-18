@@ -15,6 +15,7 @@ import { ScanColors } from './materials/ScanColors';
 import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
 import { ResizeHandles } from './ResizeHandles';
+import { Reveal } from './Reveal';
 import { ScanMesh } from './ScanMesh';
 import { SHOT_NUMBER, shotOf } from './shots';
 import { SplatLook } from './SplatLook';
@@ -121,6 +122,7 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
         </Suspense>
         {splat && <Optional what="The splat"><SplatLook /></Optional>}
         <Pieces />
+        <Reveal ready={scanDrawn} />
         <SketchSelection />
         <FitHighlights />
         <ResizeHandles />

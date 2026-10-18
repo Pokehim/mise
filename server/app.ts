@@ -21,6 +21,7 @@ import { anthropic, generateDesigns, warmCache } from './generate/agent';
 import { readFloorPlan } from './floor-plan/read';
 import { draftScale, FloorPlanDraftSchema } from '../shared/floor-plan';
 import sharp from 'sharp';
+import { refineDesign } from './generate/refine';
 import { shelfLevels } from './generate/shelves';
 
 // Read per request, so tests can point DATA_DIR at a temporary folder.
@@ -311,6 +312,25 @@ app.post('/api/generate', async (c) => {
     return c.json({ error: `Claude made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
   }
   return c.json(result);
+});
+
+// Phase 4: Refine (spec §13.1, step 7). One agent loop adjusts the Design to the Mover's words, appending
+// Claude's Edits, and saves it. It answers with the Design and just the new Edits, which the editor animates.
+app.post('/api/designs/:id/refine', async (c) => {
+  limitGenerate(c);
+  const id = c.req.param('id');
+  const { text, fast } = await readBody<{ text?: string; fast?: boolean }>(c);
+  if (typeof text !== 'string' || !text.trim()) fail(400, 'Send {text}');
+  if ((await seedIds()).includes(id)) fail(403, 'This Design is read-only in the demo; refine a copy');
+  const design = await readDesign(id);
+  try {
+    const result = await refineDesign({ ...(await generateInputs(design.scanId, fast)), design, text: text.trim() });
+    await writeJson(designPath(id), result.design);
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof HTTPException) throw error;
+    return c.json({ error: `Claude couldn't refine this Design: ${(error as Error).message}` }, 502);
+  }
 });
 
 // Writes what generating Designs for this Scan reads first to Claude's prompt cache, so that they start

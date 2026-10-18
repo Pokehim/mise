@@ -81,7 +81,7 @@ export async function warmCache(request: Pick<GenerateDesignsRequest, 'client' |
 }
 
 /** The parts of a request every take of a Brief shares, in the order the cache reads them. */
-function sharedRequest({ setup, catalog, fast = false }: { setup: RoomSetup; catalog: Catalog; fast?: boolean }) {
+export function sharedRequest({ setup, catalog, fast = false }: { setup: RoomSetup; catalog: Catalog; fast?: boolean }) {
   const summary = roomSummary(setup, catalog, replay(setup, catalog, []));
   return {
     model: MODEL,

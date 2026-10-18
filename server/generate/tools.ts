@@ -24,6 +24,10 @@ export interface DesignContext extends AnchorOptions {
   brief: Brief;
   /** The Material Library that apply_finish picks materials from. */
   materials: LibraryMaterial[];
+  /** The Design's Edits so far, which the session starts from: a Refine's (spec §13.1, step 7). A new Design starts empty. */
+  edits?: Edit[];
+  /** How many Edits this session makes, at least and at most, not counting removals; EDIT_RANGE by default. */
+  editRange?: [min: number, max: number];
   /** The most tool calls Claude gets for this Design; finish_design always runs. */
   maxToolCalls?: number;
   /** The most large furniture changes this Design may make. */
@@ -133,10 +137,10 @@ const finishTarget = z.union([
 
 /** A new Design session, with the 7 tools of spec §13.2 that change it. */
 export function createSession({
-  setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS, maxLargeChanges = MAX_LARGE_CHANGES, onEdit, takenNames,
-  random = Math.random,
+  setup, catalog, brief, materials, shelfLevels = {}, edits: earlier, editRange = EDIT_RANGE, maxToolCalls = MAX_TOOL_CALLS,
+  maxLargeChanges = MAX_LARGE_CHANGES, onEdit, takenNames, random = Math.random,
 }: DesignContext): DesignSession {
-  let edits: Edit[] = [];
+  let edits: Edit[] = earlier ?? [];
   let state = replay(setup, catalog, edits);
   let finished: DesignSession['finished'];
   let toolCalls = 0;
@@ -153,8 +157,13 @@ export function createSession({
   const largeChanges = () => pieces().filter(({ replacesOriginalId }) => replacesOriginalId).length
     + Object.values(state.originals).filter(({ moved }) => moved).length
     + pieces().filter(({ item, replacesOriginalId }) => !replacesOriginalId && isLarge(item)).length;
-  /** The Edits that count toward EDIT_RANGE: all but removals. */
-  const counted = () => edits.filter(({ type }) => type !== 'remove').length;
+  /** What this session makes: a new Design, or a Refine of one, which starts from the Design's Edits. */
+  const refining = earlier !== undefined;
+  const what = refining ? 'Refine' : 'Design';
+  /** What the review flagged in the Design before this session, which finish_design doesn't send a Refine back for. */
+  const flaggedBefore = new Set(refining ? reviewFlags(setup, catalog, state) : []);
+  /** The Edits that count toward editRange: all this session made but removals. */
+  const counted = () => edits.slice(earlier?.length).filter(({ type }) => type !== 'remove').length;
   const original = (id: string) => setup.originals.find((candidate) => candidate.id === id);
   const inRoom = (id: string) => roomItems(setup, catalog, state).find((candidate) => candidate.id === id)
     ?? fail(`The room has no Original or Piece "${id}"`);
@@ -162,7 +171,7 @@ export function createSession({
 
   /** Appends an Edit by Claude and replays the Design, or fails with why replay would skip it. */
   function apply(fields: DistributiveOmit<Edit, 'id' | 'at' | 'by'>) {
-    if (fields.type !== 'remove' && counted() >= EDIT_RANGE[1]) fail(`This Design has ${EDIT_RANGE[1]} Edits, the most it may have: call finish_design`);
+    if (fields.type !== 'remove' && counted() >= editRange[1]) fail(`This ${what} has ${editRange[1]} Edits, the most it may have: call finish_design`);
     const edit = { ...fields, id: newId('ed'), at: new Date().toISOString(), by: 'claude' } as Edit;
     const next = replay(setup, catalog, [...edits, edit]);
     const skipped = next.skipped.find(({ editId }) => editId === edit.id);
@@ -436,7 +445,7 @@ export function createSession({
         if (words > 3) fail(`The name "${name}" has ${words} words: use 3 or fewer`);
         // What the room lacks, and what the review flags, go back together: one more turn at most.
         const lacking = missing();
-        const flags = reviewFlags(setup, catalog, state);
+        const flags = reviewFlags(setup, catalog, state).filter((flag) => !flaggedBefore.has(flag));
         if ((lacking.length || flags.length) && !sentBack && toolCalls < maxToolCalls) {
           sentBack = true;
           fail([
@@ -465,15 +474,16 @@ export function createSession({
   function missing(): string[] {
     const placed = pieces();
     const has = (...categories: Category[]) => placed.filter(({ item }) => categories.includes(item.category));
-    const needs = [
+    // A Refine answers only for what it changes: what the Design already lacked stays the Mover's call.
+    const needs = refining ? [] : [
       has('wall_art', 'mirror').length < 2 && 'wall art (2 to 4 frames)',
       !has('rug').length && 'a rug',
       !has('lamp').length && 'a lamp',
       !has('decor', 'plant').some(({ placement }) => placement.mount === 'surface') && 'decor on the bed or a furniture top',
     ].filter((need): need is string => !!need);
     return [
-      ...(counted() < EDIT_RANGE[0]
-        ? [`this Design has ${counted()} Edit${counted() === 1 ? '' : 's'} besides removals, and needs ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]}`] : []),
+      ...(counted() < editRange[0]
+        ? [`this ${what} has ${counted()} Edit${counted() === 1 ? '' : 's'} besides removals, and needs ${editRange[0]} to ${editRange[1]}`] : []),
       ...(needs.length ? [`It still needs ${needs.join(', ')}`] : []),
     ];
   }

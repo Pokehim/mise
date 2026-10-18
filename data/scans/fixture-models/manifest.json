@@ -11,7 +11,7 @@
     ],
     "rotationY": 0
   },
-  "splat": "splat.ply",
+  "splat": "splat.spz",
   "splatTransform": {
     "position": [
       0,

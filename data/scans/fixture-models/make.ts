@@ -1,4 +1,5 @@
-// The fixture-models test Scan (#79): lounge-v2's shape before its files exist. Run: npx tsx data/scans/fixture-models/make.ts
+// The fixture-models test Scan (#79): lounge-v2's shape before its files exist. Run: npx tsx data/scans/fixture-models/make.ts,
+// then scripts/splat.sh data/scans/fixture-models/splat.ply --scan fixture-models (only the splat.spz is committed).
 //
 // - room.glb: an empty box room the size of the study lounge, in lounge-v1's room frame, with its walls,
 //   window and door painted into the images. Nothing stands in it: it plays the Empty Room.
@@ -278,7 +279,7 @@ const manifest: ScanManifest = {
   name: 'Test room with Master Copies',
   mesh: 'room.glb',
   meshTransform: { position: [0, 0, 0], rotationY: 0 },
-  splat: 'splat.ply',
+  splat: 'splat.spz',
   splatTransform: { position: [0, 0, 0], rotationY: 0, scale: 1 },
 };
 

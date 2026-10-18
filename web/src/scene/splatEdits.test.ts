@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Edit } from '@shared/types';
 import { replay } from '@shared/replay';
 import { catalog, edit, onFloor, place, setup } from '@shared/test-room';
-import { OPENING_DEPTH, PAD, SLAB, splatEditPlan } from './splatEdits';
+import { OPENING_DEPTH, PAD, SLAB, splatEditPlan, wallSlab } from './splatEdits';
 import { REGION_GROW } from './patchFrames';
 
 const plan = (edits: Edit[]) => splatEditPlan(setup, replay(setup, catalog, edits));
@@ -93,5 +93,16 @@ describe('splatEditPlan', () => {
 
     expect(sdfs.map((s) => [s.id, s.opacity])).toEqual([['og_desk', 0], ['wl_south', 0], ['op_door', 1]]);
     expect(mesh).toEqual({ walls: ['wl_south'], originals: [], floor: false });
+  });
+});
+
+describe('wallSlab', () => {
+  it('reaches further out of the room than into it when asked', () => {
+    const north = setup.walls.find((w) => w.id === 'wl_north')!;
+    const slab = wallSlab(north, 0.05, 0.3);
+
+    // The North wall's normal is +Z, so its outside is toward −Z.
+    expect(slab.size[2]).toBeCloseTo(0.35);
+    expect(slab.center[2]).toBeCloseTo(-1.5 - 0.125);
   });
 });

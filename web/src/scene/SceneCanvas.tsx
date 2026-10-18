@@ -4,6 +4,7 @@ import { Component, type DragEvent, type ReactNode, type RefObject, Suspense, us
 import { type Camera, NeutralToneMapping, Vector2 } from 'three';
 import { useShallow } from 'zustand/react/shallow';
 import { useRealism } from '../state/realism';
+import { AlignPanel } from './AlignPanel';
 import { useEditor } from '../state/store';
 import { CATALOG_ITEM_TYPE } from '../ui/CatalogPanel';
 import { CastShadows } from './CastShadows';
@@ -16,6 +17,7 @@ import { PieceNode } from './PieceNode';
 import { ResizeHandles } from './ResizeHandles';
 import { ScanMesh } from './ScanMesh';
 import { SelectionOutline } from './SelectionOutline';
+import { SplatLook } from './SplatLook';
 import { WalkControls } from './WalkControls';
 
 /**
@@ -58,6 +60,7 @@ interface SceneCanvasProps {
 export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
   const view = useEditor((s) => s.view);
   const realism = useRealism();
+  const splat = useEditor((s) => Boolean(s.manifest?.splat)) && realism !== 'quick';
   const container = useRef<HTMLDivElement>(null!);
   const onDrop = (event: DragEvent) => {
     const itemId = event.dataTransfer.getData(CATALOG_ITEM_TYPE);
@@ -103,6 +106,7 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
           {realism !== 'quick' && <RoomLighting />}
           {realism === 'max' && <CastShadows />}
         </Suspense>
+        {splat && <Optional what="The splat"><SplatLook /></Optional>}
         <Pieces />
         <SelectionOutline />
         <FitHighlights />
@@ -110,6 +114,7 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
         {view === 'dollhouse' ? <DollhouseCamera /> : <WalkControls />}
         {debug && <Stats parent={container} className="stats" />}
       </Canvas>
+      {debug && splat && <AlignPanel />}
     </div>
   );
 }

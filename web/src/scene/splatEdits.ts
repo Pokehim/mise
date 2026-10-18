@@ -76,10 +76,11 @@ function wallYaw({ start: [sx, sz], end: [ex, ez] }: Wall): number {
   return Math.atan2(-(ez - sz), ex - sx);
 }
 
-function wallSlab(wall: Wall): SdfBox {
+/** An opacity-0 slab over a Wall: `inside` meters into the room from the wall line, and `outside` meters out of it. */
+export function wallSlab(wall: Wall, inside = SLAB, outside = SLAB): SdfBox {
   const length = Math.hypot(wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]);
-  const [x, z] = wallPoint(wall, length / 2);
-  return { id: wall.id, center: [x, wall.height / 2, z], size: [length, wall.height, 2 * SLAB], rotationY: wallYaw(wall), opacity: 0 };
+  const [x, z] = wallPoint(wall, length / 2, (inside - outside) / 2);
+  return { id: wall.id, center: [x, wall.height / 2, z], size: [length, wall.height, inside + outside], rotationY: wallYaw(wall), opacity: 0 };
 }
 
 function openingBox(wall: Wall, opening: Opening): SdfBox {

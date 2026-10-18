@@ -116,7 +116,7 @@ export interface PartDef { id: string; name: string }   // { id: 'legs', name: '
 
 export interface CatalogItem {
   id: string;                        // ABO item_id (an ASIN), e.g. "B07HSLGGDB"
-  source: 'abo' | 'polyhaven' | 'gso' | 'generated';   // gso: Google Scanned Objects
+  source: 'abo' | 'polyhaven' | 'gso' | 'generated' | 'publicdomain';   // gso: Google Scanned Objects
   title: string;
   brand?: string;
   category: Category;

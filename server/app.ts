@@ -207,14 +207,15 @@ app.post('/api/generate', async (c) => {
   const budgetUsd = brief?.budgetUsd ?? budgetInText(text);
   if (budgetUsd !== undefined && !(typeof budgetUsd === 'number' && budgetUsd > 0)) fail(400, 'budgetUsd must be a positive number');
   const scanDir = requireScan(scanId);
-  const [setup, catalog, materials] = await Promise.all([
+  const [setup, catalog, posters, materials] = await Promise.all([
     readJson<RoomSetup>(join(scanDir, 'setup.json')),
     readJson<Catalog>(join(dataDir(), 'catalog/catalog.json')),
+    readJson<Catalog>(join(dataDir(), 'catalog/posters.json')),   // built apart, by scripts/posters-build.ts (#85)
     readJson<LibraryMaterial[]>(join(dataDir(), 'materials/materials.json')),
     mkdir(join(dataDir(), 'designs'), { recursive: true }),
   ]);
   if (!setup) fail(400, `Scan ${scanId} has no Room Setup yet`);
-  const items: Catalog = catalog ?? { version: 1, items: [] };
+  const items: Catalog = { version: 1, items: [...(catalog?.items ?? []), ...(posters?.items ?? [])] };
   const result = await generateDesigns({
     client: anthropic(),
     scanId,

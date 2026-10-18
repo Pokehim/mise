@@ -1,7 +1,8 @@
 import { Hud, Outlines } from '@react-three/drei';
+import { wallPoint } from '@shared/geometry';
 import type { RoomSetup, RoomState, Vec3 } from '@shared/types';
 import { type Selection, useEditor } from '../state/store';
-import { wallLength, wallPoint, wallRotationY } from './floorPlan';
+import { wallLength, wallRotationY } from './floorPlan';
 import { ignoreRaycast } from './objects';
 
 /**

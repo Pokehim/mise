@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { search } from '@shared/catalog-search';
 import type { CatalogItem, Category } from '@shared/types';
 import { useEditor } from '../state/store';
 
@@ -13,15 +14,13 @@ export const CATALOG_ITEM_TYPE = 'application/x-mise-catalog-item';
 
 /** Browse the Catalog by category and text, and Add an item to the Design as a Piece (spec §10.1). */
 export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) {
-  const items = useEditor((s) => s.catalog!.items);
+  const catalog = useEditor((s) => s.catalog!);
   const [category, setCategory] = useState<Category | null>(null);
   const [text, setText] = useState('');
-  const categories = useMemo(() => [...new Set(items.map((item) => item.category))], [items]);
+  const categories = useMemo(() => [...new Set(catalog.items.map((item) => item.category))], [catalog]);
 
-  const query = text.trim().toLowerCase();
-  const shown = items.filter((item) =>
-    (!category || item.category === category) &&
-    (!query || [item.title, ...item.styleTags].some((words) => words.toLowerCase().includes(query))));
+  // Every match, in Catalog order, found the way Claude's search_catalog finds items (spec §8.2).
+  const shown = search(catalog, { category: category ?? undefined, text, limit: Infinity }).map(({ item }) => item);
 
   return (
     <aside className="catalog">

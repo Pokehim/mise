@@ -49,6 +49,11 @@ describe('toCatalogItem', () => {
     expect(item.priceEstimateUsd).toBe(95);
   });
 
+  it("uses the pick's colors and styleTags, for listings where ABO has none", () => {
+    const pick = { id: 'B07BWJCZJX', category: 'chair' as const, colors: ['Antique Espresso'], styleTags: ['Casual'] };
+    expect(toCatalogItem(pick, LUMMI_CHAIR, [0.5, 0.8, 0.6])).toMatchObject({ colors: ['Antique Espresso'], styleTags: ['Casual'] });
+  });
+
   it('mounts wall art and mirrors on the wall, and everything else on the floor', () => {
     const mount = (category: Category) => toCatalogItem({ id: 'B0', category }, LUMMI_CHAIR, [1, 1, 0.05]).mount;
     expect((['wall_art', 'mirror', 'lamp', 'rug'] as const).map(mount)).toEqual(['wall', 'wall', 'floor', 'floor']);
@@ -92,6 +97,18 @@ describe('toCatalogItem', () => {
       materials: ['Wood', 'Faux leather'],
       styleTags: ['Mid-Century modern'],
     });
+  });
+
+  it('takes the style words in the title when ABO has no style', () => {
+    const styleTags = (name: string) =>
+      toCatalogItem({ id: 'B0', category: 'sofa' }, { item_id: 'B0', item_name: [{ language_tag: 'en_US', value: name }] }, [1, 1, 1]).styleTags;
+    expect([
+      'Amazon Brand – Rivet Revolve Modern Upholstered Loveseat Sofa, 56"W, Heritage Green',             // B07P8SRVPN
+      'Amazon Brand – Rivet Adjustable Arm Mid-Century Modern Living Room Standing Floor Lamp - 59 Inches', // B07374SBFL
+      'Amazon Brand – Rivet Mid Century Modern Abstract Mountain Landscape Wall Art Decor on Canvas',       // B075HWHVN6
+      'Amazon Brand – Stone & Beam Casual Wood Office Computer Desk, 60"W, Birch',                          // B07B7DL3GX
+      'Furniture 247 2 Tier (4 Cube) Shelving Unit - White',                                               // B0754KHKCX
+    ].map(styleTags)).toEqual([['Modern'], ['Mid-Century Modern'], ['Mid-Century Modern'], ['Casual'], []]);
   });
 
   it('decodes the HTML entities in ABO text, such as the "&amp;" in 57 product names', () => {

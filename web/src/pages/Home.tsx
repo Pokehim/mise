@@ -4,7 +4,7 @@ import type { Design, ScanManifest } from '@shared/types';
 import { listDesigns, listScans } from '../api';
 import { moveInLayoutId } from '../plan/library';
 import { count } from '../ui/format';
-import { ArrowRight, Plus } from '../ui/icons';
+import { ArrowRight, Plus, Sparkle } from '../ui/icons';
 import { useServerConfig } from '../ui/useServerConfig';
 import { useStartDesign } from '../ui/useStartDesign';
 import { ImportDialog } from './ImportDialog';
@@ -38,7 +38,10 @@ function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] 
           {designs.map((design) => (
             <li key={design.id}>
               <Link href={`/d/${design.id}`}>
-                <span className="name">{design.name}</span>
+                <span className="name">
+                  {design.origin === 'claude' && <span className="by-claude" title="Made by Claude from a Brief"><Sparkle /><span className="sr-only">Made by Claude: </span></span>}
+                  {design.name}
+                </span>
                 <span className="meta">
                   {count(design.edits.length, 'Edit')} · Edited {edited.format(new Date(design.updatedAt))}
                 </span>
@@ -54,9 +57,10 @@ function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] 
   );
 }
 
-/** Placeholder rows the size of a Scan section, while the Scans load. */
+/** A Scan section in construction lines, its plan's square and rows, while the Scans load. */
 const Loading = () => (
   <div className="scan loading" aria-busy="true" aria-label="Loading the Scans">
+    <span className="bone plan" />
     <span className="bone title" />
     <span className="bone row" />
     <span className="bone row" />
@@ -71,10 +75,13 @@ export function Home() {
   const all = new URLSearchParams(useSearch()).get('all') === '1';
   const [loaded, setLoaded] = useState<[ScanManifest[], Design[]]>();
   const [error, setError] = useState<string>();
+  // Bumped by "Try again", to load the Scans once more.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    setError(undefined);
     Promise.all([listScans(), listDesigns()]).then(setLoaded, (err: Error) => setError(err.message));
-  }, []);
+  }, [attempt]);
 
   const [scans, designs] = loaded ?? [[], []];
   const listed = all ? scans : scans.filter((scan) => scan.mine);
@@ -96,7 +103,10 @@ export function Home() {
           <ImportDialog scans={scans} />
         </div>
         {error && (
-          <p className="error" role="alert">Could not load the Scans ({error}). Check that the API server is running, then reload.</p>
+          <div className="home-error" role="alert">
+            <p><b>Couldn't load your Scans.</b> {error}. Check that the API server is running, then try again.</p>
+            <button type="button" onClick={() => setAttempt(attempt + 1)}>Try again</button>
+          </div>
         )}
         {!loaded && !error && <Loading />}
         {loaded && !listed.length && (
@@ -104,6 +114,13 @@ export function Home() {
         )}
         {listed.map((scan) => <ScanSection key={scan.id} scan={scan} designs={designsOf(scan)} />)}
       </main>
+      <footer className="home-footer">
+        <p>
+          3D models: <a href="https://amazon-berkeley-objects.s3.amazonaws.com/index.html">Amazon Berkeley Objects</a> (CC BY 4.0),
+          Amazon.com, and <a href="https://app.gazebosim.org/GoogleResearch/fuel/collections/Scanned%20Objects%20by%20Google%20Research">Google Scanned Objects</a> (CC BY 4.0),
+          Google LLC. Materials: <a href="https://polyhaven.com">Poly Haven</a> and <a href="https://ambientcg.com">ambientCG</a> (CC0).
+        </p>
+      </footer>
     </div>
   );
 }

@@ -1,14 +1,17 @@
-/* The Home page: an intro on the left, the Scans and their Designs on the right; one column on
-   narrow screens. Each Scan is a sheet with its plan (ScanPlan) in the margin. */
+/* The Home page: an intro on the left, the Scans and their Designs on the right, and the credits along
+   the foot of the page; one column on narrow screens. Each Scan is a sheet with its plan (ScanPlan) in
+   the margin. */
 
 .home {
   box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  /* The page's own row takes the height the content leaves, so the credits sit at the foot. */
+  grid-template-rows: 1fr auto;
   align-items: start;
   gap: var(--s-7) var(--s-8);
   min-height: 100%;
-  padding: var(--s-8) max(var(--s-6), (100% - 1180px) / 2);
+  padding: var(--s-8) max(var(--s-6), (100% - 1180px) / 2) var(--s-5);
   background: var(--grain), var(--paper);
   font-size: 15px;
 }
@@ -86,18 +89,43 @@
 }
 .designs .name { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .designs .meta { color: var(--graphite); font-size: 13px; font-variant-numeric: tabular-nums; }
-.designs .icon { color: var(--graphite); transition: translate 160ms var(--ease-out), color 120ms ease-out; }
+.designs a > .icon { color: var(--graphite); transition: translate 160ms var(--ease-out), color 120ms ease-out; }
 .designs a:focus-visible { background: var(--ink-wash); }
 @media (hover: hover) {
   .designs a:hover { background: var(--ink-wash); }
-  .designs a:hover .icon { color: var(--ink); translate: 2px 0; }
+  .designs a:hover > .icon { color: var(--ink); translate: 2px 0; }
 }
 
 .home .empty { margin: var(--s-1) 0 var(--s-2); }
 .home .error { margin: 0 0 var(--s-2); color: var(--red-pencil); }
 
+/* A Design Claude made from a Brief: the sparkle of Generate before its name. */
+.by-claude { margin-right: 6px; color: var(--graphite); }
+.by-claude .icon { vertical-align: -2px; }
+
+/* The Scans couldn't load: an empty state's shape, drawn in red pencil, with the way back. */
+.home-error {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-4);
+  border: var(--line) dashed var(--red-pencil);
+  border-radius: var(--r-3);
+  background: var(--paper-raised);
+}
+.home-error p { max-width: 56ch; margin: 0; color: var(--graphite); font-size: 13px; line-height: 1.5; text-wrap: pretty; }
+.home-error b { display: block; margin-bottom: 2px; color: var(--red-pencil); font: 400 18px/1.3 var(--font-hand); }
+.home-error button { flex: none; }
+
+/* The credits the Catalog's licenses ask for (data/catalog/CREDITS.md), under a rule across the page. */
+.home-footer { grid-column: 1 / -1; align-self: end; padding-top: var(--s-4); border-top: var(--line) solid var(--pencil); }
+.home-footer p { max-width: 96ch; margin: 0; color: var(--graphite); font-size: 12px; line-height: 1.6; text-wrap: pretty; }
+.home .home-footer a { color: inherit; }
+
 /* While the Scans load: the sheet in construction lines, before it's inked. */
-.scan.loading { display: flex; flex-direction: column; gap: var(--s-3); padding-bottom: var(--s-5); }
+.scan.loading { row-gap: var(--s-3); padding-bottom: var(--s-5); }
+.bone.plan { border-radius: var(--r-2); }
 .bone {
   display: block;
   border: var(--line) dashed var(--pencil-strong);
@@ -112,19 +140,21 @@
 }
 
 @media (max-width: 800px) {
-  .home { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); padding: var(--s-7) var(--s-4); }
+  .home { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; gap: var(--s-6); padding: var(--s-7) var(--s-4) var(--s-5); }
   .home-intro { position: static; }
   .home-intro h1 { font-size: 52px; }
   .scan { grid-template-columns: 88px minmax(0, 1fr); column-gap: var(--s-4); padding: var(--s-4) var(--s-4) var(--s-2); }
   .plan { grid-row: 1; }
   .scan > :is(.designs, .empty, .error) { grid-column: 1 / -1; }
+  .home-error { flex-direction: column; align-items: flex-start; }
+  .scan.loading > .bone.plan { grid-row: 1 / span 3; }
   .scan > .designs { margin-top: var(--s-3); }
   .scan header { flex-direction: column; gap: var(--s-3); }
   .scan h3 { font-size: 17px; }
   .home .designs a { grid-template: 'name icon' auto 'meta icon' auto / minmax(0, 1fr) 16px; gap: 2px var(--s-3); }
   .designs .name { grid-area: name; }
   .designs .meta { grid-area: meta; }
-  .designs .icon { grid-area: icon; }
+  .designs a > .icon { grid-area: icon; }
 }
 @media (prefers-reduced-motion: reduce) {
   .bone { animation: none; }

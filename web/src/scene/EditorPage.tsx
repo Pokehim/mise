@@ -103,7 +103,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
       <RefineBox />
       <Inspector />
       <HistoryPanel />
-      <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
+      <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com, and Google Scanned Objects (CC BY 4.0), Google LLC. Materials: Poly Haven and ambientCG (CC0).</footer>
     </div>
   );
 }

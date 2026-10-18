@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { cp, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,6 +7,12 @@ import fixtureDesign from '../data/designs/ds_fixture1.json';
 import fixtureSetup from '../data/scans/fixture/setup.json';
 import type { Design, ScanManifest } from '../shared/types';
 import { app } from './app';
+
+// The real writeFile, wrapped so one test can make a single write fail.
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const fs = await importOriginal<typeof import('node:fs/promises')>();
+  return { ...fs, writeFile: vi.fn(fs.writeFile) };
+});
 
 let dataDir: string;
 
@@ -20,6 +26,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
   await rm(dataDir, { recursive: true, force: true });
 });
 
@@ -48,6 +55,19 @@ describe('GET /api/scans', () => {
       ['dorm-v1', 'Maple Hall 412'],
       ['fixture', 'Sample room (4 × 3 m)'],
     ]);
+  });
+
+  it('skips a Scan whose manifest.json is corrupt', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await mkdir(join(dataDir, 'scans/broken'));
+    await writeFile(join(dataDir, 'scans/broken/manifest.json'), '{');
+
+    const res = await app.request('/api/scans');
+
+    expect(res.status).toBe(200);
+    const scans: ScanManifest[] = await res.json();
+    expect(scans.map((scan) => scan.id)).toEqual(['fixture']);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('scans/broken/manifest.json'));
   });
 });
 
@@ -192,6 +212,21 @@ describe('GET /api/designs', () => {
     const designs: Design[] = await getJson('/api/designs?scanId=fixture');
     expect(designs.map((design) => design.id)).toEqual(['ds_fixture1']);
   });
+
+  it('skips a corrupt file and a file starting with _', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await writeFile(join(dataDir, 'designs/ds_broken1.json'), '{');
+    // Like #42's planned list of seed Design ids: valid JSON, but not a Design.
+    await writeJson('designs/_seed.json', ['ds_fixture1']);
+
+    const res = await app.request('/api/designs');
+
+    expect(res.status).toBe(200);
+    const designs: Design[] = await res.json();
+    expect(designs.map((design) => design.id)).toEqual(['ds_dorm0001', 'ds_fixture1']);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('designs/ds_broken1.json'));
+  });
 });
 
 describe('GET /api/designs/:id', () => {
@@ -272,6 +307,64 @@ describe('PUT /api/designs/:id', () => {
   it('400s when the body is a different Design', async () => {
     const res = await send('PUT', '/api/designs/ds_fixture1', { ...fixtureDesign, id: 'ds_other001' });
     expect(res.status).toBe(400);
+  });
+});
+
+describe('saves', () => {
+  /** Every file in the data folder, with its contents. */
+  const snapshot = async () => {
+    const files = (await readdir(dataDir, { recursive: true, withFileTypes: true })).filter((entry) => entry.isFile());
+    return Object.fromEntries(await Promise.all(files.map(async (entry) => {
+      const path = join(entry.parentPath, entry.name);
+      return [path, await readFile(path, 'utf8')];
+    })));
+  };
+
+  it('concurrent PUTs of one Design never corrupt it', async () => {
+    // Bodies of different lengths: a shorter write over a longer one leaves the longer one's tail.
+    const withEdits = (count: number) => ({
+      ...fixtureDesign,
+      edits: Array.from({ length: count }, (_, i) => ({ ...fixtureDesign.edits[i % fixtureDesign.edits.length], id: `ed_${i + 1}` })),
+    });
+
+    for (let round = 0; round < 50; round++) {
+      await Promise.all([send('PUT', '/api/designs/ds_fixture1', withEdits(40)), send('PUT', '/api/designs/ds_fixture1', withEdits(30))]);
+
+      const res = await app.request('/api/designs/ds_fixture1');
+      expect(res.status).toBe(200);
+      const saved: Design = await res.json();
+      expect([40, 30]).toContain(saved.edits.length);
+    }
+  });
+
+  it('PUT /api/scans/:id/setup, PUT /api/scans/:id/manifest, PUT /api/designs/:id and POST /api/designs answer 400 for a null body, and write nothing', async () => {
+    const before = await snapshot();
+
+    for (const [method, path] of [
+      ['PUT', '/api/scans/fixture/setup'], ['PUT', '/api/scans/fixture/manifest'], ['PUT', '/api/designs/ds_fixture1'], ['POST', '/api/designs'],
+    ]) {
+      const res = await send(method, path, null);
+      expect(res.status, `${method} ${path}`).toBe(400);
+      expect(await res.json()).toEqual({ error: 'The body must be a JSON object' });
+    }
+
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it('a failed write leaves the old file and no .part file', async () => {
+    const fs = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+    // The disk fills partway through the temp file.
+    vi.mocked(writeFile).mockImplementationOnce(async (file, data) => {
+      await fs.writeFile(file, String(data).slice(0, 100));
+      throw Object.assign(new Error('ENOSPC: no space left on device'), { code: 'ENOSPC' });
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const res = await send('PUT', '/api/designs/ds_fixture1', { ...fixtureDesign, name: 'Never saved' });
+
+    expect(res.status).toBe(500);
+    expect(await getJson('/api/designs/ds_fixture1')).toEqual(fixtureDesign);
+    expect(await readdir(join(dataDir, 'designs'))).toEqual(['ds_fixture1.json']);
   });
 });
 

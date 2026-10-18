@@ -1,7 +1,7 @@
 import { Document } from '@gltf-transform/core';
 import { getBounds } from '@gltf-transform/functions';
 import { describe, expect, it } from 'vitest';
-import { boundsOf, clearGlass, keepNodes, potted, turn } from './models';
+import { boundsOf, clearGlass, keepNodes, madeUp, potted, turn } from './models';
 
 /** A Document of axis-aligned boxes, each a top-level node named for it: [name, min, max]. */
 function boxes(...specs: [string, [number, number, number], [number, number, number]][]) {
@@ -69,5 +69,27 @@ describe('potted', () => {
     expect(rounded(max)).toEqual([0.3, 0.65, 0.25]);
     const soil = doc.getRoot().listNodes().find((n) => n.getName() === 'soil')!;
     expect(rounded(soil.getTranslation())).toEqual([0, 0.19, 0]);
+  });
+});
+
+describe('madeUp', () => {
+  it('makes a bed frame up: a mattress of the listed size on top, centered, with a duvet, a throw and a pillow at its head', () => {
+    // A 14" twin XL frame, 1.09 × 2.07 m, its top 0.356 m up; a 39 × 80 × 10 in mattress.
+    const frame = boxes(['frame', [-0.545, 0, -1.035], [0.545, 0.356, 1.035]]);
+    const doc = madeUp(frame, { mattress: [39, 80, 10] });
+    const bounds = (name: string) => {
+      const { min, max } = getBounds(doc.getRoot().listNodes().find((n) => n.getName() === name)!);
+      return [rounded(min), rounded(max)];
+    };
+
+    // 0.991 × 2.032 × 0.254 m on the frame's top, centered on it.
+    expect(bounds('mattress')).toEqual([[-0.495, 0.356, -1.016], [0.495, 0.61, 1.016]]);
+    // The duvet over its foot two thirds, a little wider; the pillow at its head (−Z), on top.
+    const [[, , duvetHead], [, duvetTop]] = bounds('duvet');
+    expect(duvetHead).toBeCloseTo(-1.016 + 2.032 * 0.3, 2);
+    expect(duvetTop).toBeCloseTo(0.66, 2);
+    const [[, pillowBottom, pillowHead], [, pillowTop]] = bounds('pillow');
+    expect([pillowBottom, pillowHead, pillowTop]).toEqual([0.61, -0.936, 0.74]);
+    expect(bounds('throw')[1][1]).toBeCloseTo(0.69, 2);
   });
 });

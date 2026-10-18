@@ -127,6 +127,12 @@ describe('toCatalogItem', () => {
     expect(toCatalogItem(pick, LUMMI_CHAIR, [0.9, 0.6, 0.9]).title).toBe('Beanbag Chair');
   });
 
+  it("passes on the pick's Part rule overrides, such as where a made-up bed's bedding is", () => {
+    const pick = { id: 'B07BWJCZJX', category: 'chair' as const, partParams: { seatFraction: 0.5 } };
+    expect(toCatalogItem(pick, LUMMI_CHAIR, [0.9, 0.6, 0.9]).partParams).toEqual({ seatFraction: 0.5 });
+    expect(toCatalogItem({ id: 'B07BWJCZJX', category: 'chair' }, LUMMI_CHAIR, [0.9, 0.6, 0.9])).not.toHaveProperty('partParams');
+  });
+
   it('rejects a pick whose category is not a Category, such as a typo in catalog-picks.json', () => {
     const typo = { id: 'B07BWJCZJX', category: 'wallart' as Category };
     expect(() => toCatalogItem(typo, LUMMI_CHAIR, [0.5, 0.8, 0.6])).toThrow(/wallart/);

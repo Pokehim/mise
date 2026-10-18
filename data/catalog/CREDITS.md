@@ -6,7 +6,7 @@ Written by `scripts/catalog-build.ts` from `catalog.json`: edit the script, not 
 
 | Source | License | Items | Terms |
 |---|---|---|---|
-| [Amazon Berkeley Objects](https://amazon-berkeley-objects.s3.amazonaws.com/index.html) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 161 | Credit "Amazon Berkeley Objects (CC BY 4.0), Amazon.com" wherever the models are shown, as the app footer does. Covers both the 3D models and the product photos the flat rugs and thumbnails are made from. |
+| [Amazon Berkeley Objects](https://amazon-berkeley-objects.s3.amazonaws.com/index.html) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 165 | Credit "Amazon Berkeley Objects (CC BY 4.0), Amazon.com" wherever the models are shown, as the app footer does. Covers both the 3D models and the product photos the flat rugs and thumbnails are made from. |
 | [Poly Haven](https://polyhaven.com/license) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 22 | Public domain: no conditions. Credited here anyway. |
 | [Google Scanned Objects](https://app.gazebosim.org/GoogleResearch/fuel/collections/Scanned%20Objects%20by%20Google%20Research) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 16 | Credit "Google Scanned Objects (CC BY 4.0), Google LLC" wherever the models are shown. Downs, L., et al. (2022), "Google Scanned Objects: A High-Quality Dataset of 3D Scanned Household Items", ICRA 2022. |
 | Mise | — | 3 | Made for this project: placeholder boxes, and text-to-3D items (generated.json). |
@@ -56,7 +56,7 @@ differs from object to object.
 | B07374SBFL | [Rivet Adjustable Arm Mid-Century Modern Living Room Standing Floor Lamp - 59 Inches, Brushed Nickel](https://www.amazon.com/dp/B07374SBFL) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B0828FBDV7 | [Ravenna Home Single-Light Swing-Arm Floor Lamp with Beige Linen Shade, LED Bulb Included, 63"H, Dark Bronze](https://www.amazon.com/dp/B0828FBDV7) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B073772DH1 | [Rivet Brass Arc Mid-Century Modern Living Room Standing Floor Lamp with Bulb, 76"H, Brass with Linen Shade](https://www.amazon.com/dp/B073772DH1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
-| B07B4VGZ9B | [Rivet Mid-Century Modern Curved Task Desk Table Lamp With USB Port And Light Bulb - 26 Inches, Matte Black & Brushed Steel](https://www.amazon.com/dp/B07B4VGZ9B) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B4VGZ9B | [Rivet Mid-Century Modern Curved Study Task Desk Lamp, Matte Black and Brass](https://www.amazon.com/dp/B07B4VGZ9B) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07B4YVXG8 | [Stone & Beam Modern Arc Table Desk Lamp with Light Bulb and Linen Shade - 9 x 9 x 20.5 Inches, Black and Brushed Brass](https://www.amazon.com/dp/B07B4YVXG8) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07F9X919G | [Ravenna Home Mid Century Modern White Ceramic Table Lamp With LED Light Bulb - 21 Inches, Blue Linen Shade](https://www.amazon.com/dp/B07F9X919G) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B075HWHVN6 | [Rivet Mid Century Modern Abstract Mountain Landscape Wall Art Decor on Canvas - 36 x 48 Inches](https://www.amazon.com/dp/B075HWHVN6) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
@@ -135,7 +135,7 @@ differs from object to object.
 | B001DA0KU6 | [Pinzon 3'6 X 5'6 Hand-tufted Woodstock Wool Rug](https://www.amazon.com/dp/B001DA0KU6) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B001DA0KVK | [Pinzon 5 X 8 Hand-tufted Loft Wool Rug](https://www.amazon.com/dp/B001DA0KVK) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B001DA3864 | [Pinzon Kimono 5-by-8-Foot Hand-Tufted Wool Rug](https://www.amazon.com/dp/B001DA3864) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
-| B07MF1RNW1 | [Ravenna Home Classic Straight Banker's Task Desk Lamp with LED Light Bulb, 16"H, Brushed Nickel](https://www.amazon.com/dp/B07MF1RNW1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07MF1RNW1 | [Ravenna Home Classic Banker's Study Desk Lamp with LED Light Bulb, Brushed Nickel](https://www.amazon.com/dp/B07MF1RNW1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07MBFDJMP | [Ravenna Home Curvy Table Desk Lamp with LED Light Bulb, 22.5"H, Brushed Nickel](https://www.amazon.com/dp/B07MBFDJMP) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07MBFDWY5 | [Ravenna Home Floor Lamp with Shelves, LED Light Bulb included, 62.75"H, Black](https://www.amazon.com/dp/B07MBFDWY5) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07DBCN3KB | [Ravenna Home Torchiere Living Room Standing Floor Lamp with LED Light Bulbs - 69.75 Inches, Dark Bronze with Frosted Glass Shade](https://www.amazon.com/dp/B07DBCN3KB) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
@@ -143,7 +143,7 @@ differs from object to object.
 | B07HK3PNSK | [Rivet Contemporary Palm Tree Neon Table Lamp, 11.75"H, White AF44228](https://www.amazon.com/dp/B07HK3PNSK) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B0742D9X4R | [Rivet Mid-Century Modern Tripod Décor Living Room Standing Floor Lamp with Light Bulb and Drum Shade, 58"H, Black](https://www.amazon.com/dp/B0742D9X4R) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B082XLC9B4 | [Rivet Scandinavian Task Lamp, 19"H, Matte Black](https://www.amazon.com/dp/B082XLC9B4) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
-| B07MHMSDJL | [Ravenna Home Elegant Banker's Lamp with LED Light Bulb, 16"H, Dark Bronze / Antique Brass](https://www.amazon.com/dp/B07MHMSDJL) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07MHMSDJL | [Ravenna Home Elegant Banker's Study Desk Lamp with LED Light Bulb, 16"H, Dark Bronze and Antique Brass](https://www.amazon.com/dp/B07MHMSDJL) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B0825CP3NS | [Rivet Scandinavian Real Blond-Wood Table Lamp with Marble Bottom, LED Bulb Included, 18.5"H, Beige](https://www.amazon.com/dp/B0825CP3NS) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | ph-pipe-lamp | [Industrial Pipe Desk Lamp with Edison Bulb](https://polyhaven.com/a/industrial_pipe_lamp) | Poly Haven (CC0): industrial_pipe_lamp |
 | B07PMK78R8 | [AmazonBasics Modern 5-Tier Ladder Bookshelf Organizer with Solid Rubber Wood Frame, Espresso](https://www.amazon.com/dp/B07PMK78R8) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
@@ -210,6 +210,10 @@ differs from object to object.
 | gso-mug | [Threshold White Beaded Porcelain Coffee Mug](https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White) | Google Scanned Objects (CC BY 4.0), Google LLC: Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White |
 | gso-pitcher-vase | [Threshold White Porcelain Pitcher Vase](https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Porcelain_Pitcher_White) | Google Scanned Objects (CC BY 4.0), Google LLC: Threshold_Porcelain_Pitcher_White |
 | gso-bowl | [Now Designs Akita Pattern Bowl, Black](https://app.gazebosim.org/GoogleResearch/fuel/models/Now_Designs_Bowl_Akita_Black) | Google Scanned Objects (CC BY 4.0), Google LLC: Now_Designs_Bowl_Akita_Black |
+| B073WQ8JLT | [Twin XL Bed: AmazonBasics 14" Metal Platform Bed Frame with a 10" Twin XL Mattress and Oat Bedding](https://www.amazon.com/dp/B073WQ8JLT) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07QTB45S5 | [An Amazon Brand - Movian Martin - Oak Effect Bookcase - 35cm L x 77cm W x 185cm H](https://www.amazon.com/dp/B07QTB45S5) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B7J2VCD | [Stone & Beam Casual Wood Bookcase, 34"W, Natural Rattan](https://www.amazon.com/dp/B07B7J2VCD) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B074KKXLK1 | [Stone & Beam Glenwood Bookcase, 72"H, Oak](https://www.amazon.com/dp/B074KKXLK1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | placeholder-chair | [Placeholder Desk Chair](https://www.amazon.com/s?k=desk+chair) | Mise placeholder box model |
 | placeholder-desk | [Placeholder Writing Desk](https://www.amazon.com/s?k=writing+desk) | Mise placeholder box model |
 | placeholder-rug | [Placeholder 5×7 Rug](https://www.amazon.com/s?k=5x7+rug) | Mise placeholder box model |

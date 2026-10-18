@@ -1,29 +1,35 @@
 /**
  * The 16 rooms on the landing page: Designs Claude made of the study lounge, each from a one-line
- * Brief asking for a different kind of room. Each image is the Design from the door (?shot=door). The
- * Designs themselves are kept in docs/landing/designs, off the Scans, for when each room animates
- * assembling itself Edit by Edit.
+ * Brief asking for a different kind of room. Each room's clip is its reveal (scene/Reveal.tsx) recorded
+ * from the door (?shot=door): the empty lounge assembling itself Edit by Edit. Its still is the clip's
+ * last frame, and empty.webp the first, which every clip shares. The Designs themselves are kept in
+ * docs/landing/designs, off the Scans; docs/landing/README.md says how the clips were made.
  */
 export const ROOMS = [
-  { id: 'ds_xzjjooha', room: 'Dorm bedroom', name: 'Golden Hour Dorm' },
-  { id: 'ds_07ps5jt7', room: 'Game room', name: 'Neon Arcade Lounge' },
-  { id: 'ds_kjigih9i', room: 'Library', name: 'Oxblood Reading Room' },
-  { id: 'ds_zk55s7lc', room: 'Music lounge', name: 'Cabaret Vinyl Lounge' },
+  { id: 'ds_5ov52t8d', room: 'Dorm bedroom', name: 'Sage Golden Hour' },
+  { id: 'ds_99q2v2yt', room: 'Game room', name: 'Golden Hour Games' },
+  { id: 'ds_w73jn43v', room: 'Library', name: 'Oxblood Reading Room' },
+  { id: 'ds_t45f88xj', room: 'Music lounge', name: 'Olive Groove Lounge' },
   { id: 'ds_chaepniv', room: 'Study room', name: 'Quiet Wave Study' },
-  { id: 'ds_tivq6e6m', room: 'Guest bedroom', name: 'Indigo Night Snow' },
-  { id: 'ds_nlwxbact', room: 'Game room', name: 'Insert Coin Lounge' },
-  { id: 'ds_suxtyo7h', room: 'Reading corner', name: 'Clay Hour' },
-  { id: 'ds_37n12kc3', room: 'Music lounge', name: 'Velvet Groove' },
   { id: 'ds_o8dpfq5d', room: 'Dorm bedroom', name: 'Clay Wall Nook' },
+  { id: 'ds_1ueec8sv', room: 'Game room', name: 'Grand Tour Lounge' },
+  { id: 'ds_suxtyo7h', room: 'Reading corner', name: 'Clay Hour' },
+  { id: 'ds_8iuqyadz', room: 'Music lounge', name: 'Olive Listening Room' },
   { id: 'ds_7p2rrif3', room: 'Library', name: 'Green Velvet Library' },
-  { id: 'ds_a5pt0u76', room: 'Game room', name: 'Player Two Room' },
-  { id: 'ds_uq96k7k7', room: 'Guest bedroom', name: 'Quiet Fuji' },
-  { id: 'ds_k2jhhzx9', room: 'Study room', name: 'Cabaret Study Hall' },
-  { id: 'ds_dymlzff4', room: 'Library', name: 'Green Study' },
+  { id: 'ds_ra7m1wns', room: 'Dorm bedroom', name: 'Rust Golden Hour' },
+  { id: 'ds_tivq6e6m', room: 'Guest bedroom', name: 'Indigo Night Snow' },
   { id: 'ds_x82lyiiw', room: 'Dorm bedroom', name: 'Clay Wave Dorm' },
+  { id: 'ds_uq96k7k7', room: 'Guest bedroom', name: 'Quiet Fuji' },
+  { id: 'ds_xr6p7zr6', room: 'Study room', name: 'Quiet Sage Study' },
+  { id: 'ds_dymlzff4', room: 'Library', name: 'Green Study' },
 ];
 
-const images = import.meta.glob<string>('./*.webp', { eager: true, import: 'default' });
+const stills = import.meta.glob<string>('./*.webp', { eager: true, import: 'default' });
+const clips = import.meta.glob<string>('./*.webm', { eager: true, import: 'default' });
 
-/** A room's image, by its Design's id. */
-export const imageOf = (id: string) => images[`./${id}.webp`];
+/** A room's finished still, by its Design's id. */
+export const stillOf = (id: string) => stills[`./${id}.webp`];
+/** A room's clip of its reveal. */
+export const clipOf = (id: string) => clips[`./${id}.webm`];
+/** The empty lounge, the first frame of every clip. */
+export const EMPTY = stills['./empty.webp'];

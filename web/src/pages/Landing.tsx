@@ -1,15 +1,15 @@
 import { Link } from 'wouter';
 import { ArrowRight } from '../ui/icons';
 import { Credits } from './Credits';
-import { imageOf, ROOMS } from './landing/rooms';
+import { RoomGrid } from './landing/RoomGrid';
 import './home.css';
 
 /** Where "Try the demo" goes: the Scans, with the study lounge. */
 const DEMO = '/scans';
 
 /**
- * `/`: what Mise is, and the demo: the study lounge as 16 rooms Claude made of it, which opens the
- * Scans like the button beside it.
+ * `/`: what Mise is, and the demo: the study lounge as 16 rooms Claude made of it, assembling themselves
+ * as the page opens, which open the Scans like the button beside it.
  */
 export function Landing() {
   return (
@@ -24,14 +24,7 @@ export function Landing() {
       </header>
       <figure className="landing-demo">
         <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms Claude made of the Oliver Hall 6th Floor Study Lounge">
-          <ul>
-            {ROOMS.map(({ id, room, name }) => (
-              <li key={id}>
-                <img src={imageOf(id)} width={640} height={480} alt="" />
-                <span className="room-label"><b>{room}</b>{name}</span>
-              </li>
-            ))}
-          </ul>
+          <RoomGrid />
         </Link>
         {/* Labeled like a drawing: what it shows lettered, then how it was made. */}
         <figcaption>

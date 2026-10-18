@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "id": "ds_5ov52t8d",
+  "scanId": "lounge",
+  "name": "Sage Golden Hour",
+  "createdAt": "2026-10-18T12:33:12.575Z",
+  "updatedAt": "2026-10-18T12:33:12.575Z",
+  "origin": "claude",
+  "brief": {
+    "text": "turn this room into a cozy dorm bedroom: a bed, a desk to study at, a plain rug and warm lamps, in soft muted colors, no multicolor rugs, under $600",
+    "budgetUsd": 600
+  },
+  "rationale": "A cozy dorm as briefed: a bed against a sage wall under warm anime-sunset prints, a desk lit from the side by the window, a plain beige shag rug and two warm lamps in soft muted colors, under $600.",
+  "palette": {
+    "wall": "#efe7da",
+    "accents": [
+      "#a9b49c",
+      "#c49a7a",
+      "#e8dccb"
+    ],
+    "materials": [
+      "linen",
+      "maple"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_ywdxvdv6",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_vwbrfvb2",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_nrmm3ikg",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_1",
+      "id": "ed_lmn3643l",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_opvsuyn8",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_i3qxlojt",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_y5cheuuo",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_0aa7zn94",
+      "at": "2026-10-18T12:33:05.382Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_g2ra48a2",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_7gff1hja",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_ey2fasmu",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_nndjcsjw",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_ppobxeng",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_tgl5eczn",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_fvqxbl3t",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_z3hordbu",
+      "at": "2026-10-18T12:33:05.383Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_i0cjobv1",
+      "catalogId": "B073WQ8JLT",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0,
+          -2.5292
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_ly4iv706",
+      "at": "2026-10-18T12:33:05.650Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_i52u8tze",
+      "catalogId": "B0876PDMJR",
+      "placement": {
+        "position": [
+          -1.3367,
+          0,
+          -2.13116
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_ffmbetf9",
+      "at": "2026-10-18T12:33:05.867Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_h0bt0uu8",
+      "catalogId": "ph-painted-chair",
+      "placement": {
+        "position": [
+          -0.8127,
+          0,
+          -2.13116
+        ],
+        "rotationY": -1.570796326794897,
+        "mount": "floor"
+      },
+      "id": "ed_81wtdmuj",
+      "at": "2026-10-18T12:33:06.129Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#a9b49c"
+      },
+      "id": "ed_rvgpe2hr",
+      "at": "2026-10-18T12:33:06.420Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_5fgv89fd",
+      "catalogId": "B07TS83QM9",
+      "placement": {
+        "position": [
+          0.813899,
+          0,
+          -1.3917
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_f5w7istd",
+      "at": "2026-10-18T12:33:06.624Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_mt4fss7f",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          0.36739900000000025,
+          0,
+          -2.8562
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_wctzpggu",
+      "at": "2026-10-18T12:33:06.919Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_bqk0097p",
+      "catalogId": "B07JLGCKKJ",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0.66,
+          -3.3607
+        ],
+        "rotationY": 0,
+        "mount": "surface"
+      },
+      "id": "ed_2bajagai",
+      "at": "2026-10-18T12:33:07.113Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_0g1jkww9",
+      "catalogId": "B07JLZC56G",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0.66,
+          -3.1577
+        ],
+        "rotationY": 0,
+        "mount": "surface"
+      },
+      "id": "ed_4ugjaloe",
+      "at": "2026-10-18T12:33:07.114Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_pknsckd2",
+      "catalogId": "B0825CP3NS",
+      "placement": {
+        "position": [
+          -1.3367,
+          0.761,
+          -2.13116
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_vtptyyon",
+      "at": "2026-10-18T12:33:07.277Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_i0cjobv1",
+      "partId": "bedding",
+      "color": "#e8dccb",
+      "id": "ed_g6mh34ci",
+      "at": "2026-10-18T12:33:07.567Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_h0bt0uu8",
+      "partId": "*",
+      "color": "#c49a7a",
+      "id": "ed_2stubfzx",
+      "at": "2026-10-18T12:33:07.840Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_bqk0097p",
+      "id": "ed_345fjssq",
+      "at": "2026-10-18T12:33:11.109Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_0g1jkww9",
+      "id": "ed_o2ho6cdr",
+      "at": "2026-10-18T12:33:11.110Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_qf4volea",
+      "catalogId": "poster-riverbank",
+      "placement": {
+        "position": [
+          1.5744,
+          1.145,
+          -2.3497
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_9tvxrwfw",
+      "at": "2026-10-18T12:33:11.323Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_65thooyq",
+      "catalogId": "poster-after-school",
+      "placement": {
+        "position": [
+          1.5744,
+          1.234,
+          -3.0262
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_u5m1382k",
+      "at": "2026-10-18T12:33:11.323Z",
+      "by": "claude"
+    }
+  ]
+}

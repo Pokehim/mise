@@ -1,0 +1,456 @@
+{
+  "version": 1,
+  "id": "ds_t45f88xj",
+  "scanId": "lounge",
+  "name": "Olive Groove Lounge",
+  "createdAt": "2026-10-18T12:33:10.393Z",
+  "updatedAt": "2026-10-18T12:33:10.393Z",
+  "origin": "claude",
+  "brief": {
+    "text": "a music lounge for listening to records, with a record player, plants and comfy seats, in earthy muted tones, no multicolor rugs"
+  },
+  "rationale": "A record-listening lounge as the Brief asks: a walnut turntable and record crate face a deep green velvet sofa and armchair over a plain jute rug, with plants and warm lamps, all in earthy muted tones.",
+  "palette": {
+    "wall": "#d9cfc0",
+    "accents": [
+      "#6b6a4a",
+      "#a0522d",
+      "#3f5a3a"
+    ],
+    "materials": [
+      "walnut",
+      "jute"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_ghq3ostw",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_ep7ktt7b",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_pk32l4x5",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_1",
+      "id": "ed_qyy3b724",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_fskqz4lj",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_4y80wnfw",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_7f2icwt1",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_99u0j8tl",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_y6gyrhre",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_l1usroqk",
+      "at": "2026-10-18T12:33:02.722Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_1rkajljg",
+      "at": "2026-10-18T12:33:02.723Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_4t9f7t2i",
+      "at": "2026-10-18T12:33:02.723Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_0g2by2np",
+      "at": "2026-10-18T12:33:02.723Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_zl0wg830",
+      "at": "2026-10-18T12:33:02.723Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_q6tkizdt",
+      "at": "2026-10-18T12:33:02.723Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_qqx44yu1",
+      "at": "2026-10-18T12:33:02.723Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_uwatmw0c",
+      "catalogId": "B07BKK336B",
+      "placement": {
+        "position": [
+          1.1188990000000003,
+          0,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_8s3abcsx",
+      "at": "2026-10-18T12:33:03.872Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_x9fk332l",
+      "catalogId": "B07B7J8GGS",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0,
+          -0.26983000000000024
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_xg2n88y6",
+      "at": "2026-10-18T12:33:04.132Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#6b6a4a"
+      },
+      "id": "ed_idhxrqnb",
+      "at": "2026-10-18T12:33:04.378Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_7fof3x1v",
+      "catalogId": "poster-aristide-bruant",
+      "placement": {
+        "position": [
+          1.5744,
+          0.9929999999999999,
+          0.11860000000000026
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_julg528e",
+      "at": "2026-10-18T12:33:04.708Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_23zcoicz",
+      "catalogId": "poster-salut-au-monde",
+      "placement": {
+        "position": [
+          1.5744,
+          1.234,
+          0.6431000000000004
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_0emxtben",
+      "at": "2026-10-18T12:33:04.708Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ai4zkkyn",
+      "catalogId": "poster-sing-for-your-supper",
+      "placement": {
+        "position": [
+          1.5744,
+          1.145,
+          -0.4948999999999999
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_5pnhc254",
+      "at": "2026-10-18T12:33:04.708Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_2f90tego",
+      "catalogId": "B071LQHW1P",
+      "placement": {
+        "position": [
+          0.4103990000000003,
+          0,
+          0.029600000000000338
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_oznhz1hw",
+      "at": "2026-10-18T12:33:04.910Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_dqapzsjq",
+      "catalogId": "B075X4N4S4",
+      "placement": {
+        "position": [
+          -0.9407,
+          0,
+          -3.1151999999999997
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_ojurpbl1",
+      "at": "2026-10-18T12:33:05.220Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_166h50ho",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          -0.35919999999999996,
+          0,
+          -2.8276999999999997
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_yx4k4dju",
+      "at": "2026-10-18T12:33:05.225Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_qd9z4k7i",
+      "catalogId": "B075HX9T8Y",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0.765,
+          -0.26983000000000024
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_t7emvkob",
+      "at": "2026-10-18T12:33:05.226Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_6nohfvwu",
+      "catalogId": "B07C8DHX43",
+      "placement": {
+        "position": [
+          0.3593000000000002,
+          0,
+          -0.8151999999999999
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_fbcaw1ll",
+      "at": "2026-10-18T12:33:05.620Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_x37ww1pc",
+      "catalogId": "B073772DH1",
+      "placement": {
+        "position": [
+          0.8588990000000002,
+          0,
+          -2.5152
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_fqe7qiz3",
+      "at": "2026-10-18T12:33:05.648Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_hqrt05os",
+      "catalogId": "obj-record-crate",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0.765,
+          -0.6698300000000003
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_gxtzsx4b",
+      "at": "2026-10-18T12:33:05.933Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_3bths1v9",
+      "catalogId": "ph-calathea-ebony",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0.765,
+          0.030169999999999808
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_qtq9xdzm",
+      "at": "2026-10-18T12:33:05.934Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_qd9z4k7i",
+      "id": "ed_k8kplpnx",
+      "at": "2026-10-18T12:33:06.919Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_30gre5d8",
+      "catalogId": "B075HX9T8Y",
+      "placement": {
+        "position": [
+          -0.5407,
+          0,
+          2.8848000000000003
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      },
+      "id": "ed_of5jmodi",
+      "at": "2026-10-18T12:33:07.336Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_3bths1v9",
+      "id": "ed_y6mlll2n",
+      "at": "2026-10-18T12:33:08.232Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_z6v4aqr7",
+      "catalogId": "obj-turntable-walnut",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0.765,
+          -0.26983000000000024
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_twng2jvs",
+      "at": "2026-10-18T12:33:08.488Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_qdyzm2o7",
+      "catalogId": "ph-calathea-ebony",
+      "placement": {
+        "position": [
+          -1.410056220951029,
+          0.3415052385965338,
+          0.026334233058442513
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_yrdslaqz",
+      "at": "2026-10-18T12:33:08.714Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_4"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#d9cfc0"
+      },
+      "id": "ed_qfzs4u00",
+      "at": "2026-10-18T12:33:09.014Z",
+      "by": "claude"
+    }
+  ]
+}

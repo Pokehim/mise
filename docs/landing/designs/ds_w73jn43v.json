@@ -1,0 +1,393 @@
+{
+  "version": 1,
+  "id": "ds_w73jn43v",
+  "scanId": "lounge",
+  "name": "Oxblood Reading Room",
+  "createdAt": "2026-10-18T12:33:10.674Z",
+  "updatedAt": "2026-10-18T12:33:10.674Z",
+  "origin": "claude",
+  "brief": {
+    "text": "a library: bookcases, deep reading chairs, warm lamps, dark academia, with a plain wool or jute rug, no multicolor rugs"
+  },
+  "rationale": "A dark-academia library from the Brief: walnut bookcases against an oxblood wall, deep green velvet reading chairs under warm brass lamps, a plain braided jute rug and Toulouse-Lautrec posters.",
+  "palette": {
+    "wall": "#5a1f24",
+    "accents": [
+      "#2f4a3a",
+      "#b08d57",
+      "#c8642a"
+    ],
+    "materials": [
+      "walnut",
+      "velvet"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_nx1ots2u",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_bp3igy24",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_52d0wph0",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_1",
+      "id": "ed_rszx870e",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_ucqdhede",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_803cv0z5",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_p74ktmwz",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_c4wzf35f",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_vuqk7h88",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_4jmqdrqs",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_p8m89mln",
+      "at": "2026-10-18T12:33:05.869Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_0kh174km",
+      "at": "2026-10-18T12:33:05.870Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_xtlgv9c9",
+      "at": "2026-10-18T12:33:05.870Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_jp3jf5am",
+      "at": "2026-10-18T12:33:05.870Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_64nphw99",
+      "at": "2026-10-18T12:33:05.870Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_rlvimmb1",
+      "at": "2026-10-18T12:33:05.870Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_jljri2s3",
+      "catalogId": "B07PSZHDMW",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          0,
+          -0.5607639999999998
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_3cl99w0r",
+      "at": "2026-10-18T12:33:06.095Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_tql4zle5",
+      "catalogId": "B07PSZHDMW",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          0,
+          0.1296000000000003
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_lkfhpwog",
+      "at": "2026-10-18T12:33:06.394Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_f7aq1od0",
+      "catalogId": "B07PSZHDMW",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          0,
+          0.8199640000000004
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_zc3mn8kg",
+      "at": "2026-10-18T12:33:06.588Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#5a1f24"
+      },
+      "id": "ed_w5tbd8fy",
+      "at": "2026-10-18T12:33:06.822Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_cgvey56q",
+      "catalogId": "poster-aristide-bruant",
+      "placement": {
+        "position": [
+          -1.5892,
+          0.9929999999999999,
+          -0.29938000000000065
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_ltc3z8bd",
+      "at": "2026-10-18T12:33:07.093Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_9f8z376k",
+      "catalogId": "B075X4N4S4",
+      "placement": {
+        "position": [
+          -0.9407,
+          0,
+          -3.1151999999999997
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_j8y4d11b",
+      "at": "2026-10-18T12:33:07.442Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ih5253y1",
+      "catalogId": "ph-side-table",
+      "placement": {
+        "position": [
+          -0.20169999999999988,
+          0,
+          -3.3116999999999996
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_6al1256o",
+      "at": "2026-10-18T12:33:07.443Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_nmpvttxu",
+      "catalogId": "B073772DH1",
+      "placement": {
+        "position": [
+          -0.8407,
+          0,
+          -2.4151999999999996
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_qknux18m",
+      "at": "2026-10-18T12:33:07.466Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_0cuzcvc4",
+      "catalogId": "B075X4N4S4",
+      "placement": {
+        "position": [
+          0.7593000000000001,
+          0,
+          -0.11519999999999975
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_np4q3109",
+      "at": "2026-10-18T12:33:07.757Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_x6vumhb7",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          0.8718000000000001,
+          0,
+          0.46630000000000027
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_n3ekkf2e",
+      "at": "2026-10-18T12:33:07.758Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_1niddbs9",
+      "catalogId": "B075HX9T8Y",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          1.78,
+          0.1296000000000003
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_gk3u1loi",
+      "at": "2026-10-18T12:33:07.758Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ze5pnvgu",
+      "catalogId": "B0719STM26",
+      "placement": {
+        "position": [
+          -0.20169999999999988,
+          0,
+          -2.343699
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_aptof452",
+      "at": "2026-10-18T12:33:07.970Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_1lg79mtj",
+      "catalogId": "B07MHMSDJL",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          1.78,
+          -0.5607639999999998
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_pwagbp13",
+      "at": "2026-10-18T12:33:08.352Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_dgy6fdw9",
+      "catalogId": "B075HR7LD2",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          1.78,
+          -0.3607639999999998
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_8hekg6g1",
+      "at": "2026-10-18T12:33:08.352Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_9tmcngmd",
+      "catalogId": "poster-divan-japonais",
+      "placement": {
+        "position": [
+          -1.5782,
+          1.125,
+          -0.9328800000000004
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_7btfcno6",
+      "at": "2026-10-18T12:33:10.142Z",
+      "by": "claude"
+    }
+  ]
+}

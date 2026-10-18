@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "id": "ds_xr6p7zr6",
+  "scanId": "lounge",
+  "name": "Quiet Sage Study",
+  "createdAt": "2026-10-18T12:33:08.380Z",
+  "updatedAt": "2026-10-18T12:33:08.380Z",
+  "origin": "claude",
+  "brief": {
+    "text": "a focused study room with good task lighting and room for four people to work, in a calm muted palette, no multicolor rugs"
+  },
+  "rationale": "A focused study room for four or more: a task lamp at every table, a calm sage and putty palette, a single-tone braided jute rug instead of a multicolor one, and Japanese prints as the quiet focal point.",
+  "palette": {
+    "wall": "#a3ab9a",
+    "accents": [
+      "#4f6f6c",
+      "#2b2b2b",
+      "#d8cdb8"
+    ],
+    "materials": [
+      "jute",
+      "oak"
+    ]
+  },
+  "edits": [
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_4"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#a3ab9a"
+      },
+      "id": "ed_5zaknhb1",
+      "at": "2026-10-18T12:33:02.958Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ffh5fkig",
+      "catalogId": "poster-red-fuji",
+      "placement": {
+        "position": [
+          -1.5782,
+          1.125,
+          -0.19960000000000022
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_qoczfikv",
+      "at": "2026-10-18T12:33:03.270Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_chzve587",
+      "catalogId": "poster-great-wave",
+      "placement": {
+        "position": [
+          -1.5892,
+          1.145,
+          -0.756600000000001
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_pqpku2z2",
+      "at": "2026-10-18T12:33:03.271Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ovfise5x",
+      "catalogId": "poster-sudden-shower",
+      "placement": {
+        "position": [
+          -1.5892,
+          1.145,
+          0.3573999999999997
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_adtzsuzo",
+      "at": "2026-10-18T12:33:03.271Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_q2mow2op",
+      "catalogId": "B071LQHW1P",
+      "placement": {
+        "position": [
+          -0.5017984089868034,
+          0,
+          -0.1996
+        ],
+        "rotationY": -0.02277,
+        "mount": "floor"
+      },
+      "id": "ed_tdm706fa",
+      "at": "2026-10-18T12:33:03.455Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ws5gjfzq",
+      "catalogId": "B072PZJZY3",
+      "placement": {
+        "position": [
+          -0.9407,
+          0,
+          -3.2152
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_xm3xcnqt",
+      "at": "2026-10-18T12:33:03.801Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_r8sw1rm1",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          -1.3192,
+          0,
+          -3.1832
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_s62wgumz",
+      "at": "2026-10-18T12:33:03.812Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_kfj0hegb",
+      "catalogId": "B075HX9T8Y",
+      "placement": {
+        "position": [
+          -0.8133,
+          0.705,
+          -1.576
+        ],
+        "rotationY": 0.02149,
+        "mount": "surface"
+      },
+      "id": "ed_hpld0qh5",
+      "at": "2026-10-18T12:33:03.812Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_odzjjcfj",
+      "catalogId": "B07B4VGZ9B",
+      "placement": {
+        "position": [
+          -0.5133692703490684,
+          0.705,
+          -1.582446503785761
+        ],
+        "rotationY": 0.02149,
+        "mount": "surface"
+      },
+      "id": "ed_3oy6030c",
+      "at": "2026-10-18T12:33:04.294Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_555z6cka",
+      "catalogId": "B07B4VGZ9B",
+      "placement": {
+        "position": [
+          -0.803,
+          0.705,
+          -0.1996
+        ],
+        "rotationY": -0.02277,
+        "mount": "surface"
+      },
+      "id": "ed_vhgcy03q",
+      "at": "2026-10-18T12:33:04.294Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_0vlxjvcj",
+      "catalogId": "B07B4VGZ9B",
+      "placement": {
+        "position": [
+          -0.8066,
+          0.705,
+          1.7818
+        ],
+        "rotationY": -0.0215,
+        "mount": "surface"
+      },
+      "id": "ed_inu2ui06",
+      "at": "2026-10-18T12:33:04.294Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_h21ljrq4",
+      "catalogId": "ph-calathea-ebony",
+      "placement": {
+        "position": [
+          -0.6030518450499208,
+          0.705,
+          -0.19504639351072972
+        ],
+        "rotationY": -0.02277,
+        "mount": "surface"
+      },
+      "id": "ed_urwoywxu",
+      "at": "2026-10-18T12:33:04.295Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_wfpnt3f4",
+      "catalogId": "B075HR7LD2",
+      "placement": {
+        "position": [
+          -1.0029481549500792,
+          0.705,
+          -0.20415360648927028
+        ],
+        "rotationY": -0.02277,
+        "mount": "surface"
+      },
+      "id": "ed_t78186sp",
+      "at": "2026-10-18T12:33:04.295Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_q2mow2op",
+      "id": "ed_12qqcr6q",
+      "at": "2026-10-18T12:33:07.137Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_a9ijw39d",
+      "catalogId": "B0719STM26",
+      "placement": {
+        "position": [
+          -0.34120462162179804,
+          0,
+          -0.1996
+        ],
+        "rotationY": 1.5480263267948966,
+        "mount": "floor"
+      },
+      "id": "ed_akz1r38x",
+      "at": "2026-10-18T12:33:07.285Z",
+      "by": "claude"
+    }
+  ]
+}

@@ -67,7 +67,7 @@
 }
 .landing-rooms ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
 .landing-rooms li { position: relative; }
-.landing-rooms img {
+.landing-rooms :is(img, video) {
   display: block;
   width: 100%;
   height: auto;
@@ -97,7 +97,7 @@
 @media (hover: hover) {
   .home a.landing-rooms:hover { border-color: var(--ink); }
   .landing-rooms li:hover .room-label { opacity: 1; translate: 0 0; }
-  .landing-rooms ul:hover li:not(:hover) img { opacity: 0.72; }
+  .landing-rooms ul:hover li:not(:hover) :is(img, video) { opacity: 0.72; }
 }
 @media (prefers-reduced-motion: reduce) {
   .room-label { translate: none; }

@@ -11,7 +11,7 @@ Movers (a freshman furnishing a dorm, a new homeowner) buy furniture blind: will
 - **Generate.** Write a Brief, like "cozy Japandi, under $400, I need a reading corner", and Claude makes three Designs that fit the room, Edit by Edit, as you watch.
 - **Shop.** Every Design has a shopping list with product links and an estimated total.
 
-![Home: the Oliver Hall 6th Floor Study Lounge Scan, its plan, and its Designs](docs/readme/home.webp)
+![The Scans: the Oliver Hall 6th Floor Study Lounge, its plan, and its Designs](docs/readme/home.webp)
 
 **Live demo:** https://mise-dubhacks.azurewebsites.net (Room Setup and imports are off there; see [docs/deploy.md](docs/deploy.md)).
 
@@ -25,7 +25,7 @@ cp .env.example .env   # add ANTHROPIC_API_KEY (and ANTHROPIC_WORKSPACE_ID if yo
 npm run dev            # the web app on http://localhost:5173, the API on :8787
 ```
 
-Open http://localhost:5173 and pick a Design of the study lounge. Everything but Generate and text-to-3D works without keys.
+Open http://localhost:5173, choose **Try the demo**, and pick a Design of the study lounge. Everything but Generate and text-to-3D works without keys.
 
 | Command | What it does |
 |---|---|
@@ -52,7 +52,8 @@ Open http://localhost:5173 and pick a Design of the study lounge. Everything but
           │
           ▼
  web/ (Vite, React, React Three Fiber)
-   /                  Home: your Scans and their Designs, Import
+   /                  the landing page, with the demo
+   /scans             your Scans and their Designs, Import
    /setup/:scanId     Room Setup: floor, walls, Openings, Originals
    /d/:designId       the editor:  RoomState = replay(setup, catalog, edits)  →  render
                       every action appends an Edit; undo, History and Duplicate come free

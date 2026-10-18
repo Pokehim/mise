@@ -77,7 +77,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
       <main className="app-status">
         <h1>This Design didn't open</h1>
         <p>Could not open Design {designId}: {error}</p>
-        <Link href="/">Back to your Scans</Link>
+        <Link href="/scans">Back to your Scans</Link>
       </main>
     );
   }

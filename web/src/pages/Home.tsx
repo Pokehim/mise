@@ -6,6 +6,7 @@ import { moveInLayoutId } from '../plan/library';
 import { count } from '../ui/format';
 import { ArrowRight, Plus, Sparkle } from '../ui/icons';
 import { useServerConfig } from '../ui/useServerConfig';
+import { Credits } from './Credits';
 import { useStartDesign } from '../ui/useStartDesign';
 import { ImportDialog } from './ImportDialog';
 import { ScanPlan } from './ScanPlan';
@@ -68,8 +69,9 @@ const Loading = () => (
 );
 
 /**
- * `/`: the Mover's own Scans, and the Designs under each (spec §10.8). `/?all=1` lists every Scan,
- * the library's and the test rooms too, for development.
+ * `/scans`: the Mover's own Scans, and the Designs under each (spec §10.8), in one column under the
+ * name that leads back to the landing page. `/scans?all=1` lists every Scan, the library's and the
+ * test rooms too, for development.
  */
 export function Home() {
   const all = new URLSearchParams(useSearch()).get('all') === '1';
@@ -90,12 +92,8 @@ export function Home() {
     design.scanId === scan.id && (all || !scan.library || design.id !== moveInLayoutId(scan.id)));
   return (
     <div className="home">
-      <header className="home-intro">
-        <hgroup>
-          <h1>Mise</h1>
-          <p className="tagline">A sketchbook for your real room.</p>
-        </hgroup>
-        <p>Redesign your real room before you buy a thing. Try Catalog furniture at true size in your Scan, then shop the Design.</p>
+      <header className="home-top">
+        <Link href="/" className="wordmark">Mise</Link>
       </header>
       <main className="home-scans">
         <div className="home-heading-row">
@@ -114,13 +112,7 @@ export function Home() {
         )}
         {listed.map((scan) => <ScanSection key={scan.id} scan={scan} designs={designsOf(scan)} />)}
       </main>
-      <footer className="home-footer">
-        <p>
-          3D models: <a href="https://amazon-berkeley-objects.s3.amazonaws.com/index.html">Amazon Berkeley Objects</a> (CC BY 4.0),
-          Amazon.com, and <a href="https://app.gazebosim.org/GoogleResearch/fuel/collections/Scanned%20Objects%20by%20Google%20Research">Google Scanned Objects</a> (CC BY 4.0),
-          Google LLC. Materials: <a href="https://polyhaven.com">Poly Haven</a> and <a href="https://ambientcg.com">ambientCG</a> (CC0).
-        </p>
-      </footer>
+      <Credits />
     </div>
   );
 }

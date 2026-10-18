@@ -1,7 +1,5 @@
 import { checkFit, type Item as RoomItem, roomItems, TOLERANCE } from './fit';
-import {
-  distanceToWall, footprint, type OrientedRect, overlapLength, polygonsOverlap, rectCorners, rectInPolygon, wallPoint,
-} from './geometry';
+import { distanceToWall, footprint, type OrientedRect, polygonsOverlap, rectCorners, rectInPolygon, wallPoint } from './geometry';
 import type { Catalog, CatalogItem, FitViolation, Placement, RoomSetup, RoomState, Vec2, Wall } from './types';
 
 /** How far, in meters, each step slides a Placement that breaks a Fit rule. */
@@ -40,8 +38,8 @@ export type Anchor =
 /** A resolved Anchor: the Placement it stands for, or why there is none. */
 export type Resolution = { placement: Placement } | { error: string; violations: FitViolation[] };
 
-/** The Placements an Anchor allows, the one nearest to what it asks for first, and what to say when none fits. */
-interface Candidates { placements: Placement[]; noFit: string }
+/** The Placements an Anchor allows, the one nearest to what it asks for first, and what to say when none fits; or why it allows none. */
+type Candidates = { placements: Placement[]; noFit: string } | { error: string };
 
 /** The Placement an Anchor stands for, for a new Piece of `item` in the room (spec §13.2). */
 export function resolveAnchor(setup: RoomSetup, catalog: Catalog, state: RoomState, item: CatalogItem, anchor: Anchor): Resolution {
@@ -52,52 +50,43 @@ export function resolveAnchor(setup: RoomSetup, catalog: Catalog, state: RoomSta
   const violations = (placement: Placement) => checkFit(setup, withItem, {
     ...state, pieces: { ...state.pieces, [item.id]: { catalogId: item.id, placement, partColors: {} } },
   }, [item.id], { walkway: true });
-  const [asked, ...slid] = candidates.placements;
-  const askedViolations = asked ? violations(asked) : [];
-  if (asked && !askedViolations.length) return { placement: asked };
-  const placement = slid.find((candidate) => !violations(candidate).length);
-  return placement ? { placement } : { error: candidates.noFit, violations: askedViolations };
+  const placement = candidates.placements.find((candidate) => !violations(candidate).length);
+  if (placement) return { placement };
+  const [asked] = candidates.placements;
+  return { error: candidates.noFit, violations: asked ? violations(asked) : [] };
 }
 
 /** The Placements an Anchor allows for `item`, before the Fit rules pick among them, or why it allows none. */
-function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, anchor: Anchor): Candidates | { error: string } {
+function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, anchor: Anchor): Candidates {
   const [width, height, depth] = item.size;
-  /** The Placement, then the Placement slid along the unit vector [ax, az], from `min` to `max` meters, where `allowed`. */
-  const sliding = (placement: Placement, [ax, az]: Vec2, [min, max] = [-Infinity, Infinity], allowed = (_: number) => true) => {
+  /** The Placement, then the Placement slid along the unit vector [ax, az], from `min` to `max` meters. */
+  const sliding = (placement: Placement, [ax, az]: Vec2, [min, max]: [number, number]): Candidates => {
     const [x, y, z] = placement.position;
     return {
       placements: SLIDES
-        .filter((slide) => slide >= min - EPSILON && slide <= max + EPSILON && allowed(slide))
+        .filter((slide) => slide >= min - EPSILON && slide <= max + EPSILON)
         .map((slide): Placement => ({ ...placement, position: [x + ax * slide, y, z + az * slide] })),
       noFit: `${item.title} doesn't fit there, even slid up to ${MAX_SLIDE} m either way`,
     };
   };
   /**
-   * Back flush to a wall, its center `along` meters from the wall's start, sliding along it but never
-   * past its ends: on the floor, or hung with its center `centerHeight` up, and then never over an Opening.
+   * Back flush to a wall, its center `along` meters from the wall's start, sliding along the wall
+   * but keeping that center within `[from, to]`, by default where the item stays on the wall: on the
+   * floor, or hung with its center `centerHeight` up.
    */
-  const flushTo = (wall: Wall, along: number, centerHeight?: number): Candidates | { error: string } => {
-    const length = wallLength(wall);
-    if (width > length + EPSILON) return { error: `${item.title} is wider than the ${wall.name}` };
+  const flushTo = (wall: Wall, along: number, { centerHeight, from = width / 2, to = wallLength(wall) - width / 2 }:
+    { centerHeight?: number; from?: number; to?: number } = {}): Candidates => {
+    if (width > wallLength(wall) + EPSILON) return { error: `${item.title} is wider than the ${wall.name}` };
     const [x, z] = wallPoint(wall, along, depth / 2);
     const rotationY = facing(wall.normal);
-    const range: [number, number] = [width / 2 - along, length - width / 2 - along];
+    const range: [number, number] = [from - along, to - along];
     if (centerHeight === undefined) return sliding({ position: [x, 0, z], rotationY, mount: 'floor' }, direction(wall), range);
     const bottom = centerHeight - height / 2;
     if (bottom < 0 || bottom + height > wall.height) {
       const where = `the ${wall.name} ${centerHeight} m up`;
       return { error: `${item.title}, ${height} m tall, doesn't fit on ${where}: the wall is ${wall.height} m tall` };
     }
-    const openings = setup.openings.filter(({ wallId }) => wallId === wall.id);
-    /** The Opening it would hang over, slid this far. */
-    const over = (slide: number) => openings.find((opening) =>
-      overlapLength([opening.offset, opening.offset + opening.width], [along + slide - width / 2, along + slide + width / 2]) > TOLERANCE
-      && overlapLength([opening.bottom, opening.bottom + opening.height], [bottom, bottom + height]) > TOLERANCE);
-    const placement: Placement = { position: [x, bottom, z], rotationY, mount: 'wall', wallId: wall.id };
-    const hung = sliding(placement, direction(wall), range, (slide) => !over(slide));
-    // No Fit rule covers an Opening on the wall, so the error has to say so.
-    const covered = over(0);
-    return covered ? { ...hung, noFit: `${hung.noFit}: where asked, it would hang over ${covered.id}` } : hung;
+    return sliding({ position: [x, bottom, z], rotationY, mount: 'wall', wallId: wall.id }, direction(wall), range);
   };
   const wallOf = (id: string) => setup.walls.find((wall) => wall.id === id);
   const targetOf = (id: string) => inRoom.find((target) => target.id === id);
@@ -119,14 +108,17 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
         return { error: `along goes from 0 (the left end) to 1 (the right end), not ${along}` };
       }
       const centerHeight = anchor.kind === 'on_wall' ? anchor.center_height_m ?? CENTER_HEIGHT : undefined;
-      return flushTo(wall, fromStart(wall, width, along), centerHeight);
+      return flushTo(wall, fromStart(wall, width, along), { centerHeight });
     }
     case 'under_window': {
       const opening = setup.openings.find(({ id }) => id === anchor.opening_id);
       if (!opening) return { error: `The room has no window "${anchor.opening_id}"` };
       if (opening.kind !== 'window') return { error: `${opening.id} is a ${opening.kind}, not a window` };
       const wall = wallOf(opening.wallId);
-      return wall ? flushTo(wall, opening.offset + opening.width / 2) : noWall(opening.wallId);
+      if (!wall) return noWall(opening.wallId);
+      // It slides along the wall, but its center stays under the window.
+      const [from, to] = [Math.max(width / 2, opening.offset), Math.min(wallLength(wall) - width / 2, opening.offset + opening.width)];
+      return flushTo(wall, opening.offset + opening.width / 2, { from, to });
     }
     case 'beside': {
       const target = targetOf(anchor.target_id);
@@ -134,12 +126,25 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
       // Beside it, backs in line; in front of it, facing it. It slides along the side it is at, but
       // its center never past that side's ends, so that it stays next to the target.
-      const [across, out, turn, axis, range]: [number, number, number, Vec2, [number, number]] = anchor.side === 'front'
-        ? [0, targetDepth / 2 + depth / 2, Math.PI, rightOf(rotationY), [-targetWidth / 2, targetWidth / 2]]
-        : [(anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2), depth / 2 - targetDepth / 2, 0,
-          frontOf(rotationY), [-depth / 2, targetDepth - depth / 2]];
+      const { across, out, turn, axis, min, max } = anchor.side === 'front'
+        ? {
+          across: 0,
+          out: targetDepth / 2 + depth / 2,
+          turn: Math.PI,
+          axis: rightOf(rotationY),
+          min: -targetWidth / 2,
+          max: targetWidth / 2,
+        }
+        : {
+          across: (anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2),
+          out: depth / 2 - targetDepth / 2,
+          turn: 0,
+          axis: frontOf(rotationY),
+          min: -depth / 2,
+          max: targetDepth - depth / 2,
+        };
       const [x, z] = inFrameOf(target.placement, [across, out]);
-      return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, range);
+      return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, [min, max]);
     }
     case 'on_top_of': {
       const target = targetOf(anchor.target_id);

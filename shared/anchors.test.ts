@@ -145,10 +145,16 @@ describe('resolveAnchor', () => {
       });
     });
 
-    it('slides an item taller than the sill along the wall until it clears the window', () => {
-      // 1.1 m tall under a 0.9 m sill: 0.9 m along, x 0.6–1.2, it's just past the window's edge at x = 0.6.
-      expect(resolve(chest, { kind: 'under_window', opening_id: 'op_window' })).toMatchObject({
-        placement: { position: [closeTo(0.9), 0, closeTo(-1.275)] },
+    it('slides along under the window, but never out from under it', () => {
+      // A cube already stands under the middle of the window, x −0.25 to 0.25: 0.5 m along, the nightstand clears it.
+      const cubeUnderWindow = place('pc_cube', 'cube-storage', onFloor(0, -1.25));
+      expect(resolve(nightstand, { kind: 'under_window', opening_id: 'op_window' }, [cubeUnderWindow])).toMatchObject({
+        placement: { position: [closeTo(0.5), 0, closeTo(-1.3)] },
+      });
+      // 1.1 m tall, the chest would block the 0.9 m sill anywhere under the window.
+      expect(resolve(chest, { kind: 'under_window', opening_id: 'op_window' })).toEqual({
+        error: "Tall Chest doesn't fit there, even slid up to 1 m either way",
+        violations: [{ rule: 'blocks-window', subjectId: 'chest-tall', otherId: 'op_window', message: 'Blocks the window' }],
       });
     });
 
@@ -189,7 +195,8 @@ describe('resolveAnchor', () => {
       // 0.9 m wide, a print would have to slide 1.05 m to clear the window.
       const widePrint = item('print-wide', 'wall_art', 'Wide Print', [0.9, 1.2, 0.03], { mount: 'wall' });
       expect(resolve(widePrint, { kind: 'on_wall', wall_id: 'wl_north', along: 'center' })).toEqual({
-        error: "Wide Print doesn't fit there, even slid up to 1 m either way: where asked, it would hang over op_window", violations: [],
+        error: "Wide Print doesn't fit there, even slid up to 1 m either way",
+        violations: [{ rule: 'overlap', subjectId: 'print-wide', otherId: 'op_window', message: 'Covers the window' }],
       });
       expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_north', along: 'left', center_height_m: 2.4 })).toEqual({
         error: "Fern Print, 0.8 m tall, doesn't fit on the North wall 2.4 m up: the wall is 2.6 m tall", violations: [],
@@ -295,7 +302,8 @@ describe('resolveAnchor', () => {
       // A 2 m sofa in the largest free spots, mid-room, would be in the door's swing or close off the desk from the door.
       const placement = placementOf(resolve(sofa, { kind: 'open_floor' }));
 
-      expect(checkFit(setup, furnished, replay(setup, furnished, [place('pc_sofa', 'sofa-gray', placement)]))).toEqual([]);
+      const state = replay(setup, furnished, [place('pc_sofa', 'sofa-gray', placement)]);
+      expect(checkFit(setup, furnished, state, undefined, { walkway: true })).toEqual([]);
     });
 
     it('returns an error when no open floor fits the item', () => {

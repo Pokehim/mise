@@ -203,20 +203,21 @@ app.get('/api/designs/:id', async (c) => c.json(await readDesign(c.req.param('id
 // New and Duplicate are the Mover's: a duplicate copies only the Edits (spec §10.8).
 app.post('/api/designs', async (c) => {
   const { scanId, duplicateOf } = await readBody<{ scanId?: string; duplicateOf?: string }>(c);
-  let start: Pick<Design, 'scanId' | 'name' | 'edits'>;
+  let start: Omit<Design, 'version' | 'id' | 'createdAt' | 'updatedAt'>;
   if (duplicateOf) {
-    const source = await readDesign(duplicateOf);
-    // A visitor's copy of a demo seed stands in for the seed, so it keeps the seed's name.
-    const name = (await seedIds()).includes(duplicateOf) ? source.name : `${source.name} (copy)`;
-    start = { scanId: source.scanId, name, edits: source.edits };
+    const { version, id, createdAt, updatedAt, ...source } = await readDesign(duplicateOf);
+    // A visitor's copy of a demo seed stands in for the seed: all of it, so a Claude Design's copy still reveals and Refines.
+    start = (await seedIds()).includes(duplicateOf)
+      ? source
+      : { scanId: source.scanId, name: `${source.name} (copy)`, edits: source.edits, origin: 'mover' };
   } else if (scanId) {
     requireScan(scanId);
-    start = { scanId, name: 'New Design', edits: [] };
+    start = { scanId, name: 'New Design', edits: [], origin: 'mover' };
   } else {
     fail(400, 'Send {scanId} or {duplicateOf}');
   }
   const now = new Date().toISOString();
-  const design: Design = { version: 1, id: newId('ds'), ...start, createdAt: now, updatedAt: now, origin: 'mover' };
+  const design: Design = { version: 1, id: newId('ds'), ...start, createdAt: now, updatedAt: now };
   await writeJson(designPath(design.id), design);
   return c.json(design, 201);
 });
@@ -335,7 +336,8 @@ app.post('/api/designs/:id/refine', async (c) => {
     return c.json(result);
   } catch (error) {
     if (error instanceof HTTPException) throw error;
-    return c.json({ error: `The AI couldn't refine this Design: ${(error as Error).message}` }, 502);
+    // The editor says it was the Refine that failed.
+    return c.json({ error: (error as Error).message }, 502);
   }
 });
 

@@ -508,6 +508,18 @@ describe('the public demo (MISE_DEMO=1, #42)', () => {
     expect(existsSync(join(designsDir, `${copy.id}.json`))).toBe(true);
   });
 
+  it("keeps all of a Claude seed in a visitor's copy, so it still reveals and Refines", async () => {
+    const claude = { ...fixtureDesign, id: 'ds_claude01', origin: 'claude', brief: { text: 'cozy Japandi' }, rationale: 'Warm woods' };
+    await writeFile(join(designsDir, 'ds_claude01.json'), JSON.stringify(claude));
+    await writeFile(join(designsDir, '_seed.json'), JSON.stringify(['ds_fixture1', 'ds_claude01']));
+
+    const copy: Design = await (await send('POST', '/api/designs', { duplicateOf: 'ds_claude01' })).json();
+
+    const { id, createdAt, updatedAt, ...rest } = claude;
+    expect(copy).toMatchObject(rest);
+    expect(copy.id).not.toBe(id);
+  });
+
   it('turns Room Setup off but still lists the Scans', async () => {
     expect((await send('PUT', '/api/scans/fixture/setup', fixtureSetup)).status).toBe(403);
     expect((await app.request('/api/scans')).status).toBe(200);

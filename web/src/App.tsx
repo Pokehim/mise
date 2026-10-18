@@ -1,20 +1,25 @@
+import { lazy, Suspense } from 'react';
 import { Link, Route, Switch } from 'wouter';
 import { Home } from './pages/Home';
 import { Landing } from './pages/Landing';
-import { EditorPage } from './scene/EditorPage';
-import { RoomSetupPage } from './setup/RoomSetupPage';
+
+// The editor and Room Setup bring three.js and the splat renderer, megabytes the landing page and Scans don't need.
+const EditorPage = lazy(() => import('./scene/EditorPage').then(({ EditorPage }) => ({ default: EditorPage })));
+const RoomSetupPage = lazy(() => import('./setup/RoomSetupPage').then(({ RoomSetupPage }) => ({ default: RoomSetupPage })));
 
 // Routes only. Each page lives in the folder of the feature that builds it.
 export function App() {
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/scans" component={Home} />
-      <Route path="/setup/:scanId" component={RoomSetupPage} />
-      <Route path="/d/:designId" component={EditorPage} />
-      <Route>
-        <main>Page not found. <Link href="/scans">Back to Scans</Link></main>
-      </Route>
-    </Switch>
+    <Suspense fallback={null}>
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/scans" component={Home} />
+        <Route path="/setup/:scanId" component={RoomSetupPage} />
+        <Route path="/d/:designId" component={EditorPage} />
+        <Route>
+          <main>Page not found. <Link href="/scans">Back to Scans</Link></main>
+        </Route>
+      </Switch>
+    </Suspense>
   );
 }

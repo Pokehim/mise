@@ -10,7 +10,7 @@ from scipy.spatial import cKDTree
 from scipy.optimize import least_squares
 
 root, originals_path, A = sys.argv[1:4]
-V2 = f'{root}/data/scans/lounge-v2'
+V2 = f'{root}/data/scans/lounge'
 RS = f'{root}/data/scans/real-scans'
 align = json.load(open(f'{A}/align.json'))['sources']
 

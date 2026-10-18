@@ -13,7 +13,7 @@ export type Category =
 
 export interface ScanManifest {
   version: 1;
-  id: string;                        // "lounge-v1"
+  id: string;                        // "lounge"
   name: string;                      // "Maple Hall 412"
   mesh: string;                      // file in the scan folder: "room.glb"
   meshTransform: YawTransform;       // Polycam frame → room frame (set by Room Setup step 1)

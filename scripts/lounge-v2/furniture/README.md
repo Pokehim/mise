@@ -3,7 +3,7 @@
 Master Copies of the study lounge's chair, table, and whiteboard, and the 16 Originals placed from them.
 Everything here is hard-coded for this room (spec §1).
 
-Outputs, in `data/scans/lounge-v2/`:
+Outputs, in `data/scans/lounge/`:
 
 - `models/chair.glb`: nodes `seat`, `back`, `legs`, `shadow`
 - `models/table.glb`: nodes `top`, `legs`, `shadow`

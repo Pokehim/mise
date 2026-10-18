@@ -18,7 +18,7 @@ import numpy as np
 import trimesh
 from scipy.spatial import cKDTree
 
-from common import CACHE, F, H, REAL, V1, V2, X0, X1, Z0, Z1, mat4, rot_y, rounded, splat_fit, write_json, yaw_of
+from common import CACHE, F, H, MAIN_CAPTURE, REAL, SCAN, X0, X1, Z0, Z1, mat4, rot_y, rounded, splat_fit, write_json, yaw_of
 
 rng = np.random.default_rng(7)
 
@@ -130,8 +130,7 @@ def residual(M, src, tree, mask):
 
 
 def room_target():
-    with open(os.path.join(V1, 'manifest.json')) as f:
-        mt = json.load(f)['meshTransform']
+    mt = MAIN_CAPTURE
     M = mat4(rot_y(mt['rotationY']), mt['position'])
     mesh = load(os.path.join(REAL, 'POLYCAM_ROOM_GLB_1.glb'))
     p, n = apply(M, *sample(mesh, 600000))
@@ -234,7 +233,7 @@ def main():
         R, s, t = splat_fit(name)
         S[f'SPLAT_{name}.ply'] = entry(mat4(R @ F, t, s), f'docs/research/lounge-compare/align-{name}.json full fit (room = t + s R F p_raw), tilt included', flip=F)
 
-    layout_path = os.path.join(V2, 'layout.json')
+    layout_path = os.path.join(SCAN, 'layout.json')
     with open(layout_path) as f:
         layout = json.load(f)
     chairs = [it['box']['position'][::2] for it in layout['items'] if it['category'] == 'chair']
@@ -243,14 +242,14 @@ def main():
         S[name] = entry(M, 'Detail Capture, not to scale (align.py SCALE): leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair and a grid over the room, best fit', r)
     for name, M in layout['sourceTransforms'].items():
         S[name] = entry(np.array(M), 'KIRI Layout: its walls fitted to the room walls (layout.py)')
-    write_json(os.path.join(V2, 'align.json'), out)
+    write_json(os.path.join(SCAN, 'align.json'), out)
 
 
 def refit_chairs(tgt, tgt_n, tree):
-    path = os.path.join(V2, 'align.json')
+    path = os.path.join(SCAN, 'align.json')
     with open(path) as f:
         out = json.load(f)
-    with open(os.path.join(V2, 'layout.json')) as f:
+    with open(os.path.join(SCAN, 'layout.json')) as f:
         layout = json.load(f)
     chairs = [it['box']['position'][::2] for it in layout['items'] if it['category'] == 'chair']
     for name in ['ROOM_1', 'ROOM_2']:

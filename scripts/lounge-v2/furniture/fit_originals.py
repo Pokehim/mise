@@ -18,7 +18,7 @@ from scipy.spatial import cKDTree
 from scipy.optimize import least_squares
 
 root, floor_png = sys.argv[1], sys.argv[2]
-V2 = f'{root}/data/scans/lounge-v2'
+V2 = f'{root}/data/scans/lounge'
 A = sys.argv[3] if len(sys.argv) > 3 else V2      # part A's align.json and layout.json
 log = lambda *a: print(*a, file=sys.stderr)
 

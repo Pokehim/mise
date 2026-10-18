@@ -23,4 +23,4 @@ This supersedes ADR-0007 for lounge-v2: every Capture has the furniture in the s
 - Scripts and data for lounge-v2 hard-code this room's numbers and are not expected to work on other Scans.
 - Its 12 chairs are identical, and so are its 3 tables, so one Master Copy each makes every chair equally sharp but drops each one's own scuffs.
 - `Original` gains an optional Master Copy file, and Parts come from that file's named pieces when it is set. This is a `shared/types.ts` change.
-- `lounge-v1` stays as the fallback until lounge-v2 passes a walk-through by a person.
+- `lounge-v1` stayed as the fallback until lounge-v2 passed a walk-through by a person. It is now removed, and lounge-v2 is the Scan `lounge`; `synthetic-study`, the lounge modeled at its size, is the fallback.

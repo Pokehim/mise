@@ -16,9 +16,9 @@ usage() {
 Usage: scripts/splat.sh <input.ply> [--scan <id>] [--box x,y,z,X,Y,Z] [--out <file.spz>]
 
 Crops, strips spherical-harmonic bands, decimates, and writes data/scans/<scan>/splat.spz.
-lounge-v1 and lounge-v2 are made upright and cropped to the room first, by scripts/lounge-v2/room/ (#77).
+The lounge's splats are made upright and cropped to the room first, by scripts/lounge-v2/room/ (#77).
   <input.ply>  the splat after leveling, scaling, and floater removal in SuperSplat
-  --scan       scan id (default: lounge-v1)
+  --scan       scan id (default: lounge)
   --box        crop to min,max corners, in the frame SuperSplat shows (+Y up). The splat has its own
                origin until the Align step (#16), so this is NOT the room box from setup.json.
                Without it there is no crop.
@@ -31,7 +31,7 @@ EOF
 die() { echo "splat.sh: $*" >&2; exit 1; }
 usage_error() { echo "splat.sh: $*" >&2; echo >&2; usage >&2; exit 2; }
 
-input="" scan="lounge-v1" box="" out_name="splat.spz"
+input="" scan="lounge" box="" out_name="splat.spz"
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help) usage; exit 0 ;;

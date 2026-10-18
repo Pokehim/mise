@@ -11,7 +11,7 @@ const shotName = params.get('shot') ?? 'door';
 const state = (window.__state = { ready: false, src, shot: shotName, log: [] });
 const log = (m) => { state.log.push(m); console.log(m); };
 
-const ROOM = { x0: -1.5907, x1: 1.5759, z0: -3.5652, z1: 3.6244, h: 2.431 }; // lounge-v2's setup.json
+const ROOM = { x0: -1.5907, x1: 1.5759, z0: -3.5652, z1: 3.6244, h: 2.431 }; // the lounge's setup.json
 const CX = (ROOM.x0 + ROOM.x1) / 2, CZ = (ROOM.z0 + ROOM.z1) / 2;
 const CUT = ROOM.h - 0.05; // the editor's Dollhouse ceiling cut
 // The editor's default Dollhouse camera (DollhouseCamera.tsx): 1.4 × the floor diagonal, 45° down.
@@ -19,9 +19,8 @@ const DOLL = Math.hypot(ROOM.x1 - ROOM.x0, ROOM.z1 - ROOM.z0) * 1.4 * Math.SQRT1
 
 // Each is a Scan: its mesh, and its splat when its manifest has one. emptymesh leaves any splat out.
 const SOURCES = {
-  empty: { scan: 'lounge-v2' },
-  emptymesh: { scan: 'lounge-v2', noSplat: true },
-  v1: { scan: 'lounge-v1' },
+  empty: { scan: 'lounge' },
+  emptymesh: { scan: 'lounge', noSplat: true },
 };
 
 // Spec §6. Table 1 is the North table, and the chair is the one North of it (layout.json).

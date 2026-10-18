@@ -21,7 +21,7 @@ R0, R1 = 0.0120, (0.01815 - 0.0120) / 0.35
 
 root, originals_path, A, c1, c2, icp_path = sys.argv[1:7]
 SPLAT = sys.argv[7] if len(sys.argv) > 7 else 'SPLAT_ROOM_1'
-V2 = f'{root}/data/scans/lounge-v2'
+V2 = f'{root}/data/scans/lounge'
 
 def roty(a):
     return np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]])

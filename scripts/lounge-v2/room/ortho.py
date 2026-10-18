@@ -33,16 +33,15 @@ CAM = 1.0              # the camera's distance in front of the surface
 
 
 def room_matrix(source):
-    path = os.path.join(ROOT, 'data', 'scans', 'lounge-v2', 'align.json')
+    path = os.path.join(ROOT, 'data', 'scans', 'lounge', 'align.json')
     if os.environ.get('ORTHO_OWN_FRAME'):  # the source in its own frame (align.py reads the chairs' floor grain this way)
         m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
     elif os.path.exists(path):
         with open(path) as f:
             m = json.load(f)['sources'][source]['matrix']
-    else:  # before align.py has run: the Main Capture through lounge-v1's meshTransform
+    else:  # before align.py has run: the Main Capture through common.MAIN_CAPTURE (lounge-v1's meshTransform)
         assert source == 'POLYCAM_ROOM_GLB_1.glb'
-        with open(os.path.join(ROOT, 'data', 'scans', 'lounge-v1', 'manifest.json')) as f:
-            mt = json.load(f)['meshTransform']
+        mt = {'position': [-0.044, 1.202, 0.029], 'rotationY': -0.008005}
         c, s = math.cos(mt['rotationY']), math.sin(mt['rotationY'])
         m = [[c, 0, s, mt['position'][0]], [0, 1, 0, mt['position'][1]], [-s, 0, c, mt['position'][2]], [0, 0, 0, 1]]
     # align.json is in the app's frame (+Y up); Blender's importers turn glTF/OBJ +Y up into +Z up.

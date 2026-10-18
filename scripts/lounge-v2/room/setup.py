@@ -1,4 +1,4 @@
-"""lounge-v2's setup.json and manifest.json (#77 part 1, spec §5).
+"""The lounge's setup.json and manifest.json (#77 part 1, spec §5).
 
 The walls are the Main Capture's median planes (common.py), about 2 cm outside lounge-v1's; the ceiling is
 lounge-v1's. The Openings are measured on
@@ -10,10 +10,7 @@ Until part 2 writes empty-room.glb, the editor draws its stand-in room from this
 import json
 import os
 
-from common import H, V1, V2, WX0, WX1, WZ0, WZ1, X0, X1, Z0, Z1, write_json
-
-with open(os.path.join(V1, 'setup.json')) as f:
-    v1 = json.load(f)
+from common import H, SCAN, WX0, WX1, WZ0, WZ1, X0, X1, Z0, Z1, write_json
 
 OPENINGS = [
     # North wall (wl_1, from x = -1.568): the one window, its frame as KIRI's scene shows it sharply (the Main
@@ -43,14 +40,14 @@ def moved(o):
 
 
 def setup():
-    path = os.path.join(V2, 'setup.json')
+    path = os.path.join(SCAN, 'setup.json')
     originals = []
     if os.path.exists(path):
         with open(path) as f:
             originals = json.load(f).get('originals', [])
     return {
         'version': 1,
-        'scanId': 'lounge-v2',
+        'scanId': 'lounge',
         'ceilingHeight': H,
         'floor': {'polygon': [[round(x, 4), round(z, 4)] for x, z in CORNERS]},
         'walls': [{'id': i, 'name': n, 'start': [round(v, 4) for v in CORNERS[a]], 'end': [round(v, 4) for v in CORNERS[b]],
@@ -62,8 +59,9 @@ def setup():
 
 MANIFEST = {
     'version': 1,
-    'id': 'lounge-v2',
-    'name': 'Study lounge v2',
+    'id': 'lounge',
+    'name': 'Oliver Hall 6th Floor Study Lounge',
+    'mine': True,
     'mesh': 'empty-room.glb',
     'meshTransform': {'position': [0, 0, 0], 'rotationY': 0},
     # No splat: on every surface the mesh looks more real than ROOM_1's or ROOM_2's splats (splat_empty.py).
@@ -72,8 +70,8 @@ MANIFEST = {
 
 def main():
     s = setup()
-    write_json(os.path.join(V2, 'setup.json'), s)
-    write_json(os.path.join(V2, 'manifest.json'), MANIFEST)
+    write_json(os.path.join(SCAN, 'setup.json'), s)
+    write_json(os.path.join(SCAN, 'manifest.json'), MANIFEST)
     print('wrote setup.json, manifest.json')
 
 

@@ -68,6 +68,9 @@ export function ScanMesh() {
 
   const onClick = (event: ThreeEvent<MouseEvent>) => {
     if (event.delta > CLICK_TOLERANCE_PX) return;   // the end of a drag that moved the camera
+    // R3F calls this once for each Scan surface under the pointer, nearest first. Only the nearest
+    // counts, so a click on the Shell doesn't select the Wall behind it.
+    if (event.intersections.find((hit) => hit.eventObject === event.eventObject)?.object !== event.object) return;
     const target = selectionAt(event.object);
     // A click on the floor goes on to the Walk view, which moves there.
     if (target) event.stopPropagation();
@@ -80,6 +83,7 @@ export function ScanMesh() {
         <primitive object={nodes.shell} />
         <primitive object={nodes.floor} />
         <primitive object={nodes.ceiling} visible={view === 'walk'} />
+        {/* Keyed by node, so a new split replaces the old nodes rather than reusing their elements. */}
         {Object.values(nodes.walls).map((node) => <primitive key={node.uuid} object={node} />)}
         {Object.entries(nodes.originals).map(([id, node]) => (
           <primitive key={node.uuid} object={node} visible={originals[id]?.visible !== false} />

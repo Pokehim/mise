@@ -4,7 +4,7 @@ import { wallPoint } from '@shared/geometry';
 import type { Placement, Vec3 } from '@shared/types';
 import { useResize } from '../../state/resize';
 import { type Preview, type Selection, useEditor } from '../../state/store';
-import { priceEstimate } from '../../ui/format';
+import { approxDollars, productName } from '../../ui/format';
 import { wallLength, wallRotationY } from '../floorPlan';
 import { type SwapContext, swapPlacement, targetBox } from '../swapResize';
 import { Callout } from './Callout';
@@ -19,9 +19,6 @@ interface Sketched {
   detail: string;
   mono: boolean;
 }
-
-/** A Catalog title cut to its name, for a hand-lettered callout: "Rivet Campbell Mid-Century Coffee Table". */
-const shortTitle = (title: string) => title.split(/,| with | - | – /)[0].trim();
 
 /** A Piece, Original or Wall where it is shown now (a dragged one follows the pointer), or null when it's gone. */
 function sketch({ kind, id }: Selection, context: SwapContext, preview: Preview | null): Sketched | null {
@@ -43,7 +40,7 @@ function sketch({ kind, id }: Selection, context: SwapContext, preview: Preview 
   const placement = preview?.pieceId === id ? preview.placement : box.placement;
   if (kind === 'piece') {
     const item = context.catalog.items.find((it) => it.id === context.roomState.pieces[id].catalogId)!;
-    return { placement, size: box.size, title: shortTitle(item.title), detail: priceEstimate(item.priceEstimateUsd), mono: true };
+    return { placement, size: box.size, title: productName(item), detail: approxDollars(item.priceEstimateUsd), mono: true };
   }
   const original = context.setup.originals.find((it) => it.id === id)!;
   return { placement, size: box.size, title: original.label, detail: original.kept ? 'Kept Original' : 'Original', mono: false };

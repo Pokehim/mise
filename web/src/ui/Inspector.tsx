@@ -6,7 +6,8 @@ import { removeOriginal, removePiece, rotateOriginal, rotatePiece } from '../sce
 import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget, targetBox } from '../scene/swapResize';
 import { closeResize, openResize, setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
-import { cm, cmSize, inches, priceEstimate } from './format';
+import { approxDollars, cm, cmSize, inches, priceEstimate, productName } from './format';
+import { PHONE, useMediaQuery } from './useMediaQuery';
 import { GenerateItem } from './GenerateItem';
 import { Lock, RotateLeft, RotateRight, Unlock } from './icons';
 import { FinishPicker } from './inspector/FinishPicker';
@@ -47,10 +48,10 @@ function Picks({ items, onPick }: { items: { item: CatalogItem; label?: SearchRe
       {items.map(({ item, label }) => (
         <li key={item.id}>
           <button className="pick" onClick={() => onPick(item)}>
-            <img src={item.thumbnail} alt="" />
+            <img src={item.thumbnail} alt="" width={48} height={48} loading="lazy" decoding="async" />
             <span>
-              <span className="title" title={item.title}>{item.title}</span>
-              <span className="muted">{cmSize(item.size)} · {priceEstimate(item.priceEstimateUsd)}</span>
+              <span className="title" title={item.title}>{productName(item)}</span>
+              <span className="muted">{cmSize(item.size)} · <span className="price">{approxDollars(item.priceEstimateUsd)}</span></span>
               {label && <span className={`fit-label ${label}`}>{LABELS[label]}</span>}
             </span>
           </button>
@@ -155,7 +156,8 @@ function PieceInspector({ pieceId }: { pieceId: string }) {
   return (
     <>
       <p className="kind">Piece · {categoryName(item.category)}</p>
-      <h2 title={item.title}>{item.title}</h2>
+      <h2 title={item.title}>{productName(item)}</h2>
+      {item.brand && <p className="muted brand">{item.brand}</p>}
       <Size size={item.size} />
       <p className="price">{priceEstimate(item.priceEstimateUsd)}</p>
       <p>{item.url ? <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a> : <span className="muted">Generated, so no product link</span>}</p>
@@ -230,13 +232,29 @@ function WallInspector({ wallId }: { wallId: string }) {
   );
 }
 
+/**
+ * With nothing selected, the floor is what's left to change, so the panel is the Floor's, with a hint
+ * for the rest. On a phone its Finishes fold away: the Catalog comes right after, on the same page.
+ */
+function FloorInspector() {
+  const phone = useMediaQuery(PHONE);
+  const finishes = <FinishPicker target={{ kind: 'floor' }} />;
+  return (
+    <>
+      <p className="kind">Surface</p>
+      <h2>Floor</h2>
+      <p className="muted hint">Select a Piece, an Original or a Wall in the room to change it instead.</p>
+      {phone ? <details className="fold"><summary>Floor finish</summary>{finishes}</details> : finishes}
+    </>
+  );
+}
+
 /** What is selected, and what can be done with it. Each selection gets a fresh panel, with no tool open. */
 export function Inspector() {
   const selection = useEditor((s) => s.selection);
   return (
-    <aside className="inspector">
-      {!selection && <p className="muted empty"><b>Nothing selected.</b> Select a Piece, an Original, or a Wall in the room.</p>}
-      {!selection && <><p className="kind">Surface</p><h2>Floor</h2><FinishPicker target={{ kind: 'floor' }} /></>}
+    <aside className="inspector" aria-label="Inspector">
+      {!selection && <FloorInspector />}
       {selection?.kind === 'piece' && <PieceInspector key={selection.id} pieceId={selection.id} />}
       {selection?.kind === 'original' && <OriginalInspector key={selection.id} originalId={selection.id} />}
       {selection?.kind === 'wall' && <WallInspector key={selection.id} wallId={selection.id} />}

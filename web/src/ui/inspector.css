@@ -26,6 +26,8 @@
 .inspector .pick > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .inspector .pick .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 13px; line-height: 1.35; }
 .inspector .pick .muted { font-family: var(--font-mono); font-size: 11.5px; }
+/* Swap and Replace can list hundreds: the browser skips laying out the rows out of view. */
+.inspector .picks li { content-visibility: auto; contain-intrinsic-size: auto 62px; }
 
 .inspector .fit-label { align-self: flex-start; margin-top: 2px; padding: 0 6px; border-radius: var(--r-1); font-size: 11px; font-weight: 600; }
 .inspector .fit-label.fits { background: var(--wash-tint); color: var(--ink); }

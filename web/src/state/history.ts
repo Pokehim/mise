@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import type { CatalogItem, Design, Edit, Original, RoomState, SkipReason } from '@shared/types';
 import { saveDesign } from '../api';
+import { productName } from '../ui/format';
 import { describe } from './core';
 import { inRoom, type Selection, useEditor } from './store';
 
@@ -38,7 +39,7 @@ export function useCanRedo() {
 export function useDeletedText() {
   const { edits, setup, catalog } = useEditor(useShallow((s) => ({ edits: s.design?.edits, setup: s.setup, catalog: s.catalog })));
   const edit = useUndoState((h) => undoable(h, edits).deleted?.edit);
-  return edit && describe(edit, setup!, catalog!);
+  return edit && describe(edit, setup!, catalog!, { name: productName });
 }
 
 /** Replaces the Edit list, and keeps what can be taken back from it. */
@@ -98,12 +99,16 @@ interface HistoryRow {
   target?: Selection;
 }
 
-/** One row per Edit of the open Design, in order. */
+/** One row per Edit of the open Design, in order. Items go by their short names, as in the panels. */
 export function historyRows({ design, roomState, setup, catalog }: OpenDesign): HistoryRow[] {
   const skipped = new Map(roomState!.skipped.map(({ editId, reason }) => [editId, SKIP_REASONS[reason]]));
-  return design!.edits.map((edit) => ({
-    edit, text: describe(edit, setup!, catalog!), skipped: skipped.get(edit.id), target: changedItem(edit, roomState!),
-  }));
+  // Each Piece's item so far, so "Moved a Piece" can say which one.
+  const pieces = new Map<string, string>();
+  return design!.edits.map((edit) => {
+    const text = describe(edit, setup!, catalog!, { name: productName, pieces });
+    if (edit.type === 'place' || edit.type === 'swap') pieces.set(edit.pieceId, edit.catalogId);
+    return { edit, text, skipped: skipped.get(edit.id), target: changedItem(edit, roomState!) };
+  });
 }
 
 function changedItem(edit: Edit, roomState: RoomState): Selection | undefined {

@@ -68,8 +68,9 @@
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .15 0 0 0 0 .13 0 0 0 0 .1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --hatching: repeating-linear-gradient(-45deg, transparent 0 6px, var(--hatch) 6px 7px);
 
-  /* Motion: lines draw on, nothing bounces. */
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* Motion: lines draw on, nothing bounces. A strong ease-out that starts at speed, so a control
+     answers the moment it's touched; the 3D lines draw on the same curve (InkLine's quintic). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --draw: 200ms;
   --press: 150ms;
 }

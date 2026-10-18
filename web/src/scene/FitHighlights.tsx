@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import type { RoomState, Vec3 } from '@shared/types';
 import { checkFit } from '../state/core';
 import { useEditor } from '../state/store';
+import { productName } from '../ui/format';
 import { doorClearance } from './sketch/door';
 import { FitMark } from './sketch/FitMark';
 import { DASH, InkLine } from './sketch/InkLine';
@@ -23,6 +24,8 @@ export function FitHighlights() {
   const catalog = useEditor((s) => s.catalog!);
   const roomState = useEditor((s) => s.roomState!);
   const preview = useEditor((s) => s.preview);
+  // checkFit names a Piece by its Catalog title (Claude reads the same messages); a note on the room uses its short name.
+  const names = useMemo(() => new Map(catalog.items.map((item) => [item.title, productName(item)])), [catalog]);
 
   const { warned, doors } = useMemo(() => {
     // The dragged Piece or Original where it is shown, as PieceNode and OriginalNode do.
@@ -40,7 +43,8 @@ export function FitHighlights() {
     const messages = new Map<string, Set<string>>();
     for (const { subjectId, message } of violations) {
       if (!messages.has(subjectId)) messages.set(subjectId, new Set());
-      messages.get(subjectId)!.add(message);
+      const overlapped = message.startsWith('Overlaps ') && names.get(message.slice('Overlaps '.length));
+      messages.get(subjectId)!.add(overlapped ? `Overlaps ${overlapped}` : message);
     }
     // The floor each blocked door needs clear, as line segments: its swing, or the doorway's depth.
     const blocked = new Set(violations.flatMap(({ rule, otherId }) => (rule === 'door-swing' && otherId ? [otherId] : [])));
@@ -57,7 +61,7 @@ export function FitHighlights() {
       }),
       doors,
     };
-  }, [setup, catalog, roomState, preview]);
+  }, [setup, catalog, roomState, preview, names]);
 
   if (!warned.length) return null;
   return (
@@ -68,7 +72,7 @@ export function FitHighlights() {
           {doors.map(({ id, segments }) => <InkLine key={id} segments={segments} color="--red-pencil" width={1.5} dash={DASH} />)}
         </Hud>
       )}
-      {warned.map(({ id, messages, placement, size }) => <FitMark key={id} id={id} placement={placement} size={size} messages={messages} />)}
+      {warned.map(({ id, messages, placement, size }) => <FitMark key={id} id={id} placement={placement} size={size} messages={messages} live={!!preview} />)}
     </>
   );
 }

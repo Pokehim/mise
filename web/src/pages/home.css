@@ -42,7 +42,7 @@
   font-size: 16px;
   font-weight: 500;
   text-decoration: none;
-  transition: background-color 120ms ease-out, scale var(--press) ease-out;
+  transition: background-color 120ms ease-out, scale var(--press) var(--ease-out);
 }
 .cta .icon { transition: translate 160ms var(--ease-out); }
 @media (hover: hover) {
@@ -253,9 +253,7 @@
   .designs .meta { grid-area: meta; }
   .designs a > .icon { grid-area: icon; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .bone { animation: none; }
-}
+/* Under reduced motion the bones still breathe: it's opacity only, and a still page looks stuck. */
 
 /* The Scans' heading, with Import beside it. */
 .home-heading-row { display: flex; align-items: center; gap: var(--s-4); }
@@ -278,7 +276,9 @@
   box-shadow: var(--lift);
   font: 14px/1.5 var(--font-sans);
 }
-.import-dialog::backdrop { background: transparent; }
+/* A paper veil over the Scans, so the sheet reads as laid on top rather than clipped. There is no 3D
+   view on this page to keep untinted. */
+.import-dialog::backdrop { background: color-mix(in srgb, var(--paper) 72%, transparent); }
 .import-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-3); }
 .import-dialog h2 { margin: 0; font: 400 24px/1.2 var(--font-hand); }
 .import-part { min-width: 0; margin: 0; padding: 0; border: 0; }
@@ -420,6 +420,11 @@
 @keyframes step-spin {
   to { rotate: 1turn; }
 }
+/* Under reduced motion the running step pulses instead of spinning: a step can run for minutes, and
+   a still ring looks frozen. */
 @media (prefers-reduced-motion: reduce) {
-  .import-steps li.running::before { animation: none; border-top-color: var(--ink); }
+  .import-steps li.running::before { border-top-color: var(--ink); animation: step-pulse 1.2s ease-in-out infinite alternate; }
+}
+@keyframes step-pulse {
+  to { opacity: 0.35; }
 }

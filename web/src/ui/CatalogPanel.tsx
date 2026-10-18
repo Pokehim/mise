@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { CatalogItem, Category } from '@shared/types';
 import { search } from '../state/core';
 import { useEditor } from '../state/store';
-import { priceEstimate } from './format';
+import { approxDollars, productName } from './format';
 import { GenerateItem } from './GenerateItem';
 import { Plus } from './icons';
 
@@ -78,9 +78,13 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
             }}
           >
             <img src={item.thumbnail} alt="" width={56} height={56} loading="lazy" />
-            <div>
-              <div className="title" title={item.title}>{item.title}</div>
-              <div className="muted price">{priceEstimate(item.priceEstimateUsd)}</div>
+            <div className="card-text">
+              <div className="title" title={item.title}>{productName(item)}</div>
+              {/* The price first: in a narrow column only the brand ever gets cut short. */}
+              <div className="meta">
+                <span className="price">{approxDollars(item.priceEstimateUsd)}</span>
+                {item.brand && <span className="brand">{item.brand}</span>}
+              </div>
             </div>
             <button aria-label={`Add ${item.title}`} onClick={() => onAdd(item)}><Plus />Add</button>
           </li>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { search } from '@shared/catalog-search';
 import type { CatalogItem, Original } from '@shared/types';
 import { useEditor } from '../../state/store';
-import { cmSize, priceEstimate } from '../format';
+import { approxDollars, cmSize, productName } from '../format';
 
 interface OriginalReplaceProps {
   original: Original;
@@ -26,16 +26,25 @@ export function OriginalReplace({ original, onPick }: OriginalReplaceProps) {
 
   return (
     <div className="tool">
-      <input type="search" placeholder="Search the Catalog" value={text} onChange={(e) => setText(e.target.value)} />
+      <input
+        type="search"
+        name="replaceSearch"
+        aria-label="Search the Catalog for a replacement"
+        autoComplete="off"
+        placeholder="Search the Catalog…"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
       {shown.length ? (
         <ul className="picks">
           {shown.map((item) => (
             <li key={item.id}>
               <button className="pick" onClick={() => onPick(item)}>
-                <img src={item.thumbnail} alt="" />
+                {/* Lazy: a Replace list holds every floor item, hundreds of thumbnails. */}
+                <img src={item.thumbnail} alt="" width={48} height={48} loading="lazy" decoding="async" />
                 <span>
-                  <span className="title" title={item.title}>{item.title}</span>
-                  <span className="muted">{cmSize(item.size)} · {priceEstimate(item.priceEstimateUsd)}</span>
+                  <span className="title" title={item.title}>{productName(item)}</span>
+                  <span className="muted">{cmSize(item.size)} · <span className="price">{approxDollars(item.priceEstimateUsd)}</span></span>
                 </span>
               </button>
             </li>

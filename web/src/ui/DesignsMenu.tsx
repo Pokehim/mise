@@ -22,7 +22,7 @@ function SaveStatus() {
       title={status === 'failed' ? 'The last save failed. Your next change saves the whole Design again.' : undefined}
     >
       {status === 'saved' && <Check />}
-      {SAVE_TEXT[status]}
+      <span className="text">{SAVE_TEXT[status]}</span>
     </span>
   );
 }

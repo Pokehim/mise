@@ -1,10 +1,25 @@
 import { partsFor } from './parts';
-import type { Catalog, Category, Edit, Hex, RoomSetup } from './types';
+import type { Catalog, CatalogItem, Category, Edit, Hex, RoomSetup } from './types';
+
+export interface DescribeOptions {
+  /** How to name a Catalog item: its full title unless given (History gives a short name). */
+  name?: (item: CatalogItem) => string;
+  /** Each Piece's Catalog item before this Edit, by pieceId, so a move or a removal can say which. */
+  pieces?: ReadonlyMap<string, string>;
+}
 
 /** The History text for one Edit (spec §6), such as "Painted North wall · Sage". */
-export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string {
+export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog, { name = (it) => it.title, pieces }: DescribeOptions = {}): string {
   const item = (catalogId: string) => catalog.items.find((catalogItem) => catalogItem.id === catalogId);
-  const title = (catalogId: string) => item(catalogId)?.title ?? catalogId;
+  const title = (catalogId: string) => {
+    const found = item(catalogId);
+    return found ? name(found) : catalogId;
+  };
+  /** "the Swivel Office Desk Chair" for a Piece whose item is known, else undefined. */
+  const piece = (pieceId: string) => {
+    const catalogId = pieces?.get(pieceId);
+    return catalogId && `the ${title(catalogId)}`;
+  };
   const yours = (originalId: string) => {
     const original = setup.originals.find(({ id }) => id === originalId);
     return original && `your ${original.label.toLowerCase()}`;
@@ -28,9 +43,9 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
     case 'place':
       return `Placed ${title(edit.catalogId)}`;
     case 'move':
-      return `Moved ${yours(edit.targetId) ?? 'a Piece'}`;
+      return `Moved ${yours(edit.targetId) ?? piece(edit.targetId) ?? 'a Piece'}`;
     case 'remove':
-      return `Removed ${yours(edit.targetId) ?? 'a Piece'}`;
+      return `Removed ${yours(edit.targetId) ?? piece(edit.targetId) ?? 'a Piece'}`;
     case 'swap': {
       const category = item(edit.catalogId)?.category.replace('_', ' ') ?? 'a Piece';
       return `${edit.via === 'resize' ? 'Resized' : 'Swapped'} ${category} → ${title(edit.catalogId)}`;

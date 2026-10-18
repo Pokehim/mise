@@ -107,6 +107,7 @@
 .cart-piece .title { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .cart-piece a { font-size: 12px; }
 .cart .price { font-size: 12.5px; white-space: nowrap; }
+.cart .quantity { color: var(--graphite); }
 /* The total, under a rule in ink like the sum at the foot of a schedule. */
 .cart-total {
   display: flex;
@@ -212,7 +213,7 @@
 .history .reason { color: var(--red-pencil); font-size: 12px; }
 .history li.skipped .text { color: var(--graphite); text-decoration: line-through; text-decoration-color: var(--pencil-strong); }
 .history .by { margin-top: 2px; color: var(--graphite); font-size: 11px; }
-.history .by.claude { color: var(--wash); font-weight: 500; }
+.history .by.claude { color: var(--graphite); }
 .editor .history .delete { opacity: 0; }
 .history li:hover .delete,
 .history li:has(:focus-visible) .delete { opacity: 1; }

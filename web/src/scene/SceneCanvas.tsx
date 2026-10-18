@@ -85,8 +85,9 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
     onDropItem(itemId, new Vector2(((event.clientX - left) / width) * 2 - 1, -((event.clientY - top) / height) * 2 + 1));
   };
   return (
-    <div
+    <main
       className="view"
+      aria-label="The room in 3D"
       ref={container}
       onDragOver={(event) => {
         if (event.dataTransfer.types.includes(CATALOG_ITEM_TYPE)) event.preventDefault();
@@ -140,6 +141,6 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
       <SketchLinesToggle />
       {/* Not in a ?shot= view, which is a picture of the room. */}
       {view === 'walk' && !shot && scanDrawn && <WalkHint />}
-    </div>
+    </main>
   );
 }

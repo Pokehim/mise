@@ -52,6 +52,7 @@ function useEditorKeys() {
 /** The editor at /d/:designId (spec §10.1). */
 export function EditorPage({ params: { designId } }: { params: { designId: string } }) {
   const ready = useEditor((s) => s.status === 'ready' && s.design?.id === designId);
+  const designName = useEditor((s) => s.design?.name);
   const error = useEditor((s) => s.error);
   const camera = useRef<Camera>(null);
   useEditorKeys();
@@ -95,6 +96,9 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
   }
   return (
     <div className="editor">
+      {/* Past the Catalog's hundreds of Add buttons, for the keyboard. */}
+      <a className="skip-link" href="#inspector">Skip to the Inspector</a>
+      <h1 className="sr-only">{designName}</h1>
       <TopBar />
       <CatalogPanel onAdd={(item) => camera.current && addPiece(item, camera.current)} />
       <SceneCanvas

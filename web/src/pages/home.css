@@ -28,6 +28,9 @@
   padding: var(--s-8) max(var(--s-6), (100% - 1240px) / 2) var(--s-5);
 }
 
+/* The landmark round the intro and the demo; its children stay the landing grid's own cells. */
+.landing-main { display: contents; }
+
 /* The way in: a primary button, in ink, under the intro. */
 .home a.cta {
   display: inline-flex;
@@ -138,7 +141,7 @@
 .scan > :not(.plan) { grid-column: 2; }
 .scan header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-4); margin-bottom: var(--s-2); }
 /* A Scan's name is the Mover's own data, so it is set, not lettered: the hand stays for headings. */
-.scan h3 { margin: 0 0 var(--s-1); font-size: 19px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em; text-wrap: balance; }
+.scan h2 { margin: 0 0 var(--s-1); font-size: 19px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em; text-wrap: balance; }
 .scan header p { margin: 0; color: var(--graphite); font-size: 13px; }
 
 .home button.primary { padding: 7px 14px 7px 12px; white-space: nowrap; }
@@ -194,8 +197,10 @@
 .home .empty { margin: var(--s-1) 0 var(--s-2); }
 .home .error { margin: 0 0 var(--s-2); color: var(--red-pencil); }
 
-/* A Design Claude made from a Brief: the sparkle of Generate before its name. */
-.by-claude { margin-right: 6px; color: var(--graphite); }
+/* A Design Claude made from a Brief: the sparkle of Generate before its name, in a column of its own,
+   so the names of a Scan's Designs share one left edge whichever made them. */
+.designs:has(.by-claude) .name { position: relative; padding-left: 22px; }
+.by-claude { position: absolute; left: 0; color: var(--graphite); }
 .by-claude .icon { vertical-align: -2px; }
 
 /* The Scans couldn't load: an empty state's shape, drawn in red pencil, with the way back. */
@@ -247,7 +252,7 @@
   .scan.loading > .bone.plan { grid-row: 1 / span 3; }
   .scan > .designs { margin-top: var(--s-3); }
   .scan header { flex-direction: column; gap: var(--s-3); }
-  .scan h3 { font-size: 17px; }
+  .scan h2 { font-size: 17px; }
   .home .designs a { grid-template: 'name icon' auto 'meta icon' auto / minmax(0, 1fr) 16px; gap: 2px var(--s-3); }
   .designs .name { grid-area: name; }
   .designs .meta { grid-area: meta; }

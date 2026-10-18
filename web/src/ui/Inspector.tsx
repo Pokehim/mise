@@ -253,7 +253,7 @@ function FloorInspector() {
 export function Inspector() {
   const selection = useEditor((s) => s.selection);
   return (
-    <aside className="inspector" aria-label="Inspector">
+    <aside className="inspector" id="inspector" tabIndex={-1} aria-label="Inspector">
       {!selection && <FloorInspector />}
       {selection?.kind === 'piece' && <PieceInspector key={selection.id} pieceId={selection.id} />}
       {selection?.kind === 'original' && <OriginalInspector key={selection.id} originalId={selection.id} />}

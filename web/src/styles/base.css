@@ -155,6 +155,24 @@
   :is(.brief-dialog, .import-dialog) { translate: none !important; }
 }
 
+/* A link past a long run of controls, shown only while it has keyboard focus. */
+.skip-link {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: 20;
+  padding: 6px 10px;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-weight: 500;
+  translate: 0 calc(-100% - var(--s-3));
+}
+.skip-link:focus-visible { translate: 0 0; }
+/* A panel a skip link lands on takes focus, but only the keyboard's shows a ring. */
+.inspector:focus:not(:focus-visible) { outline: none; }
+
 .sr-only {
   position: absolute;
   width: 1px;

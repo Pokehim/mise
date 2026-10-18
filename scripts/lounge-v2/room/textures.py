@@ -232,7 +232,7 @@ def build(view, guide_fn=None):
         loc, _ = nc(lum, known, 40)
         rows = H - (np.arange(img.shape[0]) + 0.5) * P
         drip = known & (lum[..., 0] < 0.62 * loc[..., 0]) & (rows > BASEBOARD + 0.15)[:, None]
-        drip &= ~rect_mask(img.shape, FIXTURES.get(view, []), view)
+        drip &= ~rect_mask(img.shape, FIXTURES.get(view, []) + [grow(r, 0.02) for r, _ in PLATES.get(view, [])], view)
         known &= ~(cv2.dilate(drip.astype(np.uint8), np.ones((15, 15))) > 0)
     hole0 = ~known
     # 1. Holes from the other sources, color-matched to the base.
@@ -329,6 +329,18 @@ FIXTURES = {'east': [(6.215, 6.325, 1.44, 1.57), (6.265, 6.35, 2.04, 2.18)],
             'west': [(2.655, 2.745, 0.375, 0.51), (5.995, 6.085, 0.375, 0.51)]}
 # The whiteboard tray's end cap, past the board: removed, and kept out of the copy of the wall beside it.
 TRAY_END = (6.15, 6.45, 0.70, 0.95)
+
+
+# Power and data plates, as the Main Capture places them (u0, u1, y0, y1), and the scan that shows each sharpest:
+# the chair close-up caught the two below the whiteboard at 1 mm. finish_wall pastes them whole, last.
+# The old plate (and any smear round it, ERASE m) is painted out of the wall first.
+PLATES = {
+    'east': [((1.7425, 1.8125, 0.401, 0.521), 'CHAIR_1'), ((2.005, 2.1225, 0.396, 0.511), 'CHAIR_1'),
+             ((5.732, 5.812, 0.413, 0.526), 'KIRI')],    # the room scans smear this one; KIRI's is sharp
+    'west': [((2.665, 2.735, 0.391, 0.501), 'GLB_1'), ((6.003, 6.072, 0.384, 0.501), 'GLB_1')],
+}
+ERASE = {'KIRI': 0.05, 'CHAIR_1': 0.015, 'GLB_1': 0.0}   # m round the old plate (none where it's the same scan)
+PLATE_MARGIN = 0.006   # m of wall around a plate that comes with it (its edge and shadow), blended out
 
 
 # The East wall's outlets below the whiteboard, kept as they are when the wall around them is relit.
@@ -701,10 +713,91 @@ def stipple():
     return 1 + STIPPLE_GAIN * d
 
 
+def grow(rect, m):
+    u0, u1, y0, y1 = rect
+    return (u0 - m, u1 + m, y0 - m, y1 + m)
+
+
+def plate_median(img, p, rect):
+    """The median color of a plate's face: its bright pixels, 5 mm in from its edges."""
+    u0, u1, y0, y1 = grow(rect, -0.005)
+    blk = img[int((H - y1) / p):int((H - y0) / p), int(u0 / p):int(u1 / p)].reshape(-1, 3)
+    lum = blk.mean(axis=1)
+    return np.median(blk[lum > np.percentile(lum, 40)], axis=0)
+
+
+def ring_median(img, p, rect):
+    """The median color of the wall 2-5 cm round a plate, without outliers."""
+    o0, o1, q0, q1 = grow(rect, 0.05)
+    blk = img[int((H - q1) / p):int((H - q0) / p), int(o0 / p):int(o1 / p)]
+    rr, cc = np.mgrid[:blk.shape[0], :blk.shape[1]]
+    u = o0 + (cc + 0.5) * p
+    y = q1 - (rr + 0.5) * p
+    i0, i1, j0, j1 = grow(rect, 0.02)
+    ring = ~((u > i0) & (u < i1) & (y > j0) & (y < j1))
+    px = blk[ring]
+    lum = px.mean(axis=1)
+    med = np.median(lum)
+    return np.median(px[(lum > 0.8 * med) & (lum < 1.2 * med)], axis=0)
+
+
+def paste_plate(out, view, rect, src):
+    """One plate, whole and sharp, from its scan into the wall's final image: found in the scan near where the
+    Main Capture puts it, centered there, with its own edge and shadow, colored by the wall around it."""
+    p_hd = P / HD
+    path, p_src = ((os.path.join(CACHE, 'ortho1mm', src, f'{view}.png'), 0.001) if src == 'CHAIR_1'
+                   else (os.path.join(ORTHO, src, f'{view}.png'), P))
+    im = np.asarray(Image.open(path).convert('RGBA')).astype(np.float32) / 255
+    known = im[..., 3] > 0.98
+    img = im[..., :3]
+    # The plate in the scan: the bright blob nearest the expected place, within 8 cm (along the East wall the
+    # scans drift apart up to that), with its darker parts (labels, jacks) closed in.
+    u0, u1, y0, y1 = grow(rect, 0.08)
+    r0, r1, c0, c1 = int((H - y1) / p_src), int((H - y0) / p_src), int(u0 / p_src), int(u1 / p_src)
+    lum = img[r0:r1, c0:c1].mean(axis=2)
+    wall = np.median(lum[known[r0:r1, c0:c1]])
+    bright = lum > wall + 0.35 * (np.percentile(lum, 99) - wall)
+    k9 = max(3, int(round(0.009 / p_src)) | 1)
+    blob = cv2.morphologyEx(bright.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((k9, k9)))
+    n, lab, stats, cents = cv2.connectedComponentsWithStats(blob)
+    big = [i for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] * p_src * p_src > 0.002]   # at least 20 cm²
+    centre = np.array([((rect[0] + rect[1]) / 2 - u0) / p_src, (y1 - (rect[2] + rect[3]) / 2) / p_src])
+    k = min(big, key=lambda i: np.hypot(*(cents[i] - centre)))
+    x, y, w, h = stats[k, :4]
+    su0, sv0 = (c0 + x) * p_src, (r0 + y) * p_src                 # the plate's top-left in the scan, m
+    # Cut it with its margin, at the final resolution.
+    m = PLATE_MARGIN
+    cut = img[int((sv0 - m) / p_src):int((sv0 + h * p_src + m) / p_src), int((su0 - m) / p_src):int((su0 + w * p_src + m) / p_src)]
+    size = (int(round(cut.shape[1] * p_src / p_hd)), int(round(cut.shape[0] * p_src / p_hd)))
+    cut = cv2.resize(cut, size, interpolation=cv2.INTER_AREA if p_src < p_hd else cv2.INTER_CUBIC)
+    # Where it goes: centered on the Main Capture's plate.
+    cu, cv_ = (rect[0] + rect[1]) / 2, H - (rect[2] + rect[3]) / 2
+    top, left = int(round((cv_ - size[1] * p_hd / 2) / p_hd)), int(round((cu - size[0] * p_hd / 2) / p_hd))
+    region = out[top:top + size[1], left:left + size[0]]
+    # Its color: the Main Capture's own plate (the room's light on it), brightened as much as the wall around it
+    # was (the relit wall below the whiteboard), per channel.
+    ref = np.asarray(Image.open(os.path.join(ORTHO, 'GLB_1', f'{view}.png')).convert('RGB')).astype(np.float32) / 255
+    ref_plate = plate_median(ref, P, rect)
+    src_plate = plate_median(img, p_src, (su0, su0 + w * p_src, H - sv0 - h * p_src, H - sv0))
+    wall_gain = ring_median(out, p_hd, rect) / np.maximum(ring_median(ref, P, rect), 1e-3)
+    cut = np.clip(cut * (ref_plate / np.maximum(src_plate, 1e-3)) * wall_gain, 0, 1)
+    # The plate and its edge fully, easing out over the 3 mm round it (the scan's wall is a different teal).
+    yy, xx = np.mgrid[:size[1], :size[0]]
+    d = np.minimum.reduce([xx, yy, size[0] - 1 - xx, size[1] - 1 - yy]) * p_hd   # from the cut's border
+    alpha = np.clip((d - (m - 0.0035)) / 0.003, 0, 1)[..., None]
+    out = out.copy()
+    out[top:top + size[1], left:left + size[0]] = alpha * cut + (1 - alpha) * region
+    return out
+
+
 def finish_wall(view, st):
     """The wall's image at 1.25 mm per texel (tex/<view>.hd.png, which glb.py uses), with the stipple on the
     paint only."""
     img = np.asarray(Image.open(os.path.join(OUT, f'{view}.png')).convert('RGB')).astype(np.float32) / 255
+    # Paint out the old plates that get a sharper copy from another scan, and the smear round them.
+    gone = rect_mask(img.shape, [grow(r, ERASE[src]) for r, src in PLATES.get(view, []) if ERASE[src] > 0], view)
+    if gone.any():
+        img = cv2.inpaint((img * 255).astype(np.uint8), gone.astype(np.uint8), 6, cv2.INPAINT_TELEA).astype(np.float32) / 255
     h, w = img.shape[0] * HD, img.shape[1] * HD
     big = np.clip(cv2.resize(img, (w, h), interpolation=cv2.INTER_CUBIC), 0, 1)
     # Not paint: the glass and its frames, the door, the North sill, the baseboard, and anything that stands out
@@ -724,6 +817,8 @@ def finish_wall(view, st):
     cc = pingpong(np.arange(w), st.shape[1])
     factor = 1 + paint * (st[rr][:, cc] - 1)
     out = np.clip(big * factor[..., None], 0, 1)
+    for rect, src in PLATES.get(view, []):
+        out = paste_plate(out, view, rect, src)
     Image.fromarray((out * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, f'{view}.hd.png'))
     print(view, 'hd', out.shape, f'paint {paint.mean():.0%}', flush=True)
 

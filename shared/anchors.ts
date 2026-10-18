@@ -1,4 +1,4 @@
-import { checkFit, type Item as RoomItem, roomItems, TOLERANCE } from './fit';
+import { checkFit, type Item as RoomItem, restsOnFloorOnly, roomItems, TOLERANCE } from './fit';
 import {
   alongFromStart, distanceToWall, footprint, isBy, type OrientedRect, overlapLength, polygonsOverlap, pushFootprintInside, rectCorners,
   rectInPolygon, spanFromLeft, spanFromStart, startIsLeft, wallLength, wallPoint,
@@ -291,6 +291,9 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
     case 'on_top_of': {
       const target = targetOf(anchor.target_id);
       if (!target) return noTarget(anchor.target_id);
+      if (restsOnFloorOnly(item.category)) {
+        return { error: `${item.title} stands on the floor, never on top of ${target.name}: place it against_wall, beside or open_floor` };
+      }
       if (anchor.level !== undefined) return onLevel(target, anchor.level);
       const { placement, rect: { size: [targetWidth, targetDepth] } } = target;
       const { position: [x, , z], rotationY } = placement;

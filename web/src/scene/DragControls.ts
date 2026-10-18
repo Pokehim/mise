@@ -1,6 +1,7 @@
 import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { useCallback } from 'react';
 import { type Intersection, MathUtils, type Object3D, type Ray, Raycaster, Vector2, Vector3 } from 'three';
+import { restsOnFloorOnly } from '@shared/fit';
 import { wallPoint } from '@shared/geometry';
 import type { CatalogItem, Placement, RoomSetup, Vec2, Wall } from '@shared/types';
 import { pieceItem, useEditor } from '../state/store';
@@ -30,7 +31,8 @@ const onOriginal = (id: string) => ({ object }: Intersection) => {
 /**
  * Where the pointer puts a floor item (spec §10.3): on the upward-facing surface under the pointer,
  * such as a desk top, with its base right at the pointer, so it can't hang off the edge; else on
- * the floor, keeping the grabbed point under the pointer. Either way walls are solid: its whole
+ * the floor, keeping the grabbed point under the pointer. A big item (`restsOnFloorOnly`) never rests
+ * on a surface: over a desk top it goes on the floor under the pointer, so a chair goes under the desk. Either way walls are solid: its whole
  * footprint stays inside the room, so it stops flush at a wall while the pointer goes on, and slides
  * along it; and it snaps to a wall or into a corner near it, unless `snap` is off (Alt). Null where
  * the item can't go, or fit at all, so the drag keeps its last good placement.
@@ -40,7 +42,7 @@ function onFloorOrSurface(
   item: Draggable, start: Placement, offset: Vec2, setup: RoomSetup, snap: boolean,
 ): Placement | null {
   const hit = raycaster.intersectObjects(supports, true).find((it) => isDrawn(it) && !skip(it));
-  if (hit && facesUp(hit) && hit.point.y > FLOOR_TOLERANCE && !liesFlat(item)) {
+  if (hit && facesUp(hit) && hit.point.y > FLOOR_TOLERANCE && !liesFlat(item) && !restsOnFloorOnly(item.category)) {
     return keepInRoom({ position: hit.point.toArray(), rotationY: start.rotationY, mount: 'surface' }, item.size, setup, { snap });
   }
   const pointer = floorHit(raycaster.ray);

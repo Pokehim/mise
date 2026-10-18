@@ -1,5 +1,6 @@
 import { footprint, type OrientedRect, overlapLength, polygonsOverlap, rectCorners, rectInPolygon, wallPoint } from './geometry';
-import type { Catalog, Category, FitViolation, Opening, Placement, RoomSetup, RoomState, Vec2, Vec3, Wall } from './types';
+import { collisionBoxes } from './collision';
+import type { Catalog, Category, CollisionBox, FitViolation, Opening, Placement, RoomSetup, RoomState, Vec2, Vec3, Wall } from './types';
 
 /** How far, in meters, things may overlap before a Fit rule counts it: flush placement and scan noise. */
 export const TOLERANCE = 0.01;
@@ -23,6 +24,15 @@ const REACH = WALKER_RADIUS + CELL;
 /** What a walkway must reach the front of, from each door. */
 const WALKWAY_TARGETS: Category[] = ['bed', 'desk', 'dresser'];
 
+/** What stands only on the floor, never on top of furniture: the big items. Shelves, lamps, decor, plants and mirrors may rest on tops. */
+const FLOOR_ONLY: Category[] = ['bed', 'sofa', 'chair', 'desk', 'table', 'dresser', 'wardrobe', 'nightstand', 'storage'];
+
+/**
+ * Whether a new placement of this kind of item must stand on the floor: a chair dragged over a desk
+ * top goes under the desk. A big item a Design already rests on a surface stays there.
+ */
+export const restsOnFloorOnly = (category: Category) => FLOOR_ONLY.includes(category);
+
 /** Something that takes up room: a visible Original or a Piece. */
 export interface Item {
   id: string;
@@ -34,7 +44,12 @@ export interface Item {
   corners: Vec2[];
   /** The [bottom, top] of the item, in meters above the floor. */
   heights: [number, number];
+  /** Its solid parts in the room, from its collision boxes: a desk's top and legs, not the knee space under it. */
+  boxes: Solid[];
 }
+
+/** A solid part of an item in the room: a box turned with the item, as its footprint and its [bottom, top]. */
+interface Solid { center: Vec2; size: Vec2; heights: [number, number] }
 
 /** The floor an Opening needs clear, in front of it on its wall. */
 interface Zone { opening: Opening; wall: Wall; corners: Vec2[] }
@@ -123,10 +138,36 @@ function collide(a: Item, b: Item) {
   }
 }
 
-/** Whether two items take up the same room. Off the floor, one can be above another, so their heights count too. */
+/**
+ * Whether two items take up the same room: whether some solid part of one meets some solid part of
+ * the other, so a chair's seat can go under a desk top. Rugs and wall items are each one box, and two
+ * rugs meet wherever their footprints do.
+ */
 function overlap(a: Item, b: Item) {
+  // The outer boxes first: most pairs are far apart.
   if (!polygonsOverlap(a.corners, b.corners, TOLERANCE)) return false;
-  return a.placement.mount === 'floor' || overlapLength(a.heights, b.heights) > TOLERANCE;
+  if (liesFlat(a)) return true;
+  if (overlapLength(a.heights, b.heights) <= TOLERANCE) return false;
+  if (a.placement.mount === 'wall') return true;
+  return a.boxes.some((part) => b.boxes.some((other) => solidsOverlap(part, a.rect.rotationY, other, b.rect.rotationY)));
+}
+
+/**
+ * Whether two solid parts meet by more than TOLERANCE: their heights, then their footprints. They turn
+ * only about Y, so by the separating axis theorem their footprints meet unless their shadows on one of
+ * the four axes of their sides overlap by no more than that.
+ */
+function solidsOverlap(a: Solid, aYaw: number, b: Solid, bYaw: number): boolean {
+  if (overlapLength(a.heights, b.heights) <= TOLERANCE) return false;
+  const [dx, dz] = [b.center[0] - a.center[0], b.center[1] - a.center[1]];
+  // Each footprint's own +X and +Z, as rectCorners turns them.
+  const [ac, as, bc, bs] = [Math.cos(aYaw), Math.sin(aYaw), Math.cos(bYaw), Math.sin(bYaw)];
+  const axes: Vec2[] = [[ac, -as], [as, ac], [bc, -bs], [bs, bc]];
+  // How far a footprint reaches from its center along an axis.
+  const reach = ({ size: [width, depth] }: Solid, [cos, sin]: [number, number], [x, z]: Vec2) =>
+    (Math.abs(x * cos - z * sin) * width + Math.abs(x * sin + z * cos) * depth) / 2;
+  return axes.every((axis) =>
+    reach(a, [ac, as], axis) + reach(b, [bc, bs], axis) - Math.abs(dx * axis[0] + dz * axis[1]) > TOLERANCE);
 }
 
 /**
@@ -353,19 +394,32 @@ function doorZone(door: Opening, wall: Wall): Vec2[] {
 
 /** The visible Originals and the Pieces of a room, as the Fit rules see them. */
 export function roomItems(setup: RoomSetup, catalog: Catalog, state: RoomState): Item[] {
-  const item = ({ id, name, category, placement, size }: Pick<Item, 'id' | 'name' | 'category' | 'placement'> & { size: Vec3 }): Item => {
+  const item = ({ id, name, category, placement, size, collision }: Pick<Item, 'id' | 'name' | 'category' | 'placement'>
+    & { size: Vec3; collision?: CollisionBox[] }): Item => {
     const rect = footprint(placement, size);
-    const bottom = placement.position[1];
-    return { id, name, category, placement, rect, corners: rectCorners(rect), heights: [bottom, bottom + size[1]] };
+    const { position: [x, bottom, z], rotationY } = placement;
+    const [cos, sin] = [Math.cos(rotationY), Math.sin(rotationY)];
+    // Each box from the item's own frame to the room's, turned as rectCorners turns it.
+    const boxes = collisionBoxes({ size, collision }).map(({ min, max }): Solid => {
+      const [cx, cz] = [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2];
+      return {
+        center: [x + cx * cos + cz * sin, z - cx * sin + cz * cos],
+        size: [max[0] - min[0], max[2] - min[2]],
+        heights: [bottom + min[1], bottom + max[1]],
+      };
+    });
+    return { id, name, category, placement, rect, corners: rectCorners(rect), heights: [bottom, bottom + size[1]], boxes };
   };
   const catalogItems = new Map(catalog.items.map((catalogItem) => [catalogItem.id, catalogItem]));
   const originals = setup.originals
     .filter((original) => state.originals[original.id]?.visible)
-    .map(({ id, label, category, box }) =>
-      item({ id, name: `your ${label.toLowerCase()}`, category, placement: state.originals[id].placement, size: box.size }));
+    .map(({ id, label, category, box, collision }) =>
+      item({ id, name: `your ${label.toLowerCase()}`, category, placement: state.originals[id].placement, size: box.size, collision }));
   const pieces = Object.entries(state.pieces).flatMap(([id, { catalogId, placement }]) => {
     const catalogItem = catalogItems.get(catalogId);
-    return catalogItem ? [item({ id, name: catalogItem.title, category: catalogItem.category, placement, size: catalogItem.size })] : [];
+    return catalogItem
+      ? [item({ id, name: catalogItem.title, category: catalogItem.category, placement, size: catalogItem.size, collision: catalogItem.collision })]
+      : [];
   });
   return [...originals, ...pieces];
 }

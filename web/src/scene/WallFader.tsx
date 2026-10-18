@@ -13,9 +13,11 @@ const FADE_SECONDS = 0.15;
  */
 export function WallFader({ walls, nodes }: { walls: Wall[]; nodes: Record<string, Object3D> }) {
   useLayoutEffect(() => {
-    // Own materials, so fading one wall can't fade anything that shared its material.
+    // splitScan gives every node materials of its own, so fading one wall fades nothing else.
     for (const node of Object.values(nodes)) {
-      forEachMaterial(node, (material) => Object.assign(material.clone(), { transparent: true }));
+      forEachMaterial(node, (material) => {
+        material.transparent = true;
+      });
     }
   }, [nodes]);
 

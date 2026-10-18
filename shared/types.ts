@@ -103,6 +103,9 @@ export interface Opening {
   swing?: 'in-left' | 'in-right' | 'none';  // doors; hinge side seen from inside the room
 }
 
+/** A solid part of an item, in its own frame: meters from its bottom-center pivot, +X its right, +Z its front. */
+export interface CollisionBox { min: Vec3; max: Vec3 }
+
 export interface Box {
   position: Vec3;                    // bottom-center
   size: Vec3;                        // [width, height, depth] in the box's own frame
@@ -119,6 +122,7 @@ export interface Original {
   model?: string;                    // Master Copy file in the Scan folder, e.g. "models/chair.glb" (ADR-0009). When set, the
                                      // Original is drawn from it at box.position / box.rotationY, and its Parts are the file's
                                      // top-level node names except "shadow". Category Part rules (ADR-0006) don't apply.
+  collision?: CollisionBox[];        // its Master Copy's solid parts, at most 12, inside box.size; absent: one solid box (#129)
   floorColor: Hex;                   // average floor color around the footprint → simple Patch
   patch?: {                          // Phase 2: generated fill (Patch v2) for the spots no Capture saw
     floor?: string;                  // "patches/og_sofa.floor.png"
@@ -145,6 +149,7 @@ export interface CatalogItem {
   category: Category;
   mount: 'floor' | 'wall';           // floor items may also be dropped onto furniture tops
   size: Vec3;                        // meters [W, H, D] after normalization
+  collision?: CollisionBox[];        // its solid parts, at most 12, fitted to its model, inside size; absent: one solid box (#129)
   model: string;                     // "/data/catalog/models/<id>.glb" — bottom-center pivot, +Z front
   thumbnail: string;                 // "/data/catalog/thumbs/<id>.jpg"
   colors: string[];                  // ABO color names, e.g. ["Walnut"]

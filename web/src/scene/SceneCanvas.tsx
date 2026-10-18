@@ -8,6 +8,7 @@ import { AlignPanel } from './AlignPanel';
 import { useEditor } from '../state/store';
 import { CATALOG_ITEM_TYPE } from '../ui/CatalogPanel';
 import { CastShadows } from './CastShadows';
+import { CollisionBoxes } from './CollisionBoxes';
 import { WalkHint } from './ControlsHint';
 import { DollhouseCamera } from './DollhouseCamera';
 import { FitHighlights } from './FitHighlights';
@@ -126,6 +127,7 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
         <Reveal ready={scanDrawn} />
         <SketchSelection />
         <FitHighlights />
+        <CollisionBoxes />
         <ResizeHandles />
         {view === 'dollhouse' ? <DollhouseCamera start={shot ?? undefined} /> : <WalkControls start={shot?.pose} />}
         {debug && <Stats parent={container} className="stats" />}

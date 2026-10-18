@@ -79,12 +79,12 @@ describe('optimizeScan', () => {
     expect(measureScan(document).triangles).toBeGreaterThan(2_500);
   });
 
-  it('converts textures to WebP no larger than 2048 px, keeping their aspect ratio', async () => {
-    const document = openRoom([4096, 8]);
+  it('converts textures to WebP no larger than 4096 px, keeping their aspect ratio', async () => {
+    const document = openRoom([8192, 8]);
 
     await optimizeScan(document);
 
-    expect(measureScan(document).textures).toEqual([{ width: 2048, height: 4, mimeType: 'image/webp', bytes: expect.any(Number) }]);
+    expect(measureScan(document).textures).toEqual([{ width: 4096, height: 4, mimeType: 'image/webp', bytes: expect.any(Number) }]);
   });
 });
 
@@ -137,8 +137,8 @@ describe('formatSummary', () => {
     expect(summary).toContain('min (-1.80, 0.00, -2.10) m');
   });
 
-  it('warns when simplify could not bring the mesh under 300k triangles', () => {
-    expect(formatSummary({ ...dorm, triangles: 312_000 })).toContain('⚠ 312,000 triangles is over the limit of 300,000.');
+  it('warns when simplify could not bring the mesh under 500k triangles', () => {
+    expect(formatSummary({ ...dorm, triangles: 512_000 })).toContain('⚠ 512,000 triangles is over the limit of 500,000.');
   });
 });
 
@@ -239,5 +239,38 @@ describe('importScan', () => {
 
     expect(JSON.parse(await readFile(join(tmp, 'scans/test-room/manifest.json'), 'utf8')).name).toBe('Renamed');
     expect(existsSync(join(tmp, 'scans/test-room/setup.json'))).toBe(true);
+  });
+
+  it('adds Fill Captures to an existing Scan, keeping the Main Capture as captures/main.glb', async () => {
+    const options = { input: await zippedExport(), scanId: 'test-room', scansDir: join(tmp, 'scans') };
+    await importScan(options);
+    const dir = join(tmp, 'scans/test-room');
+    const leveled = { ...JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8')), meshTransform: { position: [0, -1, 0], rotationY: 0.5 } };
+    await writeFile(join(dir, 'manifest.json'), JSON.stringify(leveled));
+    const room = await readFile(join(dir, 'room.glb'));
+
+    const first = await importScan({ ...options, fill: true });
+    const second = await importScan({ ...options, fill: true });
+
+    expect([first.mesh, second.mesh]).toEqual(['captures/fill-1.glb', 'captures/fill-2.glb']);
+    const identity = { position: [0, 0, 0], rotationY: 0 };
+    expect(JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8'))).toEqual({
+      ...leveled,
+      captures: {
+        main: 'captures/main.glb',
+        fills: [
+          { mesh: 'captures/fill-1.glb', transform: identity, moved: [] },
+          { mesh: 'captures/fill-2.glb', transform: identity, moved: [] },
+        ],
+      },
+    });
+    expect(await readFile(join(dir, 'captures/main.glb'))).toEqual(room);
+    expect(await readFile(join(dir, 'room.glb'))).toEqual(room);
+    expect(second.stats.triangles).toBe(10);
+  });
+
+  it('refuses a Fill Capture for a Scan that has no Main Capture yet', async () => {
+    await expect(importScan({ input: await zippedExport(), scanId: 'nowhere', scansDir: join(tmp, 'scans'), fill: true }))
+      .rejects.toThrow('There is no Scan "nowhere" yet. Import its Main Capture first, without --fill.');
   });
 });

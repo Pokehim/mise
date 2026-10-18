@@ -1384,6 +1384,1004 @@
       "priceEstimateUsd": 25,
       "url": "https://www.nps.gov/articles/000/50-nifty-finds-7-the-waugh-factor.htm",
       "attribution": "National Park Service. Public domain"
+    },
+    {
+      "id": "poster-chocolate-and-tea",
+      "source": "publicdomain",
+      "title": "Chocolate and Tea",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-chocolate-and-tea.glb",
+      "thumbnail": "/data/catalog/posters/poster-chocolate-and-tea.jpg",
+      "colors": [
+        "Orange",
+        "Red",
+        "Brown"
+      ],
+      "colorHex": "#bda28c",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "art nouveau",
+        "orange",
+        "red",
+        "brown"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://clevelandart.org/art/1946.194",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-poppies-on-black",
+      "source": "publicdomain",
+      "title": "Poppies on Black",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-poppies-on-black.glb",
+      "thumbnail": "/data/catalog/posters/poster-poppies-on-black.jpg",
+      "colors": [
+        "Orange",
+        "Brown"
+      ],
+      "colorHex": "#ad9171",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "art nouveau",
+        "orange",
+        "brown"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://clevelandart.org/art/1969.237",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-princess-ilsee",
+      "source": "publicdomain",
+      "title": "Princess Ilsée",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-princess-ilsee.glb",
+      "thumbnail": "/data/catalog/posters/poster-princess-ilsee.jpg",
+      "colors": [
+        "Orange",
+        "Yellow",
+        "Gray"
+      ],
+      "colorHex": "#af9e84",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "art nouveau",
+        "orange",
+        "yellow",
+        "gray"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://clevelandart.org/art/1977.1018",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-palais-de-glace",
+      "source": "publicdomain",
+      "title": "Palais de Glace",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.954,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-palais-de-glace.glb",
+      "thumbnail": "/data/catalog/posters/poster-palais-de-glace.jpg",
+      "colors": [
+        "Orange",
+        "Yellow"
+      ],
+      "colorHex": "#e2b175",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "art nouveau",
+        "orange",
+        "yellow"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://clevelandart.org/art/1978.1054",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-jane",
+      "source": "publicdomain",
+      "title": "Jane",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-jane.glb",
+      "thumbnail": "/data/catalog/posters/poster-jane.jpg",
+      "colors": [
+        "Orange",
+        "Yellow"
+      ],
+      "colorHex": "#c68c63",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "art nouveau",
+        "orange",
+        "yellow"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://clevelandart.org/art/2014.126",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-the-twins",
+      "source": "publicdomain",
+      "title": "The Twins",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-the-twins.glb",
+      "thumbnail": "/data/catalog/posters/poster-the-twins.jpg",
+      "colors": [
+        "Orange",
+        "Red",
+        "Gray"
+      ],
+      "colorHex": "#b69c83",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "art nouveau",
+        "orange",
+        "red",
+        "gray"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.loc.gov/item/2014647783/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-improvisation-30",
+      "source": "publicdomain",
+      "title": "Improvisation No. 30 (Cannons)",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-improvisation-30.glb",
+      "thumbnail": "/data/catalog/posters/poster-improvisation-30.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Red"
+      ],
+      "colorHex": "#ab9276",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "orange",
+        "gray",
+        "red"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.artic.edu/artworks/8991",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-tightrope-walker",
+      "source": "publicdomain",
+      "title": "Tightrope Walker",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-tightrope-walker.glb",
+      "thumbnail": "/data/catalog/posters/poster-tightrope-walker.jpg",
+      "colors": [
+        "Orange",
+        "Red"
+      ],
+      "colorHex": "#cbafa2",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "orange",
+        "red"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://clevelandart.org/art/1961.154",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-rome-express",
+      "source": "publicdomain",
+      "title": "Rome Express",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-rome-express.glb",
+      "thumbnail": "/data/catalog/posters/poster-rome-express.jpg",
+      "colors": [
+        "Orange",
+        "Red"
+      ],
+      "colorHex": "#c09157",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "orange",
+        "red"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/item/2006675134/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-norway-in-september",
+      "source": "publicdomain",
+      "title": "Norway in September",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.61,
+        0.914,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-norway-in-september.glb",
+      "thumbnail": "/data/catalog/posters/poster-norway-in-september.jpg",
+      "colors": [
+        "Orange",
+        "Teal",
+        "Gray"
+      ],
+      "colorHex": "#a8876d",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "orange",
+        "teal",
+        "gray"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://www.loc.gov/item/2008679876/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-far-west-parks",
+      "source": "publicdomain",
+      "title": "Far West National Parks",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.954,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-far-west-parks.glb",
+      "thumbnail": "/data/catalog/posters/poster-far-west-parks.jpg",
+      "colors": [
+        "Orange",
+        "Gray"
+      ],
+      "colorHex": "#baa483",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "orange",
+        "gray"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://www.loc.gov/item/2018646001/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-old-wooden-church",
+      "source": "publicdomain",
+      "title": "Old Wooden Church, Poland",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-old-wooden-church.glb",
+      "thumbnail": "/data/catalog/posters/poster-old-wooden-church.jpg",
+      "colors": [
+        "Black",
+        "Brown"
+      ],
+      "colorHex": "#161616",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "black",
+        "brown"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://www.loc.gov/item/00650659/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-chikugo-river",
+      "source": "publicdomain",
+      "title": "Evening on the Chikugo River",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.497,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-chikugo-river.glb",
+      "thumbnail": "/data/catalog/posters/poster-chikugo-river.jpg",
+      "colors": [
+        "Gray"
+      ],
+      "colorHex": "#59605b",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "japanese prints",
+        "gray"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://clevelandart.org/art/1930.95",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-plum-garden",
+      "source": "publicdomain",
+      "title": "Plum Garden at Kameido",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-plum-garden.glb",
+      "thumbnail": "/data/catalog/posters/poster-plum-garden.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Green"
+      ],
+      "colorHex": "#ce9f84",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "japanese prints",
+        "orange",
+        "gray",
+        "green"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.artic.edu/artworks/26577",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-kirifuri-waterfall",
+      "source": "publicdomain",
+      "title": "Kirifuri Waterfall",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-kirifuri-waterfall.glb",
+      "thumbnail": "/data/catalog/posters/poster-kirifuri-waterfall.jpg",
+      "colors": [
+        "Green",
+        "Yellow",
+        "Gray"
+      ],
+      "colorHex": "#8fa892",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "japanese prints",
+        "green",
+        "yellow",
+        "gray"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.metmuseum.org/art/collection/search/56139",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-ghosts-of-the-taira",
+      "source": "publicdomain",
+      "title": "Ghosts of the Taira",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.954,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-ghosts-of-the-taira.glb",
+      "thumbnail": "/data/catalog/posters/poster-ghosts-of-the-taira.jpg",
+      "colors": [
+        "Gray",
+        "Blue",
+        "Orange"
+      ],
+      "colorHex": "#656563",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "japanese prints",
+        "gray",
+        "blue",
+        "orange"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://www.metmuseum.org/art/collection/search/55743",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-hydrangeas",
+      "source": "publicdomain",
+      "title": "Hydrangeas",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.61,
+        0.457,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-hydrangeas.glb",
+      "thumbnail": "/data/catalog/posters/poster-hydrangeas.jpg",
+      "colors": [
+        "Green",
+        "Blue"
+      ],
+      "colorHex": "#b8d19e",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "japanese prints",
+        "green",
+        "blue"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.artic.edu/artworks/127737",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-puppies",
+      "source": "publicdomain",
+      "title": "Puppies",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.472,
+        0.319,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-puppies.glb",
+      "thumbnail": "/data/catalog/posters/poster-puppies.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Brown"
+      ],
+      "colorHex": "#e4cc98",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "japanese prints",
+        "orange",
+        "gray",
+        "brown"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://clevelandart.org/art/1989.85.5",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-dancing-fox",
+      "source": "publicdomain",
+      "title": "Dancing Fox",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-dancing-fox.glb",
+      "thumbnail": "/data/catalog/posters/poster-dancing-fox.jpg",
+      "colors": [
+        "Orange",
+        "Gray"
+      ],
+      "colorHex": "#b7a48e",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "japanese prints",
+        "orange",
+        "gray"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://clevelandart.org/art/2016.546",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-haeckel-jellyfish",
+      "source": "publicdomain",
+      "title": "Jellyfish",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-haeckel-jellyfish.glb",
+      "thumbnail": "/data/catalog/posters/poster-haeckel-jellyfish.jpg",
+      "colors": [
+        "Orange",
+        "Beige"
+      ],
+      "colorHex": "#c2a996",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "orange",
+        "beige"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/item/2014645034/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-haeckel-mushrooms",
+      "source": "publicdomain",
+      "title": "Mushrooms",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-haeckel-mushrooms.glb",
+      "thumbnail": "/data/catalog/posters/poster-haeckel-mushrooms.jpg",
+      "colors": [
+        "Gray"
+      ],
+      "colorHex": "#60605a",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "gray"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.loc.gov/item/2015648945/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-pompon-rose",
+      "source": "publicdomain",
+      "title": "Pompon Rose",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.319,
+        0.472,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-pompon-rose.glb",
+      "thumbnail": "/data/catalog/posters/poster-pompon-rose.jpg",
+      "colors": [
+        "Beige"
+      ],
+      "colorHex": "#e6ded2",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "beige"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://clevelandart.org/art/1943.142",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-turban-lily",
+      "source": "publicdomain",
+      "title": "Turban Lily",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-turban-lily.glb",
+      "thumbnail": "/data/catalog/posters/poster-turban-lily.jpg",
+      "colors": [
+        "Orange",
+        "Beige"
+      ],
+      "colorHex": "#d3cdc4",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "orange",
+        "beige"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://clevelandart.org/art/2020.164",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-florida-jays",
+      "source": "publicdomain",
+      "title": "Florida Jays",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-florida-jays.glb",
+      "thumbnail": "/data/catalog/posters/poster-florida-jays.jpg",
+      "colors": [
+        "Beige",
+        "Orange"
+      ],
+      "colorHex": "#efe5d5",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "beige",
+        "orange"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://www.artic.edu/artworks/18878",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-copernican-planisphere",
+      "source": "publicdomain",
+      "title": "Copernican Planisphere",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.497,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-copernican-planisphere.glb",
+      "thumbnail": "/data/catalog/posters/poster-copernican-planisphere.jpg",
+      "colors": [
+        "Gray",
+        "Orange",
+        "Red"
+      ],
+      "colorHex": "#898379",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "gray",
+        "orange",
+        "red"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.loc.gov/item/2011589506/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-moon-map",
+      "source": "publicdomain",
+      "title": "Map of the Moon",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.61,
+        0.457,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-moon-map.glb",
+      "thumbnail": "/data/catalog/posters/poster-moon-map.jpg",
+      "colors": [
+        "Orange",
+        "Beige",
+        "Gray"
+      ],
+      "colorHex": "#a99e8c",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "orange",
+        "beige",
+        "gray"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/resource/g3190m.gct00305/?sp=23",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-visit-the-zoo",
+      "source": "publicdomain",
+      "title": "Visit the Zoo",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-visit-the-zoo.glb",
+      "thumbnail": "/data/catalog/posters/poster-visit-the-zoo.jpg",
+      "colors": [
+        "Beige",
+        "Gray",
+        "Orange"
+      ],
+      "colorHex": "#e8dccc",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "beige",
+        "gray",
+        "orange"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/item/92500639/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-visit-the-aquarium",
+      "source": "publicdomain",
+      "title": "Visit the Aquarium",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-visit-the-aquarium.glb",
+      "thumbnail": "/data/catalog/posters/poster-visit-the-aquarium.jpg",
+      "colors": [
+        "Gray",
+        "Brown"
+      ],
+      "colorHex": "#35352c",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "nature & science",
+        "gray",
+        "brown"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.loc.gov/item/98518437/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-torus-colony",
+      "source": "publicdomain",
+      "title": "Torus Colony Interior",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.914,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-torus-colony.glb",
+      "thumbnail": "/data/catalog/posters/poster-torus-colony.jpg",
+      "colors": [
+        "Blue",
+        "Gray",
+        "Yellow"
+      ],
+      "colorHex": "#6497bb",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "blue",
+        "gray",
+        "yellow"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://images.nasa.gov/details/ARC-1975-AC75-2621",
+      "attribution": "NASA Ames Research Center. Public domain"
+    },
+    {
+      "id": "poster-cylinder-colony",
+      "source": "publicdomain",
+      "title": "Cylinder Colony at Eclipse",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.954,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-cylinder-colony.glb",
+      "thumbnail": "/data/catalog/posters/poster-cylinder-colony.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Blue"
+      ],
+      "colorHex": "#ac916c",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "orange",
+        "gray",
+        "blue"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://images.nasa.gov/details/ARC-1975-AC75-1920",
+      "attribution": "NASA Ames Research Center. Public domain"
+    },
+    {
+      "id": "poster-building-the-torus",
+      "source": "publicdomain",
+      "title": "Building the Torus",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.61,
+        0.457,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-building-the-torus.glb",
+      "thumbnail": "/data/catalog/posters/poster-building-the-torus.jpg",
+      "colors": [
+        "Black",
+        "Gray",
+        "Green"
+      ],
+      "colorHex": "#05070a",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "black",
+        "gray",
+        "green"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://images.nasa.gov/details/ARC-1975-AC75-1886",
+      "attribution": "NASA Ames Research Center. Public domain"
     }
   ]
 }

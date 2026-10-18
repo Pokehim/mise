@@ -24,7 +24,9 @@ import type { Catalog, CatalogItem, Hex, Vec3 } from '../shared/types';
 /* ───────────── posters.json ───────────── */
 
 /** A poster collection: a styleTag, and a filter chip in the Catalog panel. */
-export const COLLECTIONS = ['museum', 'space', 'y2k', 'retro gaming', 'anime sunsets', 'gig posters', 'parks & travel'] as const;
+export const COLLECTIONS = [
+  'museum', 'japanese prints', 'art nouveau', 'nature & science', 'space', 'y2k', 'retro gaming', 'anime sunsets', 'gig posters', 'parks & travel',
+] as const;
 export type Collection = (typeof COLLECTIONS)[number];
 
 /** A standard print size in inches, portrait. */

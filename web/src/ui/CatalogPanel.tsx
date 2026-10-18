@@ -14,8 +14,9 @@ const CATEGORY_NAMES: Record<Category, string> = {
 
 /** The poster collections (#85), by the styleTag every poster of one carries beside 'poster'. */
 const POSTER_COLLECTIONS: [tag: string, name: string][] = [
-  ['museum', 'Museum'], ['space', 'Space'], ['y2k', 'Y2K'], ['retro gaming', 'Retro gaming'],
-  ['anime sunsets', 'Anime sunsets'], ['gig posters', 'Gig posters'], ['parks & travel', 'Parks & travel'],
+  ['museum', 'Museum'], ['japanese prints', 'Japanese prints'], ['art nouveau', 'Art Nouveau'], ['nature & science', 'Nature & science'],
+  ['space', 'Space'], ['y2k', 'Y2K'], ['retro gaming', 'Retro gaming'], ['anime sunsets', 'Anime sunsets'], ['gig posters', 'Gig posters'],
+  ['parks & travel', 'Parks & travel'],
 ];
 const isPoster = (item: CatalogItem) => item.styleTags.includes('poster');
 

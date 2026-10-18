@@ -14,7 +14,7 @@ import { newId } from '../../shared/ids';
 import { partsFor } from '../../shared/parts';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, CatalogItem, Category, Edit, FitViolation, Hex, LibraryMaterial, Palette, Placement, RoomSetup, RoomState } from '../../shared/types';
-import { catalogEntry, m } from './forClaude';
+import { catalogEntry, m, offeredToClaude } from './forClaude';
 import { reviewDesign } from './review';
 
 export interface DesignContext extends AnchorOptions {
@@ -25,6 +25,8 @@ export interface DesignContext extends AnchorOptions {
   materials: LibraryMaterial[];
   /** The most tool calls Claude gets for this Design; finish_design always runs. */
   maxToolCalls?: number;
+  /** The most large furniture changes this Design may make. */
+  maxLargeChanges?: number;
 }
 
 /** One Design being made: its Edits, the room they make, and the tools that change it. */
@@ -38,12 +40,15 @@ export interface DesignSession {
   readonly tools: BetaRunnableTool[];
 }
 
-/** How many tool calls a Design gets: about 30 for 8 to 15 Edits, with searches, a few retries and a review and its fixes (spec §13.3, raised for decorating). */
-const MAX_TOOL_CALLS = 30;
-/** How many Edits a decorated Design has, at least and at most. */
-export const EDIT_RANGE: [min: number, max: number] = [8, 15];
-/** How many large furniture changes a Design may make: decorating comes first. */
-export const MAX_LARGE_CHANGES = 2;
+/** How many tool calls a Design gets: about 40 for 8 to 24 Edits, with searches, a few retries and a review and its fixes (spec §13.3, raised for decorating and remodels). */
+const MAX_TOOL_CALLS = 40;
+/** How many Edits a Design has, at least and at most, not counting removals: a remodel clears what doesn't belong first. */
+export const EDIT_RANGE: [min: number, max: number] = [8, 24];
+/**
+ * How many large furniture changes a Design may make: enough to remodel, as a Brief that turns a lounge
+ * into a bedroom or a library needs. Removing an Original doesn't count.
+ */
+export const MAX_LARGE_CHANGES = 8;
 /** The most Pieces a Design may have (spec §2.3). */
 const MAX_PIECES = 25;
 /** Categories that are always large furniture. Shelves, tables, storage and chairs are when they are big. */
@@ -51,9 +56,9 @@ const LARGE: Category[] = ['bed', 'sofa', 'desk', 'dresser', 'wardrobe'];
 const SIZEABLE: Category[] = ['shelf', 'table', 'storage', 'chair'];
 const SIZEABLE_AREA = 0.6;
 const SIZEABLE_HEIGHT = 1.2;
-/** What counts as a large furniture change, for the system prompt: the rule `isLarge` and the removed Originals count by. */
+/** What counts as a large furniture change, for the system prompt: the rule `isLarge` and the replaced or moved Originals count by. */
 export const LARGE_CHANGES = `placing a ${LARGE.join(', ')}, or a ${SIZEABLE.join(', ')} of ${SIZEABLE_AREA} m² or more or `
-  + `${SIZEABLE_HEIGHT} m or taller; or replacing or removing one of the room's Originals`;
+  + `${SIZEABLE_HEIGHT} m or taller; or replacing or moving one of the room's Originals (removing one doesn't count)`;
 /** How far a replacing Piece slides along its width to clear a Fit rule, each way, nearest first. */
 const REPLACE_SLIDES = [0, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3];
 
@@ -112,7 +117,9 @@ const finishTarget = z.union([
 ]);
 
 /** A new Design session, with the 7 tools of spec §13.2 that change it, plus review_design. */
-export function createSession({ setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS }: DesignContext): DesignSession {
+export function createSession({
+  setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS, maxLargeChanges = MAX_LARGE_CHANGES,
+}: DesignContext): DesignSession {
   let edits: Edit[] = [];
   let state = replay(setup, catalog, edits);
   let finished: DesignSession['finished'];
@@ -125,8 +132,12 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
   const catalogItem = (id: string) => catalog.items.find((candidate) => candidate.id === id);
   const pieces = () => Object.values(state.pieces).map((piece) => ({ ...piece, item: catalogItem(piece.catalogId)! }));
   const totalUsd = () => pieces().reduce((total, { item }) => total + item.priceEstimateUsd, 0);
-  /** Each Original replaced, removed or moved (Kept ones can't be), and each large Piece placed new. */
-  const largeChanges = () => state.patches.length + pieces().filter(({ item, replacesOriginalId }) => !replacesOriginalId && isLarge(item)).length;
+  /** Each Original replaced or moved (Kept ones can't be), and each large Piece placed new. Removing an Original doesn't count. */
+  const largeChanges = () => pieces().filter(({ replacesOriginalId }) => replacesOriginalId).length
+    + Object.values(state.originals).filter(({ moved }) => moved).length
+    + pieces().filter(({ item, replacesOriginalId }) => !replacesOriginalId && isLarge(item)).length;
+  /** The Edits that count toward EDIT_RANGE: all but removals. */
+  const counted = () => edits.filter(({ type }) => type !== 'remove').length;
   const original = (id: string) => setup.originals.find((candidate) => candidate.id === id);
   const inRoom = (id: string) => roomItems(setup, catalog, state).find((candidate) => candidate.id === id)
     ?? fail(`The room has no Original or Piece "${id}"`);
@@ -134,7 +145,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
 
   /** Appends an Edit by Claude and replays the Design, or fails with why replay would skip it. */
   function apply(fields: DistributiveOmit<Edit, 'id' | 'at' | 'by'>) {
-    if (edits.length >= EDIT_RANGE[1]) fail(`This Design has ${EDIT_RANGE[1]} Edits, the most it may have: call finish_design`);
+    if (fields.type !== 'remove' && counted() >= EDIT_RANGE[1]) fail(`This Design has ${EDIT_RANGE[1]} Edits, the most it may have: call finish_design`);
     const edit = { ...fields, id: newId('ed'), at: new Date().toISOString(), by: 'claude' } as Edit;
     const next = replay(setup, catalog, [...edits, edit]);
     const skipped = next.skipped.find(({ editId }) => editId === edit.id);
@@ -145,8 +156,8 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
 
   /** Fails unless the Design can take one more large furniture change. */
   function checkLargeChange() {
-    if (largeChanges() >= MAX_LARGE_CHANGES) {
-      fail(`This Design already has ${MAX_LARGE_CHANGES} large furniture changes, the most it may have: decorate instead`);
+    if (largeChanges() >= maxLargeChanges) {
+      fail(`This Design already has ${maxLargeChanges} large furniture changes, the most it may have: decorate instead`);
     }
   }
   /** Fails unless the Design can still add `item`: within the budget and the Piece count, and a large change if it is one. */
@@ -201,7 +212,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       }),
       ({ category, text, color: colorName, max_width_m, max_depth_m, max_price_usd, limit = 10 }) => ({
         items: search(catalog, { category, text, color: colorName, maxSize: [max_width_m ?? Infinity, Infinity, max_depth_m ?? Infinity], limit: Infinity })
-          .filter(({ item }) => max_price_usd === undefined || item.priceEstimateUsd <= max_price_usd)
+          .filter(({ item }) => offeredToClaude(item) && (max_price_usd === undefined || item.priceEstimateUsd <= max_price_usd))
           .slice(0, limit)
           .map(({ item }) => catalogEntry(item)),
       }),
@@ -299,15 +310,17 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
     ),
     tool(
       'remove',
-      "Remove a Piece, or an Original that isn't Kept. Removing an Original is a large furniture change.",
-      z.object({ target_id: z.string() }),
-      ({ target_id }) => {
-        const { name } = inRoom(target_id);
-        const scanned = original(target_id);
-        if (scanned?.kept) fail(keptMessage(name));
-        if (scanned) checkLargeChange();
-        apply({ type: 'remove', targetId: target_id });
-        return { ok: true, ...spent() };
+      "Remove Pieces, or Originals that aren't Kept: one or many in one call, as when a remodel clears the room. "
+        + "Removals don't count toward the Edit or large-change limits.",
+      z.object({ target_ids: z.array(z.string()) }),
+      ({ target_ids }) => {
+        // Check them all before removing any, so a bad id leaves the Design as it was.
+        for (const id of target_ids) {
+          const { name } = inRoom(id);
+          if (original(id)?.kept) fail(keptMessage(name));
+        }
+        for (const id of target_ids) apply({ type: 'remove', targetId: id });
+        return { ok: true, removed: target_ids.length, ...spent() };
       },
     ),
     tool(
@@ -362,8 +375,8 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       !has('decor', 'plant').some(({ placement }) => placement.mount === 'surface') && 'decor on the bed or a furniture top',
     ].filter((need): need is string => !!need);
     return [
-      ...(edits.length < EDIT_RANGE[0]
-        ? [`this Design has ${edits.length} Edit${edits.length === 1 ? '' : 's'}, and needs ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]}`] : []),
+      ...(counted() < EDIT_RANGE[0]
+        ? [`this Design has ${counted()} Edit${counted() === 1 ? '' : 's'} besides removals, and needs ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]}`] : []),
       ...(needs.length ? [`It still needs ${needs.join(', ')}`] : []),
     ];
   }

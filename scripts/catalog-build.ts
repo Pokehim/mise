@@ -10,7 +10,8 @@
 // A pick is one of:
 //   - an ABO listing with a 3D model (the default);
 //   - an ABO rug listing without one (`flat`), built as a thin slab with the listing's photo on top (catalog/flat-rug);
-//   - a Poly Haven asset or a Google Scanned Objects scan (`source`), optionally set in a pot (catalog/models).
+//   - a Poly Haven asset or a Google Scanned Objects scan (`source`), optionally set in a pot (catalog/models);
+//   - an ABO bed frame built made up (`madeUp`): a mattress of the listed size and bedding on it (catalog/models).
 //
 // Downloads are kept in scripts/.cache/: ABO's files at their paths in the bucket.
 
@@ -25,7 +26,7 @@ import sharp from 'sharp';
 import type { Catalog, CatalogItem, Category, Hex, Vec2, Vec3 } from '../shared/types';
 import { ASPECT_TOLERANCE, rugDocument, rugTexture } from './catalog/flat-rug';
 import { gsoDocument, gsoUrl, writeGlb } from './catalog/gso';
-import { clearGlass, io, keepNodes, potted, turn } from './catalog/models';
+import { clearGlass, io, keepNodes, type MadeUp, madeUp, potted, turn } from './catalog/models';
 import { polyHavenGltf, polyHavenUrl } from './catalog/polyhaven';
 import { renderThumbnails } from './catalog/thumbnail';
 
@@ -83,6 +84,8 @@ export interface CatalogPick {
   turn?: number;
   /** A pot to stand the model, a plant, in. */
   pot?: ModelRef & { name: string };
+  /** An ABO bed frame, built made up: with a mattress of this size and bedding on it, its thumbnail rendered from the result. */
+  madeUp?: MadeUp;
 }
 
 /** §8.3: ABO has no prices, so each Category has a default estimate. */
@@ -454,8 +457,17 @@ async function buildAboModel(pick: CatalogPick, listing: Listing | undefined, im
   const { extent } = listing.model;
   if (Math.max(...extent) > 4) throw new Error(`${extent.join(' × ')} m is not a real furniture size`);
   const thumbnail = join(CACHE, 'build', `${pick.id}.jpg`);
+  const original = await cached(`3dmodels/original/${listing.model.path}`);
+  if (pick.madeUp) {
+    // The listing's photos show the bare frame, so the thumbnail is rendered from the made-up bed.
+    const raw = join(CACHE, 'build', `${pick.id}.raw.glb`);
+    await io().write(raw, madeUp(await io().read(original), pick.madeUp));
+    const model = await finishModel(pick.id, raw);
+    await renderThumbnails([{ glb: model.glb, out: thumbnail }]);
+    return { item: toCatalogItem(pick, listing, model.size), model, thumbnail };
+  }
   await writeThumbnail(listing, imagePaths, thumbnail);
-  const model = await finishModel(pick.id, await cached(`3dmodels/original/${listing.model.path}`));
+  const model = await finishModel(pick.id, original);
   return { item: toCatalogItem(pick, listing, model.size), model, thumbnail };
 }
 

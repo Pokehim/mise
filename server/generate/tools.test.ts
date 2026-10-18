@@ -41,6 +41,14 @@ describe('the Design tools', () => {
   });
 
   describe('search_catalog', () => {
+    it("never offers the Catalog's placeholder boxes", async () => {
+      const placeholder = item('placeholder-chair', 'chair', 'Placeholder Desk Chair', [0.6, 0.9, 0.6], { source: 'generated' });
+      const session = createSession({ setup, catalog: { ...decorCatalog, items: [...decorCatalog.items, placeholder] }, brief: { text: 'cozy' }, materials });
+
+      const { items } = await call(session, 'search_catalog', { category: 'chair' });
+      expect(items.map(({ id }: { id: string }) => id)).not.toContain('placeholder-chair');
+    });
+
     it('finds Catalog items of a category, with their size, colors, styles and estimated price', async () => {
       expect(await call(start(), 'search_catalog', { category: 'wall_art' })).toEqual({
         items: [
@@ -143,10 +151,11 @@ describe('the Design tools', () => {
       })).rejects.toThrow(`Fit violations: Hangs behind White Wardrobe (overlap, ${wardrobe.piece_id})`);
     });
 
-    it('allows at most 2 large furniture changes', async () => {
-      const session = start({ text: 'cozy' });
+    it('allows at most the large furniture changes it is given, not counting removed Originals', async () => {
+      const session = createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials, maxLargeChanges: 2 });
+      await call(session, 'remove', { target_ids: ['og_desk'] });
       await call(session, 'place_piece', { catalog_id: 'wardrobe-white', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
-      await call(session, 'replace_original', { original_id: 'og_desk', catalog_id: 'desk-walnut' });
+      await call(session, 'place_piece', { catalog_id: 'desk-walnut', anchor: { kind: 'against_wall', wall_id: 'wl_east', along: 'center' } });
 
       await expect(call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_east', along: 'right' } }))
         .rejects.toThrow('This Design already has 2 large furniture changes, the most it may have: decorate instead');
@@ -207,16 +216,21 @@ describe('the Design tools', () => {
   });
 
   describe('remove', () => {
-    it('removes a Piece, or an Original that is not Kept', async () => {
+    it('removes Pieces and Originals that are not Kept, several in one call', async () => {
       const session = start();
       const { piece_id } = await call(session, 'place_piece', { catalog_id: 'plant-fig', anchor: { kind: 'open_floor' } });
 
-      await call(session, 'remove', { target_id: piece_id });
-      await call(session, 'remove', { target_id: 'og_desk' });
+      expect(await call(session, 'remove', { target_ids: [piece_id, 'og_desk'] })).toMatchObject({ ok: true, removed: 2 });
 
       expect(session.state.pieces).toEqual({});
       expect(session.state.originals.og_desk.visible).toBe(false);
-      await expect(call(session, 'remove', { target_id: 'og_bed' })).rejects.toThrow('your bed is Kept');
+    });
+
+    it('removes nothing when one of them is Kept', async () => {
+      const session = start();
+
+      await expect(call(session, 'remove', { target_ids: ['og_desk', 'og_bed'] })).rejects.toThrow('your bed is Kept');
+      expect(session.state.originals.og_desk.visible).toBe(true);
     });
   });
 
@@ -248,7 +262,7 @@ describe('the Design tools', () => {
       await call(session, 'review_design', {});
 
       await expect(call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette }))
-        .rejects.toThrow('Not finished: this Design has 1 Edit, and needs 8 to 15. It still needs wall art (2 to 4 frames), a rug, a lamp, decor on the bed or a furniture top');
+        .rejects.toThrow('Not finished: this Design has 1 Edit besides removals, and needs 8 to 24. It still needs wall art (2 to 4 frames), a rug, a lamp, decor on the bed or a furniture top');
       expect(await call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette })).toEqual({ ok: true });
     });
 

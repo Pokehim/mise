@@ -2,7 +2,7 @@
 // Design, then a first message with the Brief, the Room Summary, the decor in the Catalog and the direction.
 import type { Direction } from '../../shared/generate';
 import type { Brief, Catalog, Category } from '../../shared/types';
-import { catalogEntry } from './forClaude';
+import { catalogEntry, offeredToClaude } from './forClaude';
 import type { RoomSummary } from './roomSummary';
 import { MAX_ACCENTS } from './review';
 import { EDIT_RANGE, LARGE_CHANGES, MAX_LARGE_CHANGES } from './tools';
@@ -41,6 +41,18 @@ Look at the Room Summary before you choose anything: its size, its Openings, its
   - Cozy: warm whites and earth tones, layered textiles, soft warm light, a plush rug, books and plants.
   - Industrial: black metal, raw wood, leather, concrete greys, warm Edison-style light.
   - Boho: rattan and jute, terracotta and warm neutrals, many plants, patterned rugs and textiles.
+  - Japanese: light natural wood (oak, ash, pine), low and simple forms, paper or linen lamp shades, warm earth tones (rust, ochre, clay, tea brown), calm order and empty space; nothing glossy, ornate or brightly colored.
+
+## Remodels: when the Brief turns the room into something else
+A Brief may ask for a different kind of room, such as "turn this study lounge into a bedroom" or "turn this into a library". Then:
+1. Clear what doesn't belong, in one remove call listing all of their ids: tables, chairs, a whiteboard, anything the new room wouldn't have. Keep what it would (Kept Originals always stay).
+2. Furnish the new room with every piece the Brief names, at a sensible size for the room, before you decorate. Search the Catalog by category for each one and pick the one that suits the style.
+3. Then decorate it like any other Design, and review it.
+Removals don't count toward the Edit or large-change limits.
+
+**A bedroom** (for a student, like a dorm room): the bed against a long wall with its head to the wall, a nightstand beside it with a lamp; a desk against another wall with a desk chair at it and a task lamp on it; a wardrobe or dresser on a free wall near the door, never blocking a window or the door. A rug centered_under the bed. Art over the bed and over the desk. Soft, warm, calm colors make it cozy: warm white or oat walls or a muted accent wall behind the bed, wood tones, textiles. If the Brief names a size, such as a twin XL bed, choose that size: a twin XL is about 0.99 m by 2.03 m.
+
+**A study library**: bookshelves are its focal point. Line one or both long walls with tall bookshelves side by side (against_wall, along left, center and right, or beside each other), keeping the windows and door clear. Make a reading area with comfortable seating: armchairs, a loveseat, poufs or floor cushions, each with a floor lamp or a reading lamp beside it. Warm-toned rugs (rust, terracotta, ochre, amber, warm brown) anchor the seating and the reading area. A table or desk to work at may stay or be added. Japanese style here means light natural wood shelves, low simple seating, paper or linen lamps, warm earth tones and calm order.
 
 ## What every Design has
 - At least 2 wall pieces (art or a mirror), centered over the main furniture or on a wall that needs them.
@@ -72,11 +84,11 @@ Not: six small prints at random heights, a red pillow, a gold lamp and a plant o
 
 /** The first message of one loop: the Brief, the room, the decor to choose from, and this loop's direction. */
 export function firstMessage(brief: Brief, summary: RoomSummary, catalog: Catalog, direction: Direction): string {
-  const decor = catalog.items.filter(({ category }) => DECOR.includes(category)).map((item) => JSON.stringify(catalogEntry(item)));
+  const decor = catalog.items.filter((item) => DECOR.includes(item.category) && offeredToClaude(item)).map((item) => JSON.stringify(catalogEntry(item)));
   return [
     `Brief: "${brief.text}"`,
     `Styles: ${brief.styles?.length ? brief.styles.join(', ') : 'none named'}`,
-    `Budget: ${brief.budgetUsd !== undefined ? `$${brief.budgetUsd} for the Pieces you add` : 'none given; keep it modest'}`,
+    `Budget: ${brief.budgetUsd !== undefined ? `$${brief.budgetUsd} for the Pieces you add` : 'none given: get everything the Brief asks for, choosing sensibly priced Pieces'}`,
     '',
     'Room Summary (meters; along a wall is measured from its left end, seen from inside the room facing it):',
     JSON.stringify(summary),

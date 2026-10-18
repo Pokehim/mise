@@ -13,7 +13,7 @@ const MODEL = 'claude-opus-5-5';
 /** How long one loop may take before it fails: spec §13.3's 45 s, raised for review_design and its fixes, which take loops to 20–45 s. */
 const LOOP_TIMEOUT_MS = 60_000;
 /** The most requests one loop makes: a few turns of many tool calls each, a review and its fixes, and retries. */
-const MAX_REQUESTS = 12;
+const MAX_REQUESTS = 14;
 const NUDGE = 'Call finish_design now to finish this Design.';
 
 let client: Anthropic | undefined;

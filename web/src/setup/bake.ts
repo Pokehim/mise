@@ -1,4 +1,4 @@
-// Room Setup step 6 (spec §9.3): each Original's floorColor, from a top-down render of the Floor.
+// Room Setup step 7 (spec §9.3): each Original's floorColor, from a top-down render of the Floor.
 import { type Object3D, OrthographicCamera, Scene, type WebGLRenderer, WebGLRenderTarget } from 'three';
 import type { Hex, RoomSetup, ScanManifest } from '@shared/types';
 import { disposeSplit, splitScan } from '../scene/splitScan';

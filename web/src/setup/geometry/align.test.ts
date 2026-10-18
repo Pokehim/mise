@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Vec2, Vec3, YawTransform } from '@shared/types';
 import {
-  applyYaw, composeYaw, fitCorners, invertYaw, refineAlignment, registerMoved, shellSamples, surfaceSamples, transformMesh,
+  applyYaw, composeYaw, fitCorners, invertYaw, refineAlignment, registerMoved, surfaceSamples, transformMesh, triangleSamples,
 } from './align';
 import { mergeMeshes } from './mesh';
 import { box, degrees } from './testShapes';
@@ -63,7 +63,7 @@ describe('refineAlignment', () => {
     const start = composeYaw({ position: [0.05, 0.03, -0.04], rotationY: degrees(3) }, truth);
 
     const { transform, residual } = refineAlignment(
-      surfaceSamples(fill), shellSamples(shell, walls, polygon), start,
+      triangleSamples(fill), surfaceSamples(shell, walls, polygon), start,
     );
 
     expect(Math.abs(transform.rotationY - truth.rotationY)).toBeLessThan(degrees(0.1));
@@ -86,7 +86,7 @@ describe('registerMoved', () => {
     const main = transformMesh(sofa, inMain);
     const fill = transformMesh(sofa, inFill);
 
-    const { transform } = registerMoved(surfaceSamples(fill), surfaceSamples(main), [-1.1, 0.3], [0.4, -2.4]);
+    const { transform } = registerMoved(triangleSamples(fill), triangleSamples(main), [-1.1, 0.3], [0.4, -2.4]);
 
     // The sofa's corner, carried from where the Fill Capture saw it to where it stands in the Main Capture.
     const corner: Vec3 = [1, 0.9, -0.45];

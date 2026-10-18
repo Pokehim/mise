@@ -185,7 +185,7 @@ const OriginalBox = memo(function OriginalBox({ original, selected, editable }: 
       </mesh>
       {/* The front (+Z) edge on the floor. */}
       <Line points={front} color={color} lineWidth={4} />
-      {/* Step 6: the simple Patch a replaced Original would leave, in its baked floorColor. */}
+      {/* Step 7: the simple Patch a replaced Original would leave, in its baked floorColor. */}
       {!editable && (
         <mesh position={[0, 0.004 - position[1], 0]} rotation-x={-Math.PI / 2}>
           <planeGeometry args={[w + 0.1, d + 0.1]} />

@@ -9,7 +9,7 @@ import {
 import { mm } from './geometry/mesh';
 import { wallAxis, withPolygon } from './geometry/walls';
 import {
-  CORNER_PAIRS, clearCorners, forgetMoved, isAligned, lineUp, openFill, refineLineUp, saveAndMerge, startMarking,
+  CORNER_PAIRS, clearCorners, forgetMoved, isAligned, lineUp, openFill, refineLineUp, saveAndMerge, setFillLook, startMarking,
 } from './fills';
 import { CATEGORIES, CATEGORY_NAMES, UNBAKED_FLOOR_COLOR, defaultPartParams } from './originals';
 import { isLeveled, type StepId, scanTriangles, useSetup } from './store';
@@ -319,8 +319,18 @@ function FillsPanel() {
           {draft.residual !== undefined && (
             <p className="rs-note">Its floor and walls are within {(draft.residual * 100).toFixed(1)} cm of the room's (median).</p>
           )}
-          <h3>Moved pieces</h3>
-          <p className="rs-note">For each piece that stood somewhere else in this Capture, press Mark, then click it in the Fill Capture.</p>
+          {isAligned(fill) && (
+            <label className="rs-field">
+              <span>Show the Fill Capture</span>
+              <select value={draft.look} onChange={(e) => setFillLook(e.target.value as typeof draft.look)}>
+                <option value="solid">Solid, over the room</option>
+                <option value="wireframe">As a wireframe, to compare</option>
+                <option value="hidden">Hidden</option>
+              </select>
+            </label>
+          )}
+          <h3>Moved Originals</h3>
+          <p className="rs-note">For each Original that stood somewhere else in this Capture, press Mark, then click it in the Fill Capture.</p>
           <ul className="rs-list">
             {originals.filter((o) => !o.kept).map((o) => {
               const moved = fill.moved.some((m) => m.originalId === o.id);

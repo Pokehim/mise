@@ -8,15 +8,21 @@ import { type MergeSummary, mergeScan } from './scan-merge';
 import { io, measureScan, SCANS_DIR, writeJson } from './scan-import';
 import { LOUNGE_FILL_MOVED_TRANSFORMS, LOUNGE_FILL_TRANSFORM } from './synthetic-room';
 
-/** The synthetic lounge, copied, with its Fill Capture lined up as Room Setup step 6 would: the shell, and the moved sofa. */
-async function alignedLounge(): Promise<string> {
+/**
+ * The synthetic lounge, copied, with its Fill Capture lined up as Room Setup step 6 would: its
+ * Surfaces, the moved sofa, and (wrongly) the Kept bench, which the merge must leave alone.
+ */
+async function lounge(transform = LOUNGE_FILL_TRANSFORM): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'scan-merge-'));
   await cp(join(SCANS_DIR, 'synthetic-lounge'), dir, { recursive: true });
   const manifest: ScanManifest = JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8'));
   manifest.captures!.fills[0] = {
     ...manifest.captures!.fills[0],
-    transform: LOUNGE_FILL_TRANSFORM,
-    moved: LOUNGE_FILL_MOVED_TRANSFORMS.filter((m) => m.originalId === 'og_sofa'),
+    transform,
+    moved: [
+      ...LOUNGE_FILL_MOVED_TRANSFORMS.filter((m) => m.originalId === 'og_sofa'),
+      { originalId: 'og_bench', transform: { position: [0, 0, 0.5], rotationY: 0 } },
+    ],
   };
   await writeJson(join(dir, 'manifest.json'), manifest);
   return dir;
@@ -56,7 +62,7 @@ describe('mergeScan on the synthetic lounge', () => {
   let summary: MergeSummary;
   let room: Document;
   beforeAll(async () => {
-    dir = await alignedLounge();
+    dir = await lounge();
     summary = await mergeScan(dir);
     room = await io.read(join(dir, 'room.glb'));
   }, 60_000);
@@ -76,24 +82,52 @@ describe('mergeScan on the synthetic lounge', () => {
     // The sofa's footprint grown by 10 cm, cut by the West wall: x from −2.7 to −1.67, z from −1.15 to 1.15.
     expect(area(floor)).toBeGreaterThan(0.95 * 1.03 * 2.3);
     expect(area(westWall)).toBeGreaterThan(0.95 * 2.3 * 0.95);
+    expect(summary.patches[0].coverage).toBeGreaterThan(0.95);
   });
 
   it('color-matches each Patch to the Main Capture: the Fill Capture was exposed 10% darker', () => {
-    for (const { gain } of summary.patches) for (const channel of gain) expect(channel).toBeCloseTo(1 / 0.9, 1);
+    // 10% darker in sRGB is about 20% darker in linear light, where glTF's baseColorFactor multiplies.
+    for (const { gain } of summary.patches) {
+      for (const channel of gain) {
+        expect(channel).toBeGreaterThan(1.2);
+        expect(channel).toBeLessThan(1.32);
+      }
+    }
   });
 
   it('completes the sofa with the back the Main Capture never saw, and nothing it did see', () => {
     const completion = taggedTriangles(room, 'completion', 'og_sofa');
     // The sofa faces +X from the West wall, so its back faces −X.
     expect(area(completion.filter(({ n }) => n[0] < -0.7))).toBeGreaterThan(0.9 * 2.1 * 0.85);
+    // Its top and front (+X) were in the Main Capture already.
     expect(area(completion.filter(({ n }) => n[1] > 0.7))).toBeLessThan(0.05);
+    expect(area(completion.filter(({ n }) => n[0] > 0.7))).toBeLessThan(0.05);
+  });
+
+  it('never completes or patches a Kept Original, even one marked as moved', () => {
     expect(summary.completions.map((c) => c.originalId)).toEqual(['og_sofa']);
+    expect(summary.patches.map((p) => p.originalId)).not.toContain('og_bench');
+  });
+
+  it('stores each texture once, however many Patches use it', () => {
+    const images = room.getRoot().listTextures().map((t) => Buffer.from(t.getImage()!).toString('base64'));
+    expect(new Set(images).size).toBe(images.length);
   });
 
   it('rebuilds room.glb the same way every time, from the Main Capture', async () => {
     const first = await readFile(join(dir, 'room.glb'));
     await mergeScan(dir);
     expect(await readFile(join(dir, 'room.glb'))).toEqual(first);
+  }, 60_000);
+
+  it('leaves out a Fill Capture that has not been lined up yet', async () => {
+    const unaligned = await lounge({ position: [0, 0, 0], rotationY: 0 });
+    try {
+      const result = await mergeScan(unaligned);
+      expect(result).toMatchObject({ patches: [], completions: [], skipped: [0] });
+    } finally {
+      await rm(unaligned, { recursive: true, force: true });
+    }
   }, 60_000);
 
   it('keeps room.glb within the triangle budget', async () => {

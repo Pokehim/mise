@@ -89,12 +89,18 @@ function useWithFillBounds(bounds: RoomBounds, on: boolean): RoomBounds {
   }, [bounds, fill?.scene, fill?.transform]);
 }
 
-/** Step 6: the open Fill Capture, where it is shown now. */
+/** Step 6: the open Fill Capture, where it is shown now, drawn as its look says. */
 function FillView({ onClick }: { onClick: (e: ThreeEvent<MouseEvent>) => void }) {
   const fill = useSetup((s) => s.fill);
+  useEffect(() => {
+    fill?.scene?.traverse((object) => {
+      const material = (object as Mesh).material as MeshBasicMaterial | undefined;
+      if (material) material.wireframe = fill.look === 'wireframe';
+    });
+  }, [fill?.scene, fill?.look]);
   if (!fill?.scene) return null;
   return (
-    <group position={fill.transform.position} rotation-y={fill.transform.rotationY} onClick={onClick}>
+    <group position={fill.transform.position} rotation-y={fill.transform.rotationY} onClick={onClick} visible={fill.look !== 'hidden'}>
       <primitive object={fill.scene} />
     </group>
   );

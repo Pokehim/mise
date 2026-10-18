@@ -1,9 +1,9 @@
-// Room Setup step 6 (ADR-0007): lining a Fill Capture up with the Main Capture, and a moved piece
-// with its Original. Every Capture is gravity-aligned and in meters, so a turn about +Y and a
+// Room Setup step 6 (ADR-0007): lining a Fill Capture up with the Main Capture, and a moved
+// Original's copy in it with the Original. Every Capture is gravity-aligned and in meters, so a turn about +Y and a
 // translation (a YawTransform) is all that ever differs.
 import { pointInPolygon } from '@shared/geometry';
-import type { Vec2, Vec3, Wall, YawTransform } from '@shared/types';
-import { onFloor, SPLIT } from './classify';
+import type { Box, Vec2, Vec3, Wall, YawTransform } from '@shared/types';
+import { SPLIT } from './classify';
 import { type TriangleMesh, newTriangleInfo, triangleInfo } from './mesh';
 import { wallCoordinates, withAxis } from './walls';
 
@@ -58,7 +58,7 @@ export function fitCorners(from: Vec2[], to: Vec2[]): { rotationY: number; offse
 export interface Samples { points: Float64Array; normals: Float64Array; count: number }
 
 /** A centroid and normal per triangle that `keep` accepts, thinned evenly to at most `max`. */
-export function surfaceSamples(mesh: TriangleMesh, keep: (info: ReturnType<typeof newTriangleInfo>) => boolean = () => true, max = 30_000): Samples {
+export function triangleSamples(mesh: TriangleMesh, keep: (info: ReturnType<typeof newTriangleInfo>) => boolean = () => true, max = 30_000): Samples {
   const info = newTriangleInfo();
   const kept: number[] = [];
   for (let t = 0; t < mesh.index.length / 3; t++) {
@@ -78,19 +78,41 @@ export function surfaceSamples(mesh: TriangleMesh, keep: (info: ReturnType<typeo
 }
 
 /**
- * Samples of a room's shell, in the room frame: its floor and walls (the split's rules 3 and 4).
- * Furniture moves between Captures, and the shell doesn't, so only the shell is used to line them up.
+ * Samples of a room's Surfaces, in the room frame: its floor and walls (the split's rules 3 and 4),
+ * within `band` of their planes. Furniture moves between Captures and Surfaces don't, so only
+ * Surfaces line Captures up. A wider band takes in a Capture that is still a few centimeters off.
  */
-export function shellSamples(mesh: TriangleMesh, walls: Wall[], polygon: Vec2[], max?: number): Samples {
+export function surfaceSamples(mesh: TriangleMesh, walls: Wall[], polygon: Vec2[], band = { floor: SPLIT.floorBand, wall: SPLIT.wallBand }): Samples {
   const axisWalls = walls.map(withAxis);
-  return surfaceSamples(mesh, ({ cx, cy, cz, nx, ny, nz }) => {
-    if (onFloor(cy, ny)) return pointInPolygon([cx, cz], polygon);
+  return triangleSamples(mesh, ({ cx, cy, cz, nx, ny, nz }) => {
+    if (Math.abs(cy) < band.floor && ny > SPLIT.floorNormalY) return pointInPolygon([cx, cz], polygon);
     return axisWalls.some((wall) => {
       const { depth, along } = wallCoordinates(wall, cx, cz);
-      return Math.abs(depth) < SPLIT.wallBand && along >= 0 && along <= wall.length && cy <= wall.height
+      return Math.abs(depth) < band.wall && along >= 0 && along <= wall.length && cy <= wall.height
         && Math.abs(nx * wall.normal[0] + nz * wall.normal[1]) > SPLIT.wallNormalDot;
     });
-  }, max);
+  });
+}
+
+/** The same samples seen from another frame: each point and normal moved by `transform`. */
+export function moveSamples({ points, normals, count }: Samples, transform: YawTransform): Samples {
+  const turn = { position: [0, 0, 0] as Vec3, rotationY: transform.rotationY };
+  const moved = { points: new Float64Array(points.length), normals: new Float64Array(normals.length), count };
+  for (let i = 0; i < count; i++) {
+    moved.points.set(applyYaw(transform, [points[3 * i], points[3 * i + 1], points[3 * i + 2]]), 3 * i);
+    moved.normals.set(applyYaw(turn, [normals[3 * i], normals[3 * i + 1], normals[3 * i + 2]]), 3 * i);
+  }
+  return moved;
+}
+
+/** A test for room-frame points inside a box grown by `growth` on every side, its bottom included. */
+export function inGrownBox({ position: [px, py, pz], size: [w, h, d], rotationY }: Box, growth: number) {
+  const [c, s] = [Math.cos(rotationY), Math.sin(rotationY)];
+  return ([x, y, z]: Vec3) => {
+    const [dx, dz] = [x - px, z - pz];
+    const [lx, lz] = [c * dx - s * dz, s * dx + c * dz];
+    return Math.abs(lx) <= w / 2 + growth && Math.abs(lz) <= d / 2 + growth && y - py >= -growth && y - py <= h + growth;
+  };
 }
 
 export interface Fit {
@@ -130,9 +152,9 @@ export function refineAlignment(source: Samples, target: Samples, start: YawTran
 }
 
 /**
- * Where a piece of furniture the Fill Capture saw somewhere else stands in the Main Capture: tries
- * the four quarter turns about the two pieces' centers (a box fits a piece four ways), refines each,
- * and keeps the best fit.
+ * Where an Original that a Fill Capture saw somewhere else stands in the Main Capture: tries the four
+ * quarter turns about the two copies' centers (a box fits furniture four ways), refines each, and
+ * keeps the best fit (the lowest cost, so a turn that matches less of the copy loses).
  */
 export function registerMoved(source: Samples, target: Samples, sourceCenter: Vec2, targetCenter: Vec2): Fit {
   let best: Fit | null = null;
@@ -199,13 +221,13 @@ function forEachMatch(
   source: Samples, target: Samples, transform: YawTransform, maxDistance: number,
   visit: (point: Vec3, match: Vec3, normal: Vec3) => void,
 ) {
-  const grid = gridOf(target, maxDistance);
+  const grid = sampleGrid(target, maxDistance);
   const [c, s] = [Math.cos(transform.rotationY), Math.sin(transform.rotationY)];
   for (let i = 0; i < source.count; i++) {
     const p = applyYaw(transform, [source.points[3 * i], source.points[3 * i + 1], source.points[3 * i + 2]]);
     const [snx, sny, snz] = [source.normals[3 * i], source.normals[3 * i + 1], source.normals[3 * i + 2]];
     const normal: Vec3 = [c * snx + s * snz, sny, -s * snx + c * snz];
-    const j = grid.nearest(p, maxDistance, (k) =>
+    const j = grid.nearest(p, (k) =>
       target.normals[3 * k] * normal[0] + target.normals[3 * k + 1] * normal[1] + target.normals[3 * k + 2] * normal[2] > ICP.normalDot);
     if (j < 0) continue;
     visit(p, [target.points[3 * j], target.points[3 * j + 1], target.points[3 * j + 2]],
@@ -213,34 +235,35 @@ function forEachMatch(
   }
 }
 
-/** A hash grid of the samples, for nearest-neighbor queries within one cell size. */
-function gridOf(samples: Samples, cell: number) {
+/** A hash grid of sample points, for queries within one cell size of a point. */
+export function sampleGrid({ points, count }: Pick<Samples, 'points' | 'count'>, cell: number) {
   const cells = new Map<string, number[]>();
   const key = (x: number, y: number, z: number) => `${Math.floor(x / cell)},${Math.floor(y / cell)},${Math.floor(z / cell)}`;
-  for (let i = 0; i < samples.count; i++) {
-    const k = key(samples.points[3 * i], samples.points[3 * i + 1], samples.points[3 * i + 2]);
+  for (let i = 0; i < count; i++) {
+    const k = key(points[3 * i], points[3 * i + 1], points[3 * i + 2]);
     let list = cells.get(k);
     if (!list) cells.set(k, (list = []));
     list.push(i);
   }
-  return {
-    nearest([x, y, z]: Vec3, maxDistance: number, accept: (index: number) => boolean): number {
-      const [gx, gy, gz] = [Math.floor(x / cell), Math.floor(y / cell), Math.floor(z / cell)];
-      let best = -1;
-      let bestSq = maxDistance * maxDistance;
-      for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dz = -1; dz <= 1; dz++) {
-            for (const i of cells.get(`${gx + dx},${gy + dy},${gz + dz}`) ?? []) {
-              const ex = samples.points[3 * i] - x;
-              const ey = samples.points[3 * i + 1] - y;
-              const ez = samples.points[3 * i + 2] - z;
-              const sq = ex * ex + ey * ey + ez * ez;
-              if (sq < bestSq && accept(i)) [best, bestSq] = [i, sq];
-            }
-          }
-        }
+  /** Calls `visit` with every sample in the 27 cells around the point: all those within one cell size, and some farther. */
+  function near([x, y, z]: Vec3, visit: (index: number) => void) {
+    const [gx, gy, gz] = [Math.floor(x / cell), Math.floor(y / cell), Math.floor(z / cell)];
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dz = -1; dz <= 1; dz++) for (const i of cells.get(`${gx + dx},${gy + dy},${gz + dz}`) ?? []) visit(i);
       }
+    }
+  }
+  return {
+    near,
+    /** The nearest sample within one cell size that `accept` takes, or −1. */
+    nearest(p: Vec3, accept: (index: number) => boolean): number {
+      let best = -1;
+      let bestSq = cell * cell;
+      near(p, (i) => {
+        const sq = (points[3 * i] - p[0]) ** 2 + (points[3 * i + 1] - p[1]) ** 2 + (points[3 * i + 2] - p[2]) ** 2;
+        if (sq < bestSq && accept(i)) [best, bestSq] = [i, sq];
+      });
       return best;
     },
   };

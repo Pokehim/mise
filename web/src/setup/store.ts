@@ -84,6 +84,8 @@ export interface FillDraft {
   copies: Record<string, { box: Original['box']; residual: number }>;
   /** What the last merge added. */
   merged?: string;
+  /** How it is drawn: solid over the room, as a wireframe to compare the two, or hidden. */
+  look: 'solid' | 'wireframe' | 'hidden';
 }
 
 let latestLoad = 0;

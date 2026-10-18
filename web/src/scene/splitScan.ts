@@ -9,6 +9,7 @@ import { type SplitGroup, triangleClassifier } from '../setup/geometry/classify'
 import { type Pixels, luminance, luminanceAt } from '../setup/geometry/color';
 import { type TriangleMesh, newTriangleInfo, triangleInfo } from '../setup/geometry/mesh';
 import { meshTriangles, toFrame } from '../setup/sceneTriangles';
+import type { ScanNodes } from './scanNodes';
 
 export interface SplitScan {
   shell: Object3D;
@@ -123,17 +124,14 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
   return { shell: nodes[0], floor: nodes[1], ceiling: nodes[2], walls: byId('wall'), originals: byId('original'), patches };
 }
 
-/** A split, or the same nodes without Patches (a stand-in room). */
-type SplitNodes = Omit<SplitScan, 'patches'> & Partial<Pick<SplitScan, 'patches'>>;
-
 /** Every node of a split: Shell, Floor, Ceiling, the Walls, the Originals, then the Patches. */
-export const splitNodes = (split: SplitNodes): Object3D[] => [
+export const splitNodes = (split: ScanNodes): Object3D[] => [
   split.shell, split.floor, split.ceiling, ...Object.values(split.walls), ...Object.values(split.originals),
   ...Object.values(split.patches ?? {}),
 ];
 
 /** Frees the split's geometries and materials. The textures belong to the glTF and are kept. */
-export function disposeSplit(split: SplitNodes) {
+export function disposeSplit(split: ScanNodes) {
   for (const node of splitNodes(split)) {
     node.traverse((child) => {
       if (child instanceof Mesh) {

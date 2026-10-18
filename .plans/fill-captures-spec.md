@@ -23,7 +23,7 @@ A LiDAR scan never sees what furniture hides: the floor under a sofa, the wall b
 | D5 | Each Patch gets its **own color gain**, from a ring of floor and wall both Captures saw around it. It's computed in the merge and stored as the Patch material's color factor. | Polycam exposes each Capture differently, and lamps differ locally. Baking the gain into the merge keeps load time unchanged. |
 | D6 | **Spots no Capture saw** get Patch v2's push-pull fill, as a **floor decal plus one wall decal per touched wall**, drawn under the captured Patch. | Keeps visible holes out, including through walls. |
 | D7 | **Moved Originals are completed:** after registration, the Fill copy's triangles are added only where the Main copy has no surface within **2 cm**, with a gain per Original. Furniture stays **upright** in Fill Captures (registration = turn + floor position). | Gives real backs and sides without swapping the look of the whole piece. Tipping furniture for undersides would need full 3D registration. |
-| D8 | **Alignment:** in a new Room Setup step after Originals, click 3–4 matching floor-level corners. The step solves turn and position (the floor height is found automatically), then refines with ICP. You click each moved piece in the Fill Capture and pick its Original. | Every Capture is gravity-aligned and metric, so only 4 numbers are unknown. Clicking avoids picking the wrong 90° rotation in a near-square room; ICP gives about 1 cm accuracy. |
+| D8 | **Alignment:** in a new Room Setup step after Originals, click 3–4 matching floor-level corners. The step solves turn and position (the floor height is found automatically), then refines with ICP. You click each moved Original's copy in the Fill Capture and pick the Original. | Every Capture is gravity-aligned and metric, so only 4 numbers are unknown. Clicking avoids picking the wrong 90° rotation in a near-square room; ICP gives about 1 cm accuracy. |
 | D9 | **Merging is server-side gltf-transform:** `scripts/scan-merge.ts` rebuilds `room.glb` from the Main and Fill Captures. **Saving the step triggers it** (`POST /api/scans/:id/merge`). | Keeps meshopt and WebP intact, can be re-run, and can also be run by hand. |
 | D10 | Fill triangles live **in `room.glb`, tagged** by Patch or completion. splitScan routes them by tag. | One mesh file, no new load path. |
 | D11 | **Contract:** add `ScanManifest.captures`. `Original.patch` becomes `{ floor?, walls? }`. | Explicit types instead of naming rules. Both are optional or unused today, so nothing breaks. **Person B must agree** (§5 of the main spec). |
@@ -47,7 +47,7 @@ Decided while writing (flag if wrong):
 3. **Fill Capture**, with the same lights:
    - every revealed floor and wall spot, walked up close
    - **at least two room corners**, for alignment
-   - a full walk around each moved piece
+   - a full walk around each moved Original
 4. **Every non-Kept Original's spot is uncovered in at least one Fill Capture.** If moving one piece covers another's spot, take another Fill Capture.
 5. **Export each Capture as GLB** (`lounge-main.glb`, `lounge-fill-1.glb`, …), AirDrop them, and put the furniture back.
 
@@ -128,13 +128,14 @@ For each Fill Capture:
 
 1. **Level:** find its floor height with the step 1 histogram, so y is solved.
 2. **Corners:** two top-down views side by side, Main on the left and Fill on the right. Click the same 3–4 floor-level corners in both. Solve yaw and x/z by 2D least squares (Kabsch, no scale).
-3. **Refine:** point-to-plane ICP with 4 degrees of freedom (yaw, x, y, z) on both Captures' **shell triangles**: floor (n.y > 0.8, near y = 0) and walls (near a wall plane, facing it). Furniture is left out because it moved. Run at most 30 iterations, with a correspondence cut-off of 5 cm.
+3. **Refine:** point-to-plane ICP with 4 degrees of freedom (yaw, x, y, z) on both Captures' **Surfaces**: floor (n.y > 0.8, near y = 0) and walls (near a wall plane, facing it). Furniture is left out because it moved. The Fill Capture's Surfaces are picked where the corners put it, within 10 cm. ICP runs at most 40 iterations, its match distance shrinking from 30 cm to 5 cm, so a rough start still converges.
 4. **Check:** overlay the Fill Capture as a wireframe and show the median shell distance. Aim for ≤ 1 cm.
-5. **Moved Originals:** click a moved piece in the Fill Capture. The §9.3 auto-box finds it, then pick its Original from a dropdown (non-Kept only). Registration:
+5. **Moved Originals:** press Mark beside an Original (non-Kept only), then click its copy in the Fill Capture. The §9.3 auto-box finds the copy. Registration:
    - start from the two box centers, trying turns of 0°, 90°, 180° and 270°
    - refine with ICP over yaw and floor position (3 degrees of freedom) on the vertices of both copies above y = 0.03
-   - keep the turn with the lowest residual, and preview the Fill copy over the Main copy
-6. **Save:** `PUT /api/scans/:id/manifest` (`captures`), then `POST /api/scans/:id/merge`, then reload `room.glb`.
+   - keep the turn with the lowest cost (the mean distance, counting each unmatched sample as the match distance), so a turn that matches less of the copy loses
+   - the panel shows the residual; showing the Fill Capture as a wireframe compares the two
+6. **Save:** `PUT /api/scans/:id/manifest` (`captures`), then `POST /api/scans/:id/merge`, which answers with the merge summary. Room Setup shows the Main Capture (`captures.main`), so nothing there reloads; the editor shows the result.
 
 ### 5.3 The merge: `scripts/scan-merge.ts`
 
@@ -145,16 +146,17 @@ For each Fill Capture:
    - **Region:** the Original's box grown 10 cm on every side.
    - **Keep** the Fill triangles whose centroid is in the region and that pass the §9.4 **Floor** test (|c.y| < 0.03, n.y > 0.8, inside the floor polygon) or **Wall** test (within 4 cm of a wall plane, |n·normal| > 0.7, inside the wall's extent). Moved furniture fails both tests, so it never ends up in a Patch.
    - **Coverage** = kept area ÷ the region's floor and wall area. Use the Fill Capture with the highest coverage (D4).
-   - **Gain:** take the floor and wall triangles both Captures have in a ring 10–30 cm outside the region. Sample each one's texture at up to 2,000 triangle UV centroids (decoded with sharp) and compute the per-channel mean ratio Main ÷ Fill, clamped to 0.5–2.
+   - **Gain:** take the floor and wall triangles in a ring 10–30 cm outside the region, from both Captures. Sample each one's texture at up to 2,000 triangle UV centroids (decoded with sharp, then converted to linear light, where `baseColorFactor` multiplies). Average each 10 cm cell that both Captures saw, and take the per-channel ratio Main ÷ Fill over those cells, clamped to 0.5–2.
 3. **Completions,** for each `moved` entry:
    - take the Fill triangles inside that Original's box at its Fill pose, grown 2 cm, with y > 0.02
    - transform them to the Main pose
-   - drop those within 2 cm of a Main triangle of the same Original
+   - drop those within 2 cm of a Main triangle of the same Original that faces the same way (point-to-triangle distance)
    - **Gain:** the same ratio, sampled on the surfaces both copies saw (the triangles that were dropped)
 4. **Budget:** if the Main Capture plus the fill comes to more than 500k triangles, simplify every primitive with the same ratio (`500k / total`, error 1). Neither part has its own cap, and the merge always starts again from `captures/main.glb`, so nothing is simplified twice.
-5. **Write:** transform the fill back into the Main Capture's frame, append one primitive per Patch or completion (tagged, §4.3), dedup the textures, keep the meshopt and WebP pipeline, and write `room.glb`. Print a summary per Original: coverage, triangles and gain.
+5. **Write:** transform the fill back into the Main Capture's frame, append one primitive per Patch or completion (tagged, §4.3), dedup the textures, keep the meshopt and WebP pipeline, and write `room.glb`. Print a summary per Original: triangles, area, coverage (the share of the region's floor the Fill Capture saw) and gain.
+6. **Skip** Fill Captures that still have scan-import's identity transform: they haven't been lined up, so they would land anywhere. The summary lists them.
 
-The server gains a small route next to the others in `server/app.ts`: `POST /api/scans/:id/merge` → `mergeScan` → `{ summary }`.
+The server gains a small route next to the others in `server/app.ts`: `POST /api/scans/:id/merge` → `mergeScan` → its `MergeSummary`. A Scan that isn't ready (no Fill Captures, no Room Setup) is a 400; anything else a 500.
 
 ### 5.4 splitScan (amends §9.4, #8)
 
@@ -202,9 +204,8 @@ The splat-hiding box for a lifted or removed Original is its box **grown by 10 c
   - one Kept piece, a built-in bench against a wall
 - **Main Capture:** the furniture in place.
 - **Fill Capture:**
-  - the sofa pulled 1 m off its wall and turned 180°, so its back faces the room
-  - the coffee table and side table moved to a corner where nothing stood
-  - the armchair moved
+  - the sofa moved to the other side of the room and turned around, so its back faces the room
+  - the coffee table, side table and armchair moved off their spots, to where nothing stood
   - the whole Capture offset by a known transform (yaw 0.37 rad, translation (1.2, −0.8, −0.6) m, where y simulates a different ARKit origin)
   - its textures darkened by 10%, so the gain has something to correct
 - Neither Capture has what a scanner can't see: the floor under furniture resting on it, the wall behind furniture standing against it, and furniture faces turned to a wall.

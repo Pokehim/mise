@@ -96,6 +96,10 @@ _Avoid_: Slot, snap point, position
 Separating an Original from the rest of the Scan so it can be moved or changed on its own.
 _Avoid_: Extract, cut out, segment
 
+**Completion**:
+The parts of a moved Original that only a Fill Capture saw, such as its back against the wall, added so the Original looks whole once it moves.
+_Avoid_: Reconstruction, infill
+
 **Patch**:
 What covers the spot an Original used to occupy, including the wall behind it, after it has been lifted away or removed: the real floor and wall from a Fill Capture wherever one saw them, and a generated fill where none did.
 _Avoid_: Hole fill, inpaint (that is how part of a Patch is made, not what it is)

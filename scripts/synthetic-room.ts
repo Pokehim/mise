@@ -413,7 +413,7 @@ export const LOUNGE: Room = {
   ],
 };
 
-/** Where each non-Kept lounge piece stood during the Fill Capture: upright, and off every Original's spot. */
+/** Where each non-Kept lounge Original stood during the Fill Capture: upright, and off every Original's spot. */
 export const LOUNGE_FILL_MOVED: Record<string, Pose> = {
   og_sofa: { position: [0.9, 0, -1.6], rotationY: -Math.PI / 2 },   // turned around: its back faces the room
   og_coffee_table: { position: [1.2, 0, 1], rotationY: 0 },
@@ -424,7 +424,7 @@ export const LOUNGE_FILL_MOVED: Record<string, Pose> = {
 /** The lounge's Fill Capture frame → its Main Capture's frame (here the room frame). Room Setup step 6 should recover it. */
 export const LOUNGE_FILL_TRANSFORM: YawTransform = { position: [1.2, -0.8, -0.6], rotationY: 0.37 };
 
-/** Each moved lounge piece's copy in the Fill Capture → where it stands in the Main Capture, as step 6 saves it. */
+/** Each moved lounge Original's copy in the Fill Capture → where it stands in the Main Capture, as step 6 saves it. */
 export const LOUNGE_FILL_MOVED_TRANSFORMS = Object.entries(LOUNGE_FILL_MOVED).map(([originalId, pose]) => {
   const { position, rotationY } = LOUNGE.furniture.find((f) => f.original.id === originalId)!.original.box;
   return { originalId, transform: composeYaw({ position, rotationY }, invertYaw(pose)) };
@@ -464,7 +464,7 @@ async function main() {
     manifest.captures!.fills[0] = { ...manifest.captures!.fills[0], transform: LOUNGE_FILL_TRANSFORM, moved: LOUNGE_FILL_MOVED_TRANSFORMS };
     await writeJson(join(dir, 'manifest.json'), manifest);
     const { patches, completions } = await mergeScan(dir);
-    console.log(`Wrote ${dir}: room.glb (with ${patches.length} Patches and ${completions.length} completions), ${filled.mesh}, manifest.json, and setup.json\n\n${formatSummary(stats)}`);
+    console.log(`Wrote ${dir}: room.glb (Patches: ${patches.length}, completions: ${completions.length}), ${filled.mesh}, manifest.json, and setup.json\n\n${formatSummary(stats)}`);
   }
 }
 

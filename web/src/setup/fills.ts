@@ -1,10 +1,11 @@
-// Room Setup step 6 (ADR-0007): line each Fill Capture up with the room, mark the pieces it saw
+// Room Setup step 6 (ADR-0007): line each Fill Capture up with the room, mark the Originals it saw
 // somewhere else, then rebuild room.glb with the Patches and completions they give.
 import type { Material, Mesh } from 'three';
-import type { Box, FillCapture, MovedOriginal, Original, ScanManifest, Vec2, Vec3, YawTransform } from '@shared/types';
+import type { Box, FillCapture, MovedOriginal, ScanManifest, Vec2, Vec3, YawTransform } from '@shared/types';
 import { mergeScan, scanFileUrl } from '../api';
 import {
-  IDENTITY, applyYaw, composeYaw, fitCorners, invertYaw, refineAlignment, registerMoved, shellSamples, surfaceSamples,
+  IDENTITY, applyYaw, composeYaw, fitCorners, inGrownBox, invertYaw, moveSamples, refineAlignment, registerMoved,
+  surfaceSamples, transformMesh, triangleSamples,
 } from './geometry/align';
 import { autoBox } from './geometry/autoBox';
 import { detectFloorHeight, detectYaw, levelTransform } from './geometry/level';
@@ -29,7 +30,10 @@ const rounded = ({ position, rotationY }: YawTransform): YawTransform =>
 export async function openFill(index: number) {
   const { manifest, setup } = useSetup.getState();
   const fill = manifest!.captures!.fills[index];
-  useSetup.setState({ fill: { index, transform: IDENTITY, floorHeight: 0, roomCorners: [], fillCorners: [], copies: {} }, notice: 'Loading the Fill Capture…' });
+  useSetup.setState({
+    fill: { index, transform: IDENTITY, floorHeight: 0, roomCorners: [], fillCorners: [], copies: {}, look: 'solid' },
+    notice: 'Loading the Fill Capture…',
+  });
   const scene = await loadScene(scanFileUrl(manifest!.id, fill.mesh));
   // Once lined up it lies on the room's floor and walls: drawn over them, not fighting them.
   scene.traverse((object) => {
@@ -57,7 +61,7 @@ export function clickRoomCorner([x, , z]: Vec3) {
     ? d : { ...d, roomCorners: [...d.roomCorners, [mm(x), mm(z)]] }));
 }
 
-/** A click on the Fill Capture: the same corner as the last room corner, in the Fill Capture's own frame; or, while marking, a moved piece. */
+/** A click on the Fill Capture: the same corner as the last room corner, in the Fill Capture's own frame; or, while marking, a moved Original. */
 export function clickFill(point: Vec3) {
   const draft = useSetup.getState().fill;
   if (!draft) return;
@@ -87,21 +91,26 @@ export const refineLineUp = () => refine(useSetup.getState().fill!.transform);
 function refine(start: YawTransform, change: Partial<FillDraft> = {}) {
   const { fill: draft, scene, manifest, setup } = useSetup.getState();
   if (!draft?.scene || !scene || !manifest || !setup) return;
-  // Only the floor and the walls: furniture moved between the Captures.
-  const own = sceneTriangles(draft.scene);
-  const source = surfaceSamples(own, ({ ny }) => Math.abs(ny) > 0.9 || Math.abs(ny) < 0.3);
-  const target = shellSamples(scanTriangles(scene, manifest.meshTransform), setup.walls, setup.floor.polygon);
+  // Only the floor and the walls, on both sides: furniture moved between the Captures. The Fill
+  // Capture's are picked where `start` puts it, with a band wide enough for clicks a few cm off.
+  const placed = transformMesh(sceneTriangles(draft.scene), start);
+  const band = { floor: 0.1, wall: 0.1 };
+  const source = moveSamples(surfaceSamples(placed, setup.walls, setup.floor.polygon, band), invertYaw(start));
+  const target = surfaceSamples(scanTriangles(scene, manifest.meshTransform), setup.walls, setup.floor.polygon);
   const fit = refineAlignment(source, target, start);
   useSetup.setState({ fill: { ...draft, ...change, transform: fit.transform, residual: fit.residual } });
-  saveToManifest({ transform: rounded(composeYaw(invertYaw(manifest.meshTransform), fit.transform)) });
+  updateFillCapture({ transform: rounded(composeYaw(invertYaw(manifest.meshTransform), fit.transform)) });
 }
+
+/** How the Fill Capture is drawn over the room once lined up: solid, as a wireframe, or not at all. */
+export const setFillLook = (look: FillDraft['look']) => updateDraft((d) => ({ ...d, look }));
 
 /** Starts (or stops, with undefined) marking where an Original stood in the Fill Capture. */
 export const startMarking = (originalId: string | undefined) => updateDraft((d) => ({ ...d, markingId: originalId }));
 
 /**
- * A click on a moved piece in the Fill Capture: auto-box it there, register it with its Original
- * (four starting turns, then ICP on both copies), and save where it maps to.
+ * A click on a moved Original's copy in the Fill Capture: auto-box it there, register it with the
+ * Original (four starting turns, then ICP on both copies), and keep where it maps to.
  */
 function markMoved(originalId: string, point: Vec3) {
   const { fill: draft, scene, manifest, setup } = useSetup.getState();
@@ -113,15 +122,15 @@ function markMoved(originalId: string, point: Vec3) {
     useSetup.setState({ notice: `Auto-box found no furniture there. Click on the ${original.label} itself.` });
     return;
   }
-  const source = surfaceSamples(fillRoom, insideBox(copy));
-  const target = surfaceSamples(scanTriangles(scene!, manifest!.meshTransform), insideBox(original.box));
+  const source = triangleSamples(fillRoom, furnitureIn(copy));
+  const target = triangleSamples(scanTriangles(scene!, manifest!.meshTransform), furnitureIn(original.box));
   const center = ({ position: [x, , z] }: Box): Vec2 => [x, z];
   const fit = registerMoved(source, target, center(copy), center(original.box));
   // Saved in the Main Capture's frame, like the Fill Capture's own transform.
   const toMain = invertYaw(manifest!.meshTransform);
   const moved: MovedOriginal = { originalId, transform: rounded(composeYaw(toMain, composeYaw(fit.transform, manifest!.meshTransform))) };
   const fill = manifest!.captures!.fills[draft.index];
-  saveToManifest({ moved: [...fill.moved.filter((m) => m.originalId !== originalId), moved] });
+  updateFillCapture({ moved: [...fill.moved.filter((m) => m.originalId !== originalId), moved] });
   useSetup.setState({
     fill: { ...draft, markingId: undefined, copies: { ...draft.copies, [originalId]: { box: copy, residual: fit.residual } } },
     notice: undefined,
@@ -131,7 +140,7 @@ function markMoved(originalId: string, point: Vec3) {
 export function forgetMoved(originalId: string) {
   const { fill: draft, manifest } = useSetup.getState();
   if (!draft) return;
-  saveToManifest({ moved: manifest!.captures!.fills[draft.index].moved.filter((m) => m.originalId !== originalId) });
+  updateFillCapture({ moved: manifest!.captures!.fills[draft.index].moved.filter((m) => m.originalId !== originalId) });
   const { [originalId]: _, ...copies } = draft.copies;
   useSetup.setState({ fill: { ...draft, copies } });
 }
@@ -151,8 +160,8 @@ export async function saveAndMerge() {
   }
 }
 
-/** Updates the open Fill Capture's entry in the manifest (an unsaved change until Save). */
-function saveToManifest(change: Partial<FillCapture>) {
+/** Changes the open Fill Capture's entry in the manifest: an unsaved change, until Save. */
+function updateFillCapture(change: Partial<FillCapture>) {
   const { manifest, fill: draft } = useSetup.getState();
   if (!manifest?.captures || !draft) return;
   const fills = manifest.captures.fills.map((f, i) => (i === draft.index ? { ...f, ...change } : f));
@@ -164,13 +173,10 @@ function updateDraft(change: (draft: FillDraft) => FillDraft) {
   if (draft) useSetup.setState({ fill: change(draft) });
 }
 
-/** Room-frame triangles inside a box grown by 5 cm, above the floor: one piece of furniture. */
-function insideBox({ position: [px, py, pz], size: [w, h, d], rotationY }: Original['box']) {
-  const [c, s] = [Math.cos(rotationY), Math.sin(rotationY)];
-  return ({ cx, cy, cz }: { cx: number; cy: number; cz: number }) => {
-    const [dx, dz] = [cx - px, cz - pz];
-    return cy > 0.03 && Math.abs(c * dx - s * dz) <= w / 2 + 0.05 && Math.abs(s * dx + c * dz) <= d / 2 + 0.05 && cy - py <= h + 0.05;
-  };
+/** Room-frame triangles of the furniture in a box: inside it grown by 5 cm, above the floor. */
+function furnitureIn(box: Box) {
+  const inside = inGrownBox(box, 0.05);
+  return ({ cx, cy, cz }: { cx: number; cy: number; cz: number }) => cy > 0.03 && inside([cx, cy, cz]);
 }
 
 /** True once every Fill Capture has been lined up. */

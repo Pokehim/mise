@@ -120,16 +120,16 @@ describe('splitScan', () => {
     expect(split.originals.og_bed.userData.avgLuminance).toBeCloseTo(1, 3);
   });
 
-  it('splits 300k triangles in under 300 ms, and logs the time', () => {
+  it('splits the 500k triangles a room.glb may hold in under 500 ms (spec §9.4), and logs the time', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    // 6 faces × 2 × 158² ≈ 300k triangles.
-    const big = new Group().add(primitive(box([-2, 0, -1.5], [2, 2.6, 1.5], true, 158), gray));
+    // 6 faces × 2 × 204² ≈ 500k triangles.
+    const big = new Group().add(primitive(box([-2, 0, -1.5], [2, 2.6, 1.5], true, 204), gray));
     splitScan(big, setup, manifest);
     const started = performance.now();
     splitScan(big, setup, manifest);
     const elapsed = performance.now() - started;
-    expect(elapsed).toBeLessThan(300);
-    expect(info).toHaveBeenLastCalledWith(expect.stringMatching(/^splitScan: 299,568 triangles .* in \d+ ms$/));
+    expect(elapsed).toBeLessThan(500);
+    expect(info).toHaveBeenLastCalledWith(expect.stringMatching(/^splitScan: 499,392 triangles .* in \d+ ms$/));
     info.mockRestore();
   });
 });

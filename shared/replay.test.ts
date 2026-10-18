@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { replay } from './replay';
-import { catalog, edit, onFloor, place, setup, withLampAndMirror } from './test-room';
+import { catalog, edit, onFloor, place, setup, withLampAndMirror, withMasterCopies } from './test-room';
 import type { Finish, Hex, RoomSetup, RoomState, Vec2, Vec3, Wall } from './types';
 
 /**
@@ -369,6 +369,48 @@ describe('replay', () => {
 
       expect(state.skipped).toEqual([{ editId: 'ed_2', reason: 'missing-target' }]);
       expect(state.originals.og_desk.partColors).toEqual({});
+    });
+
+    describe('of an Original drawn from a Master Copy', () => {
+      it("takes the Master Copy's Parts, not its category's", () => {
+        const state = replay(withMasterCopies, catalog, [
+          edit('ed_1', { type: 'recolor', targetId: 'og_chair1', partId: 'seat', color: '#1f2a44' }),
+        ]);
+
+        expect(state.skipped).toEqual([]);
+        expect(state.originals.og_chair1.partColors).toEqual({ seat: '#1f2a44' });
+      });
+
+      it("recolors the whole item with '*', over its Parts' colors, and clears all of them with null", () => {
+        const recolorChair = (id: string, partId: string, color: Hex | null) => edit(id, { type: 'recolor', targetId: 'og_chair1', partId, color });
+        const whole = [recolorChair('ed_1', 'seat', '#1f2a44'), recolorChair('ed_2', '*', '#9caf88'), recolorChair('ed_3', 'legs', '#1c1c1c')];
+
+        expect(replay(withMasterCopies, catalog, whole).originals.og_chair1.partColors).toEqual({ '*': '#9caf88', legs: '#1c1c1c' });
+        expect(replay(withMasterCopies, catalog, [...whole, recolorChair('ed_4', '*', null)]).originals.og_chair1.partColors).toEqual({});
+      });
+
+      it('with sameModel, recolors every Original drawn from the same Master Copy, as one Edit', () => {
+        const state = replay(withMasterCopies, catalog, [
+          edit('ed_1', { type: 'recolor', targetId: 'og_chair2', partId: 'legs', color: '#1c1c1c', sameModel: true }),
+        ]);
+
+        expect(state.skipped).toEqual([]);
+        expect(state.originals.og_chair1.partColors).toEqual({ legs: '#1c1c1c' });
+        expect(state.originals.og_chair2.partColors).toEqual({ legs: '#1c1c1c' });
+        expect(state.originals.og_stool.partColors).toEqual({});
+        expect(state.originals.og_desk.partColors).toEqual({});
+      });
+
+      it('with sameModel, leaves out a removed Original of the same Master Copy', () => {
+        const state = replay(withMasterCopies, catalog, [
+          edit('ed_1', { type: 'remove', targetId: 'og_chair1' }),
+          edit('ed_2', { type: 'recolor', targetId: 'og_chair2', partId: '*', color: '#1c1c1c', sameModel: true }),
+        ]);
+
+        expect(state.skipped).toEqual([]);
+        expect(state.originals.og_chair1.partColors).toEqual({});
+        expect(state.originals.og_chair2.partColors).toEqual({ '*': '#1c1c1c' });
+      });
     });
   });
 

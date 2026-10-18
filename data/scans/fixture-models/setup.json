@@ -1,0 +1,464 @@
+{
+  "version": 1,
+  "scanId": "fixture-models",
+  "ceilingHeight": 2.431,
+  "floor": {
+    "polygon": [
+      [
+        -1.559,
+        -3.609
+      ],
+      [
+        1.559,
+        -3.609
+      ],
+      [
+        1.559,
+        3.609
+      ],
+      [
+        -1.559,
+        3.609
+      ]
+    ]
+  },
+  "walls": [
+    {
+      "id": "wl_1",
+      "name": "North wall",
+      "start": [
+        -1.559,
+        -3.609
+      ],
+      "end": [
+        1.559,
+        -3.609
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_2",
+      "name": "East wall",
+      "start": [
+        1.559,
+        -3.609
+      ],
+      "end": [
+        1.559,
+        3.609
+      ],
+      "normal": [
+        -1,
+        0
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_3",
+      "name": "South wall",
+      "start": [
+        1.559,
+        3.609
+      ],
+      "end": [
+        -1.559,
+        3.609
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_4",
+      "name": "West wall",
+      "start": [
+        -1.559,
+        3.609
+      ],
+      "end": [
+        -1.559,
+        -3.609
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.431
+    }
+  ],
+  "openings": [
+    {
+      "id": "op_1",
+      "kind": "window",
+      "wallId": "wl_1",
+      "offset": 0.508,
+      "width": 1.717,
+      "bottom": 0.861,
+      "height": 1.467
+    },
+    {
+      "id": "op_2",
+      "kind": "door",
+      "wallId": "wl_4",
+      "offset": 0.053,
+      "width": 1.731,
+      "bottom": 0,
+      "height": 2.431,
+      "swing": "none"
+    },
+    {
+      "id": "op_3",
+      "kind": "door",
+      "wallId": "wl_3",
+      "offset": 0.03,
+      "width": 0.95,
+      "bottom": 0,
+      "height": 2.15,
+      "swing": "in-right"
+    }
+  ],
+  "originals": [
+    {
+      "id": "og_table_1",
+      "label": "Table 1",
+      "category": "table",
+      "model": "models/table.glb",
+      "box": {
+        "position": [
+          -0.784,
+          0,
+          -1.691
+        ],
+        "size": [
+          1.49,
+          0.75,
+          1.05
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_table_2",
+      "label": "Table 2",
+      "category": "table",
+      "model": "models/table.glb",
+      "box": {
+        "position": [
+          -0.784,
+          0,
+          -0.307
+        ],
+        "size": [
+          1.49,
+          0.75,
+          1.05
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_table_3",
+      "label": "Table 3",
+      "category": "table",
+      "model": "models/table.glb",
+      "box": {
+        "position": [
+          -0.784,
+          0,
+          1.734
+        ],
+        "size": [
+          1.49,
+          0.75,
+          1.05
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_1",
+      "label": "Chair 1",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          -2.121
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_2",
+      "label": "Chair 2",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -0.414,
+          0,
+          -2.121
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_3",
+      "label": "Chair 3",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          -1.2610000000000001
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_4",
+      "label": "Chair 4",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -0.414,
+          0,
+          -1.2610000000000001
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_5",
+      "label": "Chair 5",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          -0.737
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_6",
+      "label": "Chair 6",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -0.414,
+          0,
+          -0.737
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_7",
+      "label": "Chair 7",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          0.123
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_8",
+      "label": "Chair 8",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -0.414,
+          0,
+          0.123
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_9",
+      "label": "Chair 9",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          1.304
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_10",
+      "label": "Chair 10",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -0.414,
+          0,
+          1.304
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 0
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_11",
+      "label": "Chair 11",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          2.164
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_chair_12",
+      "label": "Chair 12",
+      "category": "chair",
+      "model": "models/chair.glb",
+      "box": {
+        "position": [
+          -0.414,
+          0,
+          2.164
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.5
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    },
+    {
+      "id": "og_whiteboard",
+      "label": "Whiteboard",
+      "category": "wall_art",
+      "model": "models/whiteboard.glb",
+      "box": {
+        "position": [
+          1.519,
+          0.795,
+          -0.5790000000000002
+        ],
+        "size": [
+          6.11,
+          1.25,
+          0.08
+        ],
+        "rotationY": -1.5707963267948966
+      },
+      "kept": false,
+      "floorColor": "#655148"
+    }
+  ]
+}

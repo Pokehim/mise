@@ -9,6 +9,7 @@ import { scanFileUrl } from '../api';
 import { useEditor } from '../state/store';
 import { AlignPicker, useAlign, useSplatTransform } from './AlignPanel';
 import { type SdfBox, type SplatEditPlan, SLAB, splatEditPlan, wallSlab } from './splatEdits';
+import { hasMasterCopies } from './ScanMesh';
 import type { SplitNodeData } from './splitScan';
 
 extend({ SparkRenderer, SplatMesh, SplatEdit, SplatEditSdf });
@@ -44,7 +45,12 @@ export function SplatLook() {
   // Stable args: new ones would make R3F build a new renderer, or load the splat again.
   const rendererArgs = useMemo(() => [{ renderer: gl, lodSplatCount: LOD_BUDGET }] as const, [gl]);
   const meshArgs = useMemo(() => [{ url: scanFileUrl(manifest.id, manifest.splat!), lod: true }] as const, [manifest.id, manifest.splat]);
-  const plan = useMemo(() => splatEditPlan(setup, roomState), [setup, roomState]);
+  // Originals drawn from Master Copies aren't in the splat (ADR-0009): nothing of theirs to hide.
+  const masterCopies = hasMasterCopies(setup);
+  const plan = useMemo(
+    () => splatEditPlan(masterCopies ? { ...setup, originals: setup.originals.filter(({ model }) => !model) } : setup, roomState),
+    [setup, roomState, masterCopies],
+  );
 
   return (
     <>
@@ -57,7 +63,8 @@ export function SplatLook() {
         {plan.sdfs.map((box) => <Sdf key={box.id} box={box} />)}
       </splatEdit>
       <DollhouseCuts walls={setup.walls} ceiling={view === 'dollhouse' ? setup.ceilingHeight - 0.05 : null} />
-      <MeshHider plan={plan} showAll={meshOnly} />
+      {/* The Empty Room mesh is always drawn, under the splat (lounge-v2 spec §3). */}
+      <MeshHider plan={plan} showAll={meshOnly || masterCopies} />
       {debug && <AlignPicker />}
     </>
   );

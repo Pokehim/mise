@@ -88,13 +88,20 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
       case 'recolor': {
         const piece = pieceAt(edit.targetId);
         // place, swap and replace only ever give a Piece a catalogId that is in the Catalog.
-        if (piece) return putParts(piece.partColors, catalogItems.get(piece.catalogId)!.category, edit.partId, edit.color);
+        if (piece) return putParts(piece.partColors, partIds(catalogItems.get(piece.catalogId)!.category), edit.partId, edit.color);
         const original = scanned.get(edit.targetId);
         if (!original || !state.originals[original.id].visible) return 'missing-target';
-        const { partColors, partFinishes } = state.originals[original.id];
-        const reason = putParts(partColors, original.category, edit.partId, edit.color);
-        // A Part shows the look its last Edit gave it, so a color replaces a Finish. Reset color leaves the Finish.
-        if (!reason && edit.color !== null) putParts(partFinishes, original.category, edit.partId, null);
+        // sameModel: every Original still in the room that is drawn from the same Master Copy, in one Edit.
+        const targets = edit.sameModel && original.model
+          ? setup.originals.filter(({ id, model }) => model === original.model && state.originals[id].visible)
+          : [original];
+        let reason: SkipReason | undefined;
+        for (const target of targets) {
+          const { partColors, partFinishes } = state.originals[target.id];
+          reason = putParts(partColors, partsOf(target), edit.partId, edit.color);
+          // A Part shows the look its last Edit gave it, so a color replaces a Finish. Reset color leaves the Finish.
+          if (!reason && edit.color !== null) putParts(partFinishes, partsOf(target), edit.partId, null);
+        }
         return reason;
       }
       case 'finish': {
@@ -113,9 +120,9 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
             const original = scanned.get(target.originalId);
             if (!original) return 'missing-target';
             const { partColors, partFinishes } = state.originals[original.id];
-            const reason = putParts(partFinishes, original.category, target.partId, finish);
+            const reason = putParts(partFinishes, partsOf(original), target.partId, finish);
             // And a Finish replaces a color: { kind: 'none' } leaves the Part as scanned.
-            if (!reason) putParts(partColors, original.category, target.partId, null);
+            if (!reason) putParts(partColors, partsOf(original), target.partId, null);
             return reason;
           }
           default:
@@ -163,15 +170,28 @@ function startPlacement({ box: { position, rotationY }, category }: Original, wa
 
 const partIds = (category: Category) => partsFor(category).map((part) => part.id);
 
+/**
+ * An Original's Parts: its category's, or null for one drawn from a Master Copy, whose Parts are the
+ * file's top-level node names (ADR-0009). replay can't read the file, so it takes any Part id for it.
+ */
+const partsOf = (original: Original) => (original.model ? null : partIds(original.category));
+
 /** Sets a key, or deletes it when the value is null. */
 function put<V>(record: Record<string, V>, key: string, value: V | null) {
   if (value === null) delete record[key];
   else record[key] = value;
 }
 
-/** Puts a value on one Part of the category, or on every Part when partId is '*'. */
-function putParts<V>(values: Record<string, V>, category: Category, partId: string, value: V | null): SkipReason | undefined {
-  const parts = partIds(category);
+/**
+ * Puts a value on one of the Parts, or on every Part when partId is '*'. With parts null, any Part id
+ * goes, and '*' is kept as its own key, under every Part's own value: it replaces all of them.
+ */
+function putParts<V>(values: Record<string, V>, parts: string[] | null, partId: string, value: V | null): SkipReason | undefined {
+  if (!parts) {
+    if (partId === '*') for (const key of Object.keys(values)) delete values[key];
+    put(values, partId, value);
+    return;
+  }
   if (partId !== '*' && !parts.includes(partId)) return 'unknown-part';
   for (const id of partId === '*' ? parts : [partId]) put(values, id, value);
 }

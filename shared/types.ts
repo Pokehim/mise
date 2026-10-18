@@ -105,6 +105,9 @@ export interface Original {
   box: Box;
   kept: boolean;                     // can't leave the real room (e.g. a building-owned sofa)
   partParams?: PartParams;           // overrides for the category Part rule (ADR-0006)
+  model?: string;                    // Master Copy file in the Scan folder, e.g. "models/chair.glb" (ADR-0009). When set, the
+                                     // Original is drawn from it at box.position / box.rotationY, and its Parts are the file's
+                                     // top-level node names except "shadow". Category Part rules (ADR-0006) don't apply.
   floorColor: Hex;                   // average floor color around the footprint → simple Patch
   patch?: {                          // Phase 2: generated fill (Patch v2) for the spots no Capture saw
     floor?: string;                  // "patches/og_sofa.floor.png"
@@ -185,7 +188,8 @@ export type Edit = EditBase & (
                        via: 'swap' | 'resize'; targetSize?: Vec3 }
   | { type: 'replace'; originalId: string; pieceId: string; catalogId: string; placement: Placement;
                        via: 'replace' | 'resize'; targetSize?: Vec3 }
-  | { type: 'recolor'; targetId: string; partId: string; color: Hex | null }  // '*' = all Parts; null = clear
+  | { type: 'recolor'; targetId: string; partId: string; color: Hex | null;  // '*' = all Parts; null = clear
+                       sameModel?: true }                                   // every Original with the same `model` (ADR-0009)
   | { type: 'finish';  target: FinishTarget; finish: Finish }
 );
 

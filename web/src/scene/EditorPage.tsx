@@ -9,6 +9,7 @@ import { Inspector } from '../ui/Inspector';
 import { TopBar } from '../ui/TopBar';
 import { addPiece, removeOriginal, removePiece, rotateOriginal, rotatePiece } from './pieceEdits';
 import { SceneCanvas } from './SceneCanvas';
+import { SHOT_NUMBER, shotView } from './shots';
 import './editor.css';
 import '../ui/designs.css';
 
@@ -53,6 +54,10 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
   useEffect(() => {
     void useEditor.getState().load(designId);
   }, [designId]);
+  // ?shot= opens in its shot's View (SceneCanvas puts the camera there).
+  useEffect(() => {
+    if (SHOT_NUMBER) useEditor.getState().setView(shotView(SHOT_NUMBER));
+  }, []);
 
   if (error) {
     return (

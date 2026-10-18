@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { partsFor } from '@shared/parts';
 import type { Category, Finish, LibraryMaterial, RoomState } from '@shared/types';
 import { materialThumbnail, useMaterialLibrary } from '../../scene/materials/triplanar';
 import { useEditor } from '../../state/store';
 import { ColorChoice } from './ColorChoice';
+import { useParts } from './RecolorControl';
 
 /** What a Finish goes on: a Wall, the Floor, or a Part of an Original (spec §11.1). */
 export type FinishPickerTarget =
@@ -33,7 +33,8 @@ function appliedFinish(roomState: RoomState, target: FinishPickerTarget, parts: 
     ? [roomState.surfaces.walls[target.wallId]]
     : target.kind === 'floor'
       ? [roomState.surfaces.floor]
-      : parts.map((partId) => roomState.originals[target.originalId]?.partFinishes[partId]);
+      // A Master Copy's Original may have a Finish for the whole item, under its Parts' own.
+      : parts.map((partId) => roomState.originals[target.originalId]?.partFinishes[partId] ?? roomState.originals[target.originalId]?.partFinishes[ALL]);
   const [first] = finishes;
   return first && finishes.every((finish) => JSON.stringify(finish) === JSON.stringify(first)) ? first : null;
 }
@@ -47,7 +48,8 @@ function appliedFinish(roomState: RoomState, target: FinishPickerTarget, parts: 
 export function FinishPicker({ target }: { target: FinishPickerTarget }) {
   const library = useMaterialLibrary();
   const [partId, setPartId] = useState(ALL);
-  const parts = target.kind === 'original' ? partsFor(target.category) : [];
+  const { parts: originalParts } = useParts(target.kind === 'original' ? target.originalId : '', target.kind === 'original' ? target.category : 'decor');
+  const parts = target.kind === 'original' ? originalParts : [];
   const chosenParts = partId === ALL ? parts.map(({ id }) => id) : [partId];
   const applied = useEditor((s) => appliedFinish(s.roomState!, target, chosenParts));
   // appliedFinish builds nothing new: it hands back a Finish that is in the room state, so the

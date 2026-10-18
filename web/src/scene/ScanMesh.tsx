@@ -1,11 +1,14 @@
 import { Bvh } from '@react-three/drei';
-import type { ThreeEvent } from '@react-three/fiber';
+import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { use, useEffect, useLayoutEffect, useMemo } from 'react';
-import { type Object3D, Plane, Vector3 } from 'three';
+import { type Mesh, type Object3D, Plane, Vector3 } from 'three';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { RoomSetup } from '@shared/types';
 import { scanFileUrl } from '../api';
 import { type Selection, useEditor } from '../state/store';
 import { withMeshopt } from './gltf';
+import { MasterCopies } from './MasterCopies';
+import { sharpen } from './masterCopy';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
 import { OriginalNode } from './OriginalNode';
 import { hasNoCapture } from './room/buildRoom';
@@ -46,13 +49,33 @@ function selectionAt(object: Object3D): Selection | null {
   return null;
 }
 
-/** The Scan: its mesh split into nodes, or a stand-in room from the Room Setup when it has no mesh yet. */
+/**
+ * How far back the Empty Room mesh is pushed in depth when its Originals come from Master Copies, so the
+ * splat lying on the same surface draws over it (lounge-v2 spec §3).
+ */
+const EMPTY_ROOM_OFFSET = { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 4 } as const;
+
+/** Whether a Scan's Originals are drawn from Master Copies, over an Empty Room mesh (ADR-0009). */
+export const hasMasterCopies = (setup: RoomSetup) => setup.originals.some(({ model }) => model);
+
+/**
+ * The Scan: its mesh split into nodes, or a stand-in room from the Room Setup when it has no mesh yet.
+ * When its Originals are drawn from Master Copies (lounge-v2), the mesh is the Empty Room: nothing is
+ * cut out of it, it is always drawn, and the Master Copies stand in it.
+ */
 export function ScanMesh() {
   const manifest = useEditor((s) => s.manifest!);
-  const setup = useEditor((s) => s.setup!);
+  const fullSetup = useEditor((s) => s.setup!);
+  const masterCopies = hasMasterCopies(fullSetup);
+  // Only Originals without a Master Copy are cut out of the mesh.
+  const setup = useMemo(
+    () => (masterCopies ? { ...fullSetup, originals: fullSetup.originals.filter(({ model }) => !model) } : fullSetup),
+    [fullSetup, masterCopies],
+  );
   // Originals lifted or removed: their Patch, from a Fill Capture, shows (ADR-0007).
   const patched = useEditor((s) => s.roomState!.patches);
   const view = useEditor((s) => s.view);
+  const anisotropy = useThree((s) => s.gl.capabilities.getMaxAnisotropy());
   // A room with no Capture has no mesh file to fetch (ADR-0010, ADR-0011).
   const gltf = use(hasNoCapture(manifest, setup) ? NO_MESH : loadScanMesh(scanFileUrl(manifest.id, manifest.mesh)));
 
@@ -72,6 +95,19 @@ export function ScanMesh() {
   useLayoutEffect(() => {
     ceilingClip.constant = view === 'dollhouse' ? setup.ceilingHeight - 0.05 : 1e6;
   }, [ceilingClip, view, setup]);
+  useLayoutEffect(() => {
+    if (!masterCopies) return;
+    for (const node of splitNodes(nodes)) {
+      node.traverse((mesh) => {
+        // Before the splat, which draws without writing depth, even where WallFader makes a wall see-through.
+        if ((mesh as Mesh).isMesh) mesh.renderOrder = -1;
+      });
+      forEachMaterial(node, (material) => {
+        Object.assign(material, EMPTY_ROOM_OFFSET);
+        sharpen(material, anisotropy);
+      });
+    }
+  }, [nodes, masterCopies, anisotropy]);
 
   const onClick = (event: ThreeEvent<MouseEvent>) => {
     if (event.delta > CLICK_TOLERANCE_PX) return;   // the end of a drag that moved the camera
@@ -97,6 +133,7 @@ export function ScanMesh() {
           <primitive key={node.uuid} object={node} visible={patched.includes(id)} />
         ))}
       </Bvh>
+      {masterCopies && <MasterCopies />}
       <WallFader walls={setup.walls} nodes={nodes.walls} />
       <Patches captured={nodes.patches} />
     </group>

@@ -51,6 +51,6 @@ if __name__ == '__main__':
             if i == int(5.5 * FPS): from PIL import Image; Image.fromarray(fr).save(f'{OUT}/scan-sweep-mid.png')
     src = ['-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', raw]
     subprocess.run([ff, '-y', '-loglevel', 'error', *src, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'slow', '-movflags', '+faststart', f'{OUT}/scan-sweep-1080p.mp4'], check=True)
-    subprocess.run([ff, '-y', '-loglevel', 'error', *src, '-vf', 'scale=1280:-2', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '40', '-row-mt', '1', '-an', f'{OUT}/scan-sweep-720p.webm'], check=True)
+    subprocess.run([ff, '-y', '-loglevel', 'error', *src, '-vf', 'scale=1280:-2', '-c:v', 'libvpx-vp9', '-pix_fmt', 'yuv420p', '-b:v', '0', '-crf', '40', '-row-mt', '1', '-an', f'{OUT}/scan-sweep-720p.webm'], check=True)
     os.remove(raw)
     print('encoded')

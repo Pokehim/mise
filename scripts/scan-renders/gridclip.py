@@ -1,8 +1,9 @@
 # The landing page's scan clip, 4:3, played over the room grid before the rooms assemble: the lounge's
-# point cloud builds from the door to the window in LiDAR colors, the camera comes down to the door, the
-# furniture's points clear away, and the points turn, near to far, into the lounge's Empty Room from the
-# door: the first frame of every room clip (empty.webp). Run it with the app up (docs/landing/README.md):
-# it opens the editor at ?shot=door&empty=1 for that frame and its camera.
+# point cloud builds from the door to the window in LiDAR colors, the camera comes down to the door, and
+# the points turn, near to far, into the lounge as the app rebuilt it, its Originals and all, from the
+# door: the first frame of every room clip (empty.webp), each of which then takes out what its Design
+# removes. Run it with the app up (docs/landing/README.md): it opens the editor at ?shot=door for that
+# frame and its camera.
 import json, os, subprocess, sys
 from multiprocessing import Pool
 import numpy as np
@@ -11,23 +12,17 @@ from scene import *
 from render import *
 
 FPS = 30
-W, H = 1440, 1080
+W, H = 1600, 1200  # the grid is about 1530 device pixels wide on a Retina screen
 SWEEP = (0.2, 2.8)  # the scan plane, door to window, while the camera turns overhead
 FLY = (2.8, 4.4)    # down to the door
-CLEAR = (4.2, 5.0)  # the furniture's points go
-SOLID = (5.0, 6.0)  # the points turn into the Empty Room, near to far
-END = 6.6
+SOLID = (4.5, 5.5)  # the points turn into the rebuilt lounge, near to far
+END = 6.0
 N = round(END * FPS)
 DEST = os.path.join(ROOT, "web/src/pages/landing/scan")
 os.makedirs(OUT, exist_ok=True)
-DOOR = os.path.join(OUT, "door.json")  # the door shot's camera and its Empty Room, from door.mjs
+DOOR = os.path.join(OUT, "door.json")  # the door shot's camera and the lounge from it, from door.mjs
 
 xyz, rgb, heat = room(1)
-# The furniture: whatever stands clear of the floor, the ceiling and every wall.
-inside = (xyz[:, 0] > X0 + 0.12) & (xyz[:, 0] < X1 - 0.12) & (xyz[:, 2] > Z0 + 0.12) & (xyz[:, 2] < Z1 - 0.12) \
-    & (xyz[:, 1] > FLOOR + 0.04) & (xyz[:, 1] < CEIL - 0.1)
-# Each furniture point's moment to go, so they thin out rather than vanish at once.
-leave = np.random.default_rng(1).random(len(xyz))
 
 def smooth(t): t = np.clip(t, 0, 1); return t * t * (3 - 2 * t)
 def phase(t, span): return smooth((t - span[0]) / (span[1] - span[0]))
@@ -76,11 +71,11 @@ def depth_map(points, eye, tgt, f, cy, cell=8):
     img = Image.fromarray(d.reshape(h, w).astype(np.float32), mode="F")
     return np.asarray(img.resize((w // 2, h // 2), Image.BILINEAR).resize((W, H), Image.BILINEAR))
 
-EMPTY = None
+ROOM = None
 def render_frame(i):
-    global EMPTY
-    if EMPTY is None:
-        EMPTY = np.asarray(Image.open(os.path.join(OUT, "door.png")).convert("RGB").resize((W, H), Image.LANCZOS)) / 255
+    global ROOM
+    if ROOM is None:
+        ROOM = np.asarray(Image.open(os.path.join(OUT, "door.png")).convert("RGB").resize((W, H), Image.LANCZOS)) / 255
     t = i / FPS
     eye, tgt, f, cy = pose(t)
     zs, s = sweep_z(t)
@@ -95,18 +90,17 @@ def render_frame(i):
         k = seen & (xyz[:, 1] < CEIL - 0.12) & near
         img = render_glow(xyz[k], col[k], eye, tgt, 55, W, H, gain=0.75, bg=BG, f=f, cy=cy) * (1 - solid)
     if solid > 0:
-        gone = inside & (leave < phase(t, CLEAR))
-        k = seen & dollhouse(xyz, eye, cut_ceiling=eye[1] > CEIL) & near & ~gone
+        k = seen & dollhouse(xyz, eye, cut_ceiling=eye[1] > CEIL) & near
         img = img + render_z(xyz[k], col[k], eye, tgt, 55, W, H, size=0.0028, bg=BG, f=f, cy=cy) * solid
         img = soften(img)
         wipe = phase(t, SOLID)
         if wipe > 0:
             # Near to far: a pixel turns once the wipe passes the nearest point there.
-            depth = depth_map(xyz[k & ~inside], eye, tgt, f, cy)
+            depth = depth_map(xyz[k], eye, tgt, f, cy)
             reach = 0.5 + wipe * 9.0
             m = np.clip((reach - depth) / 1.2, 0, 1)[..., None]
             m = np.maximum(m, phase(t, (SOLID[1] - 0.25, SOLID[1])))
-            img = img * (1 - m) + EMPTY * m
+            img = img * (1 - m) + ROOM * m
     else:
         img = soften(img)
     return (np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)
@@ -120,14 +114,15 @@ if __name__ == "__main__":
             out.write(fr.tobytes())
             if "--frames" in sys.argv and i % 15 == 0: Image.fromarray(fr).save(os.path.join(OUT, f"grid-{i:03}.png"))
     # The page's slip: how many of the scan's points the plane has passed, ten times a second, and when
-    # the scan stops being the scan and becomes the Empty Room.
+    # the scan stops being the scan and becomes the rebuilt lounge.
     total = len(xyz)
     counts = [int(round(total * np.mean(xyz[:, 2] >= sweep_z(t / 10)[0]))) for t in range(int(END * 10) + 1)]
-    json.dump({"total": total, "counts": counts, "empty": SOLID[0]}, open(os.path.join(DEST, "counts.json"), "w"))
-    # Two sizes: phones (the grid under 800 px wide) get the small one.
-    for name, size, crf in (("scan.webm", "1200:900", 52), ("scan-small.webm", "800:600", 56)):
+    json.dump({"total": total, "counts": counts, "rebuilt": SOLID[0]}, open(os.path.join(DEST, "counts.json"), "w"))
+    # Two sizes: phones (the grid under 800 px wide) get the small one. 4:2:0 (VP9 profile 0) by name:
+    # from RGB frames ffmpeg picks 4:4:4 RGB (profile 1), which Chrome plays and Safari doesn't.
+    for name, size, crf in (("scan.webm", "1600:1200", 42), ("scan-small.webm", "800:600", 42)):
         subprocess.run([ff, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", raw,
-                        "-vf", f"scale={size}:flags=lanczos", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", str(crf), "-row-mt", "1", "-an",
+                        "-vf", f"scale={size}:flags=lanczos", "-c:v", "libvpx-vp9", "-pix_fmt", "yuv420p", "-b:v", "0", "-crf", str(crf), "-row-mt", "1", "-an",
                         os.path.join(DEST, name)], check=True)
-    os.remove(raw)
+    if "--keep-raw" not in sys.argv: os.remove(raw)
     print("ok", total)

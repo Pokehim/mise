@@ -16,6 +16,8 @@ const SCAN_RATE = 1.25;
 const SHARP_PX = 1000;
 /** The 1200×900 scan needs about 3.3 Mb/s to play through at SCAN_RATE; below this, it's the 800×600 one. */
 const SHARP_MBPS = 8;
+/** A scan that hasn't moved for this long, whether it never started or stalled, gives way to the rooms. */
+const SCAN_PATIENCE_MS = 4000;
 /** How many rooms' clips load at once. */
 const LOADING = 2;
 /** Each room's place in the wave, which is the order their clips load in. */
@@ -73,6 +75,7 @@ export function RoomGrid() {
     const assemble = () => {
       if (assembled) return;
       assembled = true;
+      scan.current?.pause();
       loadRooms();
       setScanning(false);
       videos.current.forEach((video, i) => {
@@ -86,12 +89,21 @@ export function RoomGrid() {
     const observer = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return;
       observer.disconnect();
-      const video = scan.current!;
       video.onended = assemble;
       video.onerror = assemble;
       video.playbackRate = SCAN_RATE;
-      // A browser that refuses to play the scan goes straight to the rooms.
+      // A browser that refuses to play the scan, can't decode it, or can't get it goes to the rooms.
       video.play().catch(assemble);
+      let last = 0;
+      const watch = window.setInterval(() => {
+        if (assembled) return clearInterval(watch);
+        if (video.currentTime === last) {
+          clearInterval(watch);
+          assemble();
+        }
+        last = video.currentTime;
+      }, SCAN_PATIENCE_MS);
+      timers.push(watch);
     }, { threshold: 0.35 });
     const video = scan.current!;
     video.src = sharpScan(grid.current!) ? scanClip : scanClipSmall;
@@ -106,7 +118,7 @@ export function RoomGrid() {
       video.removeEventListener('progress', whenLoaded);
       video.removeEventListener('canplaythrough', whenLoaded);
       observer.disconnect();
-      timers.forEach(clearTimeout);
+      timers.forEach((timer) => { clearTimeout(timer); clearInterval(timer); });
     };
   }, [animate]);
 

@@ -124,10 +124,11 @@ if __name__ == "__main__":
     total = len(xyz)
     counts = [int(round(total * np.mean(xyz[:, 2] >= sweep_z(t / 10)[0]))) for t in range(int(END * 10) + 1)]
     json.dump({"total": total, "counts": counts, "empty": SOLID[0]}, open(os.path.join(DEST, "counts.json"), "w"))
-    # Two sizes: phones (the grid under 800 px wide) get the small one.
+    # Two sizes: phones (the grid under 800 px wide) get the small one. 4:2:0 (VP9 profile 0) by name:
+    # from RGB frames ffmpeg picks 4:4:4 RGB (profile 1), which Chrome plays and Safari doesn't.
     for name, size, crf in (("scan.webm", "1200:900", 52), ("scan-small.webm", "800:600", 56)):
         subprocess.run([ff, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", raw,
-                        "-vf", f"scale={size}:flags=lanczos", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", str(crf), "-row-mt", "1", "-an",
+                        "-vf", f"scale={size}:flags=lanczos", "-c:v", "libvpx-vp9", "-pix_fmt", "yuv420p", "-b:v", "0", "-crf", str(crf), "-row-mt", "1", "-an",
                         os.path.join(DEST, name)], check=True)
     os.remove(raw)
     print("ok", total)

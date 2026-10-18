@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "scanId": "plan-demo",
+  "ceilingHeight": 2.44,
+  "floor": {
+    "polygon": [
+      [
+        -2.0209,
+        -2.4289050473186125
+      ],
+      [
+        2.0209,
+        -2.4289050473186125
+      ],
+      [
+        2.0209,
+        2.4289050473186125
+      ],
+      [
+        -2.0209,
+        2.4289050473186125
+      ]
+    ]
+  },
+  "walls": [
+    {
+      "id": "wl_1",
+      "name": "North wall",
+      "start": [
+        -2.0209,
+        -2.4289050473186125
+      ],
+      "end": [
+        2.0209,
+        -2.4289050473186125
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.44
+    },
+    {
+      "id": "wl_2",
+      "name": "East wall",
+      "start": [
+        2.0209,
+        -2.4289050473186125
+      ],
+      "end": [
+        2.0209,
+        2.4289050473186125
+      ],
+      "normal": [
+        -1,
+        0
+      ],
+      "height": 2.44
+    },
+    {
+      "id": "wl_3",
+      "name": "South wall",
+      "start": [
+        2.0209,
+        2.4289050473186125
+      ],
+      "end": [
+        -2.0209,
+        2.4289050473186125
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.44
+    },
+    {
+      "id": "wl_4",
+      "name": "West wall",
+      "start": [
+        -2.0209,
+        2.4289050473186125
+      ],
+      "end": [
+        -2.0209,
+        -2.4289050473186125
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.44
+    }
+  ],
+  "openings": [
+    {
+      "id": "op_1",
+      "kind": "window",
+      "wallId": "wl_1",
+      "offset": 0.045,
+      "width": 3.953,
+      "bottom": 0.91,
+      "height": 1.22
+    },
+    {
+      "id": "op_2",
+      "kind": "door",
+      "wallId": "wl_3",
+      "offset": 1.683,
+      "width": 0.842,
+      "bottom": 0,
+      "height": 2.03,
+      "swing": "in-right"
+    }
+  ],
+  "originals": [],
+  "surfaces": {
+    "walls": "drywall",
+    "wallColor": "#ece6da",
+    "floor": "carpet-grey",
+    "ceiling": "drywall",
+    "baseboard": "rubber"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "rooms": [
+    {
+      "label": "Traditional double (TD)",
+      "corners": [
+        { "x": 406.5, "y": 272 },
+        { "x": 723.5, "y": 272 },
+        { "x": 723.5, "y": 653 },
+        { "x": 406.5, "y": 653 }
+      ],
+      "openings": [
+        { "kind": "window", "from": { "x": 410, "y": 272 }, "to": { "x": 720, "y": 272 }, "swing": null },
+        { "kind": "door", "from": { "x": 525.5, "y": 653 }, "to": { "x": 591.5, "y": 653 }, "swing": "in-right" }
+      ]
+    }
+  ],
+  "scaleHints": [
+    { "text": "13'-3 1/8\"", "meters": 4.0418, "from": { "x": 406.5, "y": 155 }, "to": { "x": 723.5, "y": 155 } },
+    { "text": "15'-11 1/16\"", "meters": 4.853, "from": { "x": 811, "y": 272 }, "to": { "x": 811, "y": 653 } }
+  ],
+  "ceilingHeight": null,
+  "notes": "Read by hand from CMU's Donner House traditional double plan (data/floor-plans/cmu/plan.png) for the seeded demo. The window's extent along the North wall is estimated."
+}

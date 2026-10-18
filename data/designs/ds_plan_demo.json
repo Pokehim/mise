@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "id": "ds_plan_demo",
+  "scanId": "plan-demo",
+  "name": "Oak and sage",
+  "createdAt": "2026-10-18T09:00:00.000Z",
+  "updatedAt": "2026-10-18T09:00:00.000Z",
+  "origin": "mover",
+  "edits": [
+    {
+      "id": "ed_1",
+      "at": "2026-10-18T09:00:00.000Z",
+      "by": "mover",
+      "type": "finish",
+      "target": {
+        "kind": "floor"
+      },
+      "finish": {
+        "kind": "material",
+        "materialId": "oak"
+      }
+    },
+    {
+      "id": "ed_2",
+      "at": "2026-10-18T09:00:00.000Z",
+      "by": "mover",
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_1"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#a3b39a"
+      }
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import { useEditor } from '../state/store';
 import { wallRotationY } from './floorPlan';
 import { ignoreRaycast } from './objects';
 import { floorFrame, wallFrame } from './patchFrames';
+import { hasNoCapture } from './room/buildRoom';
 
 /**
  * How far past the footprint a Patch reaches on every side (spec §10.6), as §11.2 measures margins.
@@ -169,6 +170,9 @@ function OriginalPatch({ original, captured }: { original: Original; captured: b
 export function Patches({ captured }: { captured: Record<string, Object3D> }) {
   const ids = useEditor(useShallow((s) => s.roomState!.patches));
   const originals = useEditor((s) => s.setup!.originals);
+  // Nothing was ever hidden under the furniture of a room with no Capture: its floor shows already.
+  const noCapture = useEditor((s) => hasNoCapture(s.manifest!, s.setup!));
+  if (noCapture) return null;
   return (
     <group name="patches">
       {originals.filter(({ id }) => ids.includes(id)).map((original) => (

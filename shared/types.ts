@@ -20,6 +20,13 @@ export interface ScanManifest {
   splat?: string;                    // Phase 3: "splat.spz"
   splatTransform?: YawTransform & { scale: number }; // Phase 3: splat frame → room frame
   captures?: ScanCaptures;           // Phase 2 (ADR-0007): what room.glb was merged from
+  floorPlan?: FloorPlanSource;       // ADR-0011: built from a Floor Plan; there are no Captures and no room.glb
+}
+
+export interface FloorPlanSource {
+  image: string;                     // "plan/floor-plan.png": what Claude read, and Room Setup's backdrop
+  draft: string;                     // "plan/draft.json": Claude's reading of it, in that image's pixels
+  metersPerPixel: number;            // set in Room Setup from a printed dimension
 }
 
 export interface YawTransform { position: Vec3; rotationY: number }

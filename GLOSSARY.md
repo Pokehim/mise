@@ -9,7 +9,7 @@ The person the product serves: someone about to move into, or who has just moved
 _Avoid_: User (too generic), customer, designer
 
 **Scan**:
-The captured copy of one real room: it looks like the room, and it knows the room's walls, floor, Openings, and furniture with their real-world dimensions. A Scan is made once, from its Captures plus Room Setup, and is never changed by Designs.
+The captured copy of one real room: it looks like the room, and it knows the room's walls, floor, Openings, and furniture with their real-world dimensions. A Scan is made once, from its Captures or a Floor Plan, plus Room Setup, and is never changed by Designs.
 _Avoid_: Model, capture, room (when you mean the digital copy)
 
 **Capture**:
@@ -30,10 +30,14 @@ _Avoid_: Object scan, close-up, hero scan
 
 **Layout**:
 A clean plan of the room from KIRI Engine's Room mode: walls, Openings, and furniture as labeled boxes at real size, with no scanned surfaces. Room Setup starts from it.
-_Avoid_: Floor plan, RoomPlan model, blueprint
+_Avoid_: RoomPlan model, blueprint, Floor Plan (a Floor Plan comes from the building, not a scanning app)
+
+**Floor Plan**:
+A drawing of a room from above, from its building or housing office, given as an image or PDF. A Scan can be built from one when the Mover can't capture the room yet: Claude reads it, the Mover corrects that reading in Room Setup, and the room starts empty, for the Mover to furnish.
+_Avoid_: Blueprint, Layout (a Layout comes from a scanning app), map
 
 **Room Setup**:
-The one-time step that turns the Captures into a usable Scan: it marks the floor, walls, Openings, and Originals on the Main Capture, starting from the Layout when there is one, and lines up every other Capture with the Main Capture.
+The one-time step that turns the Captures, or a Floor Plan, into a usable Scan. For a Floor Plan, it is the Mover correcting Claude's reading of the plan: its corners, Openings and scale. For Captures, it marks the floor, walls, Openings, and Originals on the Main Capture, starting from the Layout when there is one, and lines up every other Capture with the Main Capture.
 _Avoid_: Annotation, labeling, calibration
 
 **Opening**:

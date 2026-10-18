@@ -1,11 +1,12 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Document, getBounds, NodeIO } from '@gltf-transform/core';
+import { Document, getBounds } from '@gltf-transform/core';
 import sharp from 'sharp';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { io } from '../../scripts/scan-import';
-import type { Catalog, CatalogItem, Vec3 } from '../../shared/types';
+import { item } from '../../shared/test-room';
+import type { CatalogItem } from '../../shared/types';
 import { app } from '../app';
 import type { Job } from './routes';
 
@@ -39,7 +40,7 @@ async function boxGlb(min: number[], max: number[]) {
     .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(corners)).setBuffer(buffer))
     .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint16Array(faces)).setBuffer(buffer));
   doc.getRoot().setDefaultScene(doc.createScene().addChild(doc.createNode().setMesh(doc.createMesh().addPrimitive(prim))));
-  return new NodeIO().writeBinary(doc);
+  return io.writeBinary(doc);
 }
 
 const photo = () => sharp({ create: { width: 64, height: 64, channels: 3, background: '#ffffff' } }).jpeg().toBuffer();
@@ -55,10 +56,13 @@ async function falMakesABox() {
   });
 }
 
-const post = (body: unknown) =>
-  app.request('/api/generate-object', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const post = (body: unknown, server = app) =>
+  server.request('/api/generate-object', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
-const getJson = async (path: string) => (await app.request(path)).json();
+const getJson = async (path: string, server = app) => (await server.request(path)).json();
+
+/** Starts a job and returns its id. */
+const start = async (body: unknown) => (await (await post(body)).json()).jobId as string;
 
 /** Polls a job until it stops running. */
 async function finished(jobId: string): Promise<Job> {
@@ -69,35 +73,40 @@ async function finished(jobId: string): Promise<Job> {
   }
 }
 
+/** The item a finished job made. */
+function itemOf(job: Job): CatalogItem {
+  if (job.status !== 'done') throw new Error(`The job didn't finish: ${JSON.stringify(job)}`);
+  return job.item;
+}
+
+// Jobs live as long as the server process, so each test asks for something different.
 describe('POST /api/generate-object', () => {
   it('generates a Catalog item, scaled into the target box with its pivot at the bottom center', async () => {
     await falMakesABox();
 
     const res = await post({ query: 'aquarium', category: 'decor', targetSize: [1, 1, 1] });
     expect(res.status).toBe(200);
-    const job = await finished((await res.json()).jobId);
+    const generated = itemOf(await finished((await res.json()).jobId));
 
-    expect(job.error).toBeUndefined();
-    expect(job).toMatchObject({ status: 'done', progress: 1 });
-    expect(job.item).toMatchObject({
+    expect(generated).toMatchObject({
       source: 'generated', title: 'Aquarium', category: 'decor', mount: 'floor', size: [1, 0.5, 0.5], priceEstimateUsd: 25, url: '',
     });
-    const model = await app.request(job.item!.model);
+    const model = await app.request(generated.model);
     expect(model.status).toBe(200);
-    const { min, max } = getBounds((await io.readBinary(new Uint8Array(await model.arrayBuffer()))).getRoot().getDefaultScene()!);
+    const { min, max } = getBounds((await io.readBinary(new Uint8Array(await model.arrayBuffer()))).getRoot().listScenes()[0]);
     [...min, ...max].forEach((value, i) => expect(value).toBeCloseTo([-0.5, 0, -0.25, 0.5, 0.5, 0.25][i], 2));
-    expect((await app.request(job.item!.thumbnail)).status).toBe(200);
+    expect((await app.request(generated.thumbnail)).status).toBe(200);
+    expect((await getJson('/data/catalog/generated.json')).items).toEqual([generated]);
   }, 30_000);
 
   it("scales into the category's typical size from catalog.json when the Mover gave no size", async () => {
     await falMakesABox();
     await mkdir(join(dataDir, 'catalog'));
-    const table = (size: Vec3) => ({ category: 'table', size }) as CatalogItem;
-    await writeFile(join(dataDir, 'catalog/catalog.json'), JSON.stringify({ version: 1, items: [table([1.2, 0.5, 0.6])] }));
+    await writeFile(join(dataDir, 'catalog/catalog.json'), JSON.stringify({ version: 1, items: [item('t', 'table', 'T', [1.2, 0.5, 0.6])] }));
 
-    const job = await finished((await (await post({ query: 'coffee table with a fish tank', category: 'table' })).json()).jobId);
+    const generated = itemOf(await finished(await start({ query: 'coffee table with a fish tank', category: 'table' })));
 
-    expect(job.item?.size).toEqual([1, 0.5, 0.5]);   // the 2 × 1 × 1 box, fit by its height
+    expect(generated.size).toEqual([1, 0.5, 0.5]);   // the 2 × 1 × 1 box, fit by its height
   }, 30_000);
 
   it('reports the step it is on while TRELLIS.2 runs', async () => {
@@ -111,23 +120,21 @@ describe('POST /api/generate-object', () => {
       await modelDone;
       return makeBox(endpoint, options);
     });
-    const { jobId } = await (await post({ query: 'globe', category: 'decor', targetSize: [0.3, 0.4, 0.3] })).json();
+    const jobId = await start({ query: 'globe', category: 'decor', targetSize: [0.3, 0.4, 0.3] });
 
     await vi.waitFor(async () => expect(await getJson(`/api/jobs/${jobId}`)).toEqual({ status: 'running', step: 'model', progress: 0.15 }));
     finishModel();
     expect((await finished(jobId)).status).toBe('done');
   }, 30_000);
 
-  it('fails the job, with fal\'s reason, when a fal call fails', async () => {
+  it("fails the job, with fal's reason, when a fal call fails", async () => {
     fal.subscribe.mockRejectedValue(new Error('Unprocessable Entity'));
 
-    const job = await finished((await (await post({ query: 'lava lamp', category: 'lamp' })).json()).jobId);
+    const job = await finished(await start({ query: 'lava lamp', category: 'lamp' }));
 
-    expect(job).toMatchObject({ status: 'failed', error: 'Unprocessable Entity' });
+    expect(job).toEqual({ status: 'failed', error: 'Unprocessable Entity' });
   });
-});
 
-describe('POST /api/generate-object, refused', () => {
   it('refuses a category that is not a Category', async () => {
     const res = await post({ query: 'aquarium', category: 'aquarium' });
 
@@ -138,35 +145,35 @@ describe('POST /api/generate-object, refused', () => {
   it('refuses before calling fal when FAL_KEY is not set', async () => {
     vi.stubEnv('FAL_KEY', '');
 
-    const res = await post({ query: 'aquarium', category: 'decor' });
+    const res = await post({ query: 'sea chest', category: 'storage' });
 
     expect(res.status).toBe(503);
     expect(fal.subscribe).not.toHaveBeenCalled();
   });
 });
 
-// Jobs live as long as the server process, so each test asks for something different.
 describe('the cache, by query', () => {
   it('joins the running job when the same query comes again, so fal is paid once', async () => {
     await falMakesABox();
 
-    const first = await (await post({ query: 'Fish tank', category: 'decor', targetSize: [1, 1, 1] })).json();
-    const again = await (await post({ query: ' fish  tank', category: 'decor', targetSize: [1, 1, 1] })).json();
+    const first = await start({ query: 'Fish tank', category: 'decor', targetSize: [1, 1, 1] });
+    const again = await start({ query: ' fish  tank', category: 'decor', targetSize: [1, 1, 1] });
 
-    expect(again.jobId).toBe(first.jobId);
-    expect((await finished(first.jobId)).status).toBe('done');
+    expect(again).toBe(first);
+    expect((await finished(first)).status).toBe('done');
     expect(fal.subscribe).toHaveBeenCalledTimes(2);   // one photo, one model
   }, 30_000);
 
-  it('reuses an item generated before the server restarted, from generated.json', async () => {
-    const earlier = { id: 'gen_earlier1', source: 'generated', title: 'Bubble chair', category: 'chair' } as CatalogItem;
-    await mkdir(join(dataDir, 'catalog'));
-    await writeFile(join(dataDir, 'catalog/generated.json'), JSON.stringify({ version: 1, items: [earlier] } satisfies Catalog));
+  it('reuses an item generated before the server restarted, without calling fal', async () => {
+    await falMakesABox();
+    const before = itemOf(await finished(await start({ query: 'bubble chair', category: 'chair', targetSize: [1, 1, 1] })));
+    fal.subscribe.mockClear();
+    vi.resetModules();
+    const { app: restarted } = await import('../app');
 
-    const res = await post({ query: 'bubble chair', category: 'chair' });
+    const { jobId } = await (await post({ query: 'Bubble chair', category: 'chair' }, restarted)).json();
 
-    expect(await finished((await res.json()).jobId)).toMatchObject({ status: 'done', item: earlier });
+    expect(await getJson(`/api/jobs/${jobId}`, restarted)).toEqual({ status: 'done', item: before });
     expect(fal.subscribe).not.toHaveBeenCalled();
-  });
+  }, 30_000);
 });
-

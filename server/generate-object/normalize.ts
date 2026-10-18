@@ -16,14 +16,14 @@ export function targetBox(catalog: Catalog, category: Category): Vec3 {
   return [0, 1, 2].map((axis) => median(sizes.map((size) => size[axis]))) as Vec3;
 }
 
-/** A box axis under this is the thin one of a rug, wall art or a mirror (the Catalog's are 0.6–8 cm). */
-const THIN = 0.1;
+/** The axis a category's items are flat along: rugs lie flat and wall items hang, height and depth. */
+const FLAT_AXIS: Partial<Record<Category, number>> = { rug: 1, wall_art: 2, mirror: 2 };
 
 /**
- * The uniform scale that fits a model of `size` inside `box`: the tightest of its axes. A thin axis doesn't count,
- * since image-to-3D makes rugs and frames thicker than real ones and fitting it would shrink the whole item.
+ * The uniform scale that fits a model of `size` inside `box`: the tightest of its axes. A flat item's thin axis doesn't
+ * count, since image-to-3D makes rugs and frames thicker than real ones and fitting it would shrink the whole item.
  */
-export function fitScale(size: Vec3, box: Vec3): number {
-  const axes = [0, 1, 2].filter((axis) => box[axis] >= THIN);
+export function fitScale(size: Vec3, box: Vec3, category: Category): number {
+  const axes = [0, 1, 2].filter((axis) => axis !== FLAT_AXIS[category]);
   return Math.min(...axes.map((axis) => box[axis] / size[axis]));
 }

@@ -11,8 +11,8 @@ import type { Trellis2Output } from '@fal-ai/client/endpoints';
 import { getBounds } from '@gltf-transform/core';
 import { center } from '@gltf-transform/functions';
 import sharp from 'sharp';
-import { DEFAULT_PRICE_USD, gltfTransform, sizeFromInspect } from '../../scripts/catalog-build';
-import { io } from '../../scripts/scan-import';
+import { DEFAULT_PRICE_USD, mountOf, optimizeModel } from '../../scripts/catalog-build';
+import { io, writeJson } from '../../scripts/scan-import';
 import type { Catalog, CatalogItem, Category, Vec3 } from '../../shared/types';
 import { fitScale, targetBox } from './normalize';
 
@@ -24,7 +24,7 @@ export interface GenerateRequest {
   targetSize?: Vec3;
 }
 
-/** The steps of a run, in order. */
+/** The steps of a run, in order. A run starts on 'photo'. */
 export type Step = 'photo' | 'queued' | 'model' | 'fitting';
 
 // 1024 costs $0.30 (llms.txt). fal's schema takes integers here, though the SDK's generated types still say strings.
@@ -51,7 +51,7 @@ let appending = Promise.resolve();
 function addGenerated(dataDir: string, item: CatalogItem): Promise<void> {
   const append = appending.then(async () => {
     const catalog = await readGenerated(dataDir);
-    await writeFile(generatedPath(dataDir), `${JSON.stringify({ ...catalog, items: [...catalog.items, item] }, null, 2)}\n`);
+    await writeJson(generatedPath(dataDir), { ...catalog, items: [...catalog.items, item] });
   });
   appending = append.catch(() => {});
   return append;
@@ -59,12 +59,14 @@ function addGenerated(dataDir: string, item: CatalogItem): Promise<void> {
 
 /**
  * Generates `request.query` as Catalog item `id`: its model and thumbnail go in data/catalog/models and thumbs, and
- * the item in generated.json. `onStep` hears each step as it starts.
+ * the item in generated.json. `onStep` hears each step after the first as it starts.
  */
 export async function generateObject(request: GenerateRequest, id: string, dataDir: string, onStep: (step: Step) => void) {
   const { query, category, targetSize } = request;
+  const model = `/data/catalog/models/${id}.glb`;
+  const thumbnail = `/data/catalog/thumbs/${id}.jpg`;
+  const inData = (url: string) => join(dataDir, url.slice('/data/'.length));
 
-  onStep('photo');
   const { data: photo } = await fal.subscribe('fal-ai/flux/schnell', {
     input: {
       prompt: `Studio product photo of ${query}, a single product, centered, plain white background, soft light, three-quarter view`,
@@ -72,9 +74,12 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
     },
   });
   const photoUrl = photo.images[0].url;
+  // The thumbnail downloads while TRELLIS.2 runs. The catch only keeps a failed model from leaving it unhandled.
+  const thumbnailJpeg = download(photoUrl).then((bytes) => sharp(bytes).resize(256, 256, { fit: 'inside' }).jpeg().toBuffer());
+  thumbnailJpeg.catch(() => {});
 
   onStep('queued');
-  const { data: model }: { data: Trellis2Output } = await fal.subscribe<string>('fal-ai/trellis-2', {
+  const { data: trellis }: { data: Trellis2Output } = await fal.subscribe<string>('fal-ai/trellis-2', {
     input: { image_url: photoUrl, ...TRELLIS_INPUT },
     onQueueUpdate: ({ status }) => status !== 'IN_QUEUE' && onStep('model'),
   });
@@ -83,30 +88,31 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
   const work = await mkdtemp(join(tmpdir(), 'mise-generate-'));
   try {
     // Bottom-center pivot, then one uniform scale about it into the box.
-    const doc = await io.readBinary(await download(model.model_glb.url));
+    const doc = await io.readBinary(await download(trellis.model_glb.url));
     await doc.transform(center({ pivot: 'below' }));
     const scene = doc.getRoot().listScenes()[0];
     const { min, max } = getBounds(scene);
     const box = targetSize ?? targetBox(JSON.parse(await readFile(join(dataDir, 'catalog/catalog.json'), 'utf8')), category);
-    const scale = fitScale([max[0] - min[0], max[1] - min[1], max[2] - min[2]], box);
+    const scale = fitScale([max[0] - min[0], max[1] - min[1], max[2] - min[2]], box, category);
     for (const node of scene.listChildren()) {
       node.setTranslation(node.getTranslation().map((v) => v * scale) as Vec3).setScale(node.getScale().map((v) => v * scale) as Vec3);
     }
-    const scaled = join(work, 'scaled.glb');
-    const glb = join(work, 'model.glb');
-    await io.write(scaled, doc);
-    // Optimize last: like catalog-build, since center would undo its meshopt compression.
-    await gltfTransform('optimize', scaled, glb, '--texture-compress', 'webp', '--texture-size', '1024');
+    const centered = join(work, 'centered.glb');
+    await io.write(centered, doc);
+    await mkdir(join(dataDir, 'catalog/models'), { recursive: true });
+    await mkdir(join(dataDir, 'catalog/thumbs'), { recursive: true });
+    const { size } = await optimizeModel(centered, inData(model));
+    await writeFile(inData(thumbnail), await thumbnailJpeg);
 
     const item: CatalogItem = {
       id,
       source: 'generated',
       title: query[0].toUpperCase() + query.slice(1),
       category,
-      mount: category === 'wall_art' || category === 'mirror' ? 'wall' : 'floor',
-      size: sizeFromInspect(await gltfTransform('inspect', glb, '--format', 'csv')),
-      model: `/data/catalog/models/${id}.glb`,
-      thumbnail: `/data/catalog/thumbs/${id}.jpg`,
+      mount: mountOf(category),
+      size,
+      model,
+      thumbnail,
       colors: [],
       materials: [],
       styleTags: [],
@@ -114,10 +120,6 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
       url: '',
       attribution: 'Generated with FLUX.1 [schnell] and TRELLIS.2 (MIT) on fal',
     };
-    await mkdir(join(dataDir, 'catalog/models'), { recursive: true });
-    await mkdir(join(dataDir, 'catalog/thumbs'), { recursive: true });
-    await writeFile(join(dataDir, item.model.slice('/data/'.length)), await readFile(glb));
-    await sharp(await download(photoUrl)).resize(256, 256, { fit: 'inside' }).jpeg().toFile(join(dataDir, item.thumbnail.slice('/data/'.length)));
     await addGenerated(dataDir, item);
     return item;
   } finally {

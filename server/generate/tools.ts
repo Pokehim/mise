@@ -14,7 +14,7 @@ import { newId } from '../../shared/ids';
 import { partsFor } from '../../shared/parts';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, CatalogItem, Category, Edit, FitViolation, Hex, LibraryMaterial, Palette, Placement, RoomSetup, RoomState } from '../../shared/types';
-import { catalogEntry, m, offeredToClaude } from './forClaude';
+import { catalogEntry, m, offeredToClaude, shuffled } from './forClaude';
 import { reviewFlags } from './review';
 import { type Draft, dressBed, hangGallery, layRug, makeCorner, styleTops } from './moves';
 
@@ -32,6 +32,8 @@ export interface DesignContext extends AnchorOptions {
   onEdit?: (edit: Edit) => void;
   /** The names the Brief's finished takes have taken, shared by its sessions, so that each take has a name of its own. */
   takenNames?: Set<string>;
+  /** Orders search_catalog's matches, which all rank equal, so each take sees different ones first. */
+  random?: () => number;
 }
 
 /** One Design being made: its Edits, the room they make, and the tools that change it. */
@@ -132,6 +134,7 @@ const finishTarget = z.union([
 /** A new Design session, with the 7 tools of spec §13.2 that change it. */
 export function createSession({
   setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS, maxLargeChanges = MAX_LARGE_CHANGES, onEdit, takenNames,
+  random = Math.random,
 }: DesignContext): DesignSession {
   let edits: Edit[] = [];
   let state = replay(setup, catalog, edits);
@@ -308,7 +311,8 @@ export function createSession({
         limit: z.number().optional().describe('At most this many items; 10 by default'),
       }),
       ({ category, text, color: colorName, max_width_m, max_depth_m, max_price_usd, limit = 10 }) => ({
-        items: search(catalog, { category, text, color: colorName, maxSize: [max_width_m ?? Infinity, Infinity, max_depth_m ?? Infinity], limit: Infinity })
+        // Matches all rank equal, so Catalog order would show every take the same first ten: shuffle them.
+        items: shuffled(search(catalog, { category, text, color: colorName, maxSize: [max_width_m ?? Infinity, Infinity, max_depth_m ?? Infinity], limit: Infinity }), random)
           .filter(({ item }) => offeredToClaude(item) && (max_price_usd === undefined || item.priceEstimateUsd <= max_price_usd))
           .slice(0, limit)
           .map(({ item }) => catalogEntry(item)),

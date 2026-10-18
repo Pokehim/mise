@@ -50,13 +50,25 @@ describe('the Design tools', () => {
       expect(items.map(({ id }: { id: string }) => id)).not.toContain('placeholder-chair');
     });
 
-    it('finds Catalog items of a category, with their size, colors, styles and estimated price', async () => {
-      expect(await call(start(), 'search_catalog', { category: 'wall_art' })).toEqual({
-        items: [
-          { id: 'print-fern', title: 'Fern Print', category: 'wall_art', size_m: [0.5, 0.6, 0.03], colors: ['Green'], styles: [], price_usd: 40 },
-          { id: 'poster-city', title: 'City Poster', category: 'wall_art', size_m: [0.4, 0.5, 0.02], colors: ['Black'], styles: [], price_usd: 30 },
-        ],
-      });
+    it('finds Catalog items of a category, with their size, colors, styles and estimated price, in a shuffled order', async () => {
+      const { items } = await call(start(), 'search_catalog', { category: 'wall_art' });
+      expect(items).toHaveLength(2);
+      expect(items).toEqual(expect.arrayContaining([
+        { id: 'print-fern', title: 'Fern Print', category: 'wall_art', size_m: [0.5, 0.6, 0.03], colors: ['Green'], styles: [], price_usd: 40 },
+        { id: 'poster-city', title: 'City Poster', category: 'wall_art', size_m: [0.4, 0.5, 0.02], colors: ['Black'], styles: [], price_usd: 30 },
+      ]));
+    });
+
+    it('shows different matches first to different takes', async () => {
+      const chairs = Array.from({ length: 30 }, (_, i) => item(`chair-${i}`, 'chair', `Chair ${i}`, [0.6, 0.9, 0.6]));
+      const catalog = { ...decorCatalog, items: [...decorCatalog.items, ...chairs] };
+      const firstTen = async (seed: number) => {
+        let s = seed;
+        const random = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+        const { items } = await call(createSession({ setup, catalog, brief: { text: 'cozy' }, materials, random }), 'search_catalog', { category: 'chair' });
+        return items.map(({ id }: { id: string }) => id).join();
+      };
+      expect(await firstTen(1)).not.toBe(await firstTen(2));
     });
 
     it('narrows by size and estimated price', async () => {

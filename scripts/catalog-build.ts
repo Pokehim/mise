@@ -5,7 +5,8 @@
 //     Lists ABO listings to pick from, the ones with a 3D model first.
 //   npx tsx scripts/catalog-build.ts [--only <id,id,…>]
 //     Builds every pick in scripts/catalog-picks.json (or just those) into data/catalog/: models/<id>.glb,
-//     thumbs/<id>.jpg, catalog.json. Each source's license is in data/catalog/CREDITS.md.
+//     thumbs/<id>.jpg, catalog.json. Each source's license is in data/catalog/CREDITS.md. Every item's collision boxes
+//     are fitted to its model as catalog.json is assembled (scripts/collision.ts): `--only none` refreshes just those.
 //
 // A pick is one of:
 //   - an ABO listing with a 3D model (the default);
@@ -26,6 +27,7 @@ import { gunzipSync } from 'node:zlib';
 import sharp from 'sharp';
 import type { Catalog, CatalogItem, Category, Hex, PartParams, Vec2, Vec3 } from '../shared/types';
 import { ASPECT_TOLERANCE, rugDocument, rugTexture } from './catalog/flat-rug';
+import { type Collision, decide, fitModel, readOverrides, summary, toJson, withCollision } from './collision';
 import { gsoDocument, gsoUrl, writeGlb } from './catalog/gso';
 import { clearGlass, io, keepNodes, type MadeUp, madeUp, potted, scaleTo, tilt, turn } from './catalog/models';
 import { objaverseGlb, sketchfabUrl } from './catalog/objaverse';
@@ -364,6 +366,7 @@ const ABO = 'https://amazon-berkeley-objects.s3.amazonaws.com';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const CACHE = join(ROOT, 'scripts/.cache');
 const PICKS = join(ROOT, 'scripts/catalog-picks.json');
+const COLLISION_OVERRIDES = join(ROOT, 'scripts/catalog/collision-overrides.json');
 const CATALOG_DIR = join(ROOT, 'data/catalog');
 const GLTF_TRANSFORM = join(ROOT, 'node_modules/.bin/gltf-transform');
 const MAX_GLB_BYTES = 2_000_000;     // §2.3: each Piece ≤ 2 MB
@@ -555,6 +558,30 @@ async function buildPick(pick: CatalogPick, listing: Listing | undefined, imageP
   return { item, ...model };
 }
 
+/**
+ * The Catalog's items with their collision boxes (#129), fitted to each built model, or as an override sets them, with
+ * the size an override corrects. Prints one line per item, then the summary.
+ */
+async function fitCollisions(items: CatalogItem[]): Promise<CatalogItem[]> {
+  const overrides = await readOverrides(COLLISION_OVERRIDES);
+  const results: { id: string; before: Vec3; collision: Collision }[] = [];
+  const fitted: CatalogItem[] = [];
+  for (const item of items) {
+    try {
+      const collision = decide(item.id, await fitModel(join(ROOT, item.model)), item.size, overrides[item.id]);
+      console.log(collision.line);
+      results.push({ id: item.id, before: item.size, collision });
+      fitted.push(withCollision({ ...item, size: collision.size }, collision.collision, 'size'));
+    } catch (error) {
+      // Its model didn't load: it stays one solid box, as an item with no collision boxes is.
+      console.error(`✗ ${item.id} collision boxes skipped: ${error instanceof Error ? error.message : error}`);
+      fitted.push(withCollision(item, undefined, 'size'));
+    }
+  }
+  console.log(summary(results));
+  return fitted;
+}
+
 /** The sources this script builds; the Catalog's other items, such as the placeholder boxes, are built elsewhere. */
 const BUILT_SOURCES = new Set<CatalogItem['source']>(['abo', 'polyhaven', 'gso', 'sketchfab']);
 
@@ -598,8 +625,9 @@ async function build(only?: Set<string>) {
   const items = built.filter((item) => item !== undefined);
 
   // Items from other sources, such as the placeholder boxes, are built elsewhere: keep them.
-  const catalog: Catalog = { version: 1, items: [...items, ...previous.items.filter((item) => !BUILT_SOURCES.has(item.source))] };
-  await writeFile(file, `${JSON.stringify(catalog, null, 2)}\n`);
+  const assembled = [...items, ...previous.items.filter((item) => !BUILT_SOURCES.has(item.source))];
+  const catalog: Catalog = { version: 1, items: await fitCollisions(assembled) };
+  await writeFile(file, toJson(catalog));
   await writeFile(join(CATALOG_DIR, 'CREDITS.md'), creditsMarkdown(catalog));
 
   // Remove the files of items that left the Catalog, such as earlier picks. Text-to-3D's items stay (generated.json, and

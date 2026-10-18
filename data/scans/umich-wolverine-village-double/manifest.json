@@ -10,5 +10,16 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "University of Michigan",
+    "aliases": [
+      "Michigan",
+      "UMich",
+      "U of M",
+      "U-M"
+    ],
+    "hall": "Wolverine Village",
+    "room": "Double"
   }
 }

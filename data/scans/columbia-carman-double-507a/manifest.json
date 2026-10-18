@@ -10,5 +10,13 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "Columbia University",
+    "aliases": [
+      "Columbia"
+    ],
+    "hall": "Carman Hall",
+    "room": "Double, 507A"
   }
 }

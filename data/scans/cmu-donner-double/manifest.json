@@ -10,5 +10,14 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "Carnegie Mellon University",
+    "aliases": [
+      "CMU",
+      "Carnegie Mellon"
+    ],
+    "hall": "Donner House",
+    "room": "Traditional double"
   }
 }

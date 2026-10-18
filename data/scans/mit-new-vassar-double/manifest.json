@@ -10,5 +10,13 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "Massachusetts Institute of Technology",
+    "aliases": [
+      "MIT"
+    ],
+    "hall": "New Vassar",
+    "room": "Double"
   }
 }

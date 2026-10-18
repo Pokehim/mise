@@ -10,5 +10,15 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "University of California, Berkeley",
+    "aliases": [
+      "UC Berkeley",
+      "Berkeley",
+      "Cal"
+    ],
+    "hall": "Blackwell Hall",
+    "room": "Double"
   }
 }

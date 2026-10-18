@@ -10,5 +10,13 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "Stanford University",
+    "aliases": [
+      "Stanford"
+    ],
+    "hall": "Wilbur Hall",
+    "room": "Double"
   }
 }

@@ -10,5 +10,15 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "University of Illinois Urbana-Champaign",
+    "aliases": [
+      "UIUC",
+      "Illinois",
+      "Urbana-Champaign"
+    ],
+    "hall": "Wassaja Hall",
+    "room": "Double, type 2A"
   }
 }

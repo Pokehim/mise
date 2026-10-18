@@ -12,8 +12,9 @@ import { checkFit } from '../shared/fit';
 import { distanceToWall } from '../shared/geometry';
 import { replay } from '../shared/replay';
 import type {
-  Catalog, CatalogItem, Category, Design, Edit, Hex, Opening, RoomSetup, RoomSurfaces, ScanManifest, Vec2, Vec3,
+  Catalog, CatalogItem, Category, Design, Edit, Hex, LibraryEntry, Opening, RoomSetup, RoomSurfaces, ScanManifest, Vec2, Vec3,
 } from '../shared/types';
+import { moveInLayoutId } from '../web/src/plan/library';
 import { wallsFromPolygon } from '../web/src/setup/geometry/walls';
 import { writeJson } from './scan-import';
 
@@ -67,6 +68,24 @@ const LOOKS: Record<string, { wallColor?: Hex; carpet?: string; wood?: string }>
   columbia: { wallColor: '#eceae4', wood: 'oak' },
   umich: { wallColor: '#f0ede6', wood: 'walnut' },
   gatech: { wallColor: '#eeebe5', wood: 'maple' },
+};
+
+/**
+ * Each room in the floor plan library, as "Import from floor plan" finds it: its school's full name
+ * and what students call it, and its hall and room. room.json's own school and hall carry notes
+ * ("substitute for Harvard") that a search mustn't match.
+ */
+const LIBRARY: Record<string, LibraryEntry> = {
+  stanford: { school: 'Stanford University', aliases: ['Stanford'], hall: 'Wilbur Hall', room: 'Double' },
+  berkeley: { school: 'University of California, Berkeley', aliases: ['UC Berkeley', 'Berkeley', 'Cal'], hall: 'Blackwell Hall', room: 'Double' },
+  cmu: { school: 'Carnegie Mellon University', aliases: ['CMU', 'Carnegie Mellon'], hall: 'Donner House', room: 'Traditional double' },
+  uw: { school: 'University of Washington', aliases: ['UW', 'UDub', 'U Dub'], hall: 'Lander Hall', room: 'Double, private bath' },
+  mit: { school: 'Massachusetts Institute of Technology', aliases: ['MIT'], hall: 'New Vassar', room: 'Double' },
+  uiuc: { school: 'University of Illinois Urbana-Champaign', aliases: ['UIUC', 'Illinois', 'Urbana-Champaign'], hall: 'Wassaja Hall', room: 'Double, type 2A' },
+  ucla: { school: 'University of California, Los Angeles', aliases: ['UCLA'], hall: 'Dykstra Hall', room: 'Classic triple' },
+  columbia: { school: 'Columbia University', aliases: ['Columbia'], hall: 'Carman Hall', room: 'Double, 507A' },
+  umich: { school: 'University of Michigan', aliases: ['Michigan', 'UMich', 'U of M', 'U-M'], hall: 'Wolverine Village', room: 'Double' },
+  gatech: { school: 'Georgia Institute of Technology', aliases: ['Georgia Tech', 'GT', 'GaTech'], hall: 'Peterson Hall', room: 'Double, N303' },
 };
 
 const DOOR_HEIGHT = 2.03;
@@ -167,7 +186,7 @@ export function moveInDesign(plan: PlanRoom, catalog: Catalog, at: string): Desi
     });
   }
   return {
-    version: 1, id: `ds_${plan.id.split('-')[0]}`, scanId: plan.id, name: 'Move-in layout',
+    version: 1, id: moveInLayoutId(plan.id), scanId: plan.id, name: 'Move-in layout',
     createdAt: at, updatedAt: at, origin: 'mover', edits,
   };
 }
@@ -269,6 +288,7 @@ async function main() {
     const setup = planSetup(plan, school);
     const manifest: ScanManifest = {
       version: 1, id: plan.id, name: plan.name, mesh: 'room.glb', meshTransform: { position: [0, 0, 0], rotationY: 0 },
+      library: LIBRARY[school],
     };
     const design = moveInDesign(plan, catalog, at);
     const dropped = settleOrDrop(setup, catalog, design);

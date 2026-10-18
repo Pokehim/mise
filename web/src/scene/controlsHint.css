@@ -1,0 +1,23 @@
+/* The Dollhouse view's controls, in its top-left corner until the first drag (ControlsHint). It never catches the pointer. */
+.controls-hint {
+  position: absolute;
+  top: var(--s-3);
+  left: var(--s-3);
+  max-width: calc(100% - 2 * var(--s-3));
+  margin: 0;
+  padding: 3px 8px;
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  color: var(--graphite);
+  font: 400 12px/1.4 var(--font-sans);
+  pointer-events: none;
+  user-select: none;
+  transition: opacity var(--press) ease-out;
+}
+.controls-hint[data-seen] { opacity: 0; }
+.controls-hint .coarse { display: none; }
+@media (pointer: coarse) {
+  .controls-hint .fine { display: none; }
+  .controls-hint .coarse { display: inline; }
+}

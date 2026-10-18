@@ -1,9 +1,11 @@
 import { CameraControls, CameraControlsImpl } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { MathUtils, type PerspectiveCamera, Plane, Raycaster, Spherical, Vector2, Vector3 } from 'three';
+import { createRoot } from 'react-dom/client';
+import { MathUtils, PerspectiveCamera, Plane, Raycaster, Spherical, Vector2, Vector3 } from 'three';
 import type { Vec3 } from '@shared/types';
 import { useEditor } from '../state/store';
+import { ControlsHint, hideControlsHint } from './ControlsHint';
 import { roomBounds } from './floorPlan';
 import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
 import type { Shot } from './shots';
@@ -42,7 +44,9 @@ function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
  * that box, a 45° view is too close to frame the room, so its distance is capped instead.
  *
  * The wheel, a trackpad swipe and a pinch all zoom toward what is under the pointer, which stays
- * under it. Dragging turns the view around the room's center, wherever the zoom has taken it.
+ * under it. Dragging moves the view across the room like a map, keeping the grabbed point under
+ * the pointer. Shift+drag or a right-drag turns it around the room's center, wherever the zoom and
+ * the drags have taken it.
  *
  * Nothing here sets the camera's azimuth from a position (setLookAt does), since that gives an
  * angle within ±180° while the camera's own adds up as it turns: smoothing from one to the other
@@ -91,25 +95,62 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
     void cameraControls.dollyTo(distance, true);
   }, [room, boundary, distance, start, camera]);
 
+  // The controls hint, over the view. Not in a ?shot= view, which is a picture of the room.
+  useEffect(() => {
+    if (start) return;
+    const host = document.createElement('div');
+    element.append(host);
+    const root = createRoot(host);
+    root.render(<ControlsHint />);
+    // After this render: a root can't unmount while React renders.
+    return () => void setTimeout(() => {
+      root.unmount();
+      host.remove();
+    });
+  }, [element, start]);
+
   useEffect(() => {
     const cameraControls = controls.current;
     const raycaster = new Raycaster();
     const pivot = new Vector3();
     const target = new Vector3();
+    const under = new Vector3();
     const center = room.getCenter(new Vector3());
+    const floor = new Plane(UP, -room.min.y);
+    // Where the camera is going, rather than where it is this frame: a move drag aims from it, so
+    // pointer events between two frames, or during the zoom's easing, don't count a move twice.
+    const goal = new PerspectiveCamera();
     let last = { time: -Infinity, x: 0, y: 0 };
-    let drag: { pointerId: number; x: number; y: number } | null = null;
+    let drag: {
+      pointerId: number; x: number; y: number; downX: number; downY: number;
+      // A move drag holds the grabbed point on the plane through it; a turn drag has none.
+      grabbed: { point: Vector3; plane: Plane } | null; turn: boolean;
+    } | null = null;
 
-    // What the pointer is on: the Scan or a Piece, else the floor, else (above the horizon) the target.
-    const aimAt = (clientX: number, clientY: number) => {
+    const aimFrom = (clientX: number, clientY: number, from = camera) => {
       const { left, top, width, height } = gl.domElement.getBoundingClientRect();
-      raycaster.setFromCamera(new Vector2(((clientX - left) / width) * 2 - 1, -((clientY - top) / height) * 2 + 1), camera);
+      raycaster.setFromCamera(new Vector2(((clientX - left) / width) * 2 - 1, -((clientY - top) / height) * 2 + 1), from);
+    };
+    const toGoal = () => {
+      goal.copy(camera as PerspectiveCamera, false);
+      cameraControls.getPosition(goal.position, true);
+      goal.lookAt(cameraControls.getTarget(target, true));
+      goal.updateMatrixWorld();
+      return goal;
+    };
+    // What the ray is on: the Scan or a Piece, else the floor.
+    const hitOf = () => {
       const supports = [scene.getObjectByName('scan'), scene.getObjectByName('pieces')].filter((object) => !!object);
-      const hit = raycaster.intersectObjects(supports, true).find(isDrawn);
-      if (hit) pivot.copy(hit.point);
-      else if (!raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -room.min.y), pivot)) {
-        cameraControls.getTarget(pivot, true);
-      }
+      return raycaster.intersectObjects(supports, true).find(isDrawn)?.point
+        ?? raycaster.ray.intersectPlane(floor, new Vector3());
+    };
+
+    // What the pointer is on, else (above the horizon) the target.
+    const aimAt = (clientX: number, clientY: number) => {
+      aimFrom(clientX, clientY);
+      const hit = hitOf();
+      if (hit) pivot.copy(hit);
+      else cameraControls.getTarget(pivot, true);
     };
 
     // The zoom scales the camera's distance, and its target about the point under the pointer: the
@@ -130,19 +171,51 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       void cameraControls.dollyTo(zoomed, true);
     };
 
-    // A drag turns the camera and its target together about the vertical line through the room's
-    // center, so the camera circles the room even when zoomed in on a corner of it. Tilting stays
-    // about the target. One pointer only: two fingers pinch and pan in camera-controls.
+    const endDrag = () => {
+      drag = null;
+      element.dataset.dollhouse = 'idle';
+    };
+
+    // A drag moves the camera and its target together across the room, so the grabbed point, on
+    // the Scan, a Piece or the floor, stays under the pointer: the target goes as far as the point
+    // under the pointer would have, the other way. It holds that point's height, and from above
+    // the horizon there is nothing to grab.
+    //
+    // A turn drag turns the camera and its target together about the vertical line through the
+    // room's center, so the camera circles the room even when zoomed in on a corner of it. Tilting
+    // stays about the target.
+    //
+    // One pointer only: two fingers pinch and turn in camera-controls.
     const onPointerDown = (event: PointerEvent) => {
       // A second finger isn't primary, and hands the gesture over.
-      drag = event.isPrimary && event.button === 0 && cameraControls.enabled
-        ? { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
-        : null;
+      const turn = event.button === 2 || (event.button === 0 && event.shiftKey);
+      if (!event.isPrimary || !(turn || event.button === 0) || !cameraControls.enabled) return endDrag();
+      const { clientX: x, clientY: y } = event;
+      let grabbed = null;
+      if (!turn) {
+        aimFrom(x, y, toGoal());
+        // Not above the camera, where the ray from it would never meet that point's level again.
+        const point = hitOf();
+        if (point && point.y < goal.position.y - 0.1) grabbed = { point, plane: new Plane(UP, -point.y) };
+      }
+      drag = { pointerId: event.pointerId, x, y, downX: x, downY: y, grabbed, turn };
+      element.dataset.dollhouse = 'moving';
     };
     const onPointerMove = (event: PointerEvent) => {
       if (event.pointerId !== drag?.pointerId) return;
       // A Piece drag can start on this same press, and turns the controls off.
-      if (!cameraControls.enabled) return void (drag = null);
+      if (!cameraControls.enabled) return endDrag();
+      if (Math.hypot(event.clientX - drag.downX, event.clientY - drag.downY) > CLICK_TOLERANCE_PX) hideControlsHint();
+      if (!drag.turn) {
+        const { grabbed } = drag;
+        if (!grabbed) return;
+        aimFrom(event.clientX, event.clientY, toGoal());
+        if (!raycaster.ray.intersectPlane(grabbed.plane, under)) return;
+        // The boundary stops the target, and from there the grabbed point slips.
+        cameraControls.getTarget(target, true).add(grabbed.point).sub(under);
+        void cameraControls.moveTo(target.x, target.y, target.z, false);
+        return;
+      }
       const { height } = gl.domElement.getBoundingClientRect();
       // As camera-controls turns: a drag the view's height long is a full turn.
       const azimuth = (-2 * Math.PI * (event.clientX - drag.x)) / height;
@@ -153,17 +226,24 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       void cameraControls.rotate(azimuth, polar, true);
     };
     const onPointerUp = (event: PointerEvent) => {
-      if (event.pointerId === drag?.pointerId) drag = null;
+      if (event.pointerId === drag?.pointerId) endDrag();
     };
+    // The right button turns the view, so it opens no menu.
+    const onContextMenu = (event: MouseEvent) => event.preventDefault();
+
+    element.dataset.dollhouse = 'idle';
 
     element.addEventListener('wheel', onWheel, { passive: false });
     element.addEventListener('pointerdown', onPointerDown);
+    element.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     window.addEventListener('pointercancel', onPointerUp);
     return () => {
       element.removeEventListener('wheel', onWheel);
       element.removeEventListener('pointerdown', onPointerDown);
+      element.removeEventListener('contextmenu', onContextMenu);
+      delete element.dataset.dollhouse;
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);
@@ -178,11 +258,13 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       maxDistance={distance * 2}
       maxPolarAngle={Math.PI * 0.45}
       smoothTime={SMOOTH_TIME}
-      // The wheel and a one-pointer drag are handled above; a touch screen's pinch still zooms
-      // toward the fingers here.
+      // The wheel and one-pointer drags are handled above; on a touch screen, two fingers still
+      // pinch toward the fingers here, and turn the view, since one finger now moves it.
       mouseButtons-wheel={CameraControlsImpl.ACTION.NONE}
       mouseButtons-left={CameraControlsImpl.ACTION.NONE}
+      mouseButtons-right={CameraControlsImpl.ACTION.NONE}
       touches-one={CameraControlsImpl.ACTION.NONE}
+      touches-two={CameraControlsImpl.ACTION.TOUCH_DOLLY_ROTATE}
       dollyToCursor
     />
   );

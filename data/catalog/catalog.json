@@ -204,7 +204,7 @@
     {
       "id": "B07TKXBZZL",
       "source": "abo",
-      "title": "AmazonBasics Memory Foam Filled Bean Bag Chair with Microfiber Cover - 4', Blue",
+      "title": "AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 4', Blue",
       "brand": "AmazonBasics",
       "category": "chair",
       "mount": "floor",
@@ -653,7 +653,7 @@
       "mount": "floor",
       "size": [
         1.393,
-        1.29,
+        1.288,
         1.968
       ],
       "model": "/data/catalog/models/B07SQWPC7Z.glb",
@@ -679,8 +679,8 @@
       "category": "sofa",
       "mount": "floor",
       "size": [
-        1.43,
-        0.898,
+        1.429,
+        0.897,
         0.868
       ],
       "model": "/data/catalog/models/B07P6JVMJL.glb",
@@ -1342,6 +1342,88 @@
       "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
     },
     {
+      "id": "B084HV7BC3",
+      "source": "abo",
+      "title": "Rivet Modern Oval Hanging Mirror, 39\"H, Black",
+      "brand": "Rivet",
+      "category": "mirror",
+      "mount": "wall",
+      "size": [
+        0.222,
+        0.991,
+        0.032
+      ],
+      "model": "/data/catalog/models/B084HV7BC3.glb",
+      "thumbnail": "/data/catalog/thumbs/B084HV7BC3.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Glass"
+      ],
+      "styleTags": [
+        "Oblong Oval"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "https://www.amazon.com/dp/B084HV7BC3",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B084HTZ8PW",
+      "source": "abo",
+      "title": "Rivet Modern Round Hanging Mirror with Shelf, 18\" Diameter, Black",
+      "brand": "Rivet",
+      "category": "mirror",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.457,
+        0.133
+      ],
+      "model": "/data/catalog/models/B084HTZ8PW.glb",
+      "thumbnail": "/data/catalog/thumbs/B084HTZ8PW.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Round Hanging"
+      ],
+      "priceEstimateUsd": 50,
+      "url": "https://www.amazon.com/dp/B084HTZ8PW",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B073WGSN2Q",
+      "source": "abo",
+      "title": "Stone & Beam Modern Arc Metal Frame Hanging Wall Mirror Decor, 46.25 Inch Height, Silver Finish",
+      "brand": "Stone & Beam",
+      "category": "mirror",
+      "mount": "wall",
+      "size": [
+        0.464,
+        1.175,
+        0.025
+      ],
+      "model": "/data/catalog/models/B073WGSN2Q.glb",
+      "thumbnail": "/data/catalog/thumbs/B073WGSN2Q.jpg",
+      "colors": [
+        "Glass"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B073WGSN2Q",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
       "id": "B07PSZHDMW",
       "source": "abo",
       "title": "AmazonBasics Modern 5-Tier Ladder Bookshelf Organizer with Solid Rubber Wood Frame, Walnut",
@@ -1607,6 +1689,2090 @@
       "priceEstimateUsd": 25,
       "url": "https://www.amazon.com/dp/B07MBFDS2R",
       "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07TN1ZSX8",
+      "source": "abo",
+      "title": "AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 3', Gray",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.918,
+        0.605,
+        0.913
+      ],
+      "model": "/data/catalog/models/B07TN1ZSX8.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TN1ZSX8.jpg",
+      "colors": [
+        "Gray"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Casual"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B07TN1ZSX8",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07TP4SSTZ",
+      "source": "abo",
+      "title": "AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 5', Pink",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        1.524,
+        0.877,
+        1.523
+      ],
+      "model": "/data/catalog/models/B07TP4SSTZ.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TP4SSTZ.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Casual"
+      ],
+      "priceEstimateUsd": 200,
+      "url": "https://www.amazon.com/dp/B07TP4SSTZ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HJ66BLL",
+      "source": "abo",
+      "title": "AmazonBasics Gaming/Racing Style Office Chair with Removable Headrest and High Back Cushion - Blue",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.696,
+        1.293,
+        0.651
+      ],
+      "model": "/data/catalog/models/B07HJ66BLL.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HJ66BLL.jpg",
+      "colors": [
+        "Blue"
+      ],
+      "materials": [
+        "PVC",
+        "Nylon",
+        "Metal"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "https://www.amazon.com/dp/B07HJ66BLL",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075X33QXP",
+      "source": "abo",
+      "title": "Rivet Modern Upholstered Cube Ottoman Pouf, 20\"W, Bear",
+      "brand": "Rivet",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.521,
+        0.453,
+        0.512
+      ],
+      "model": "/data/catalog/models/B075X33QXP.glb",
+      "thumbnail": "/data/catalog/thumbs/B075X33QXP.jpg",
+      "colors": [
+        "Bear"
+      ],
+      "colorHex": "#867d70",
+      "materials": [],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B075X33QXP",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B0876PDMJR",
+      "source": "abo",
+      "title": "AmazonBasics 40\" Multipurpose Foldable Computer Study Desk - Black",
+      "brand": "AmazonBasics",
+      "category": "desk",
+      "mount": "floor",
+      "size": [
+        1.016,
+        0.761,
+        0.508
+      ],
+      "model": "/data/catalog/models/B0876PDMJR.glb",
+      "thumbnail": "/data/catalog/thumbs/B0876PDMJR.jpg",
+      "colors": [
+        "Black, Dark Boad"
+      ],
+      "materials": [
+        "Metal",
+        "Wood"
+      ],
+      "styleTags": [
+        "Easy assembly"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://www.amazon.com/dp/B0876PDMJR",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QX2BYDH",
+      "source": "abo",
+      "title": "AmazonBasics Gaming Computer Desk with Storage for Controller, Headphone & Speaker - Black",
+      "brand": "AmazonBasics",
+      "category": "desk",
+      "mount": "floor",
+      "size": [
+        1.29,
+        0.88,
+        0.58
+      ],
+      "model": "/data/catalog/models/B07QX2BYDH.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QX2BYDH.jpg",
+      "colors": [
+        "Black"
+      ],
+      "colorHex": "#3d3d3e",
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Gaming computer desk with storage"
+      ],
+      "priceEstimateUsd": 130,
+      "url": "https://www.amazon.com/dp/B07QX2BYDH",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSJDN75",
+      "source": "abo",
+      "title": "Rivet Modern Computer Desk, 30\"H, Walnut and White",
+      "brand": "Rivet",
+      "category": "desk",
+      "mount": "floor",
+      "size": [
+        1.069,
+        0.761,
+        0.409
+      ],
+      "model": "/data/catalog/models/B07HSJDN75.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSJDN75.jpg",
+      "colors": [
+        "White"
+      ],
+      "colorHex": "#c5c0b7",
+      "materials": [
+        "Engineered Wood"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 160,
+      "url": "https://www.amazon.com/dp/B07HSJDN75",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSM6C1J",
+      "source": "abo",
+      "title": "Rivet Two-Toned Modern Nightstand 15.75\"W, Natural & White",
+      "brand": "Rivet",
+      "category": "nightstand",
+      "mount": "floor",
+      "size": [
+        0.4,
+        0.601,
+        0.316
+      ],
+      "model": "/data/catalog/models/B07HSM6C1J.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSM6C1J.jpg",
+      "colors": [
+        "White"
+      ],
+      "colorHex": "#c89557",
+      "materials": [
+        "Wood",
+        "Oak",
+        "Iron"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B07HSM6C1J",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07DBF1R71",
+      "source": "abo",
+      "title": "Ravenna Home Priscilla Modern X-Frame End Table Nightstand, 18.9\"W, Black",
+      "brand": "Ravenna Home",
+      "category": "nightstand",
+      "mount": "floor",
+      "size": [
+        0.479,
+        0.623,
+        0.402
+      ],
+      "model": "/data/catalog/models/B07DBF1R71.glb",
+      "thumbnail": "/data/catalog/thumbs/B07DBF1R71.jpg",
+      "colors": [
+        "Black"
+      ],
+      "colorHex": "#17161a",
+      "materials": [
+        "Pine"
+      ],
+      "styleTags": [
+        "Traditional"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07DBF1R71",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07NRQVY26",
+      "source": "abo",
+      "title": "AmazonBasics Classic 2-Drawer Wood Nightstand End Table - Black Oak",
+      "brand": "AmazonBasics",
+      "category": "nightstand",
+      "mount": "floor",
+      "size": [
+        0.589,
+        0.711,
+        0.408
+      ],
+      "model": "/data/catalog/models/B07NRQVY26.glb",
+      "thumbnail": "/data/catalog/thumbs/B07NRQVY26.jpg",
+      "colors": [
+        "Black Oak"
+      ],
+      "colorHex": "#262324",
+      "materials": [
+        "Medium-density Fibreboard",
+        "Wood",
+        "Oak"
+      ],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "https://www.amazon.com/dp/B07NRQVY26",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07RGR6XYT",
+      "source": "abo",
+      "title": "Max & Finn Twin Floor Bunk Bed, Gray",
+      "brand": "Max & Finn",
+      "category": "bed",
+      "mount": "floor",
+      "size": [
+        2.013,
+        1.206,
+        1.105
+      ],
+      "model": "/data/catalog/models/B07RGR6XYT.glb",
+      "thumbnail": "/data/catalog/thumbs/B07RGR6XYT.jpg",
+      "colors": [
+        "Grey"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 330,
+      "url": "https://www.amazon.com/dp/B07RGR6XYT",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075XZN7NV",
+      "source": "abo",
+      "title": "AmazonBasics Faux Leather Upholstered Platform Bed Frame with Wooden Slats, Full",
+      "brand": "AmazonBasics",
+      "category": "bed",
+      "mount": "floor",
+      "size": [
+        1.469,
+        1.047,
+        2.152
+      ],
+      "model": "/data/catalog/models/B075XZN7NV.glb",
+      "thumbnail": "/data/catalog/thumbs/B075XZN7NV.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Faux leather",
+        "Wood"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 230,
+      "url": "https://www.amazon.com/dp/B075XZN7NV",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07MJL5SZB",
+      "source": "abo",
+      "title": "Ravenna Home Westcott Tufted Loveseat Sofa Couch, 60\"W, Blue Velvet",
+      "brand": "Ravenna Home",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.558,
+        0.826,
+        0.834
+      ],
+      "model": "/data/catalog/models/B07MJL5SZB.glb",
+      "thumbnail": "/data/catalog/thumbs/B07MJL5SZB.jpg",
+      "colors": [
+        "Blue"
+      ],
+      "colorHex": "#11304e",
+      "materials": [
+        "Velvet"
+      ],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 420,
+      "url": "https://www.amazon.com/dp/B07MJL5SZB",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HZ8N5DD",
+      "source": "abo",
+      "title": "Stone & Beam Kristin Chair-and-a-Half Upholstered Sleeper Sofa, 55.5\"W, Navy",
+      "brand": "Stone & Beam",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.405,
+        1.003,
+        0.938
+      ],
+      "model": "/data/catalog/models/B07HZ8N5DD.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HZ8N5DD.jpg",
+      "colors": [
+        "Navy"
+      ],
+      "colorHex": "#2b2f38",
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 650,
+      "url": "https://www.amazon.com/dp/B07HZ8N5DD",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07PXFVNXR",
+      "source": "abo",
+      "title": "Ameriwood Home Classic 5 Drawer Dresser, White",
+      "brand": "Ameriwood Home",
+      "category": "dresser",
+      "mount": "floor",
+      "size": [
+        0.704,
+        1.255,
+        0.399
+      ],
+      "model": "/data/catalog/models/B07PXFVNXR.glb",
+      "thumbnail": "/data/catalog/thumbs/B07PXFVNXR.jpg",
+      "colors": [
+        "White"
+      ],
+      "colorHex": "#d5d1d0",
+      "materials": [
+        "Engineered Wood"
+      ],
+      "styleTags": [
+        "5 Drawer Dresser"
+      ],
+      "priceEstimateUsd": 130,
+      "url": "https://www.amazon.com/dp/B07PXFVNXR",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B084ZB8L8W",
+      "source": "abo",
+      "title": "Stone & Beam Rustic 3-Drawer Bedroom Dresser, 31.9\"W, Oak Finish",
+      "brand": "Stone & Beam",
+      "category": "dresser",
+      "mount": "floor",
+      "size": [
+        0.804,
+        0.804,
+        0.427
+      ],
+      "model": "/data/catalog/models/B084ZB8L8W.glb",
+      "thumbnail": "/data/catalog/thumbs/B084ZB8L8W.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "colorHex": "#a17942",
+      "materials": [
+        "Medium-Density Fibreboard"
+      ],
+      "styleTags": [
+        "Rustic"
+      ],
+      "priceEstimateUsd": 250,
+      "url": "https://www.amazon.com/dp/B084ZB8L8W",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSDP2CP",
+      "source": "abo",
+      "title": "Rivet Modern Chest of Drawers with Diamond Pattern 17.3\"W, Walnut & Gray Wash",
+      "brand": "Rivet",
+      "category": "dresser",
+      "mount": "floor",
+      "size": [
+        0.967,
+        0.847,
+        0.446
+      ],
+      "model": "/data/catalog/models/B07HSDP2CP.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSDP2CP.jpg",
+      "colors": [
+        "Gray"
+      ],
+      "colorHex": "#393836",
+      "materials": [
+        "Walnut"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 300,
+      "url": "https://www.amazon.com/dp/B07HSDP2CP",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07H8V7P3H",
+      "source": "abo",
+      "title": "Movian Moselle 2-Door Wardrobe, 100 x 60 x 196 cm, Light Brown Oak-Effect/White",
+      "brand": "Movian",
+      "category": "wardrobe",
+      "mount": "floor",
+      "size": [
+        1,
+        1.96,
+        0.6
+      ],
+      "model": "/data/catalog/models/B07H8V7P3H.glb",
+      "thumbnail": "/data/catalog/thumbs/B07H8V7P3H.jpg",
+      "colors": [
+        "Oak Sonoma/Alpine White"
+      ],
+      "colorHex": "#cecbcc",
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "2-Door Wardrobe"
+      ],
+      "priceEstimateUsd": 220,
+      "url": "https://www.amazon.com/dp/B07H8V7P3H",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07TWQSZL4",
+      "source": "abo",
+      "title": "AmazonBasics Leaning Garment Rack, Silver",
+      "brand": "AmazonBasics",
+      "category": "wardrobe",
+      "mount": "floor",
+      "size": [
+        0.609,
+        1.574,
+        0.349
+      ],
+      "model": "/data/catalog/models/B07TWQSZL4.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TWQSZL4.jpg",
+      "colors": [
+        "Silver"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 60,
+      "url": "https://www.amazon.com/dp/B07TWQSZL4",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSHPJQQ",
+      "source": "abo",
+      "title": "Rivet Modern Color-Block Area Rug, 5 x 8 Foot, Round, Multicolor",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.514,
+        0.015,
+        1.514
+      ],
+      "model": "/data/catalog/models/B07HSHPJQQ.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSHPJQQ.jpg",
+      "colors": [],
+      "materials": [
+        "Nylon"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07HSHPJQQ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QGG5LLM",
+      "source": "abo",
+      "title": "Ravenna Home Floral Medallion Tiled Rug, 5'3\" Round, Cerulean Blue with Ivory",
+      "brand": "Ravenna Home",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.593,
+        0.012,
+        1.593
+      ],
+      "model": "/data/catalog/models/B07QGG5LLM.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QGG5LLM.jpg",
+      "colors": [
+        "Ivory/Blue"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07QGG5LLM",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QGG5NFC",
+      "source": "abo",
+      "title": "Ravenna Home Round Vintage Damask Patterned Rug, 5'3\" Round, Ivory on Warm Grey",
+      "brand": "Ravenna Home",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.593,
+        0.012,
+        1.593
+      ],
+      "model": "/data/catalog/models/B07QGG5NFC.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QGG5NFC.jpg",
+      "colors": [
+        "Grey"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Vintage"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07QGG5NFC",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07B4ZFF2T",
+      "source": "abo",
+      "title": "Rivet Contemporary Chevron Runner Hallway Rug, 7' 6\" x 2' 3\", Grey",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.286,
+        0.008,
+        0.686
+      ],
+      "model": "/data/catalog/models/B07B4ZFF2T.glb",
+      "thumbnail": "/data/catalog/thumbs/B07B4ZFF2T.jpg",
+      "colors": [
+        "Grey"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Grey"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07B4ZFF2T",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSLYW92",
+      "source": "abo",
+      "title": "Rivet Wool Runner Rug, 2' 6\" x 8', Black, White",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.476,
+        0.01,
+        0.807
+      ],
+      "model": "/data/catalog/models/B07HSLYW92.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSLYW92.jpg",
+      "colors": [],
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07HSLYW92",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QBS4RKK",
+      "source": "abo",
+      "title": "Amazon Basics Modern Plush High-Pile Shag Area Rug - 4x6 (3'11\" x 5'3\"), Grey",
+      "brand": "Amazon Basics",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.601,
+        0.025,
+        1.198
+      ],
+      "model": "/data/catalog/models/B07QBS4RKK.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QBS4RKK.jpg",
+      "colors": [
+        "Grey"
+      ],
+      "materials": [
+        "Polypropylene"
+      ],
+      "styleTags": [
+        "High Pile Solid"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07QBS4RKK",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B071W2XLQJ",
+      "source": "abo",
+      "title": "Rivet Shaggy Short Rug, 5' x 8', Taupe",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.469,
+        0.024,
+        1.539
+      ],
+      "model": "/data/catalog/models/B071W2XLQJ.glb",
+      "thumbnail": "/data/catalog/thumbs/B071W2XLQJ.jpg",
+      "colors": [
+        "Taupe"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B071W2XLQJ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B071LQHW1P",
+      "source": "abo",
+      "title": "Rivet Textured Zen Hand-Woven Jute Area Rug, 5 x 7 Foot, Champagne",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.144,
+        0.013,
+        1.509
+      ],
+      "model": "/data/catalog/models/B071LQHW1P.glb",
+      "thumbnail": "/data/catalog/thumbs/B071LQHW1P.jpg",
+      "colors": [
+        "Champagne"
+      ],
+      "materials": [
+        "Jute"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B071LQHW1P",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075TZF1TT",
+      "source": "abo",
+      "title": "Stone & Beam Contemporary Rikki Border Jute Rug, 5' x 8' Oval, White",
+      "brand": "Stone & Beam",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.432,
+        0.006,
+        1.521
+      ],
+      "model": "/data/catalog/models/B075TZF1TT.glb",
+      "thumbnail": "/data/catalog/thumbs/B075TZF1TT.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [
+        "Jute"
+      ],
+      "styleTags": [
+        "Contemporary"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B075TZF1TT",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07B51XCGS",
+      "source": "abo",
+      "title": "Stone & Beam Casual Geometric Kilim Cotton Area Rug, 4 x 6 Foot, Flatweave, Blue, Orange, Ivory",
+      "brand": "Stone & Beam",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.825,
+        0.009,
+        1.221
+      ],
+      "model": "/data/catalog/models/B07B51XCGS.glb",
+      "thumbnail": "/data/catalog/thumbs/B07B51XCGS.jpg",
+      "colors": [
+        "Blue, Orange, Ivory"
+      ],
+      "materials": [
+        "Cotton"
+      ],
+      "styleTags": [
+        "Casual"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07B51XCGS",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075LFMQM6",
+      "source": "abo",
+      "title": "Rivet Arrow Wool Area Rug",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.219,
+        0.01,
+        1.829
+      ],
+      "model": "/data/catalog/models/B075LFMQM6.glb",
+      "thumbnail": "/data/catalog/thumbs/B075LFMQM6.jpg",
+      "colors": [
+        "Ivory",
+        "Charcoal"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "https://www.amazon.com/dp/B075LFMQM6",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075LDWMZ8",
+      "source": "abo",
+      "title": "Rivet Woven Bordered Sisal Rug, 8' x 10', Natural",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.439,
+        0.01,
+        3.048
+      ],
+      "model": "/data/catalog/models/B075LDWMZ8.glb",
+      "thumbnail": "/data/catalog/thumbs/B075LDWMZ8.jpg",
+      "colors": [
+        "Natural",
+        "Black"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 300,
+      "url": "https://www.amazon.com/dp/B075LDWMZ8",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075LB2WD8",
+      "source": "abo",
+      "title": "Rivet Motion Modern Grid Pop Runner Rug",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.686,
+        0.01,
+        2.438
+      ],
+      "model": "/data/catalog/models/B075LB2WD8.glb",
+      "thumbnail": "/data/catalog/thumbs/B075LB2WD8.jpg",
+      "colors": [
+        "Taupe",
+        "Grey"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B075LB2WD8",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075JQ8VH6",
+      "source": "abo",
+      "title": "Stone & Beam Contemporary Striped Rug",
+      "brand": "Stone & Beam",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.439,
+        0.01,
+        3.048
+      ],
+      "model": "/data/catalog/models/B075JQ8VH6.glb",
+      "thumbnail": "/data/catalog/thumbs/B075JQ8VH6.jpg",
+      "colors": [
+        "Multicolor"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Contemporary"
+      ],
+      "priceEstimateUsd": 400,
+      "url": "https://www.amazon.com/dp/B075JQ8VH6",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07MF1RNW1",
+      "source": "abo",
+      "title": "Ravenna Home Classic Straight Banker's Task Desk Lamp with LED Light Bulb, 16\"H, Brushed Nickel",
+      "brand": "Ravenna Home",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.269,
+        0.404,
+        0.227
+      ],
+      "model": "/data/catalog/models/B07MF1RNW1.glb",
+      "thumbnail": "/data/catalog/thumbs/B07MF1RNW1.jpg",
+      "colors": [
+        "Brushed Nickel"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07MF1RNW1",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07MBFDJMP",
+      "source": "abo",
+      "title": "Ravenna Home Curvy Table Desk Lamp with LED Light Bulb, 22.5\"H, Brushed Nickel",
+      "brand": "Ravenna Home",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.365,
+        0.571,
+        0.212
+      ],
+      "model": "/data/catalog/models/B07MBFDJMP.glb",
+      "thumbnail": "/data/catalog/thumbs/B07MBFDJMP.jpg",
+      "colors": [
+        "Brushed Nickel"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07MBFDJMP",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07MBFDWY5",
+      "source": "abo",
+      "title": "Ravenna Home Floor Lamp with Shelves, LED Light Bulb included, 62.75\"H, Black",
+      "brand": "Ravenna Home",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.279,
+        1.594,
+        0.279
+      ],
+      "model": "/data/catalog/models/B07MBFDWY5.glb",
+      "thumbnail": "/data/catalog/thumbs/B07MBFDWY5.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Metal",
+        "Brass",
+        "Linen",
+        "Faux Wood"
+      ],
+      "styleTags": [
+        "Antique"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07MBFDWY5",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07DBCN3KB",
+      "source": "abo",
+      "title": "Ravenna Home Torchiere Living Room Standing Floor Lamp with LED Light Bulbs - 69.75 Inches, Dark Bronze with Frosted Glass Shade",
+      "brand": "Ravenna Home",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.406,
+        1.797,
+        0.406
+      ],
+      "model": "/data/catalog/models/B07DBCN3KB.glb",
+      "thumbnail": "/data/catalog/thumbs/B07DBCN3KB.jpg",
+      "colors": [
+        "Dark Bronze"
+      ],
+      "materials": [
+        "Glass"
+      ],
+      "styleTags": [
+        "Without Reading Arm"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07DBCN3KB",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B082XMFBY2",
+      "source": "abo",
+      "title": "Rivet Globe Stick Floor Lamp, 69\"H, Black Marble",
+      "brand": "Rivet",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.229,
+        1.747,
+        0.229
+      ],
+      "model": "/data/catalog/models/B082XMFBY2.glb",
+      "thumbnail": "/data/catalog/thumbs/B082XMFBY2.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Acrylic"
+      ],
+      "styleTags": [
+        "Floor"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B082XMFBY2",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HK3PNSK",
+      "source": "abo",
+      "title": "Rivet Contemporary Palm Tree Neon Table Lamp, 11.75\"H, White AF44228",
+      "brand": "Rivet",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.168,
+        0.317,
+        0.088
+      ],
+      "model": "/data/catalog/models/B07HK3PNSK.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HK3PNSK.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Pineapple"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07HK3PNSK",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07PMK78R8",
+      "source": "abo",
+      "title": "AmazonBasics Modern 5-Tier Ladder Bookshelf Organizer with Solid Rubber Wood Frame, Espresso",
+      "brand": "AmazonBasics",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.6,
+        1.77,
+        0.35
+      ],
+      "model": "/data/catalog/models/B07PMK78R8.glb",
+      "thumbnail": "/data/catalog/thumbs/B07PMK78R8.jpg",
+      "colors": [
+        "Espresso"
+      ],
+      "colorHex": "#361e19",
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07PMK78R8",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07L9BVBCJ",
+      "source": "abo",
+      "title": "AmazonBasics 2-Tier Stackable Storage Shelf",
+      "brand": "AmazonBasics",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.589,
+        0.564,
+        0.338
+      ],
+      "model": "/data/catalog/models/B07L9BVBCJ.glb",
+      "thumbnail": "/data/catalog/thumbs/B07L9BVBCJ.jpg",
+      "colors": [],
+      "materials": [
+        "Engineered Wood"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 40,
+      "url": "https://www.amazon.com/dp/B07L9BVBCJ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07GP6DMDF",
+      "source": "abo",
+      "title": "Civet Home Bookshelf, Honey",
+      "brand": "Civet Home",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.66,
+        1.067,
+        0.305
+      ],
+      "model": "/data/catalog/models/B07GP6DMDF.glb",
+      "thumbnail": "/data/catalog/thumbs/B07GP6DMDF.jpg",
+      "colors": [
+        "Honey"
+      ],
+      "colorHex": "#d29458",
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 70,
+      "url": "https://www.amazon.com/dp/B07GP6DMDF",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B082JGV1YM",
+      "source": "abo",
+      "title": "Stone & Beam 5-Shelf Bookcase, 75\"H, Weathered Oak Finish",
+      "brand": "Stone & Beam",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.805,
+        1.905,
+        0.335
+      ],
+      "model": "/data/catalog/models/B082JGV1YM.glb",
+      "thumbnail": "/data/catalog/thumbs/B082JGV1YM.jpg",
+      "colors": [
+        "Weathered Oak"
+      ],
+      "materials": [
+        "Pine",
+        "MDF",
+        "Pine Veneer"
+      ],
+      "styleTags": [
+        "Firm"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "https://www.amazon.com/dp/B082JGV1YM",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B0735CKD6R",
+      "source": "abo",
+      "title": "AmazonBasics 4 Cube Grid Wire Storage Shelves, Black",
+      "brand": "AmazonBasics",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.711,
+        0.711,
+        0.356
+      ],
+      "model": "/data/catalog/models/B0735CKD6R.glb",
+      "thumbnail": "/data/catalog/thumbs/B0735CKD6R.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Alloy Steel"
+      ],
+      "styleTags": [
+        "Four Cube"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://www.amazon.com/dp/B0735CKD6R",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B0735CKFJK",
+      "source": "abo",
+      "title": "AmazonBasics 6 Cube Grid Wire Storage Shelves, White",
+      "brand": "AmazonBasics",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.711,
+        1.067,
+        0.356
+      ],
+      "model": "/data/catalog/models/B0735CKFJK.glb",
+      "thumbnail": "/data/catalog/thumbs/B0735CKFJK.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [
+        "Plastic",
+        "Alloy Steel"
+      ],
+      "styleTags": [
+        "Six Cube"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://www.amazon.com/dp/B0735CKFJK",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07B8MSPDC",
+      "source": "abo",
+      "title": "Stone & Beam Modern Rustic Farmhouse Wood Slat Storage Bins - Set of 3, Natural",
+      "brand": "Stone & Beam",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        1.064,
+        0.311,
+        0.393
+      ],
+      "model": "/data/catalog/models/B07B8MSPDC.glb",
+      "thumbnail": "/data/catalog/thumbs/B07B8MSPDC.jpg",
+      "colors": [
+        "Natural"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Modern",
+        "Rustic",
+        "Farmhouse"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://www.amazon.com/dp/B07B8MSPDC",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B078JM9XSJ",
+      "source": "abo",
+      "title": "Stone & Beam Modern Farmhouse Wood and Galvanized Metal Decor Storage Bin Basket - 15.75 Inch, White Washed",
+      "brand": "Stone & Beam",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.545,
+        0.247,
+        0.414
+      ],
+      "model": "/data/catalog/models/B078JM9XSJ.glb",
+      "thumbnail": "/data/catalog/thumbs/B078JM9XSJ.jpg",
+      "colors": [],
+      "materials": [],
+      "styleTags": [
+        "Modern",
+        "Farmhouse"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.amazon.com/dp/B078JM9XSJ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSMVFKY",
+      "source": "abo",
+      "title": "Rivet Modern Braided Stripe Round Basket Set - Set of 3, Natural",
+      "brand": "Rivet",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.799,
+        0.396,
+        0.363
+      ],
+      "model": "/data/catalog/models/B07HSMVFKY.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSMVFKY.jpg",
+      "colors": [],
+      "materials": [],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 50,
+      "url": "https://www.amazon.com/dp/B07HSMVFKY",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07B8CX5W5",
+      "source": "abo",
+      "title": "Rivet Modern Metal Kitchen Rolling Bar Cart with Wheels, 30\" Inch Height, Gold",
+      "brand": "Rivet",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.483,
+        0.761,
+        0.332
+      ],
+      "model": "/data/catalog/models/B07B8CX5W5.glb",
+      "thumbnail": "/data/catalog/thumbs/B07B8CX5W5.jpg",
+      "colors": [
+        "Gold"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B07B8CX5W5",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07M7NSYD3",
+      "source": "abo",
+      "title": "Ravenna Home 2-Drawer Kitchen Cart, 36.5\"H, White Wood",
+      "brand": "Ravenna Home",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.762,
+        0.914,
+        0.559
+      ],
+      "model": "/data/catalog/models/B07M7NSYD3.glb",
+      "thumbnail": "/data/catalog/thumbs/B07M7NSYD3.jpg",
+      "colors": [],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 150,
+      "url": "https://www.amazon.com/dp/B07M7NSYD3",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07M7MMPXB",
+      "source": "abo",
+      "title": "Ravenna Home Vegan Leather Classic Tufted Storage Ottoman - 24 Inch, Black",
+      "brand": "Ravenna Home",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.636,
+        0.442,
+        0.636
+      ],
+      "model": "/data/catalog/models/B07M7MMPXB.glb",
+      "thumbnail": "/data/catalog/thumbs/B07M7MMPXB.jpg",
+      "colors": [
+        "Black"
+      ],
+      "colorHex": "#353434",
+      "materials": [],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.amazon.com/dp/B07M7MMPXB",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07C8WMTZM",
+      "source": "abo",
+      "title": "Rivet Glam Soft Faux Fur Throw Pillow - 20 x 20 Inch, Black",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.533,
+        0.523,
+        0.21
+      ],
+      "model": "/data/catalog/models/B07C8WMTZM.glb",
+      "thumbnail": "/data/catalog/thumbs/B07C8WMTZM.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plush"
+      ],
+      "styleTags": [
+        "Glam"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.amazon.com/dp/B07C8WMTZM",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07JLZC56G",
+      "source": "abo",
+      "title": "Rivet Contemporary Shiny Luxe Velvet Throw Pillow - 17 x 17 Inch, Blush",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.47,
+        0.464,
+        0.175
+      ],
+      "model": "/data/catalog/models/B07JLZC56G.glb",
+      "thumbnail": "/data/catalog/thumbs/B07JLZC56G.jpg",
+      "colors": [
+        "Blush"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Contemporary"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://www.amazon.com/dp/B07JLZC56G",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07JL5PNGZ",
+      "source": "abo",
+      "title": "Rivet Mid-Century Round Velvet Throw Pillow - 16 x 16 Inch, Aqua",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.428,
+        0.407,
+        0.148
+      ],
+      "model": "/data/catalog/models/B07JL5PNGZ.glb",
+      "thumbnail": "/data/catalog/thumbs/B07JL5PNGZ.jpg",
+      "colors": [
+        "Aqua"
+      ],
+      "materials": [
+        "Velvet"
+      ],
+      "styleTags": [
+        "Mid-Century"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://www.amazon.com/dp/B07JL5PNGZ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B078JMJC49",
+      "source": "abo",
+      "title": "Rivet Mid Century Modern Ceramic Home Decor Flower Vase - 12 Inch, Blue and Green",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.139,
+        0.313,
+        0.139
+      ],
+      "model": "/data/catalog/models/B078JMJC49.glb",
+      "thumbnail": "/data/catalog/thumbs/B078JMJC49.jpg",
+      "colors": [],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Tall"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://www.amazon.com/dp/B078JMJC49",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSPJ11F",
+      "source": "abo",
+      "title": "Rivet Modern Cylindrical Stoneware Candle Holder Lantern Home Decor Set - Set of 2, Gray and Cream",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.347,
+        0.255,
+        0.184
+      ],
+      "model": "/data/catalog/models/B07HSPJ11F.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSPJ11F.jpg",
+      "colors": [],
+      "materials": [],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://www.amazon.com/dp/B07HSPJ11F",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSGP5PS",
+      "source": "abo",
+      "title": "Rivet Contemporary Fir Decorative Blanket Ladder with Iron Rungs - 71.65\"H, Black and Natural Wood",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.442,
+        1.805,
+        0.2
+      ],
+      "model": "/data/catalog/models/B07HSGP5PS.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSGP5PS.jpg",
+      "colors": [],
+      "materials": [],
+      "styleTags": [
+        "Contemporary"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://www.amazon.com/dp/B07HSGP5PS",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B084HV7MCW",
+      "source": "abo",
+      "title": "Rivet Modern Tall Geometric Wire Baskets, Set of 2, 13.25\"H and 10.75\"H, Gold",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.805,
+        0.343,
+        0.45
+      ],
+      "model": "/data/catalog/models/B084HV7MCW.glb",
+      "thumbnail": "/data/catalog/thumbs/B084HV7MCW.jpg",
+      "colors": [
+        "Gold"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Tall Geometric"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.amazon.com/dp/B084HV7MCW",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "ph-potted-plant-01",
+      "source": "polyhaven",
+      "title": "Indoor Tree Plant in Terracotta Urn, 53\" Tall",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.587,
+        1.336,
+        0.634
+      ],
+      "model": "/data/catalog/models/ph-potted-plant-01.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-potted-plant-01.jpg",
+      "colors": [
+        "Green",
+        "Terracotta"
+      ],
+      "materials": [
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Traditional"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://polyhaven.com/a/potted_plant_01",
+      "attribution": "Poly Haven (CC0): potted_plant_01"
+    },
+    {
+      "id": "ph-potted-plant-02",
+      "source": "polyhaven",
+      "title": "Arrowhead Plant in Round Terracotta Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.701,
+        0.841,
+        0.657
+      ],
+      "model": "/data/catalog/models/ph-potted-plant-02.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-potted-plant-02.jpg",
+      "colors": [
+        "Green",
+        "Terracotta"
+      ],
+      "materials": [
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://polyhaven.com/a/potted_plant_02",
+      "attribution": "Poly Haven (CC0): potted_plant_02"
+    },
+    {
+      "id": "ph-potted-plant-04",
+      "source": "polyhaven",
+      "title": "Zebra Cactus (Haworthia) Succulent Plant in White Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.168,
+        0.267,
+        0.185
+      ],
+      "model": "/data/catalog/models/ph-potted-plant-04.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-potted-plant-04.jpg",
+      "colors": [
+        "Green",
+        "White"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://polyhaven.com/a/potted_plant_04",
+      "attribution": "Poly Haven (CC0): potted_plant_04"
+    },
+    {
+      "id": "ph-anthurium",
+      "source": "polyhaven",
+      "title": "Anthurium Plant in 10\" Brown Flower Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.757,
+        0.659,
+        0.572
+      ],
+      "model": "/data/catalog/models/ph-anthurium.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-anthurium.jpg",
+      "colors": [
+        "Green",
+        "Brown"
+      ],
+      "materials": [
+        "Plastic"
+      ],
+      "styleTags": [
+        "Casual"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://polyhaven.com/a/anthurium_botany_01",
+      "attribution": "Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Cole_Hardware_Flower_Pot_1025"
+    },
+    {
+      "id": "ph-anthurium-urn",
+      "source": "polyhaven",
+      "title": "Anthurium Plant in Natural Urn Planter",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.601,
+        0.489,
+        0.657
+      ],
+      "model": "/data/catalog/models/ph-anthurium-urn.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-anthurium-urn.jpg",
+      "colors": [
+        "Green",
+        "Natural"
+      ],
+      "materials": [
+        "Bamboo fiber"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://polyhaven.com/a/anthurium_botany_01",
+      "attribution": "Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_URN_NAT"
+    },
+    {
+      "id": "ph-calathea",
+      "source": "polyhaven",
+      "title": "Calathea Orbifolia Plant in Terracotta Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.601,
+        0.616,
+        0.526
+      ],
+      "model": "/data/catalog/models/ph-calathea.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-calathea.jpg",
+      "colors": [
+        "Green",
+        "Terracotta"
+      ],
+      "materials": [
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 55,
+      "url": "https://polyhaven.com/a/calathea_orbifolia_01",
+      "attribution": "Poly Haven (CC0): calathea_orbifolia_01; pot: Poly Haven (CC0): planter_pot_clay"
+    },
+    {
+      "id": "ph-calathea-small",
+      "source": "polyhaven",
+      "title": "Small Calathea Desk Plant in Turquoise Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.347,
+        0.443,
+        0.44
+      ],
+      "model": "/data/catalog/models/ph-calathea-small.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-calathea-small.jpg",
+      "colors": [
+        "Green",
+        "Turquoise"
+      ],
+      "materials": [
+        "Bamboo fiber"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://polyhaven.com/a/calathea_orbifolia_01",
+      "attribution": "Poly Haven (CC0): calathea_orbifolia_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Pot_Nova_6_Turquoise"
+    },
+    {
+      "id": "ph-fern",
+      "source": "polyhaven",
+      "title": "Fern Plant in Tall Square Turquoise Planter",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.99,
+        0.68,
+        0.894
+      ],
+      "model": "/data/catalog/models/ph-fern.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-fern.jpg",
+      "colors": [
+        "Green",
+        "Turquoise"
+      ],
+      "materials": [
+        "Bamboo fiber"
+      ],
+      "styleTags": [
+        "Contemporary"
+      ],
+      "priceEstimateUsd": 50,
+      "url": "https://polyhaven.com/a/fern_02",
+      "attribution": "Poly Haven (CC0): fern_02; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_Quadra_Turquoise_QP12"
+    },
+    {
+      "id": "ph-fern-bowl",
+      "source": "polyhaven",
+      "title": "Fern Plant in Wide Turquoise Bowl Planter",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.874,
+        0.56,
+        0.765
+      ],
+      "model": "/data/catalog/models/ph-fern-bowl.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-fern-bowl.jpg",
+      "colors": [
+        "Green",
+        "Turquoise"
+      ],
+      "materials": [
+        "Bamboo fiber"
+      ],
+      "styleTags": [
+        "Casual"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://polyhaven.com/a/fern_02",
+      "attribution": "Poly Haven (CC0): fern_02; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_SB9Turquoise"
+    },
+    {
+      "id": "ph-money-tree",
+      "source": "polyhaven",
+      "title": "Money Tree Plant (Pachira) in 12\" Green Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.975,
+        1.406,
+        0.924
+      ],
+      "model": "/data/catalog/models/ph-money-tree.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-money-tree.jpg",
+      "colors": [
+        "Green"
+      ],
+      "materials": [
+        "Bamboo fiber"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://polyhaven.com/a/pachira_aquatica_01",
+      "attribution": "Poly Haven (CC0): pachira_aquatica_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_12_Pot_Nova"
+    },
+    {
+      "id": "ph-ceramic-vase",
+      "source": "polyhaven",
+      "title": "Speckled Ceramic Vase, 16\" Tall",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.204,
+        0.4,
+        0.204
+      ],
+      "model": "/data/catalog/models/ph-ceramic-vase.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-ceramic-vase.jpg",
+      "colors": [
+        "Cream"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Rustic"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://polyhaven.com/a/ceramic_vase_01",
+      "attribution": "Poly Haven (CC0): ceramic_vase_01"
+    },
+    {
+      "id": "ph-book-set",
+      "source": "polyhaven",
+      "title": "Encyclopedia Book Set, 20 Volumes",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.551,
+        0.237,
+        0.163
+      ],
+      "model": "/data/catalog/models/ph-book-set.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-book-set.jpg",
+      "colors": [
+        "Burgundy"
+      ],
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "Traditional"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://polyhaven.com/a/book_encyclopedia_set_01",
+      "attribution": "Poly Haven (CC0): book_encyclopedia_set_01"
+    },
+    {
+      "id": "ph-wicker-basket",
+      "source": "polyhaven",
+      "title": "Small Round Wicker Basket",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.212,
+        0.2,
+        0.216
+      ],
+      "model": "/data/catalog/models/ph-wicker-basket.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-wicker-basket.jpg",
+      "colors": [
+        "Natural"
+      ],
+      "materials": [
+        "Wicker"
+      ],
+      "styleTags": [
+        "Rustic",
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://polyhaven.com/a/wicker_basket_02",
+      "attribution": "Poly Haven (CC0): wicker_basket_02"
+    },
+    {
+      "id": "ph-candlestick",
+      "source": "polyhaven",
+      "title": "Turned Wooden Candlestick with Candle",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.097,
+        0.22,
+        0.099
+      ],
+      "model": "/data/catalog/models/ph-candlestick.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-candlestick.jpg",
+      "colors": [
+        "Natural",
+        "White"
+      ],
+      "materials": [
+        "Wood",
+        "Wax"
+      ],
+      "styleTags": [
+        "Farmhouse"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://polyhaven.com/a/wooden_candlestick",
+      "attribution": "Poly Haven (CC0): wooden_candlestick"
+    },
+    {
+      "id": "ph-picture-frame",
+      "source": "polyhaven",
+      "title": "Standing Picture Frame, 5×7",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.201,
+        0.25,
+        0.1
+      ],
+      "model": "/data/catalog/models/ph-picture-frame.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-picture-frame.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Wood",
+        "Glass"
+      ],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 12,
+      "url": "https://polyhaven.com/a/standing_picture_frame_01",
+      "attribution": "Poly Haven (CC0): standing_picture_frame_01"
+    },
+    {
+      "id": "gso-alarm-clock",
+      "source": "gso",
+      "title": "Crosley Vintage Metal Alarm Clock",
+      "brand": "Crosley",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.109,
+        0.162,
+        0.054
+      ],
+      "model": "/data/catalog/models/gso-alarm-clock.glb",
+      "thumbnail": "/data/catalog/thumbs/gso-alarm-clock.jpg",
+      "colors": [
+        "Bronze"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Vintage"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Crosley_Alarm_Clock_Vintage_Metal",
+      "attribution": "Google Scanned Objects (CC BY 4.0), Google LLC: Crosley_Alarm_Clock_Vintage_Metal"
+    },
+    {
+      "id": "gso-desk-caddy",
+      "source": "gso",
+      "title": "Markings Faux Leather Desk Caddy",
+      "brand": "Markings",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.293,
+        0.113,
+        0.105
+      ],
+      "model": "/data/catalog/models/gso-desk-caddy.glb",
+      "thumbnail": "/data/catalog/thumbs/gso-desk-caddy.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [
+        "Faux leather"
+      ],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Markings_Desk_Caddy",
+      "attribution": "Google Scanned Objects (CC BY 4.0), Google LLC: Markings_Desk_Caddy"
+    },
+    {
+      "id": "gso-letter-holder",
+      "source": "gso",
+      "title": "Markings Faux Leather Desk Letter Holder",
+      "brand": "Markings",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.198,
+        0.141,
+        0.1
+      ],
+      "model": "/data/catalog/models/gso-letter-holder.glb",
+      "thumbnail": "/data/catalog/thumbs/gso-letter-holder.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [
+        "Faux leather"
+      ],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 12,
+      "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Markings_Letter_Holder",
+      "attribution": "Google Scanned Objects (CC BY 4.0), Google LLC: Markings_Letter_Holder"
+    },
+    {
+      "id": "gso-basket",
+      "source": "gso",
+      "title": "Threshold Woven Basket with Fabric Liner, Small",
+      "brand": "Threshold",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.239,
+        0.148,
+        0.162
+      ],
+      "model": "/data/catalog/models/gso-basket.glb",
+      "thumbnail": "/data/catalog/thumbs/gso-basket.jpg",
+      "colors": [
+        "Natural",
+        "White"
+      ],
+      "materials": [
+        "Wicker",
+        "Fabric"
+      ],
+      "styleTags": [
+        "Farmhouse"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Basket_Natural_Finish_Fabric_Liner_Small",
+      "attribution": "Google Scanned Objects (CC BY 4.0), Google LLC: Threshold_Basket_Natural_Finish_Fabric_Liner_Small"
+    },
+    {
+      "id": "gso-waste-basket",
+      "source": "gso",
+      "title": "Hefty Decorative Waste Basket, 8.5 Liter, Bronze",
+      "brand": "Hefty",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.271,
+        0.3,
+        0.204
+      ],
+      "model": "/data/catalog/models/gso-waste-basket.glb",
+      "thumbnail": "/data/catalog/thumbs/gso-waste-basket.jpg",
+      "colors": [
+        "Bronze"
+      ],
+      "materials": [
+        "Plastic"
+      ],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 10,
+      "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Hefty_Waste_Basket_Decorative_Bronze_85_liter",
+      "attribution": "Google Scanned Objects (CC BY 4.0), Google LLC: Hefty_Waste_Basket_Decorative_Bronze_85_liter"
+    },
+    {
+      "id": "gso-keyboard",
+      "source": "gso",
+      "title": "Razer BlackWidow Ultimate Mechanical Gaming Keyboard",
+      "brand": "Razer",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.471,
+        0.049,
+        0.299
+      ],
+      "model": "/data/catalog/models/gso-keyboard.glb",
+      "thumbnail": "/data/catalog/thumbs/gso-keyboard.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Razer_BlackWidow_Ultimate_2014_Mechanical_Gaming_Keyboard",
+      "attribution": "Google Scanned Objects (CC BY 4.0), Google LLC: Razer_BlackWidow_Ultimate_2014_Mechanical_Gaming_Keyboard"
     },
     {
       "id": "placeholder-chair",

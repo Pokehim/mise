@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogItem, Category } from '../shared/types';
-import { type AboListing, type AboModel, findListings, type Listing, sizeFromInspect, toCatalogItem } from './catalog-build';
+import {
+  type AboListing, type AboModel, type CatalogPick, creditsMarkdown, findListings, type Listing, listedRugInches, sizeFromInspect,
+  toCatalogItem, toSourcedItem, trianglesFromInspect,
+} from './catalog-build';
 
 // ABO listing B07BWJCZJX from listings_*.json.gz, keeping only the en_US and de_DE entries.
 const LUMMI_CHAIR: AboListing = {
@@ -119,6 +122,11 @@ describe('toCatalogItem', () => {
       .toBe('Rivet Mid-Century Modern Curved Task Desk Table Lamp With USB Port And Light Bulb - 26 Inches, Matte Black & Brushed Steel');
   });
 
+  it("uses the pick's title, for words a Mover searches by that the listing's name lacks", () => {
+    const pick = { id: 'B07BWJCZJX', category: 'chair' as const, title: 'Beanbag Chair' };
+    expect(toCatalogItem(pick, LUMMI_CHAIR, [0.9, 0.6, 0.9]).title).toBe('Beanbag Chair');
+  });
+
   it('rejects a pick whose category is not a Category, such as a typo in catalog-picks.json', () => {
     const typo = { id: 'B07BWJCZJX', category: 'wallart' as Category };
     expect(() => toCatalogItem(typo, LUMMI_CHAIR, [0.5, 0.8, 0.6])).toThrow(/wallart/);
@@ -203,5 +211,120 @@ describe('sizeFromInspect', () => {
   it('fails when the output has no scene bounding box, instead of returning NaN', () => {
     const overviewOnly = CHAIR_INSPECT.slice(0, CHAIR_INSPECT.indexOf(' SCENES'));
     expect(() => sizeFromInspect(overviewOnly)).toThrow(/bounding box/);
+  });
+});
+
+describe('toSourcedItem', () => {
+  // scripts/catalog-picks.json: a Poly Haven plant set in a Google Scanned Objects pot.
+  const ANTHURIUM: CatalogPick = {
+    id: 'ph-anthurium',
+    category: 'plant',
+    source: 'polyhaven',
+    asset: 'anthurium_botany_01',
+    nodes: ['anthurium_botany_01_b'],
+    pot: { source: 'gso', asset: 'Cole_Hardware_Flower_Pot_1025', name: 'Cole Hardware 10.25" Flower Pot' },
+    title: 'Anthurium Plant in 10" Brown Flower Pot',
+    colors: ['Green', 'Brown'],
+    materials: ['Plastic'],
+    styleTags: ['Casual'],
+    price: 40,
+  };
+
+  it('maps a pick from another source to a CatalogItem, crediting the plant and its pot', () => {
+    const item: CatalogItem = {
+      id: 'ph-anthurium',
+      source: 'polyhaven',
+      title: 'Anthurium Plant in 10" Brown Flower Pot',
+      category: 'plant',
+      mount: 'floor',
+      size: [0.757, 0.659, 0.572],
+      model: '/data/catalog/models/ph-anthurium.glb',
+      thumbnail: '/data/catalog/thumbs/ph-anthurium.jpg',
+      colors: ['Green', 'Brown'],
+      materials: ['Plastic'],
+      styleTags: ['Casual'],
+      priceEstimateUsd: 40,
+      url: 'https://polyhaven.com/a/anthurium_botany_01',
+      attribution: 'Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Cole_Hardware_Flower_Pot_1025',
+    };
+    expect(toSourcedItem(ANTHURIUM, [0.757, 0.659, 0.572])).toEqual(item);
+  });
+
+  it("links a Google Scanned Objects item to its Fuel page, and keeps the pick's brand", () => {
+    const clock: CatalogPick = {
+      id: 'gso-alarm-clock', category: 'decor', source: 'gso', asset: 'Crosley_Alarm_Clock_Vintage_Metal',
+      title: 'Crosley Vintage Metal Alarm Clock', brand: 'Crosley', colors: ['Bronze'], materials: ['Metal'],
+      styleTags: ['Vintage'], price: 20,
+    };
+    expect(toSourcedItem(clock, [0.109, 0.162, 0.054])).toMatchObject({
+      source: 'gso',
+      brand: 'Crosley',
+      url: 'https://app.gazebosim.org/GoogleResearch/fuel/models/Crosley_Alarm_Clock_Vintage_Metal',
+      attribution: 'Google Scanned Objects (CC BY 4.0), Google LLC: Crosley_Alarm_Clock_Vintage_Metal',
+    });
+  });
+
+  it('rejects a pick missing a field that ABO would have given, such as its colors', () => {
+    const { colors: _, ...noColors } = ANTHURIUM;
+    expect(() => toSourcedItem(noColors, [0.5, 0.5, 0.5])).toThrow(/colors/);
+  });
+});
+
+describe('trianglesFromInspect', () => {
+  it('counts the triangles of every mesh instance in the MESHES table', () => {
+    // `gltf-transform inspect --format csv` of ph-anthurium after optimize, cut to its MESHES table, with a second
+    // mesh drawn twice added.
+    const inspect = `
+ MESHES
+ ────────────────────────────────────────────
+#,name,mode,meshPrimitives,glPrimitives,vertices,indices,attributes,instances,size
+0,anthurium_botany_01_b,TRIANGLES,2,19882,12063,u16,"NORMAL:i8_norm, POSITION:i16_norm, TEXCOORD_0:u16_norm",1,321532
+1,soil,TRIANGLES,1,32,33,u16,"NORMAL:i8_norm, POSITION:i16_norm",2,624
+
+
+
+ MATERIALS
+`;
+    expect(trianglesFromInspect(inspect)).toBe(19882 + 2 * 32);
+  });
+});
+
+describe('listedRugInches', () => {
+  it("reads a rug listing's item_dimensions as width × length, the shorter side first", () => {
+    const rug: AboListing = {
+      item_id: 'B0',
+      item_dimensions: { length: { normalized_value: { value: 48 } }, width: { normalized_value: { value: 72 } } },
+    };
+    expect(listedRugInches(rug)).toEqual([48, 72]);
+  });
+
+  it('gives nothing when the listing has no item_dimensions, as no rug listing without a 3D model does', () => {
+    expect(listedRugInches({ item_id: 'B075LFMQM6' })).toBeUndefined();
+  });
+});
+
+describe('creditsMarkdown', () => {
+  const item = (id: string, source: CatalogItem['source'], title: string, attribution: string): CatalogItem => ({
+    id, source, title, attribution, category: 'decor', mount: 'floor', size: [0.1, 0.1, 0.1], model: '', thumbnail: '',
+    colors: [], materials: [], styleTags: [], priceEstimateUsd: 10, url: `https://example.com/${id}`,
+  });
+  const credits = creditsMarkdown({
+    version: 1,
+    items: [
+      item('B0', 'abo', 'Rivet Vase', 'Amazon Berkeley Objects (CC BY 4.0), Amazon.com'),
+      item('gso-clock', 'gso', 'Crosley Clock | Bronze', 'Google Scanned Objects (CC BY 4.0), Google LLC: Crosley'),
+      item('ph-fern', 'polyhaven', 'Fern', 'Poly Haven (CC0): fern_02; pot: Google Scanned Objects (CC BY 4.0), Google LLC: QP12'),
+    ],
+  });
+
+  it('states every source with its license and how many items credit it, a plant in a scanned pot among them', () => {
+    expect(credits).toMatch(/\| \[Amazon Berkeley Objects\]\(.*\) \| \[CC BY 4\.0\]\(.*\) \| 1 \|/);
+    expect(credits).toMatch(/\| \[Poly Haven\]\(.*\) \| \[CC0 1\.0\]\(.*\) \| 1 \|/);
+    expect(credits).toMatch(/\| \[Google Scanned Objects\]\(.*\) \| \[CC BY 4\.0\]\(.*\) \| 2 \|/);
+  });
+
+  it("credits every item, escaping a '|' in its title so the table holds", () => {
+    expect(credits).toContain('| B0 | [Rivet Vase](https://example.com/B0) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |');
+    expect(credits).toContain('| gso-clock | [Crosley Clock \\| Bronze](https://example.com/gso-clock) |');
   });
 });

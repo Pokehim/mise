@@ -324,10 +324,13 @@ async function build() {
   const catalog: Catalog = { version: 1, items: [...items, ...previous.items.filter((item) => item.source !== 'abo')] };
   await writeFile(file, `${JSON.stringify(catalog, null, 2)}\n`);
 
-  // Remove the files of items that left the Catalog, such as earlier picks. Text-to-3D's items (generated.json) stay.
-  const generatedFile = join(CATALOG_DIR, 'generated.json');
-  const generated: Catalog = existsSync(generatedFile) ? JSON.parse(await readFile(generatedFile, 'utf8')) : { version: 1, items: [] };
-  const used = new Set([...catalog.items, ...generated.items].flatMap((item) => [item.model, item.thumbnail]));
+  // Remove the files of items that left the Catalog, such as earlier picks. Text-to-3D's items stay (generated.json, and
+  // its sandbox's generated-sandbox.json).
+  const generated = await Promise.all(['generated.json', 'generated-sandbox.json'].map(async (name): Promise<Catalog> => {
+    const generatedFile = join(CATALOG_DIR, name);
+    return existsSync(generatedFile) ? JSON.parse(await readFile(generatedFile, 'utf8')) : { version: 1, items: [] };
+  }));
+  const used = new Set([catalog, ...generated].flatMap(({ items }) => items.flatMap((item) => [item.model, item.thumbnail])));
   for (const dir of ['models', 'thumbs']) {
     for (const name of await readdir(join(CATALOG_DIR, dir))) {
       if (!used.has(`/data/catalog/${dir}/${name}`)) await rm(join(CATALOG_DIR, dir, name));

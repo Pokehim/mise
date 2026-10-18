@@ -12,9 +12,10 @@ import { getBounds } from '@gltf-transform/core';
 import { center } from '@gltf-transform/functions';
 import sharp from 'sharp';
 import { DEFAULT_PRICE_USD, mountOf, optimizeModel } from '../../scripts/catalog-build';
-import { io, writeJson } from '../../scripts/scan-import';
+import { io, optimizeScan, writeJson } from '../../scripts/scan-import';
 import type { Catalog, CatalogItem, Category, Vec3 } from '../../shared/types';
 import { fitScale, targetBox } from './normalize';
+import { inSandbox, sandboxFal } from './sandbox';
 
 export interface GenerateRequest {
   /** What the Mover searched for, such as "aquarium". */
@@ -30,6 +31,8 @@ export type Step = 'photo' | 'queued' | 'model' | 'fitting';
 // 1024 costs $0.30 (llms.txt). fal's schema takes integers here, though the SDK's generated types still say strings.
 // 50k vertices is the docs' advice for the web, and keeps a Piece under §2.3's 2 MB.
 const TRELLIS_INPUT = { resolution: 1024, texture_size: 1024, decimation_target: 50_000 };
+// And in case it returns more anyway: the example in its docs, 479k triangles, comes to 1.5 MB simplified to this.
+const MAX_TRIANGLES = 75_000;
 
 async function download(url: string): Promise<Uint8Array> {
   const res = await fetch(url);
@@ -37,9 +40,14 @@ async function download(url: string): Promise<Uint8Array> {
   return new Uint8Array(await res.arrayBuffer());
 }
 
-const generatedPath = (dataDir: string) => join(dataDir, 'catalog/generated.json');
+const generatedPath = (dataDir: string) =>
+  join(dataDir, 'catalog', inSandbox() ? 'generated-sandbox.json' : 'generated.json');
+const rawDir = (dataDir: string, id: string) => join(dataDir, 'catalog/raw', id);
 
-/** The items text-to-3D has made: data/catalog/generated.json, kept apart from the built catalog.json. */
+/**
+ * The items text-to-3D has made: data/catalog/generated.json, kept apart from the built catalog.json (and the sandbox's
+ * in generated-sandbox.json).
+ */
 export async function readGenerated(dataDir: string): Promise<Catalog> {
   const file = generatedPath(dataDir);
   return existsSync(file) ? JSON.parse(await readFile(file, 'utf8')) : { version: 1, items: [] };
@@ -58,6 +66,41 @@ function addGenerated(dataDir: string, item: CatalogItem): Promise<void> {
 }
 
 /**
+ * fal's photo of `query` and TRELLIS.2's GLB of it. They wait in data/catalog/raw/<id> until the item is done, so that
+ * trying again after a failed fitting step doesn't pay fal again.
+ */
+async function falOutputs(query: string, id: string, dataDir: string, onStep: (step: Step) => void) {
+  const raw = rawDir(dataDir, id);
+  if (existsSync(join(raw, 'model.glb'))) {
+    const [photo, glb] = await Promise.all([readFile(join(raw, 'photo')), readFile(join(raw, 'model.glb'))]);
+    return { photo, glb };
+  }
+
+  const client = inSandbox() ? sandboxFal : fal;
+  const { data } = await client.subscribe('fal-ai/flux/schnell', {
+    input: {
+      prompt: `Studio product photo of ${query}, a single product, centered, plain white background, soft light, three-quarter view`,
+      image_size: 'square_hd',
+    },
+  });
+  const photoUrl = data.images[0].url;
+  // The photo downloads while TRELLIS.2 runs. The catch only keeps a failed model from leaving it unhandled.
+  const photo = download(photoUrl);
+  photo.catch(() => {});
+
+  onStep('queued');
+  const { data: trellis }: { data: Trellis2Output } = await client.subscribe<string>('fal-ai/trellis-2', {
+    input: { image_url: photoUrl, ...TRELLIS_INPUT },
+    onQueueUpdate: ({ status }) => status !== 'IN_QUEUE' && onStep('model'),
+  });
+  const outputs = { photo: await photo, glb: await download(trellis.model_glb.url) };
+  await mkdir(raw, { recursive: true });
+  await writeFile(join(raw, 'photo'), outputs.photo);
+  await writeFile(join(raw, 'model.glb'), outputs.glb);   // last, as its being there means both are
+  return outputs;
+}
+
+/**
  * Generates `request.query` as Catalog item `id`: its model and thumbnail go in data/catalog/models and thumbs, and
  * the item in generated.json. `onStep` hears each step after the first as it starts.
  */
@@ -67,28 +110,13 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
   const thumbnail = `/data/catalog/thumbs/${id}.jpg`;
   const onDisk = (url: string) => join(dataDir, url.slice('/data/'.length));
 
-  const { data: photo } = await fal.subscribe('fal-ai/flux/schnell', {
-    input: {
-      prompt: `Studio product photo of ${query}, a single product, centered, plain white background, soft light, three-quarter view`,
-      image_size: 'square_hd',
-    },
-  });
-  const photoUrl = photo.images[0].url;
-  // The thumbnail downloads while TRELLIS.2 runs. The catch only keeps a failed model from leaving it unhandled.
-  const thumbnailJpeg = download(photoUrl).then((bytes) => sharp(bytes).resize(256, 256, { fit: 'inside' }).jpeg().toBuffer());
-  thumbnailJpeg.catch(() => {});
-
-  onStep('queued');
-  const { data: trellis }: { data: Trellis2Output } = await fal.subscribe<string>('fal-ai/trellis-2', {
-    input: { image_url: photoUrl, ...TRELLIS_INPUT },
-    onQueueUpdate: ({ status }) => status !== 'IN_QUEUE' && onStep('model'),
-  });
-
+  const { photo, glb } = await falOutputs(query, id, dataDir, onStep);
   onStep('fitting');
   const tmp = await mkdtemp(join(tmpdir(), 'mise-generate-'));
   try {
-    // Bottom-center pivot, then one uniform scale about it into the box.
-    const doc = await io.readBinary(await download(trellis.model_glb.url));
+    // Simplified to the triangle budget, a bottom-center pivot, then one uniform scale about it into the box.
+    const doc = await io.readBinary(glb);
+    await optimizeScan(doc, MAX_TRIANGLES);
     await doc.transform(center({ pivot: 'below' }));
     const scene = doc.getRoot().listScenes()[0];
     const { min, max } = getBounds(scene);
@@ -102,7 +130,7 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
     await mkdir(join(dataDir, 'catalog/models'), { recursive: true });
     await mkdir(join(dataDir, 'catalog/thumbs'), { recursive: true });
     const { size } = await optimizeModel(centered, onDisk(model));
-    await writeFile(onDisk(thumbnail), await thumbnailJpeg);
+    await writeFile(onDisk(thumbnail), await sharp(photo).resize(256, 256, { fit: 'inside' }).jpeg().toBuffer());
 
     const item: CatalogItem = {
       id,
@@ -118,9 +146,12 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
       styleTags: [],
       priceEstimateUsd: DEFAULT_PRICE_USD[category],
       url: '',
-      attribution: 'Generated with FLUX.1 [schnell] and TRELLIS.2 (MIT) on fal',
+      attribution: inSandbox()
+        ? "The sandbox's stand-in: the example model in TRELLIS.2's docs"
+        : 'Generated with FLUX.1 [schnell] and TRELLIS.2 (MIT) on fal',
     };
     await addGenerated(dataDir, item);
+    await rm(rawDir(dataDir, id), { recursive: true, force: true });
     return item;
   } finally {
     await rm(tmp, { recursive: true, force: true });

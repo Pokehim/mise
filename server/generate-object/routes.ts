@@ -4,6 +4,7 @@ import { HTTPException } from 'hono/http-exception';
 import { isCategory } from '../../scripts/catalog-build';
 import type { CatalogItem, Vec3 } from '../../shared/types';
 import { type GenerateRequest, generateObject, readGenerated, type Step } from './pipeline';
+import { inSandbox } from './sandbox';
 
 /** What GET /api/jobs/:id returns. progress is 0–1; a failed job keeps how far it got. */
 export type Job =
@@ -56,10 +57,12 @@ function parseRequest({ query, category, targetSize }: Record<string, unknown>):
 
 /**
  * The id of a query, in any case, in a category, which sets its size: its job's, its item's and its cache key, so each is
- * generated, and paid for, once.
+ * generated, and paid for, once. The sandbox's are other ids, so its stand-ins never answer a real request.
  */
-const idFor = ({ query, category }: GenerateRequest) =>
-  `gen_${createHash('sha256').update(`${category}:${query.toLowerCase()}`).digest('hex').slice(0, 8)}`;
+function idFor({ query, category }: GenerateRequest) {
+  const key = `${inSandbox() ? 'sandbox:' : ''}${category}:${query.toLowerCase()}`;
+  return `gen_${createHash('sha256').update(key).digest('hex').slice(0, 8)}`;
+}
 
 /**
  * POST /generate-object { query, category, targetSize? } → { jobId }, then GET /jobs/:id → Job (spec §13.3, Stretch).

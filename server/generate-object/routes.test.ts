@@ -25,34 +25,57 @@ beforeEach(async () => {
 afterEach(async () => {
   vi.useRealTimers();
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
   fal.subscribe.mockReset();
   await rm(dataDir, { recursive: true, force: true });
 });
 
 const dataUrl = (type: string, bytes: Uint8Array) => `data:${type};base64,${Buffer.from(bytes).toString('base64')}`;
 
-/** A GLB of one box from `min` to `max`, standing anywhere, as TRELLIS.2's are. */
-async function boxGlb(min: number[], max: number[]) {
+/** A GLB of one mesh, standing anywhere, as TRELLIS.2's are. */
+async function meshGlb(positions: number[], indices: number[]) {
   const doc = new Document();
-  const corners = [0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => [i & 1 ? max[0] : min[0], i & 2 ? max[1] : min[1], i & 4 ? max[2] : min[2]]);
-  const faces = [0, 1, 3, 0, 3, 2, 4, 6, 7, 4, 7, 5, 0, 4, 5, 0, 5, 1, 2, 3, 7, 2, 7, 6, 0, 2, 6, 0, 6, 4, 1, 5, 7, 1, 7, 3];
   const buffer = doc.createBuffer();
   const prim = doc.createPrimitive()
-    .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(corners)).setBuffer(buffer))
-    .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint16Array(faces)).setBuffer(buffer));
+    .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(positions)).setBuffer(buffer))
+    .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint32Array(indices)).setBuffer(buffer));
   doc.getRoot().setDefaultScene(doc.createScene().addChild(doc.createNode().setMesh(doc.createMesh().addPrimitive(prim))));
   return io.writeBinary(doc);
 }
 
+/** A box from `min` to `max`. */
+function boxGlb(min: number[], max: number[]) {
+  const corners = [0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => [i & 1 ? max[0] : min[0], i & 2 ? max[1] : min[1], i & 4 ? max[2] : min[2]]);
+  return meshGlb(corners, [0, 1, 3, 0, 3, 2, 4, 6, 7, 4, 7, 5, 0, 4, 5, 0, 5, 1, 2, 3, 7, 2, 7, 6, 0, 2, 6, 0, 6, 4, 1, 5, 7, 1, 7, 3]);
+}
+
+/** A bumpy n × n grid 1 m across: 2(n - 1)² triangles, which simplifying without losing detail can't merge. */
+function bumpyGlb(n: number) {
+  let seed = 1;
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const positions = Array.from({ length: n * n }, (_, i) => [(i % n) / n, random() * 0.05, Math.floor(i / n) / n]).flat();
+  const indices = Array.from({ length: (n - 1) ** 2 }, (_, cell) => {
+    const i = cell + Math.floor(cell / (n - 1));   // the cell's corner nearest the origin
+    return [i, i + n, i + 1, i + 1, i + n, i + n + 1];
+  }).flat();
+  return meshGlb(positions, indices);
+}
+
+/** The triangles in a GLB. */
+async function triangles(glb: Uint8Array) {
+  const meshes = (await io.readBinary(glb)).getRoot().listMeshes();
+  return meshes.flatMap((mesh) => mesh.listPrimitives()).reduce((sum, prim) => sum + prim.getIndices()!.getCount() / 3, 0);
+}
+
 const photo = () => sharp({ create: { width: 64, height: 64, channels: 3, background: '#ffffff' } }).jpeg().toBuffer();
 
-/** fal answering FLUX with a product photo and TRELLIS.2 with a 2 × 1 × 1 m box. */
-async function falMakesABox() {
+/** fal answering FLUX with a product photo and TRELLIS.2 with `glb`: by default a 2 × 1 × 1 m box. */
+async function falMakesABox(glb?: Uint8Array) {
   const image = dataUrl('image/jpeg', await photo());
-  const glb = dataUrl('model/gltf-binary', await boxGlb([3, 1, -1], [5, 2, 0]));
+  const model = dataUrl('model/gltf-binary', glb ?? await boxGlb([3, 1, -1], [5, 2, 0]));
   fal.subscribe.mockImplementation(async (endpoint: string) => {
     if (endpoint === 'fal-ai/flux/schnell') return { data: { images: [{ url: image, width: 64, height: 64 }] }, requestId: 'flux' };
-    if (endpoint === 'fal-ai/trellis-2') return { data: { model_glb: { url: glb } }, requestId: 'trellis' };
+    if (endpoint === 'fal-ai/trellis-2') return { data: { model_glb: { url: model } }, requestId: 'trellis' };
     throw new Error(`Unexpected endpoint ${endpoint}`);
   });
 }
@@ -66,9 +89,9 @@ const getJson = async (path: string, server = app) => (await server.request(path
 const start = async (body: unknown) => (await (await post(body)).json()).jobId as string;
 
 /** Polls a job until it stops running. */
-async function finished(jobId: string): Promise<Job> {
+async function finished(jobId: string, server = app): Promise<Job> {
   for (;;) {
-    const job: Job = await getJson(`/api/jobs/${jobId}`);
+    const job: Job = await getJson(`/api/jobs/${jobId}`, server);
     if (job.status !== 'running') return job;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
@@ -109,6 +132,15 @@ describe('POST /api/generate-object', () => {
 
     expect(generated.size).toEqual([1, 0.5, 0.5]);   // the 2 × 1 × 1 box, fit by its height
   }, 30_000);
+
+  it("simplifies a dense model to 75k triangles, to keep it in §2.3's 2 MB", async () => {
+    await falMakesABox(await bumpyGlb(260));   // 134,162 triangles
+
+    const generated = itemOf(await finished(await start({ query: 'shag rug', category: 'rug', targetSize: [2, 0.02, 1.5] })));
+
+    const model = new Uint8Array(await (await app.request(generated.model)).arrayBuffer());
+    expect(await triangles(model)).toBeLessThanOrEqual(75_000);
+  }, 60_000);
 
   it('reports its step, and progress that keeps moving while TRELLIS.2 runs', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -210,6 +242,22 @@ describe('the cache, by query and category', () => {
     expect([asChair.category, asStorage.category]).toEqual(['chair', 'storage']);
   }, 30_000);
 
+  it("keeps what fal made when fitting fails, so trying again doesn't pay fal again", async () => {
+    await falMakesABox();
+    await mkdir(join(dataDir, 'catalog'));
+    await writeFile(join(dataDir, 'catalog/catalog.json'), 'not JSON');   // fitting needs it, without a targetSize
+    const first = await finished(await start({ query: 'hammock', category: 'chair' }));
+    expect(first.status).toBe('failed');
+
+    await writeFile(join(dataDir, 'catalog/catalog.json'), JSON.stringify({ version: 1, items: [] }));
+    vi.resetModules();   // as after a restart, say to fix what failed
+    const { app: restarted } = await import('../app');
+    const { jobId } = await (await post({ query: 'hammock', category: 'chair' }, restarted)).json();
+
+    expect(itemOf(await finished(jobId, restarted)).size).toEqual([0.5, 0.25, 0.25]);   // the box in the 50 cm cube
+    expect(fal.subscribe).toHaveBeenCalledTimes(2);   // the first run's photo and model
+  }, 30_000);
+
   it('reuses an item generated before the server restarted, without calling fal', async () => {
     await falMakesABox();
     const before = itemOf(await finished(await start({ query: 'bubble chair', category: 'chair', targetSize: [1, 1, 1] })));
@@ -221,5 +269,33 @@ describe('the cache, by query and category', () => {
 
     expect(await getJson(`/api/jobs/${jobId}`, restarted)).toEqual({ status: 'done', progress: 1, item: before });
     expect(fal.subscribe).not.toHaveBeenCalled();
+  }, 30_000);
+});
+
+describe('the sandbox, FAL_KEY=sandbox', () => {
+  it("makes items from fal's example outputs without calling fal, kept apart from real ones", async () => {
+    vi.stubEnv('FAL_KEY', 'sandbox');
+    const [glb, jpeg] = await Promise.all([boxGlb([0, 0, 0], [1, 1, 1]), photo()]);
+    const fetched: string[] = [];
+    vi.stubGlobal('fetch', async (url: string) => {
+      fetched.push(url);
+      return new Response(url.endsWith('.glb') ? glb : jpeg);
+    });
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+
+    const jobId = await start({ query: 'canoe', category: 'decor', targetSize: [1, 1, 1] });
+    await vi.advanceTimersByTimeAsync(60_000);   // the sandbox's stand-in for fal's 30 s
+    vi.useRealTimers();
+    const sandboxed = itemOf(await finished(jobId));
+
+    expect(fal.subscribe).not.toHaveBeenCalled();
+    expect(fetched).toHaveLength(2);
+    expect(fetched.every((url) => url.startsWith('https://v3b.fal.media/'))).toBe(true);
+    expect((await getJson('/api/catalog/generated')).items).toEqual([sandboxed]);
+
+    vi.stubEnv('FAL_KEY', 'test-key');
+    expect((await getJson('/api/catalog/generated')).items).toEqual([]);
+    await falMakesABox();
+    expect(await start({ query: 'canoe', category: 'decor', targetSize: [1, 1, 1] })).not.toBe(jobId);
   }, 30_000);
 });

@@ -15,8 +15,57 @@ V2 = os.path.join(ROOT, 'data', 'scans', 'lounge-v2')
 COMPARE = os.path.join(ROOT, 'docs', 'research', 'lounge-compare')
 CACHE = os.path.join(ROOT, 'scripts', '.cache', 'lounge-v2')  # gitignored
 
-# lounge-v1's room frame: inner faces of the walls, floor at y = 0.
+# lounge-v1's room frame: inner faces of the walls, floor at y = 0. Images (ortho.py, textures.py) are laid out on
+# these lines.
 X0, X1, Z0, Z1, H = -1.568, 1.55, -3.545, 3.673, 2.431
+# The Empty Room's walls: each the median plane of the Main Capture's wall (#77), about 2 cm outside lounge-v1's
+# lines. The South one is the plane of the door and the glass wall.
+WX0, WX1, WZ0, WZ1 = -1.5907, 1.5759, -3.5652, 3.6244
+
+
+def _even(u0, u1, n, w):
+    """n equal panes between u0 and u1, with n - 1 mullions w wide between them: (panes, mullions)."""
+    pane = (u1 - u0 - (n - 1) * w) / n
+    return ([(u0 + i * (pane + w), u0 + i * (pane + w) + pane) for i in range(n)],
+            [(u0 + i * (pane + w) + pane, u0 + (i + 1) * (pane + w)) for i in range(n - 1)])
+
+
+def _glazing():
+    """Every glass area and its frame, per wall, with u along lounge-v1's line (as the images are laid out) and y
+    up: panes (u0, u1, y0, y1), and frame members (u0, u1, y0, y1, how far they stand out of the glass). The
+    frames are dark bronze aluminum, as the Captures show them; the panes are even."""
+    M = 0.05                                           # mullion and post width
+    out = {}
+    # South: the wood door at the East end, its frame, then the glass wall to the West corner.
+    s0, s1 = X1 - WX1, X1 - WX0
+    panes, mull = _even(1.01, s1 - M, 3, M)
+    out['south'] = {
+        'panes': [(a, b, 0.07, 2.21) for a, b in panes],
+        # The West corner's post is the main door's (west, below): one post, or they'd overlap and flicker.
+        'frames': [(s0, 0.03, 0, 2.33, 0.02), (s0, 0.95, 2.28, 2.33, 0.02),           # the door frame
+                   (0.95, 1.01, 0, 2.33, 0.05),                                       # the post by the door
+                   (1.01, s1 - M, 2.21, 2.27, 0.05), (1.01, s1 - M, 0, 0.07, 0.05)]   # head and bottom rail
+                  + [(a, b, 0.07, 2.21, 0.05) for a, b in mull]}
+    # West: the main door, a glass storefront of three panes.
+    w0 = Z1 - WZ1
+    panes, mull = _even(w0 + 0.06, 1.76, 3, M)
+    out['west'] = {
+        'panes': [(a, b, 0.07, 2.17) for a, b in panes],
+        'frames': [(w0, w0 + 0.06, 0, 2.25, 0.05), (1.76, 1.82, 0, 2.25, 0.05),
+                   (w0, 1.82, 2.17, 2.25, 0.05), (w0 + 0.06, 1.76, 0, 0.07, 0.05)]
+                  + [(a, b, 0.07, 2.17, 0.05) for a, b in mull]}
+    # North: the window, two panes in KIRI's frame (made square: 0.555-2.205 m along, 0.89-2.36 m up).
+    panes, mull = _even(0.605, 2.155, 2, M)
+    out['north'] = {
+        'panes': [(a, b, 0.935, 2.31) for a, b in panes],
+        'frames': [(0.555, 0.605, 0.89, 2.36, 0.03), (2.155, 2.205, 0.89, 2.36, 0.03),
+                   (0.555, 2.205, 2.31, 2.36, 0.03), (0.605, 2.155, 0.89, 0.935, 0.03)]
+                  + [(a, b, 0.935, 2.31, 0.03) for a, b in mull]}
+    out['east'] = {'panes': [], 'frames': []}
+    return out
+
+
+GLAZING = _glazing()
 
 F = np.diag([1.0, -1.0, -1.0])  # 180° about X: both Polycam splats are stored Y down
 
@@ -120,7 +169,7 @@ def transform_splats(data, R, t=(0, 0, 0), s=1.0, keep_sh=False):
     return out
 
 
-def to_spz(ply, scan, max_splats=1500000):
+def to_spz(ply, scan, max_splats=1500000, out_name='splat.spz'):
     """Runs scripts/splat.sh on an already-cropped PLY (no --box)."""
     env = dict(os.environ, SPLAT_MAX=str(max_splats))
-    subprocess.run([os.path.join(ROOT, 'scripts', 'splat.sh'), ply, '--scan', scan], check=True, env=env)
+    subprocess.run([os.path.join(ROOT, 'scripts', 'splat.sh'), ply, '--scan', scan, '--out', out_name], check=True, env=env)

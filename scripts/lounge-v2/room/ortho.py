@@ -27,7 +27,8 @@ VIEWS = {
     'floor': dict(origin=(X0, 0, Z0), u=(1, 0, 0), v=(0, 0, 1), w=X1 - X0, h=Z1 - Z0, inward=(0, 1, 0)),
     'ceiling': dict(origin=(X0, H, Z1), u=(1, 0, 0), v=(0, 0, -1), w=X1 - X0, h=Z1 - Z0, inward=(0, -1, 0)),
 }
-IN, OUT = 0.06, 0.10   # the slab: this far in front of the surface, and behind it
+IN, OUT = 0.06, float(os.environ.get('ORTHO_OUT', 0.10))   # the slab: this far in front of the surface, and behind it
+# (ORTHO_OUT=4 sees through the glass, to the hallway beyond it)
 CAM = 1.0              # the camera's distance in front of the surface
 
 

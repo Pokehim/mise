@@ -40,7 +40,7 @@ export function DesignCards({ onOpen, onBack }: { onOpen: () => void; onBack: ()
       </ul>
       <footer>
         {status === 'done'
-          ? <span className="muted">{seconds !== undefined && `Made in ${seconds} s · `}prices are estimates</span>
+          ? <span className="muted">{seconds !== undefined && <>Made in <span className="seconds">{seconds} s</span> · </>}prices are estimates</span>
           : <Elapsed />}
         <button type="button" disabled={status !== 'done'} onClick={onBack}>Change the Brief</button>
       </footer>

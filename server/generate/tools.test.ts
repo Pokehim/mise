@@ -252,8 +252,8 @@ describe('the Design tools', () => {
     });
 
     it("sends Claude back once for a name another take on the Brief already has", async () => {
-      const names = new Set<string>();
-      const [first, second] = [0, 1].map(() => createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials, names }));
+      const takenNames = new Set<string>();
+      const [first, second] = [0, 1].map(() => createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials, takenNames }));
       const finish = (session: DesignSession, name: string) => call(session, 'finish_design', { name, rationale: 'Oat walls.', palette });
       for (const session of [first, second]) await expect(finish(session, 'Quiet Oat Nook')).rejects.toThrow('Not finished');
 

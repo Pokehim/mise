@@ -106,8 +106,8 @@
 @media (hover: hover) {
   .editor .design-card:hover:not(:disabled) { border-color: var(--ink); }
 }
-/* The take open in the editor: the wash marks what's chosen. */
-.editor .design-card[aria-current='true'] { border-color: var(--wash); background: var(--wash-tint); }
+/* The take open in the editor: chosen, so the wash tint under it and an ink edge. */
+.editor .design-card[aria-current='true'] { border-color: var(--ink); background: var(--wash-tint); }
 .design-card h3 { margin: 0; font: 400 21px/1.2 var(--font-hand); }
 .design-card .rationale {
   display: -webkit-box;
@@ -154,8 +154,7 @@
 /* What the Design adds, in its own color with an ink edge. */
 .plan-sketch .piece > * { fill: var(--color, var(--pencil-strong)); stroke: var(--ink); stroke-width: var(--line); }
 .plan-sketch .piece.rug > :first-child { fill-opacity: 0.5; stroke: var(--pencil-strong); }
-.plan-sketch .piece .hatched { stroke: none; }
-.plan-sketch .hatch { stroke: var(--ink); stroke-width: 0.02; opacity: 0.35; }
+.plan-sketch .piece.rug .border { fill: none; stroke: var(--pencil-strong); }
 /* The Piece Claude just placed: the wash marks what's active. */
 .plan-sketch .piece.latest > * { stroke: var(--wash); stroke-width: var(--line-strong); }
 .plan-sketch .paint { stroke-linecap: butt; }

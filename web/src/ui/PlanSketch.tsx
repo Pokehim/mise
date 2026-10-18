@@ -1,4 +1,4 @@
-import { type CSSProperties, useId, useMemo } from 'react';
+import { type CSSProperties, useMemo } from 'react';
 import { COLOR_NAMES } from '@shared/describe';
 import { roomItems, type Item } from '@shared/fit';
 import { rectCorners, wallLength, wallPoint } from '@shared/geometry';
@@ -17,19 +17,19 @@ const ON_WALL_DEPTH = 0.1;
 const DOT = 0.06;
 /** How thick a window draws in its wall, in meters. */
 const WINDOW_DEPTH = 0.08;
+/** How far inside a rug's edge its border line runs, in meters. */
+const RUG_BORDER = 0.08;
 
 /**
- * A Design seen from above, drawn like an architect's plan: walls and openings in ink, your furniture
- * in pencil, and what the Design adds in its own colors. Rugs are hatched, wall art is a bar on its
- * wall, and lamps and things on tops are dots. Each Piece settles in as it arrives, so a take can be watched as
- * Claude makes it; `latest` is outlined in the wash.
+ * A Design seen from above, drawn like an architect's plan: the walls and Openings in ink, the Originals
+ * in pencil, and the Pieces the Design adds in their own colors. A rug has a border line inside its edge,
+ * wall art is a bar on its wall, and lamps and things on tops are dots. Each Piece settles in as it
+ * arrives, so a take can be watched as Claude makes it; `latest` is outlined in the wash.
  */
 export function PlanSketch({ setup, catalog, edits, latest }: { setup: RoomSetup; catalog: Catalog; edits: Edit[]; latest?: string }) {
   const state = useMemo(() => replay(setup, catalog, edits), [setup, catalog, edits]);
   const items = useMemo(() => roomItems(setup, catalog, state), [setup, catalog, state]);
   const colors = useMemo(() => new Map(catalog.items.map((item) => [item.id, itemColor(item)])), [catalog]);
-  // One hatch pattern per plan, as the three takes' plans share a page.
-  const hatch = `plan-hatch-${useId().replace(/[^\w-]/g, '')}`;
 
   const { min, max } = roomBounds(setup);
   const viewBox = `${min.x - MARGIN} ${min.z - MARGIN} ${max.x - min.x + 2 * MARGIN} ${max.z - min.z + 2 * MARGIN}`;
@@ -39,11 +39,6 @@ export function PlanSketch({ setup, catalog, edits, latest }: { setup: RoomSetup
 
   return (
     <svg className="plan-sketch" viewBox={viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label="The Design from above">
-      <defs>
-        <pattern id={hatch} width="0.08" height="0.08" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-          <line x1="0" y1="0" x2="0" y2="0.08" className="hatch" />
-        </pattern>
-      </defs>
       <polygon className="floor" points={points(setup.floor.polygon)} />
       {setup.walls.map((wall) => {
         const finish = state.surfaces.walls[wall.id];
@@ -71,14 +66,14 @@ export function PlanSketch({ setup, catalog, edits, latest }: { setup: RoomSetup
         if (!piece) return <polygon key={item.id} className={`original ${item.category}`} points={points(item.corners)} style={fill(originalColor(state, item.id))} />;
         const color = piece.partColors['*'] ?? Object.values(piece.partColors)[0] ?? colors.get(piece.catalogId);
         const className = `piece ${item.category}${item.id === latest ? ' latest' : ''}`;
-        return <g key={item.id} className={className} style={{ '--color': color } as CSSProperties}>{shape(item, hatch)}</g>;
+        return <g key={item.id} className={className} style={{ '--color': color } as CSSProperties}>{shape(item)}</g>;
       })}
     </svg>
   );
 }
 
-/** A Piece's mark on the plan: a hatched rug, a bar on the wall, a dot on a top or for a lamp, or its footprint. */
-function shape(item: Item, hatch: string) {
+/** A Piece's mark on the plan: a rug with its border, a bar on the wall, a dot on a top or for a lamp, or its footprint. */
+function shape(item: Item) {
   const { rect, placement, category } = item;
   if (placement.mount === 'wall') {
     // Out from the wall to ON_WALL_DEPTH, whatever the frame's own depth.
@@ -92,7 +87,8 @@ function shape(item: Item, hatch: string) {
     return <circle cx={rect.center[0]} cy={rect.center[1]} r={Math.max(DOT, Math.min(...rect.size) / 2)} />;
   }
   if (category === 'rug') {
-    return <><polygon points={points(item.corners)} /><polygon className="hatched" points={points(item.corners)} style={{ fill: `url(#${hatch})` }} /></>;
+    const border = rectCorners({ ...rect, size: [Math.max(0, rect.size[0] - 2 * RUG_BORDER), Math.max(0, rect.size[1] - 2 * RUG_BORDER)] });
+    return <><polygon points={points(item.corners)} /><polygon className="border" points={points(border)} /></>;
   }
   return <polygon points={points(item.corners)} />;
 }

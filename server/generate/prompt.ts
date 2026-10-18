@@ -29,7 +29,7 @@ Design the whole room in ONE reply: make every tool call in a single turn, in th
 3. lay_rug under the bed or sofa.
 4. make_corner: a chair, a lamp and a plant or side table near a window (its Opening id), or wherever the Brief asks for a place, such as a reading corner. That is the cozy light where the room is dark. A table lamp needs a side table to stand on. When the Brief asks for no place to sit, light a chair the room already has: pass its id as the chair.
 5. dress_bed: one or two pillows on the bed.
-6. style_tops: plants and small decor on the desk, dresser, nightstands or shelves from decor.tops.
+6. style_tops: plants and small decor on the desk, dresser, nightstands or shelves from decor.tops. A shelf you place with place_piece comes back with its shelf_levels: put decor on a level with place_piece, on_top_of the shelf with that level.
 7. recolor, if it helps: the bedding or a chair in the Palette's colors.
 8. finish_design: a name of 3 words or fewer, a one-line rationale that mentions the Brief, and the Palette.
 Skip a step only when the room has nothing for it. That makes ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]} Edits. Use place_piece, replace_original or remove only for what the Brief asks beyond these steps, with at most ${MAX_LARGE_CHANGES} large furniture changes: ${LARGE_CHANGES}.

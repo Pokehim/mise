@@ -13,6 +13,7 @@ import { createSession, type DesignSession } from './tools';
 const print = item('print-fern', 'wall_art', 'Fern Print', [0.5, 0.6, 0.03], { mount: 'wall', priceEstimateUsd: 40 });
 const poster = item('poster-city', 'wall_art', 'City Poster', [0.4, 0.5, 0.02], { mount: 'wall', priceEstimateUsd: 30 });
 const sketch = item('sketch-oak', 'wall_art', 'Oak Sketch', [0.3, 0.4, 0.02], { mount: 'wall', priceEstimateUsd: 25 });
+const roundMirror = item('mirror-round', 'mirror', 'Round Mirror', [0.6, 0.6, 0.03], { mount: 'wall', priceEstimateUsd: 50 });
 const pillow = item('pillow-navy', 'decor', 'Navy Pillow', [0.45, 0.45, 0.15], { priceEstimateUsd: 25 });
 const vase = item('vase-white', 'decor', 'White Vase', [0.17, 0.33, 0.17], { priceEstimateUsd: 25 });
 const fern = item('plant-fern', 'plant', 'Potted Fern', [0.3, 0.6, 0.3], { priceEstimateUsd: 30 });
@@ -20,7 +21,7 @@ const armchair = item('chair-reading', 'chair', 'Reading Chair', [0.75, 0.8, 0.7
 const floorLamp = item('lamp-floor', 'lamp', 'Linen Floor Lamp', [0.35, 1.55, 0.35], { priceEstimateUsd: 45 });
 const sideTable = item('table-side', 'table', 'Round Side Table', [0.45, 0.55, 0.45], { priceEstimateUsd: 60 });
 const smallRug = item('rug-small', 'rug', 'Small Rug', [1.2, 0.01, 1], { priceEstimateUsd: 50 });
-const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug] };
+const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug] };
 
 const start = (onEdit?: (edit: Edit) => void) =>
   createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials: [], onEdit });
@@ -42,13 +43,28 @@ describe('the decorating moves', () => {
 
       const report = await call(session, 'hang_gallery', { over_id: 'og_bed', wall_id: 'wl_west', catalog_ids: ['print-fern', 'poster-city', 'sketch-oak'] });
 
-      expect(report.placed.map(({ catalog_id }: { catalog_id: string }) => catalog_id)).toEqual(['poster-city', 'print-fern', 'sketch-oak']);
+      // The widest in the middle, hung first, then outward.
+      expect(report.placed.map(({ catalog_id }: { catalog_id: string }) => catalog_id)).toEqual(['print-fern', 'sketch-oak', 'poster-city']);
       // Left to right on the West wall: 0.4 + 0.08 + 0.5 + 0.08 + 0.3 = 1.36 m, centered on the bed's 0.97 to 3 m.
       const frames = roomOf(session).filter(({ placement }) => placement.mount === 'wall').map((frame) => ({
         span: spanFromLeft(westWall, frame.corners), center: (frame.heights[0] + frame.heights[1]) / 2,
       })).sort((a, b) => a.span[0] - b.span[0]);
       expect(frames.map(({ span }) => span[0])).toEqual([expect.closeTo(1.305), expect.closeTo(1.785), expect.closeTo(2.365)]);
       expect(frames.every(({ center }) => Math.abs(center - 1.45) < 1e-6)).toBe(true);
+      expect(fit(session)).toEqual([]);
+    });
+
+    it('keeps the row centered over furniture narrower than the row', async () => {
+      const session = start();
+      const eastWall = setup.walls.find(({ id }) => id === 'wl_east')!;
+
+      // 0.5 + 0.08 + 0.6 + 0.08 + 0.4 = 1.66 m of frames over the 1.07 m desk.
+      await call(session, 'hang_gallery', { over_id: 'og_desk', wall_id: 'wl_east', catalog_ids: ['print-fern', 'mirror-round', 'poster-city'] });
+
+      const room = roomOf(session);
+      const spans = room.filter(({ placement }) => placement.mount === 'wall').map((frame) => spanFromLeft(eastWall, frame.corners));
+      const [deskFrom, deskTo] = spanFromLeft(eastWall, room.find(({ id }) => id === 'og_desk')!.corners);
+      expect((Math.min(...spans.map(([from]) => from)) + Math.max(...spans.map(([, to]) => to))) / 2).toBeCloseTo((deskFrom + deskTo) / 2);
       expect(fit(session)).toEqual([]);
     });
 

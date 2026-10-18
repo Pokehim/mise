@@ -27,8 +27,8 @@ export interface DesignContext extends AnchorOptions {
   maxToolCalls?: number;
   /** Called with each Edit as soon as it is applied, so the Mover can watch the Design take shape. */
   onEdit?: (edit: Edit) => void;
-  /** The names of the Brief's finished takes, shared by its sessions, so that each take has a name of its own. */
-  names?: Set<string>;
+  /** The names the Brief's finished takes have taken, shared by its sessions, so that each take has a name of its own. */
+  takenNames?: Set<string>;
 }
 
 /** One Design being made: its Edits, the room they make, and the tools that change it. */
@@ -116,7 +116,7 @@ const finishTarget = z.union([
 ]);
 
 /** A new Design session, with the 7 tools of spec §13.2 that change it. */
-export function createSession({ setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS, onEdit, names }: DesignContext): DesignSession {
+export function createSession({ setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS, onEdit, takenNames }: DesignContext): DesignSession {
   let edits: Edit[] = [];
   let state = replay(setup, catalog, edits);
   let finished: DesignSession['finished'];
@@ -391,7 +391,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
           sentBack = true;
           fail(`Not finished: ${lacking.join('. ')}. Add them, then call finish_design again`);
         }
-        const taken = [...(names ?? [])].find((other) => other.toLowerCase() === name.trim().toLowerCase());
+        const taken = [...(takenNames ?? [])].find((other) => other.toLowerCase() === name.trim().toLowerCase());
         if (taken && !renamed) {
           renamed = true;
           fail(`Another take on this Brief is called "${taken}": give this one a name of its own`);
@@ -401,7 +401,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
           rationale: rationale.trim().split('\n')[0],
           palette: { wall: checkHex(palette.wall), accents: palette.accents.map(checkHex), materials: palette.materials },
         };
-        names?.add(finished.name);
+        takenNames?.add(finished.name);
         return { ok: true };
       },
     ),

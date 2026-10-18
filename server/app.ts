@@ -257,7 +257,7 @@ app.post('/api/generate', async (c) => {
 });
 
 // Writes what generating Designs for this Scan reads first to Claude's prompt cache, so that they start
-// sooner. The Brief dialog asks for it when it opens.
+// sooner. The Brief dialog asks for it when the Mover starts writing a Brief.
 app.post('/api/generate/warm', async (c) => {
   const { scanId, fast } = await readBody<{ scanId?: string; fast?: boolean }>(c);
   if (!scanId) fail(400, 'Send {scanId}');

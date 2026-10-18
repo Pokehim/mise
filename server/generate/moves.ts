@@ -7,7 +7,6 @@ import { type Anchor, BY_WALL, GALLERY_GAP } from '../../shared/anchors';
 import type { Item } from '../../shared/fit';
 import { isBy } from '../../shared/geometry';
 import type { CatalogItem, Category, RoomSetup } from '../../shared/types';
-import { FLOOR_LAMP } from './catalogList';
 import { TOP_CATEGORIES } from './roomSummary';
 
 /** What a move can do to the Design: read the room and the Catalog, and place Pieces as place_piece does. */
@@ -29,6 +28,8 @@ export interface MoveReport {
   skipped: { catalog_id: string; why: string }[];
 }
 
+/** A lamp this tall, in meters, stands on the floor; a shorter one goes on a table. */
+const FLOOR_LAMP = 1;
 /** A plant or decor shorter than this goes on a furniture top, not on the floor. */
 const FLOOR_DECOR = 0.6;
 /** What a table lamp can stand on, beside a reading chair. */
@@ -36,12 +37,28 @@ const SIDE_TABLES: Category[] = ['table', 'nightstand', 'storage', 'shelf', 'dre
 /** What a table lamp can stand on anywhere in the room, when it has no side table: the tops decor rests on, but a bed. */
 const LAMP_TOPS: Category[] = TOP_CATEGORIES.filter((category) => category !== 'bed');
 
+/** Whether a lamp stands on the floor, rather than on a table. */
+export const isFloorLamp = ({ size: [, height] }: CatalogItem) => height >= FLOOR_LAMP;
+
 /** Collects a move's report, and fails the call only when the move placed nothing at all. */
 function reporter(verb: string) {
   const report: MoveReport = { placed: [], skipped: [] };
+  const placed = (catalogId: string, pieceId: string, as: string) => report.placed.push({ catalog_id: catalogId, piece_id: pieceId, as });
+  const skip = (catalogId: string, why: string) => report.skipped.push({ catalog_id: catalogId, why });
   return {
-    placed: (catalogId: string, pieceId: string, as: string) => report.placed.push({ catalog_id: catalogId, piece_id: pieceId, as }),
-    skip: (catalogId: string, why: string) => report.skipped.push({ catalog_id: catalogId, why }),
+    placed,
+    skip,
+    /** Places an item with `place` and reports it, or reports why it was skipped: its Piece id, if placed. */
+    attempt: (catalogId: string, place: () => { pieceId: string; as: string }): string | undefined => {
+      try {
+        const { pieceId, as } = place();
+        placed(catalogId, pieceId, as);
+        return pieceId;
+      } catch (error) {
+        skip(catalogId, reason(error));
+        return undefined;
+      }
+    },
     done: () => {
       if (!report.placed.length) throw new ToolError(`${verb} nothing: ${report.skipped.map(({ why }) => why).join('; ')}`);
       return report;
@@ -65,17 +82,20 @@ function lookUp(draft: Draft, catalogIds: string[], skip: (catalogId: string, wh
   });
 }
 
-/** Tries each Anchor in turn and places the item at the first that works, or throws the last reason. */
+/**
+ * Tries each Anchor in turn and places the item at the first that works. When none does, it throws why
+ * the first, the spot asked for, failed: its Fit violations say more than the last fallback's.
+ */
 function placeFirst(draft: Draft, item: CatalogItem, anchors: Anchor[]): { pieceId: string; anchor: Anchor } {
-  let last: unknown = new Error(`There is nowhere for ${item.title}`);
+  let first: unknown;
   for (const anchor of anchors) {
     try {
       return { pieceId: draft.place(item, anchor), anchor };
     } catch (error) {
-      last = error;
+      first ??= error;
     }
   }
-  throw last;
+  throw first ?? new ToolError(`There is nowhere for ${item.title}`);
 }
 
 /** The frames in hanging order, left to right: the widest in the middle, the others alternating out from it. */
@@ -91,7 +111,7 @@ function middleOut(frames: CatalogItem[]): CatalogItem[] {
  * wall the target stands against. A frame that doesn't fit is skipped.
  */
 export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { over_id: string; wall_id: string; catalog_ids: string[] }): MoveReport {
-  const { placed, skip, done } = reporter('Hung');
+  const { placed, skip, attempt, done } = reporter('Hung');
   const target = draft.inRoom(over_id);
   const frames = lookUp(draft, catalog_ids, skip, (frame) =>
     (frame.category === 'wall_art' || frame.category === 'mirror' ? undefined : `${frame.title} is not wall art or a mirror`));
@@ -99,32 +119,34 @@ export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { o
   const row = middleOut(frames);
   const walls = [wall_id, ...draft.setup.walls.filter((wall) => wall.id !== wall_id && isBy(wall, target, BY_WALL)).map(({ id }) => id)];
   const rowWidth = row.reduce((total, frame) => total + frame.size[0], 0) + GALLERY_GAP * (row.length - 1);
+  // The widest frame, in the middle of the row, and how far its center is from the row's.
+  const middle = Math.floor(row.length / 2);
+  const offset = -rowWidth / 2 + row.slice(0, middle).reduce((total, frame) => total + frame.size[0] + GALLERY_GAP, 0) + row[middle].size[0] / 2;
+  const outward = [
+    ...row.slice(middle + 1).map((frame) => ['right', frame] as const),
+    ...row.slice(0, middle).reverse().map((frame) => ['left', frame] as const),
+  ];
   let firstFailure: unknown;
   for (const wall of walls) {
-    // The first frame, at the row's left end; then each next one to the right of the last, then any
-    // that didn't fit there to the left of the first.
-    const [first, ...rest] = row;
-    let firstId: string;
+    // The middle frame first, where it is in the row centered over the target; then outward, each frame
+    // beside the last on its side, or on the other side when it doesn't fit there. Hung from the middle,
+    // the row stays centered even when it is wider than the target, which a frame's center may not leave.
+    let middleId: string;
     try {
-      firstId = draft.place(first, { kind: 'on_wall_over', target_id: over_id, wall_id: wall, offset_m: -rowWidth / 2 + first.size[0] / 2 });
+      middleId = draft.place(row[middle], { kind: 'on_wall_over', target_id: over_id, wall_id: wall, offset_m: offset });
     } catch (error) {
       firstFailure ??= error;
       continue;
     }
-    placed(first.id, firstId, `over ${target.name}`);
-    let [leftmost, rightmost] = [firstId, firstId];
-    for (const frame of rest) {
-      try {
-        const { pieceId, anchor } = placeFirst(draft, frame, [
-          { kind: 'on_wall_beside', target_id: rightmost, side: 'right', gap_m: GALLERY_GAP },
-          { kind: 'on_wall_beside', target_id: leftmost, side: 'left', gap_m: GALLERY_GAP },
-        ]);
-        placed(frame.id, pieceId, `over ${target.name}`);
-        if (anchor.kind === 'on_wall_beside' && anchor.side === 'right') rightmost = pieceId;
-        else leftmost = pieceId;
-      } catch (error) {
-        skip(frame.id, reason(error));
-      }
+    placed(row[middle].id, middleId, `over ${target.name}`);
+    const ends = { left: middleId, right: middleId };
+    for (const [side, frame] of outward) {
+      const sides = side === 'right' ? (['right', 'left'] as const) : (['left', 'right'] as const);
+      attempt(frame.id, () => {
+        const { pieceId, anchor } = placeFirst(draft, frame, sides.map((each): Anchor => ({ kind: 'on_wall_beside', target_id: ends[each], side: each, gap_m: GALLERY_GAP })));
+        if (anchor.kind === 'on_wall_beside') ends[anchor.side] = pieceId;
+        return { pieceId, as: `over ${target.name}` };
+      });
     }
     return done();
   }
@@ -134,16 +156,14 @@ export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { o
 
 /** A rug centered under a bed or a sofa, or failing that on the open floor nearest it. */
 export function layRug(draft: Draft, { catalog_id, under_id }: { catalog_id: string; under_id: string }): MoveReport {
-  const { placed, skip, done } = reporter('Laid');
+  const { skip, attempt, done } = reporter('Laid');
   const target = draft.inRoom(under_id);
   const [rug] = lookUp(draft, [catalog_id], skip, (item) => (item.category === 'rug' ? undefined : `${item.title} is not a rug`));
   if (!rug) return done();
-  try {
+  attempt(rug.id, () => {
     const { pieceId, anchor } = placeFirst(draft, rug, [{ kind: 'centered_under', target_id: under_id }, { kind: 'open_floor', near_id: under_id }]);
-    placed(rug.id, pieceId, anchor.kind === 'centered_under' ? `centered under ${target.name}` : `on the open floor near ${target.name}`);
-  } catch (error) {
-    skip(rug.id, reason(error));
-  }
+    return { pieceId, as: anchor.kind === 'centered_under' ? `centered under ${target.name}` : `on the open floor near ${target.name}` };
+  });
   return done();
 }
 
@@ -156,19 +176,14 @@ export function layRug(draft: Draft, { catalog_id, under_id }: { catalog_id: str
 export function makeCorner(
   draft: Draft, { chair_id, lamp_id, side_id, near_id }: { chair_id: string; lamp_id: string; side_id: string; near_id: string },
 ): MoveReport {
-  const { placed, skip, done } = reporter('Placed');
+  const { skip, attempt, done } = reporter('Placed');
   let chairId = chair_id;
-  // A chair from the Catalog goes near near_id; one already in the room, such as your desk chair, stays put.
+  // A chair from the Catalog goes near near_id; one already in the room, such as an Original desk chair, stays put.
   if (!draft.items().some(({ id }) => id === chair_id)) {
     const [chair] = lookUp(draft, [chair_id], skip);
-    if (!chair) return done();
-    try {
-      chairId = draft.place(chair, { kind: 'open_floor', near_id });
-      placed(chair.id, chairId, `near ${near_id}`);
-    } catch (error) {
-      skip(chair.id, reason(error));
-      return done();
-    }
+    const pieceId = chair && attempt(chair.id, () => ({ pieceId: draft.place(chair, { kind: 'open_floor', near_id }), as: `near ${near_id}` }));
+    if (!pieceId) return done();
+    chairId = pieceId;
   }
   const [lamp] = lamp_id ? lookUp(draft, [lamp_id], skip) : [];
   const [side] = side_id ? lookUp(draft, [side_id], skip) : [];
@@ -187,21 +202,14 @@ export function makeCorner(
       .sort((a, b) => distance(a) - distance(b));
     return placeFirst(draft, item, [...(first ? [first] : []), ...tops.map(({ id }) => id)].map((id): Anchor => ({ kind: 'on_top_of', target_id: id }))).pieceId;
   };
-  /** Puts the item on the nearest top or by the chair, and reports it: its Piece id, or undefined when it didn't fit. */
-  const put = (item: CatalogItem, onTop: boolean, first?: string) => {
-    try {
-      const pieceId = onTop ? onNearestTop(item, first) : byChair(item);
-      placed(item.id, pieceId, onTop ? 'on the nearest furniture top' : 'by the chair');
-      return pieceId;
-    } catch (error) {
-      skip(item.id, reason(error));
-      return undefined;
-    }
-  };
+  /** Puts the item on the nearest top or by the chair: its Piece id, or undefined when it didn't fit. */
+  const put = (item: CatalogItem, onTop: boolean, first?: string) => attempt(item.id, () => (onTop
+    ? { pieceId: onNearestTop(item, first), as: 'on the nearest furniture top' }
+    : { pieceId: byChair(item), as: 'by the chair' }));
   const sideTable = side && SIDE_TABLES.includes(side.category);
   // A side table goes in first, so that a table lamp can stand on it.
   const sideTableId = sideTable ? put(side, false) : undefined;
-  if (lamp) put(lamp, lamp.size[1] < FLOOR_LAMP, sideTableId);
+  if (lamp) put(lamp, !isFloorLamp(lamp), sideTableId);
   // A small plant or ornament beside a reading chair sits on a table, not on the floor.
   if (side && !sideTable) put(side, side.size[1] < FLOOR_DECOR);
   return done();
@@ -209,31 +217,21 @@ export function makeCorner(
 
 /** Pillows and throws resting on a bed's bedding. */
 export function dressBed(draft: Draft, { bed_id, catalog_ids }: { bed_id: string; catalog_ids: string[] }): MoveReport {
-  const { placed, skip, done } = reporter('Put');
+  const { skip, attempt, done } = reporter('Put');
   const bed = draft.inRoom(bed_id);
   if (bed.category !== 'bed') throw new ToolError(`${bed.name} is not a bed: put decor on it with style_tops`);
   for (const item of lookUp(draft, catalog_ids, skip)) {
-    try {
-      placed(item.id, draft.place(item, { kind: 'on_top_of', target_id: bed_id }), `on ${bed.name}`);
-    } catch (error) {
-      skip(item.id, reason(error));
-    }
+    attempt(item.id, () => ({ pieceId: draft.place(item, { kind: 'on_top_of', target_id: bed_id }), as: `on ${bed.name}` }));
   }
   return done();
 }
 
 /** Decor, plants and table lamps resting on furniture tops: desks, dressers, nightstands and shelves. */
 export function styleTops(draft: Draft, { items }: { items: { catalog_id: string; on_id: string }[] }): MoveReport {
-  const { placed, skip, done } = reporter('Put');
+  const { skip, attempt, done } = reporter('Put');
   for (const { catalog_id, on_id } of items) {
     const [item] = lookUp(draft, [catalog_id], skip);
-    if (!item) continue;
-    try {
-      const top = draft.inRoom(on_id);
-      placed(item.id, draft.place(item, { kind: 'on_top_of', target_id: on_id }), `on ${top.name}`);
-    } catch (error) {
-      skip(item.id, reason(error));
-    }
+    if (item) attempt(item.id, () => ({ pieceId: draft.place(item, { kind: 'on_top_of', target_id: on_id }), as: `on ${draft.inRoom(on_id).name}` }));
   }
   return done();
 }

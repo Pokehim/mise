@@ -50,8 +50,8 @@ export async function generateDesigns(request: GenerateDesignsRequest): Promise<
   const started = performance.now();
   const shared = sharedRequest(request);
   // The takes run side by side, and each needs a name of its own.
-  const names = new Set<string>();
-  const runs = await Promise.all(DIRECTIONS.map((direction) => designLoop({ ...request, names }, shared, direction)));
+  const takenNames = new Set<string>();
+  const runs = await Promise.all(DIRECTIONS.map((direction) => designLoop({ ...request, takenNames }, shared, direction)));
   return {
     designs: runs.flatMap(({ design }) => (design ? [design] : [])),
     failures: runs.flatMap(({ direction, error }) => (error ? [{ direction, error }] : [])),
@@ -95,13 +95,15 @@ function sharedRequest({ setup, catalog, fast = false }: { setup: RoomSetup; cat
   };
 }
 
+type SharedRequest = ReturnType<typeof sharedRequest>;
+
 /** The same request at standard speed. */
-function standardSpeed({ speed, betas, ...params }: ReturnType<typeof sharedRequest>): ReturnType<typeof sharedRequest> {
+function standardSpeed({ speed, betas, ...params }: SharedRequest): SharedRequest {
   return { ...params, betas: betas.filter((beta) => beta !== FAST_MODE_BETA) };
 }
 
 /** One agent loop: Claude designs in its own session until it calls finish_design, runs out of requests, or of time. */
-async function designLoop(request: GenerateDesignsRequest, shared: ReturnType<typeof sharedRequest>, direction: Direction) {
+async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest, direction: Direction) {
   const { client, brief, loopTimeoutMs = LOOP_TIMEOUT_MS, onEvent } = request;
   const started = performance.now();
   const report: LoopReport = {
@@ -125,7 +127,7 @@ async function designLoop(request: GenerateDesignsRequest, shared: ReturnType<ty
       try {
         messages = await run(client, params, session, messages, report, { started, signal: timeout });
       } catch (error) {
-        // Fast mode has its own rate limit and no retries: refused before the Design has begun, it goes on at standard speed.
+        // Fast mode has its own rate limit: still refused after the SDK's retries, before the Design has begun, it goes on at standard speed.
         const refused = error instanceof Anthropic.RateLimitError || error instanceof Anthropic.InternalServerError;
         if (!refused || params.speed !== 'fast' || session.edits.length) throw error;
         console.warn(`Generate (${direction}): fast mode refused (${error.message}), going on at standard speed`);
@@ -159,11 +161,10 @@ async function designLoop(request: GenerateDesignsRequest, shared: ReturnType<ty
  * and returns the conversation so far. Replies stream, and each tool runs as soon as its call is complete.
  */
 async function run(
-  client: Anthropic, shared: ReturnType<typeof sharedRequest>, session: DesignSession, messages: Anthropic.Beta.BetaMessageParam[],
+  client: Anthropic, shared: SharedRequest, session: DesignSession, messages: Anthropic.Beta.BetaMessageParam[],
   report: LoopReport, { started, signal }: { started: number; signal: AbortSignal },
 ) {
-  // A fast request isn't retried: refused, it goes on at standard speed at once (designLoop).
-  const runner = (shared.speed === 'fast' ? client.withOptions({ maxRetries: 0 }) : client).beta.messages.toolRunner({
+  const runner = client.beta.messages.toolRunner({
     ...shared,
     max_tokens: 16000,
     max_iterations: MAX_REQUESTS - report.requests,

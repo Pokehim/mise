@@ -3,14 +3,13 @@
 // finds the rest.
 import type { Catalog, CatalogItem, Category } from '../../shared/types';
 import { m } from './forClaude';
+import { isFloorLamp } from './moves';
 
 /** How many items of each category the shortlist shows. */
 export const SHORTLIST: Partial<Record<Category, number>> = {
   wall_art: 12, mirror: 4, rug: 10, lamp: 10, plant: 8, decor: 12, chair: 8, table: 6, nightstand: 4,
 };
 
-/** A lamp this tall, in meters, stands on the floor; a shorter one goes on a table. */
-export const FLOOR_LAMP = 1;
 /** Chairs for sitting at a desk or a counter, not in a reading corner. */
 const WORK_CHAIR = /\b(office|desk chair|task|counter|stool|kitchen|dining|gaming)\b/i;
 /** A table this wide is a desk or a dining table, not a side table. */
@@ -19,7 +18,7 @@ const SIDE_TABLE_WIDTH = 0.7;
 const TITLE_LENGTH = 50;
 
 /** Whether an item belongs on the shortlist of its category. */
-function fits({ category, title, size: [width] }: CatalogItem) {
+function onShortlist({ category, title, size: [width] }: CatalogItem) {
   if (category === 'chair') return !WORK_CHAIR.test(title);
   if (category === 'table') return width <= SIDE_TABLE_WIDTH;
   return true;
@@ -28,7 +27,7 @@ function fits({ category, title, size: [width] }: CatalogItem) {
 /** The shortlist, as lines grouped by category: id, title, size, first color and estimated price. */
 export function catalogList(catalog: Catalog): string {
   const sections = (Object.entries(SHORTLIST) as [Category, number][]).flatMap(([category, count]) => {
-    const items = spread(catalog.items.filter((item) => item.category === category && fits(item)), count);
+    const items = spread(catalog.items.filter((item) => item.category === category && onShortlist(item)), count);
     return items.length ? [[`${category}:`, ...items.map(line)].join('\n')] : [];
   });
   return [
@@ -55,8 +54,9 @@ function spread(items: CatalogItem[], count: number): CatalogItem[] {
 }
 
 /** One item as a shortlist line. */
-function line({ id, title, category, size, colors, priceEstimateUsd }: CatalogItem): string {
-  const kind = category === 'lamp' ? (size[1] >= FLOOR_LAMP ? ' (floor lamp)' : ' (table lamp)') : '';
+function line(item: CatalogItem): string {
+  const { id, title, category, size, colors, priceEstimateUsd } = item;
+  const kind = category === 'lamp' ? (isFloorLamp(item) ? ' (floor lamp)' : ' (table lamp)') : '';
   return `- ${id} | ${shorten(title)}${kind} | ${size.map(m).join('×')} m | ${colors[0] ?? '—'} | $${priceEstimateUsd}`;
 }
 

@@ -4,9 +4,9 @@ import { clipOf, EMPTY, ROOMS, stillOf } from './rooms';
 /** The grid's columns, for the wave. */
 const COLUMNS = 4;
 /** The wave: each diagonal of the grid starts this long after the one before it. */
-const WAVE_MS = 260;
+const WAVE_MS = 230;
 /** The clips are recorded at the reveal's own pace; the grid plays them a little faster. */
-const RATE = 1.4;
+const RATE = 1.6;
 
 /** Whether the rooms should assemble: not under reduced motion, and only where the WebM clips play. */
 function useAnimate() {

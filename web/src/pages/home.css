@@ -56,6 +56,35 @@
   .home a.cta:active { scale: 0.97; }
 }
 
+/* The intro, and under it the real room. */
+.landing-side { display: grid; gap: var(--s-6); }
+
+/* The real room: a photo mounted like the rooms, set down on the sheet a little askew, its label beside
+   an arrow to the rooms. */
+.landing-real { display: grid; gap: var(--s-4); max-width: 280px; margin: 0; }
+.landing-real img {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 6px;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--paper-raised);
+  box-shadow: var(--lift);
+  rotate: -1.5deg;
+}
+.landing-real figcaption {
+  display: grid;
+  grid-template: 'title arrow' auto 'note note' auto / auto 1fr;
+  column-gap: var(--s-3);
+  color: var(--graphite);
+  font-size: 13px;
+}
+.landing-real .landing-title { grid-area: title; color: var(--ink); }
+.landing-real .note { grid-area: note; }
+.hand-arrow { grid-area: arrow; align-self: end; color: var(--pencil-strong); }
+
 /* The demo: the 16 rooms mounted on the sheet together like a contact print, labeled like a drawing. */
 .landing-demo { margin: 0; }
 .home a.landing-rooms {
@@ -257,6 +286,12 @@
   .home-intro h1 { font-size: 52px; }
   .home a.cta { margin-top: var(--s-5); }
   .landing-rooms ul { gap: 4px; }
+  .landing-side { gap: var(--s-6); }
+  /* The rooms are under the photo here: the arrow turns to point down at them. */
+  .landing-real { max-width: none; }
+  .landing-real img { max-width: 280px; }
+  .landing-real figcaption { grid-template: 'title arrow' auto 'note arrow' auto / minmax(0, max-content) auto; justify-content: start; }
+  .hand-arrow { align-self: center; rotate: 70deg; }
   .scan { grid-template-columns: 88px minmax(0, 1fr); column-gap: var(--s-4); padding: var(--s-4) var(--s-4) var(--s-2); }
   .plan { grid-row: 1; }
   .scan > :is(.designs, .empty, .error) { grid-column: 1 / -1; }

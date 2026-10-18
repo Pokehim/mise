@@ -10,3 +10,5 @@ node scripts/landing-clips.ts ds_x ds_y  # just these
 ```
 
 To open one of these Designs in the editor, copy it into `data/designs/`, then go to `/d/<id>`.
+
+The photo beside the rooms (`web/src/pages/landing/real-room.webp`) is the lounge as it really is, with its tables and chairs: a phone photo cropped square from below the ceiling, resized to 800 px, and saved as WebP without its metadata.

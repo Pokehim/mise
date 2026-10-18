@@ -1,7 +1,7 @@
 /**
  * The 16 rooms on the landing page: Designs Claude made of the study lounge, each from a one-line
  * Brief asking for a different kind of room. Each room's clip is its reveal (scene/Reveal.tsx) recorded
- * from the door (?shot=door): the empty lounge assembling itself Edit by Edit. Its still is the clip's
+ * from the door (?shot=door): the lounge as it is, its Originals going and Pieces coming Edit by Edit. Its still is the clip's
  * last frame, and empty.webp the first, which every clip shares. The Designs themselves are kept in
  * docs/landing/designs, off the Scans; docs/landing/README.md says how the clips were made.
  */
@@ -31,5 +31,5 @@ const clips = import.meta.glob<string>('./*.webm', { eager: true, import: 'defau
 export const stillOf = (id: string) => stills[`./${id}.webp`];
 /** A room's clip of its reveal. */
 export const clipOf = (id: string) => clips[`./${id}.webm`];
-/** The empty lounge, the first frame of every clip. */
+/** The lounge as it is, Originals and all: the first frame of every clip. */
 export const EMPTY = stills['./empty.webp'];

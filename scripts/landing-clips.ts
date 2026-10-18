@@ -6,9 +6,9 @@
  *
  * Run it with node (Node 24 strips the types), not tsx: tsx renames functions with a helper that the
  * page, where the recording code runs, doesn't have. Start the app first (./.superset/run.sh). BASE_URL defaults to http://localhost:$PORT. For each Design,
- * the script opens /d/<id>?shot=door, presses Replay, and records the 3D view from the empty lounge to
+ * the script opens /d/<id>?shot=door, presses Replay, and records the 3D view from the lounge as it is to
  * the finished room: a 4:3 band of it, at 640×480, as WebM. It saves <id>.webm, the last frame as
- * <id>.webp, and the first frame (the empty lounge, the same for every Design) as empty.webp. The editor
+ * <id>.webp, and the first frame (the lounge as it is, the same for every Design) as empty.webp. The editor
  * reads Designs from data/designs, so each one is copied there while it is recorded, then removed.
  * The GPU flags matter: without them Chromium draws the scene in software, at about 6 frames a second.
  * Then run scripts/landing-clips-compress.py, which re-encodes the new clips at a third of the bytes.
@@ -23,8 +23,8 @@ const OUT = 'web/src/pages/landing';
 const GPU_ARGS = ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'];
 const WIDTH = 640;
 const HEIGHT = 480;
-/** Enough for 640×480 VP9 to stay clean while Pieces drop in: about 250 KB for a 5 s reveal. */
-const BITS_PER_SECOND = 400_000;
+/** Near-lossless: the browser encodes in real time, so landing-clips-compress.py makes the small clip from this one. */
+const BITS_PER_SECOND = 8_000_000;
 /** How long the finished room holds at the end of a clip. */
 const HOLD_MS = 900;
 
@@ -74,7 +74,7 @@ for (const [n, id] of ids.entries()) {
       });
     }, { width: WIDTH, height: HEIGHT, bitsPerSecond: BITS_PER_SECOND });
 
-    // Replay empties the room at once and shows its first Edit 300 ms later: record from the empty room.
+    // Replay puts the room back as it is and starts its first Edit 300 ms later: record from there.
     await page.click('button.replay');
     await page.waitForTimeout(100);
     await page.evaluate(() => window.__clip!.recorder.start());

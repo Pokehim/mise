@@ -12,9 +12,9 @@ const WAVE_MS = 230;
 const RATE = 1.6;
 /** The scan plays a little faster than it was rendered, so the rooms aren't kept waiting. */
 const SCAN_RATE = 1.25;
-/** Below this many device pixels across the grid, the 800×600 scan is as sharp as the 1200×900 one. */
+/** Below this many device pixels across the grid, the 800×600 scan is as sharp as the 1600×1200 one. */
 const SHARP_PX = 1000;
-/** The 1200×900 scan needs about 3.3 Mb/s to play through at SCAN_RATE; below this, it's the 800×600 one. */
+/** The 1600×1200 scan needs about 4.5 Mb/s to play through at SCAN_RATE; below this, it's the 800×600 one. */
 const SHARP_MBPS = 8;
 /** A scan that hasn't moved for this long, whether it never started or stalled, gives way to the rooms. */
 const SCAN_PATIENCE_MS = 4000;
@@ -34,8 +34,8 @@ function useAnimate() {
 /**
  * The 16 rooms, 4 by 4. Once the grid is in view, the lounge's scan builds over it first: its point
  * cloud, captured from the door to the window, which the camera follows down to the door, where the
- * furniture clears and the points turn into the Empty Room (docs/landing/README.md). That is the first
- * frame of every room, so the scan fades to the 16 of them, which assemble in a wave from the top left, each playing its
+ * points turn into the lounge as the app rebuilt it (docs/landing/README.md). That is the first frame of
+ * every room, so the scan fades to the 16 of them, which assemble in a wave from the top left, each playing its
  * reveal once and stopping on the finished room. Pointing at a finished room plays it again. Without
  * motion, there's no scan, and each room shows its finished still.
  *
@@ -138,7 +138,7 @@ export function RoomGrid() {
       </ul>
       {animate && (
         <div className="room-scan" data-done={!scanning || undefined} aria-hidden="true">
-          <video ref={scan} width={1200} height={900} muted playsInline preload="auto" />
+          <video ref={scan} width={1600} height={1200} muted playsInline preload="auto" />
           <PointCount video={scan} />
         </div>
       )}
@@ -146,7 +146,7 @@ export function RoomGrid() {
   );
 }
 
-/** The scan's slip: how many of its points the scan has passed, counting with the clip, then the Empty Room. */
+/** The scan's slip: how many of its points the scan has passed, counting with the clip, then the rebuilt lounge. */
 function PointCount({ video }: { video: RefObject<HTMLVideoElement | null> }) {
   const [t, setT] = useState(0);
   useEffect(() => {
@@ -158,9 +158,9 @@ function PointCount({ video }: { video: RefObject<HTMLVideoElement | null> }) {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [video]);
-  const { counts, total, empty } = scanCounts;
+  const { counts, total, rebuilt } = scanCounts;
   const count = counts[Math.min(counts.length - 1, Math.round(t * 10))];
-  if (t >= empty) return <span className="room-label scan-label"><b>The Empty Room</b>Furniture out, ready to design</span>;
+  if (t >= rebuilt) return <span className="room-label scan-label"><b>The real room, rebuilt</b>In 3D, ready to redesign</span>;
   return (
     <span className="room-label scan-label">
       <b>{count < total ? 'Scanning the real room' : 'The real room, scanned'}</b>
@@ -169,14 +169,14 @@ function PointCount({ video }: { video: RefObject<HTMLVideoElement | null> }) {
   );
 }
 
-/** Whether the 1200×900 scan is worth its bytes here: a big, sharp grid, on a connection that can play it. */
+/** Whether the 1600×1200 scan is worth its bytes here: a big, sharp grid, on a connection that can play it. */
 function sharpScan(grid: HTMLElement) {
   const connection = (navigator as Navigator & { connection?: { downlink?: number; saveData?: boolean } }).connection;
   if (connection?.saveData || (connection?.downlink !== undefined && connection.downlink < SHARP_MBPS)) return false;
   return grid.clientWidth * devicePixelRatio >= SHARP_PX;
 }
 
-/** Plays a room's reveal from the empty lounge. A browser that refuses to play it keeps the poster. */
+/** Plays a room's reveal from the lounge as it is. A browser that refuses to play it keeps the poster. */
 function play(video: HTMLVideoElement | null) {
   if (!video) return;
   // Only a replay seeks: a seek on a clip that hasn't played yet fetches it again.

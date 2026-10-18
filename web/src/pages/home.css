@@ -126,6 +126,18 @@
 .home-heading { display: flex; align-items: center; gap: var(--s-3); margin: 0; font: 400 22px/1.2 var(--font-hand); }
 .home-heading::after { content: ''; flex: 1; height: var(--line); background: var(--pencil); }
 
+/* Start fresh, in the page's bottom-right corner: it forgets what this browser keeps (api.ts, startFresh). */
+.home .start-fresh {
+  position: fixed;
+  right: var(--s-4);
+  bottom: var(--s-4);
+  z-index: 1;
+  padding: 5px 10px 5px 8px;
+  box-shadow: var(--lift);
+  font-size: 13px;
+}
+.home .start-fresh .icon { color: var(--graphite); }
+
 /* ───────────── A Scan's sheet ───────────── */
 
 .scan {

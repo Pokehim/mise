@@ -28,7 +28,6 @@ export function BriefDialog() {
   const fast = useGenerate((s) => s.fast);
   const step = sent?.status ?? 'brief';
   const dialog = useRef<HTMLDialogElement>(null);
-  const field = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(sent?.brief?.text ?? '');
   const [styles, setStyles] = useState<string[]>(sent?.brief?.styles ?? []);
   // A budget the Brief's words named stays in its words, so that changing them changes it.
@@ -51,18 +50,19 @@ export function BriefDialog() {
     void generate(scanId, brief, useEditor.getState().design!);
   }
 
+  function open() {
+    dialog.current!.showModal();
+    // showModal focuses the first control, the Close button, and React's autoFocus ran long before.
+    dialog.current!.querySelector('textarea')?.focus();
+  }
+
   return (
     <>
       <button
         className={`generate-button${step === 'designing' ? ' designing' : ''}`}
         // The label hides on a phone, where the button is its icon.
         aria-label={step === 'designing' ? 'Designing…' : 'Generate'}
-        onClick={() => {
-          dialog.current!.showModal();
-          // The Brief's field, not the first button (Close): showModal() ignores autoFocus on a dialog
-          // that was already mounted.
-          field.current?.focus();
-        }}
+        onClick={open}
       >
         <Sparkle />
         <span className="label">{step === 'designing' ? 'Designing…' : 'Generate'}</span>
@@ -94,7 +94,6 @@ export function BriefDialog() {
             <label className="field">
               <span>What do you want?</span>
               <textarea
-                ref={field}
                 name="brief"
                 rows={3}
                 placeholder={EXAMPLE}

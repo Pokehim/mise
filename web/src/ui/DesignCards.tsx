@@ -48,6 +48,15 @@ export function DesignCards({ onOpen, onBack }: { onOpen: () => void; onBack: ()
   );
 }
 
+/** How many lines of Claude's plan a card shows: the latest, as Claude writes them. */
+const PLAN_LINES = 6;
+
+/** The lines of Claude's plan a card shows: without its Markdown's bold and bullet marks, or empty lines. */
+export const planLines = (plan: string) => plan.split('\n')
+  .map((line) => line.replaceAll('**', '').replace(/^\s*[-*•]\s+/, '').trim())
+  .filter(Boolean)
+  .slice(-PLAN_LINES);
+
 /**
  * One take: its plan from above as Claude draws it, with Claude's plan in words and the step it is on;
  * then its Design, or why it didn't finish.
@@ -75,7 +84,7 @@ function TakeCard({ direction, take: { plan, edits, design, report, error }, onO
         : error ? <span className="error">This take didn't finish: {error}</span>
         : (
           <>
-            {plan && <span className="plan">{plan.trim().split('\n').filter(Boolean).map((line, i) => <span key={i}>{line}</span>)}</span>}
+            {plan && <span className="plan">{planLines(plan).map((line, i) => <span key={i}>{line}</span>)}</span>}
             <span className="step" aria-live="polite">{last ? describe(last, setup, catalog, { name: productName }) : plan ? 'Planning…' : 'Reading the room…'}</span>
           </>
         )}

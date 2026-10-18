@@ -123,6 +123,12 @@ function wallChecks(subject: Item, setup: RoomSetup): FitViolation[] {
 const liesFlat = (item: Item) => item.category === 'rug';
 
 /**
+ * Whether two items break the overlap rule together: they can be in each other's way (`collide`) and
+ * take up the same room (`overlap`). For a sweep that moves one item a step at a time (shared/tuck.ts).
+ */
+export const itemsMeet = (a: Item, b: Item) => collide(a, b) && overlap(a, b);
+
+/**
  * Whether two items can be in each other's way: only items with the same mount can. On the floor,
  * rugs meet only rugs; on walls, only items on the same wall meet.
  */

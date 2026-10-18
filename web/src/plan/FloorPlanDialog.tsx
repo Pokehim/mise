@@ -1,7 +1,7 @@
 import { type FormEvent, type RefObject, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import type { ScanManifest } from '@shared/types';
-import { createDesign, saveDesign, saveManifest, uploadFloorPlan } from '../api';
+import { createDesign, makeScanMine, saveDesign, uploadFloorPlan } from '../api';
 import { ScanPlan } from '../pages/ScanPlan';
 import { ArrowRight, Close } from '../ui/icons';
 import { type LibraryScan, moveInLayoutId, planImageBase, searchLibrary } from './library';
@@ -91,7 +91,7 @@ function LibrarySearch({ inputRef, scans, query, onQuery, onWorking, onUpload }:
     setError(undefined);
     onWorking(true);
     try {
-      if (!scan.mine) await saveManifest({ ...scan, mine: true });
+      await makeScanMine(scan);
       const design = furnished
         ? await createDesign({ duplicateOf: moveInLayoutId(scan.id) }).then((copy) => saveDesign({ ...copy, name: 'Move-in layout' }))
         : await createDesign({ scanId: scan.id });

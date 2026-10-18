@@ -6,7 +6,8 @@
  *
  * The room is still replay(edits) (ADR-0001): while a reveal plays, the store's roomState is the replay of
  * the Edits shown so far, and the Design itself doesn't change, so nothing is saved. Any change to the
- * Edits (an Edit, undo) ends it, and the room is the whole Design again.
+ * Edits (an Edit, undo) ends it, and the room is the whole Design again. Selecting something ends it at once
+ * too, so that an Edit is never made from a room only part shown (a chair moved from where it stood 9 Edits ago).
  *
  *   reveal(from)    Replays the open Design's Edits from `from` on; the ones before it show at once.
  *   useReveal       { run }: the reveal playing, if any: the Edits it plays and the next one to show.
@@ -21,7 +22,7 @@ import { roomItems } from '@shared/fit';
 import { pointInPolygon } from '@shared/geometry';
 import type { Catalog, Edit, Finish, LibraryMaterial, Placement, RoomSetup, RoomState } from '@shared/types';
 import { replay } from '../state/core';
-import { useEditor } from '../state/store';
+import { inRoom, useEditor } from '../state/store';
 import { recolorParts } from './applyParts';
 import { withMeshopt } from './gltf';
 import { applyFinish, useMaterialLibrary } from './materials/triplanar';
@@ -55,6 +56,11 @@ export function reveal(from = 0) {
 useEditor.subscribe((state, prev) => {
   const { run } = useReveal.getState();
   if (run && state.design?.edits !== run.edits) useReveal.setState({ run: null });
+  else if (run && state.selection && state.selection !== prev.selection) {
+    useReveal.setState({ run: null });
+    const roomState = replay(state.setup!, state.catalog!, run.edits);
+    useEditor.setState({ roomState, selection: inRoom(state.selection, roomState) ? state.selection : null });
+  }
   const opened = state.status === 'ready' && (prev.status !== 'ready' || prev.design?.id !== state.design?.id);
   // ?shot= is a screenshot of the finished room.
   // One made on top of another Design reveals only its own Edits: the room it started from shows at once.

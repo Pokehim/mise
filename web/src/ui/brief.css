@@ -143,9 +143,27 @@
 .editor .design-card:disabled { color: var(--ink); }
 .editor .design-card.drawing { cursor: progress; }
 .editor .design-card.failed { cursor: default; }
-/* Claude's plan for the take, in its words, as it writes it: its concept, layout and decor, a few lines each. */
-.design-card .plan { display: grid; gap: var(--s-1); color: var(--ink); font-size: 12.5px; line-height: 1.45; }
-.design-card .plan > span { display: -webkit-box; max-height: calc(3 * 1.45em); overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+/* Claude's plan for the take, in its words, as it writes it: its latest lines (planLines), a few lines each.
+   It keeps to the card's width, however long a line or a word. */
+.design-card .plan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--s-1);
+  width: 100%;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.design-card .plan > span {
+  display: -webkit-box;
+  max-height: calc(3 * 1.45em);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
 .design-card .step { min-height: 2.9em; color: var(--graphite); font-size: 13px; line-height: 1.45; }
 .design-card .error { margin: 0; }
 .cards-step .seconds { font-family: var(--font-mono); }

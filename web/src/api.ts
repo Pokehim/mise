@@ -1,4 +1,5 @@
 import type { FloorPlanDraft, PlanReading } from '@shared/floor-plan';
+import type { Direction } from '@shared/generate';
 import type { Catalog, Design, RoomSetup, ScanManifest } from '@shared/types';
 import type { MergeSummary } from '../../scripts/scan-merge';
 import type { ImportEvent } from '../../server/app';
@@ -18,7 +19,13 @@ async function request<T>(method: string, url: string, body?: unknown, init?: Re
 /** A file in a Scan's folder, such as its mesh: scanFileUrl('dorm-v1', 'room.glb'). */
 export const scanFileUrl = (scanId: string, file: string) => `/data/scans/${scanId}/${file}`;
 
-export const listScans = () => request<ScanManifest[]>('GET', '/api/scans');
+/** The Scans. The demo is shared, so there the ones a visitor made theirs, from the library, are theirs in their browser only. */
+export async function listScans() {
+  const [scans, { demo }] = await Promise.all([request<ScanManifest[]>('GET', '/api/scans'), loadConfig()]);
+  if (!demo) return scans;
+  const { scans: mine } = readMine();
+  return scans.map((scan) => (mine.includes(scan.id) ? { ...scan, mine: true } : scan));
+}
 export const loadManifest = (scanId: string) => request<ScanManifest>('GET', scanFileUrl(scanId, 'manifest.json'));
 
 /* Floor Plans (ADR-0011): a plan image becomes a Scan, read by Claude, and corrected in Room Setup. */
@@ -143,6 +150,15 @@ export async function createDesign(from: { scanId: string } | { duplicateOf: str
 export const saveDesign = (design: Design, init?: Pick<RequestInit, 'keepalive'>) =>
   request<Design>('PUT', `/api/designs/${design.id}`, design, init);
 
+/* Saved takes: a Design the AI made, saved for its Brief, which Generate gives again when that Brief comes back. */
+type SavedTake = { direction: Direction | null };
+export const savedTake = (designId: string) => request<SavedTake>('GET', `/api/designs/${designId}/saved-take`);
+/** Saving and forgetting need the key, which changes what every visitor's Brief gives. */
+export const saveTake = (designId: string, key: string) =>
+  request<SavedTake>('PUT', `/api/designs/${designId}/saved-take`, undefined, { headers: { 'X-Mise-Key': key } });
+export const forgetTake = (designId: string, key: string) =>
+  request<SavedTake>('DELETE', `/api/designs/${designId}/saved-take`, undefined, { headers: { 'X-Mise-Key': key } });
+
 /* ───────────── The public demo (#42) ───────────── */
 
 /** What the server offers (GET /api/config). */
@@ -153,15 +169,30 @@ let config: Promise<ServerConfig> | undefined;
 export const loadConfig = () =>
   (config ??= request<ServerConfig>('GET', '/api/config').catch(() => ({ demo: false, seeds: [], generate: true, textTo3d: true })));
 
-/** The Designs this browser made, and its copy of each seed Design it opened. */
-interface Mine { ids: string[]; copies: Record<string, string> }
+/**
+ * Start fresh: forgets everything Mise keeps in this browser, its Designs, Scans and copies of the seeds in
+ * the demo and its settings, then opens the Scans anew, so the demo's rooms are as they were first scanned.
+ * The Designs stay on the server, as do the takes saved for a Brief.
+ */
+export function startFresh() {
+  try {
+    for (const key of Object.keys(localStorage)) if (key.startsWith('mise.')) localStorage.removeItem(key);
+  } catch {
+    // Storage is off, as in some private windows: there is nothing kept to forget.
+  }
+  // A whole new page, so no store keeps what was forgotten.
+  window.location.assign('/scans');
+}
+
+/** The Designs this browser made, its copy of each seed Design it opened, and the Scans it made its own. */
+interface Mine { ids: string[]; copies: Record<string, string>; scans: string[] }
 const MINE = 'mise.demo.mine';
 
 function readMine(): Mine {
   try {
-    return { ids: [], copies: {}, ...JSON.parse(localStorage.getItem(MINE) ?? '{}') };
+    return { ids: [], copies: {}, scans: [], ...JSON.parse(localStorage.getItem(MINE) ?? '{}') };
   } catch {
-    return { ids: [], copies: {} };
+    return { ids: [], copies: {}, scans: [] };
   }
 }
 
@@ -177,6 +208,14 @@ function writeMine(mine: Mine) {
 export function rememberDesigns(ids: string[]) {
   const mine = readMine();
   writeMine({ ...mine, ids: [...new Set([...mine.ids, ...ids])] });
+}
+
+/** Makes a Scan the Mover's, so /scans lists it. In the demo, which can't change a Scan, it is theirs in this browser. */
+export async function makeScanMine(scan: ScanManifest) {
+  if (scan.mine) return;
+  if (!(await loadConfig()).demo) return void (await saveManifest({ ...scan, mine: true }));
+  const mine = readMine();
+  writeMine({ ...mine, scans: [...new Set([...mine.scans, scan.id])] });
 }
 
 /** The Design a visitor edits when they open designId: in the demo, their own copy of a seed, made on first open. */

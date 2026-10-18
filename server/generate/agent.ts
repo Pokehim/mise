@@ -13,6 +13,7 @@ import { replay } from '../../shared/replay';
 import type { Catalog, Design, RoomSetup } from '../../shared/types';
 import { briefMessage, currentRoom, roomContext, SYSTEM_PROMPT } from './prompt';
 import { roomSummary } from './roomSummary';
+import { replaySavedTake } from './saved';
 import { createSession, type DesignContext, type DesignSession } from './tools';
 
 /** Claude Sonnet 5.5, the standard: half the price of Opus 5.5 per token, and a quarter of Opus in fast mode, for Designs about as good, if slower. */
@@ -56,17 +57,25 @@ export interface GenerateDesignsRequest extends Omit<DesignContext, 'edits' | 's
   signal?: AbortSignal;
   /** Called with each step as it happens: each Edit, and each Design finished or failed. */
   onEvent?: (event: GenerateEvent) => void;
+  /** The Designs saved for this Brief (saved.ts), by direction: each is given again as its take, instead of Claude's. */
+  saved?: Partial<Record<Direction, Design>>;
+  replayEditMs?: number;
 }
 
 /** Turns a Brief into up to 3 Designs, one per direction. When a loop fails, the others are still returned (spec §13.1). */
 export async function generateDesigns(request: GenerateDesignsRequest): Promise<GenerateResult> {
   const started = performance.now();
+  const { saved = {} } = request;
   const shared = sharedRequest(request);
-  await inCache(request, shared);
+  // Saved takes don't ask Claude, so a Brief that has all three needs no cache.
+  if (DIRECTIONS.some((direction) => !saved[direction])) await inCache(request, shared);
   // The takes run side by side, and each needs a name of its own.
-  const takenNames = new Set<string>();
+  const takenNames = new Set(Object.values(saved).map(({ name }) => name));
   const current = request.current && currentRoom(request.setup, request.catalog, request.current);
-  const runs = await Promise.all(DIRECTIONS.map((direction) => designLoop({ ...request, takenNames }, shared, direction, current)));
+  const runs = await Promise.all(DIRECTIONS.map((direction) => {
+    const take = saved[direction];
+    return take ? replaySavedTake(request, take, direction) : designLoop({ ...request, takenNames }, shared, direction, current);
+  }));
   return {
     designs: runs.flatMap(({ design }) => (design ? [design] : [])),
     failures: runs.flatMap(({ direction, error }) => (error ? [{ direction, error }] : [])),
@@ -213,11 +222,15 @@ async function designLoop(
   } catch (error) {
     stopped = error as Error;
   }
+  // No one is left to see it: a take cut short by the Mover leaving isn't saved.
+  if (signal?.aborted) return fail('The Mover left before the Design was done');
+  // The take's own Edits, after those of the Design it starts from.
+  const made = session.edits.length - (request.current?.edits.length ?? 0);
   let finished: Pick<Design, 'name' | 'rationale' | 'palette'> | undefined = session.finished;
+  // A Design that changes nothing isn't one, even when Claude calls it finished.
+  if (finished && !made) return fail('The AI made no changes');
   if (!finished) {
     const why = timeout.aborted ? `The AI took longer than ${loopTimeoutMs / 1000} s` : stopped?.message ?? 'The AI stopped without finishing the Design';
-    // The take's own Edits, after those of the Design it starts from.
-    const made = session.edits.length - (request.current?.edits.length ?? 0);
     if (!made) return fail(why);
     console.warn(`Generate (${direction}): ${why}, so its Design keeps the ${made} Edits made until then`);
     const cause = timeout.aborted ? `Out of time after ${loopTimeoutMs / 1000} s` : stopped ? 'Cut short by an error' : 'Stopped before finishing';
@@ -228,7 +241,7 @@ async function designLoop(
     const { name, rationale, palette } = finished;
     const design: Design = {
       version: 1, id: newId('ds'), scanId: request.scanId, name, createdAt: now, updatedAt: now,
-      origin: 'claude', brief, rationale, palette, edits: session.edits,
+      origin: 'claude', brief, direction, rationale, palette, edits: session.edits,
       ...(request.current && { startedFrom: { designId: request.current.id, edits: request.current.edits.length } }),
     };
     await request.save(design);

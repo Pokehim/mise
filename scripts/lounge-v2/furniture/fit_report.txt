@@ -13,4 +13,4 @@ Chair 9: (-1.117, 1.505) yaw 2.1 deg; splat points 5183, median distance 8.8 mm,
 Chair 10: (-0.415, 1.498) yaw -2.6 deg; splat points 9113, median distance 8.6 mm, within 3 cm 87%; free-scale fit: scale 0.9890 (median 8.5 mm); Layout box center moved 5.7 cm
 Chair 11: (-1.174, 2.060) yaw 177.1 deg; splat points 3097, median distance 9.4 mm, within 3 cm 69%; free-scale fit: scale 0.9841 (median 9.5 mm); Layout box center moved 21.1 cm
 Chair 12: (-0.442, 2.068) yaw 172.4 deg; splat points 5715, median distance 12.2 mm, within 3 cm 79%; free-scale fit: scale 0.9830 (median 9.2 mm); Layout box center moved 21.0 cm
-Whiteboard: back on the East wall at x = 1.55, z -3.565..2.522, y 0.845..2.330
+Whiteboard: back on the East wall at x = 1.5759, z -3.565..2.522, y 0.845..2.330

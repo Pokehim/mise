@@ -6,17 +6,13 @@ import { chooseSpeed, generate, useGenerate, warm } from '../state/generate';
 import { saveNow } from '../state/history';
 import { useEditor } from '../state/store';
 import { DesignCards } from './DesignCards';
-import { count } from './format';
 import { Close, Sparkle } from './icons';
 import './brief.css';
 
 /** The style chips of the Brief (spec §13.1). */
 const STYLES = ['Japandi', 'Minimal', 'Mid-century', 'Cozy', 'Industrial', 'Boho'];
 /** The speeds the AI can design at: standard, for the least credit, or fast mode, quicker for several times the credit. */
-const SPEEDS = [
-  { fast: false, name: 'Standard', hint: 'About 15–25 s for the 3 Designs, for the least credit.' },
-  { fast: true, name: 'Fast', hint: 'About twice as quick, for about 3 times the credit.' },
-];
+const SPEEDS = [{ fast: false, name: 'Standard' }, { fast: true, name: 'Fast' }];
 /** What a Brief can look like, shown in the empty field. */
 const EXAMPLE = 'cozy Japandi, under $400, I need a reading corner';
 
@@ -26,9 +22,7 @@ const EXAMPLE = 'cozy Japandi, under $400, I need a reading corner';
  */
 export function BriefDialog() {
   const scanId = useEditor((s) => s.design!.scanId);
-  const { designName, designEdits, hasOriginals } = useEditor(useShallow((s) => ({
-    designName: s.design!.name, designEdits: s.design!.edits.length, hasOriginals: !!s.setup?.originals.length,
-  })));
+  const designEdits = useEditor((s) => s.design!.edits.length);
   // The Brief of this Scan the Mover last sent, if any: the takes on it, or the form again to change it.
   const sent = useGenerate(useShallow((s) => (s.scanId === scanId ? { status: s.status, brief: s.brief, error: s.error } : undefined)));
   const fast = useGenerate((s) => s.fast);
@@ -113,13 +107,8 @@ export function BriefDialog() {
                 <legend>Start from</legend>
                 <div className="chips">
                   <button type="button" aria-pressed={fromCurrent} disabled={!designEdits} onClick={() => setStart('current')}>Current room</button>
-                  <button type="button" aria-pressed={!fromCurrent} onClick={() => setStart('empty')}>{hasOriginals ? 'Room as scanned' : 'Empty room'}</button>
+                  <button type="button" aria-pressed={!fromCurrent} onClick={() => setStart('empty')}>Empty room</button>
                 </div>
-                <span className="hint">
-                  {!designEdits ? 'This Design has no Edits yet, so the AI starts from the room as it is.'
-                    : fromCurrent ? `"${designName}" as it is now: the AI keeps its ${count(designEdits, 'Edit')} and designs around them. Its Pieces don't count toward the budget.`
-                    : hasOriginals ? "The room as it was scanned, without this Design's Edits." : "The room with nothing in it: the AI furnishes it from scratch."}
-                </span>
               </fieldset>
               <fieldset className="field speed">
                 <legend>Speed</legend>
@@ -136,7 +125,6 @@ export function BriefDialog() {
                     </button>
                   ))}
                 </div>
-                <span className="hint">{SPEEDS.find((speed) => speed.fast === fast)!.hint}</span>
               </fieldset>
             </div>
             <label className="field budget">

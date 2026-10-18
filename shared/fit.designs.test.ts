@@ -23,8 +23,6 @@ const LOUNGE = [
 /** Each Design's violations before the Fit rules used collision boxes, as `<rule> <subjectId> <otherId>`. */
 const BEFORE: Record<string, string[]> = {
   'ds_lounge.json': LOUNGE,
-  'ds_suxtyo7h.json': LOUNGE,
-  'ds_z0mh7lt2.json': LOUNGE,
 };
 
 describe('the Designs in data/designs', () => {

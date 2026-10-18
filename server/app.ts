@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { mergeScan } from '../scripts/scan-merge';
 import { newId } from '../shared/ids';
 import type { Design, ScanManifest } from '../shared/types';
 
@@ -76,6 +77,12 @@ const saveScanFile = (file: string) => async (c: Context) => {
 
 app.put('/api/scans/:id/setup', saveScanFile('setup.json'));
 app.put('/api/scans/:id/manifest', saveScanFile('manifest.json'));
+
+// Phase 2 (ADR-0007): Room Setup's Fill Captures step saves the manifest, then rebuilds room.glb here.
+app.post('/api/scans/:id/merge', async (c) => {
+  const dir = requireScan(c.req.param('id'));
+  return c.json(await mergeScan(dir).catch((error: Error) => fail(400, error.message)));
+});
 
 app.get('/api/designs', async (c) => {
   const scanId = c.req.query('scanId');

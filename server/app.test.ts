@@ -95,6 +95,30 @@ describe('PUT /api/scans/:id/manifest', () => {
   });
 });
 
+describe('POST /api/scans/:id/merge', () => {
+  it('rebuilds room.glb from the Main and Fill Captures, and answers with what it added', async () => {
+    await cp(new URL('../data/scans/synthetic-lounge', import.meta.url), join(dataDir, 'scans/synthetic-lounge'), { recursive: true });
+
+    const res = await app.request('/api/scans/synthetic-lounge/merge', { method: 'POST' });
+
+    expect(res.status).toBe(200);
+    const summary = await res.json();
+    expect(summary.triangles).toBeGreaterThan(0);
+    expect(Array.isArray(summary.patches)).toBe(true);
+    expect((await app.request('/data/scans/synthetic-lounge/room.glb')).status).toBe(200);
+  }, 60_000);
+
+  it('400s for a Scan with no Fill Captures, and says why', async () => {
+    const res = await app.request('/api/scans/fixture/merge', { method: 'POST' });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/has no Fill Captures/);
+  });
+
+  it('404s for a Scan that does not exist', async () => {
+    expect((await app.request('/api/scans/nowhere/merge', { method: 'POST' })).status).toBe(404);
+  });
+});
+
 describe('GET /api/designs', () => {
   beforeEach(async () => {
     await writeJson('designs/ds_dorm0001.json', {

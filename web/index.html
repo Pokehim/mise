@@ -3,8 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- --paper (styles/tokens.css): a meta tag can't read a CSS variable. -->
+    <meta name="theme-color" content="#f4efe4" />
     <link rel="icon" href="data:," />
     <title>Mise</title>
+    <!-- The sketch style's three faces (docs/design/sketch-style.md): a hand, a sans and a mono. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=JetBrains+Mono:wght@400;500&family=Work+Sans:wght@400;500;600&display=swap" />
     <style>
       html, body, #root { height: 100%; margin: 0; }
       body { font-family: system-ui, sans-serif; }
@@ -12,6 +18,18 @@
     </style>
   </head>
   <body>
+    <!-- The pencil wobble of selected states: a border on ::after, displaced by low-frequency noise
+         (base.css). Two seeds, so neighbouring controls aren't drawn with the same hand-tremor. -->
+    <svg width="0" height="0" aria-hidden="true" style="position: absolute">
+      <filter id="pencil" x="-10%" y="-30%" width="120%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="2" />
+        <feDisplacementMap in="SourceGraphic" scale="2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+      <filter id="pencil-2" x="-10%" y="-30%" width="120%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="7" />
+        <feDisplacementMap in="SourceGraphic" scale="2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

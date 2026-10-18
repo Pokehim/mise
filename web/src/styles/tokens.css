@@ -1,0 +1,75 @@
+/* Prices read "≈ $90 (est.)", and a mono's ≈ is too small to tell from "=" at 11–13 px: that one
+   character comes from a system sans, in front of the mono. */
+@font-face {
+  font-family: 'Mise Approx';
+  src: local('Helvetica Neue'), local('Helvetica'), local('Arial'), local('Roboto');
+  unicode-range: U+2248;
+}
+
+/* Design tokens of the concept-sketch style (docs/design/sketch-style.md). Every color in the app's
+   CSS comes from here; the 3D overlays read the same tokens (scene/sketch/tokens.ts). */
+
+:root {
+  /* Paper: the panels are sheets, cards and popovers are sheets laid on them. */
+  --paper: #f4efe4;
+  --paper-raised: #fbf8f1;
+  /* The desk under the sheets: the 3D view's backdrop. It is the color the view had before the sketch
+     style, as it shows through holes in a Scan: the room stays pixel-identical. */
+  --desk: #f4f1ea;
+
+  /* Ink and graphite: text and linework. Graphite is the lightest text color (≥ 5.9:1 on any paper). */
+  --ink: #27231f;
+  --graphite: #5b5349;
+  /* Pencil lines: hairline rules (decorative), and the stronger one for control borders (≥ 3:1). */
+  --pencil: #d5ccbc;
+  --pencil-strong: #8c8272;
+
+  /* The one accent: a watercolor wash, strong for text and lines, light for fills. */
+  --wash: #2d6489;
+  --wash-tint: #dce6ec;
+  --wash-tint-strong: #c9d9e4;
+
+  /* Red pencil: problems only (Fit warnings, skipped Edits, failed saves, errors). */
+  --red-pencil: #b02a20;
+
+  /* Transparent ink, for hatching and hover washes over any paper. */
+  --hatch: rgb(39 35 31 / 0.13);
+  --ink-wash: rgb(39 35 31 / 0.05);
+
+  /* Type: a hand for headings, 3D callouts, Fit notes and empty states only; a sans for everything
+     else; a mono for measures and prices. */
+  --font-hand: 'Architects Daughter', 'Bradley Hand', cursive;
+  --font-sans: 'Work Sans', system-ui, sans-serif;
+  --font-mono: 'Mise Approx', 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Spacing: a 4 px grid. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 72px;
+
+  /* Radius: drafting corners, never pills. */
+  --r-1: 2px;
+  --r-2: 3px;
+  --r-3: 4px;
+
+  /* Lines. */
+  --line: 1px;
+  --line-strong: 1.5px;
+
+  /* Elevation: one faint paper lift, for what floats over the page (popovers). */
+  --lift: 0 1px 0 rgb(39 35 31 / 0.05), 0 10px 24px -14px rgb(39 35 31 / 0.35);
+
+  /* Textures. Paper grain goes on panels only, never on the 3D view. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .15 0 0 0 0 .13 0 0 0 0 .1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --hatching: repeating-linear-gradient(-45deg, transparent 0 6px, var(--hatch) 6px 7px);
+
+  /* Motion: lines draw on, nothing bounces. */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --draw: 200ms;
+  --press: 150ms;
+}

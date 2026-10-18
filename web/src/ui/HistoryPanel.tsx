@@ -20,9 +20,10 @@ export function HistoryPanel() {
   const { select, setHighlight } = useEditor.getState();
   const list = useRef<HTMLOListElement>(null);
 
-  // Keep the newest Edit in view as Edits are added.
+  // Keep the newest Edit in view as Edits are added. The list scrolls, never the page: on a phone the
+  // panels stack under the room, and the page jumping down to History would hide it.
   useEffect(() => {
-    list.current?.lastElementChild?.scrollIntoView({ block: 'nearest' });
+    if (list.current) list.current.scrollTop = list.current.scrollHeight;
   }, [rows.length]);
   useEffect(() => () => setHighlight(null), [setHighlight]);
 
@@ -82,7 +83,7 @@ export function HistoryPanel() {
         </ol>
       ) : (
         <p className="empty">
-          No Edits yet. Add a Piece from the Catalog, or select something in the room to change it. Each change shows up here.
+          <b>No Edits yet.</b> Add a Piece from the Catalog, or select something in the room to change it. Each change shows up here.
         </p>
       )}
     </section>

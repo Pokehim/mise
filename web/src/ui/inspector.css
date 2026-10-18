@@ -1,54 +1,63 @@
 /* The Inspector's tools (spec §10.4, §10.5): Swap's and Replace's lists, the Resize panel, and
    the Recolor and Paint controls. */
 
-.inspector .tool { display: flex; flex-direction: column; gap: 8px; margin: 0 0 12px; }
+.inspector .tool { display: flex; flex-direction: column; gap: var(--s-2); margin: 0 0 var(--s-3); }
 .inspector .tool p { margin: 0; }
-.inspector .fields { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.inspector .fields :is(input, select) { font: inherit; padding: 3px 4px; border: 1px solid var(--line); border-radius: 6px; }
-.inspector .fields input[type='number'] { width: 56px; }
-.inspector .tool input[type='search'] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; }
+.inspector .tool > p.muted { font-size: 12px; }
+.inspector .fields { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--s-2); color: var(--graphite); font-size: 13px; }
+.inspector .fields input[type='number'] { width: 64px; padding: 4px 6px; color: var(--ink); font-family: var(--font-mono); font-size: 13px; }
+.inspector .fields select { flex: 1; color: var(--ink); }
+.inspector .fields button { gap: 4px; padding: 3px 8px 3px 6px; font-family: var(--font-mono); font-size: 12.5px; }
+.inspector .tool input[type='search'] { width: 100%; }
 
-.inspector .picks { display: flex; flex-direction: column; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+/* Catalog items to pick from: a plain list, each row a button. */
+.inspector .picks { display: flex; flex-direction: column; gap: 6px; margin: 0 0 var(--s-3); padding: 0; list-style: none; }
 .inspector .pick {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 48px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: var(--s-3);
   width: 100%;
   padding: 6px;
+  border-color: var(--pencil);
   text-align: left;
 }
-.inspector .pick img { width: 48px; height: 48px; object-fit: contain; }
+.inspector .pick img { box-sizing: border-box; width: 48px; height: 48px; border-radius: var(--r-1); background: var(--paper); object-fit: contain; }
 .inspector .pick > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.inspector .pick .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.inspector .pick .muted { font-size: 12px; }
+.inspector .pick .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 13px; line-height: 1.35; }
+.inspector .pick .muted { font-family: var(--font-mono); font-size: 11.5px; }
 
-.inspector .fit-label { align-self: flex-start; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-.inspector .fit-label.fits { background: #dcefe9; color: var(--accent); }
-.inspector .fit-label.closest { background: #f6ead2; color: #8a5a00; }
+.inspector .fit-label { align-self: flex-start; margin-top: 2px; padding: 0 6px; border-radius: var(--r-1); font-size: 11px; font-weight: 600; }
+.inspector .fit-label.fits { background: var(--wash-tint); color: var(--ink); }
+.inspector .fit-label.closest { background: var(--ink-wash); color: var(--graphite); }
 
+/* A section of the sheet: a hand-lettered title, then a rule to the edge. */
 .inspector h3 {
-  margin: 16px 0 8px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-5) 0 var(--s-2);
+  font: 400 18px/1.2 var(--font-hand);
 }
-.inspector .parts { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
-.inspector .parts button { padding: 2px 8px; font-size: 13px; }
+.inspector h3::after { content: ''; flex: 1; height: var(--line); background: var(--pencil); }
+.inspector .parts { display: flex; flex-wrap: wrap; gap: 2px; margin: 0 -6px var(--s-2); }
 
-.inspector .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-.inspector .swatch { aspect-ratio: 1; padding: 0; border: 1px solid rgb(0 0 0 / 0.15); border-radius: 50%; }
-.inspector .swatch[aria-pressed='true'] { outline: 2px solid var(--accent); outline-offset: 2px; }
-.inspector .color-choice .actions { align-items: center; }
-.inspector .picker { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+/* Swatches: paint chips and material samples, pinned to the sheet. */
+.inspector .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--s-2); }
+.inspector .swatch { aspect-ratio: 1; padding: 0; border: var(--line) solid var(--hatch); border-radius: var(--r-1); }
+@media (hover: hover) {
+  .inspector .swatch:hover:not(:disabled) { border-color: var(--ink); }
+}
+.inspector .swatch[aria-pressed='true'] { border-color: transparent; }
+.inspector .swatch[aria-pressed='true']::after { inset: -4px; }
+.inspector .color-choice .actions { align-items: center; justify-content: space-between; }
+.inspector .picker { display: flex; align-items: center; gap: var(--s-2); font-size: 13px; cursor: pointer; }
 .inspector .picker input {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-1);
   background: none;
   cursor: pointer;
 }

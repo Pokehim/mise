@@ -1,11 +1,14 @@
-import { Edges, Hud, useCursor } from '@react-three/drei';
+import { Billboard, Hud, useCursor } from '@react-three/drei';
 import { type ThreeEvent, useThree } from '@react-three/fiber';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { type Ray, Raycaster, Vector2 } from 'three';
 import type { Vec2 } from '@shared/types';
 import { type ResizeSession, setResizeSide, useResize } from '../state/resize';
 import { useEditor } from '../state/store';
 import { ignoreRaycast } from './objects';
+import { DASH, InkLine } from './sketch/InkLine';
+import { boxEdges } from './sketch/lines';
+import { token } from './sketch/tokens';
 import { floorHit } from './placement';
 import { swapPlacement } from './swapResize';
 
@@ -14,7 +17,6 @@ const MIN_SIZE = 0.1;
 const HANDLE_RADIUS = 0.06;
 /** How far, in meters, a handle's center sits out from its face, so it isn't buried in the item. */
 const HANDLE_OUT = 0.05;
-const COLOR = '#1f7a6d';
 
 /** A face handle: one on each side pulls the width out on both sides (the center stays); the front one pulls the depth (the back stays). */
 type Handle = { axis: 0; side: 1 | -1 } | { axis: 2; side: 1 };
@@ -40,6 +42,7 @@ function ResizeBox({ session: { target, size } }: { session: ResizeSession }) {
   useCursor(hovered, 'ew-resize');
 
   const [width, height, depth] = size;
+  const edges = useMemo(() => boxEdges(size), [size]);
   const placement = swapPlacement({ setup, catalog, roomState }, target, depth);
   if (!placement) return null;
   const { position: [x, y, z], rotationY } = placement;
@@ -89,29 +92,33 @@ function ResizeBox({ session: { target, size } }: { session: ResizeSession }) {
     window.addEventListener('pointercancel', onUp);
   };
 
-  // Priority 3: over FitHighlights (2), and both over SelectionOutline's always-mounted Hud (1),
+  // Priority 3: over FitHighlights (2), and both over SketchSelection's always-mounted Hud (1),
   // which is the one that draws the scene itself. A higher priority also gets the pointer first.
   return (
     <Hud renderPriority={3}>
       <group position={[x, y, z]} rotation-y={rotationY}>
-        {/* A unit box scaled to the size, so a drag doesn't rebuild its geometry and edges on every move. */}
-        <mesh position-y={height / 2} scale={size} raycast={ignoreRaycast}>
-          <boxGeometry />
-          <meshBasicMaterial color={COLOR} transparent opacity={0.12} depthWrite={false} />
-          <Edges color={COLOR} lineWidth={2} />
-        </mesh>
+        {/* A construction line in the wash: dashed, ruled, and with nothing laid over the room inside it. */}
+        <InkLine segments={edges} color="--wash" width={1.5} dash={DASH} />
         {HANDLES.map((handle) => (
-          <mesh
+          // A drafting handle: a paper disc ringed in the wash, always facing the camera.
+          <Billboard
             key={`${handle.axis}${handle.side}`}
             position={handle.axis === 0 ? [handle.side * (width / 2 + HANDLE_OUT), height / 2, 0] : [0, height / 2, depth / 2 + HANDLE_OUT]}
-            onPointerDown={onDown(handle)}
-            onClick={(event) => event.stopPropagation()}
-            onPointerOver={() => setHovered(true)}
-            onPointerOut={() => setHovered(false)}
           >
-            <sphereGeometry args={[HANDLE_RADIUS, 16, 8]} />
-            <meshBasicMaterial color={COLOR} />
-          </mesh>
+            <mesh
+              onPointerDown={onDown(handle)}
+              onClick={(event) => event.stopPropagation()}
+              onPointerOver={() => setHovered(true)}
+              onPointerOut={() => setHovered(false)}
+            >
+              <circleGeometry args={[HANDLE_RADIUS, 24]} />
+              <meshBasicMaterial color={token('--paper-raised')} depthTest={false} toneMapped={false} />
+            </mesh>
+            <mesh renderOrder={1} raycast={ignoreRaycast}>
+              <ringGeometry args={[HANDLE_RADIUS * 0.72, HANDLE_RADIUS, 24]} />
+              <meshBasicMaterial color={token('--wash')} depthTest={false} toneMapped={false} />
+            </mesh>
+          </Billboard>
         ))}
       </group>
     </Hud>

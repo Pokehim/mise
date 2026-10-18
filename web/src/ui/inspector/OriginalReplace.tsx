@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { search } from '@shared/catalog-search';
 import type { CatalogItem, Original } from '@shared/types';
 import { useEditor } from '../../state/store';
-
-const cm = (meters: number) => Math.round(meters * 100);
+import { cmSize, priceEstimate } from '../format';
 
 interface OriginalReplaceProps {
   original: Original;
@@ -36,7 +35,7 @@ export function OriginalReplace({ original, onPick }: OriginalReplaceProps) {
                 <img src={item.thumbnail} alt="" />
                 <span>
                   <span className="title" title={item.title}>{item.title}</span>
-                  <span className="muted">{cm(item.size[0])} × {cm(item.size[2])} × {cm(item.size[1])} cm · ≈ ${item.priceEstimateUsd} (est.)</span>
+                  <span className="muted">{cmSize(item.size)} · {priceEstimate(item.priceEstimateUsd)}</span>
                 </span>
               </button>
             </li>

@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
 import { useEditor, type View } from '../state/store';
 import { DesignsMenu } from './DesignsMenu';
+import { ArrowLeft } from './icons';
 import { RealismToggle } from './RealismToggle';
 import { ShoppingList } from './ShoppingList';
 
@@ -11,8 +12,8 @@ export function TopBar() {
   const view = useEditor((s) => s.view);
   return (
     <header className="topbar">
-      <Link href="/">← Scans</Link>
-      <span className="muted">{scanName}</span>
+      <Link href="/" className="back" aria-label="Scans"><ArrowLeft /><span className="label">Scans</span></Link>
+      <span className="muted scan-name">{scanName}</span>
       <DesignsMenu />
       <span className="spacer" />
       <RealismToggle />

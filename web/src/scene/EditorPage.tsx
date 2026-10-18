@@ -23,8 +23,10 @@ function useEditorKeys() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) return;
-      // Nor while a dialog (Generate, Refine) is open over the room.
+      // Nor while a dialog (Generate, Refine) is open over the room, or from inside a TopBar panel
+      // (the Designs menu, the shopping list): Backspace there must not delete what's selected.
       if (document.querySelector('dialog[open]')) return;
+      if (event.target instanceof Element && event.target.closest('[role="dialog"]')) return;
       const { selection, preview, select } = useEditor.getState();
       if (event.key === 'Escape') select(null);
       // A drag finishes before undo.

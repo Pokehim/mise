@@ -1,11 +1,12 @@
 import { Billboard, Hud, useCursor } from '@react-three/drei';
 import { type ThreeEvent, useThree } from '@react-three/fiber';
-import { useMemo, useState } from 'react';
-import { type Ray, Raycaster, Vector2 } from 'three';
+import { useMemo, useRef, useState } from 'react';
+import { type Group, type Ray, Raycaster, Vector2 } from 'three';
 import type { Vec2 } from '@shared/types';
 import { type ResizeSession, setResizeSide, useResize } from '../state/resize';
 import { useEditor } from '../state/store';
 import { ignoreRaycast } from './objects';
+import { touchTargetPx, useScreenScale } from './screenScale';
 import { DASH, InkLine } from './sketch/InkLine';
 import { boxEdges } from './sketch/lines';
 import { token } from './sketch/tokens';
@@ -14,7 +15,8 @@ import { swapPlacement } from './swapResize';
 
 /** The smallest width or depth the handles draw, in meters. */
 const MIN_SIZE = 0.1;
-const HANDLE_RADIUS = 0.06;
+/** A handle's disc, in CSS pixels on screen at any zoom; it catches the pointer over a touch target's width. */
+const HANDLE_RADIUS_PX = 8;
 /** How far, in meters, a handle's center sits out from its face, so it isn't buried in the item. */
 const HANDLE_OUT = 0.05;
 
@@ -38,8 +40,6 @@ function ResizeBox({ session: { target, size } }: { session: ResizeSession }) {
   const catalog = useEditor((s) => s.catalog!);
   const roomState = useEditor((s) => s.roomState!);
   const get = useThree((s) => s.get);
-  const [hovered, setHovered] = useState(false);
-  useCursor(hovered, 'ew-resize');
 
   const [width, height, depth] = size;
   const edges = useMemo(() => boxEdges(size), [size]);
@@ -51,7 +51,7 @@ function ResizeBox({ session: { target, size } }: { session: ResizeSession }) {
 
   // Like a Piece drag (DragControls): until the pointer is released it pulls the handle, and the
   // camera and the rest of the scene ignore it.
-  const onDown = (handle: Handle) => (event: ThreeEvent<PointerEvent>) => {
+  const onDown = (handle: Handle, onRelease: () => void) => (event: ThreeEvent<PointerEvent>) => {
     if (event.button !== 0) return;
     event.stopPropagation();
     const { camera, gl, controls, setEvents } = get();
@@ -82,7 +82,7 @@ function ResizeBox({ session: { target, size } }: { session: ResizeSession }) {
       window.removeEventListener('pointercancel', onUp);
       if (cameraControls) cameraControls.enabled = true;
       setEvents({ enabled: true });
-      setHovered(false);
+      onRelease();
     };
     const cameraControls = controls as { enabled: boolean } | null;
     if (cameraControls) cameraControls.enabled = false;
@@ -100,27 +100,60 @@ function ResizeBox({ session: { target, size } }: { session: ResizeSession }) {
         {/* A construction line in the wash: dashed, ruled, and with nothing laid over the room inside it. */}
         <InkLine segments={edges} color="--wash" width={1.5} dash={DASH} />
         {HANDLES.map((handle) => (
-          // A drafting handle: a paper disc ringed in the wash, always facing the camera.
-          <Billboard
+          <ResizeHandle
             key={`${handle.axis}${handle.side}`}
+            handle={handle}
             position={handle.axis === 0 ? [handle.side * (width / 2 + HANDLE_OUT), height / 2, 0] : [0, height / 2, depth / 2 + HANDLE_OUT]}
-          >
-            <mesh
-              onPointerDown={onDown(handle)}
-              onClick={(event) => event.stopPropagation()}
-              onPointerOver={() => setHovered(true)}
-              onPointerOut={() => setHovered(false)}
-            >
-              <circleGeometry args={[HANDLE_RADIUS, 24]} />
-              <meshBasicMaterial color={token('--paper-raised')} depthTest={false} toneMapped={false} />
-            </mesh>
-            <mesh renderOrder={1} raycast={ignoreRaycast}>
-              <ringGeometry args={[HANDLE_RADIUS * 0.72, HANDLE_RADIUS, 24]} />
-              <meshBasicMaterial color={token('--wash')} depthTest={false} toneMapped={false} />
-            </mesh>
-          </Billboard>
+            onDown={onDown}
+          />
         ))}
       </group>
     </Hud>
+  );
+}
+
+/**
+ * A drafting handle: a paper disc ringed in the wash, always facing the camera and the same size on
+ * screen at any zoom. Hovered or held, it fills with the wash, so a press shows before the pull does.
+ */
+function ResizeHandle({ handle, position, onDown }: {
+  handle: Handle;
+  position: [number, number, number];
+  onDown: (handle: Handle, onRelease: () => void) => (event: ThreeEvent<PointerEvent>) => void;
+}) {
+  const scaled = useRef<Group>(null);
+  // One unit of the group is one CSS pixel.
+  useScreenScale(scaled, 1);
+  const [hovered, setHovered] = useState(false);
+  const [held, setHeld] = useState(false);
+  // Across the screen for the width; the depth runs into it.
+  useCursor(hovered || held, handle.axis === 0 ? 'ew-resize' : 'ns-resize');
+  const press = onDown(handle, () => setHeld(false));
+  return (
+    <Billboard position={position}>
+      <group ref={scaled}>
+        {/* What catches the pointer: a touch target's width, drawn but see-through, since hidden objects take no hits. */}
+        <mesh
+          onPointerDown={(event) => {
+            if (event.button === 0) setHeld(true);
+            press(event);
+          }}
+          onClick={(event) => event.stopPropagation()}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+        >
+          <circleGeometry args={[touchTargetPx() / 2, 24]} />
+          <meshBasicMaterial transparent opacity={0} depthTest={false} depthWrite={false} />
+        </mesh>
+        <mesh renderOrder={1} raycast={ignoreRaycast}>
+          <circleGeometry args={[HANDLE_RADIUS_PX, 24]} />
+          <meshBasicMaterial color={token(hovered || held ? '--wash-tint' : '--paper-raised')} depthTest={false} toneMapped={false} />
+        </mesh>
+        <mesh renderOrder={2} raycast={ignoreRaycast}>
+          <ringGeometry args={[HANDLE_RADIUS_PX * (held ? 0.6 : 0.72), HANDLE_RADIUS_PX, 24]} />
+          <meshBasicMaterial color={token('--wash')} depthTest={false} toneMapped={false} />
+        </mesh>
+      </group>
+    </Billboard>
   );
 }

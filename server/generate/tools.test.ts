@@ -33,10 +33,10 @@ async function call(session: DesignSession, name: string, input: unknown) {
 }
 
 describe('the Design tools', () => {
-  it('are the 7 tools of spec §13.2, each with a strict schema but place_piece, whose grammar is too large', () => {
+  it('are the 7 tools of spec §13.2 plus review_design, each with a strict schema but place_piece, whose grammar is too large', () => {
     expect(start().tools.map(({ name, strict }) => [name, strict])).toEqual([
       ['search_catalog', true], ['place_piece', undefined], ['replace_original', true], ['recolor', true],
-      ['apply_finish', true], ['remove', true], ['finish_design', true],
+      ['apply_finish', true], ['remove', true], ['review_design', true], ['finish_design', true],
     ]);
   });
 
@@ -234,6 +234,7 @@ describe('the Design tools', () => {
       await place('plant-fig', { kind: 'on_top_of', target_id: 'og_desk' });
       await call(session, 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } });
       await call(session, 'recolor', { target_id: 'og_bed', part_id: 'bedding', color: '#f4efe6' });
+      await call(session, 'review_design', {});
 
       expect(await call(session, 'finish_design', { name: 'Sage Nook', rationale: 'A cozy sage corner, as the Brief asks.', palette })).toEqual({ ok: true });
       expect(session.finished).toEqual({ name: 'Sage Nook', rationale: 'A cozy sage corner, as the Brief asks.', palette });
@@ -244,10 +245,20 @@ describe('the Design tools', () => {
     it('sends Claude back once to add what a decorated room lacks', async () => {
       const session = start();
       await call(session, 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } });
+      await call(session, 'review_design', {});
 
       await expect(call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette }))
         .rejects.toThrow('Not finished: this Design has 1 Edit, and needs 8 to 15. It still needs wall art (2 to 4 frames), a rug, a lamp, decor on the bed or a furniture top');
       expect(await call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette })).toEqual({ ok: true });
+    });
+
+    it('sends Claude back once to review the Design, if it changed since the last review', async () => {
+      const session = start();
+      await call(session, 'review_design', {});
+      await call(session, 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } });
+
+      await expect(call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette }))
+        .rejects.toThrow('Call review_design first');
     });
 
     it('fails for a name longer than 3 words', async () => {

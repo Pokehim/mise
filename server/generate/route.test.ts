@@ -28,6 +28,7 @@ const palette = { wall: '#f4efe6', accents: ['#9caf88'], materials: ['oak'] };
 const paintAndFinish = (name: string): Turn[] => [() => ({
   content: [
     use('toolu_paint', 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_4' }, finish: { kind: 'paint', color: '#9caf88' } }),
+    use('toolu_review', 'review_design', {}),
     use('toolu_finish_1', 'finish_design', { name, rationale: 'Sage, as the Brief asks.', palette }),
     use('toolu_finish_2', 'finish_design', { name, rationale: 'Sage, as the Brief asks.', palette }),
   ],

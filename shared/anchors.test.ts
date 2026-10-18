@@ -21,7 +21,8 @@ const cube = item('cube-storage', 'storage', 'Storage Cube', [0.5, 0.5, 0.5]);
 const wardrobe = item('wardrobe-white', 'wardrobe', 'White Wardrobe', [1, 1.8, 0.58]);
 const smallRug = item('rug-small', 'rug', 'Small Rug', [1.2, 0.01, 1]);
 const poster = item('poster-city', 'wall_art', 'City Poster', [0.4, 0.5, 0.02], { mount: 'wall' });
-const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant, cube, smallRug, wardrobe, poster] };
+const table = item('table-oak', 'table', 'Oak Table', [1.5, 0.75, 0.9]);
+const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant, cube, smallRug, wardrobe, poster, table] };
 
 /** The room with nothing in it. */
 const empty: RoomSetup = { ...setup, originals: [] };
@@ -398,6 +399,15 @@ describe('resolveAnchor', () => {
   });
 
   describe('centered_under', () => {
+    it('centers a rug under a table, its long side along the table\'s, so the chairs around it stand on it too', () => {
+      // The table runs east–west, 1.5 × 0.9; the rug, 1.52 wide and 2.13 deep, turns a quarter to lie along it.
+      const tableMidRoom = place('pc_table', 'table-oak', onFloor(0, 0));
+
+      expect(resolve(rug, { kind: 'centered_under', target_id: 'pc_table' }, [tableMidRoom], empty)).toEqual({
+        placement: { position: [closeTo(0), 0, closeTo(0)], rotationY: closeTo(Math.PI / 2), mount: 'floor' },
+      });
+    });
+
     it('lays a rug centered under the target, its long side across it, with a third of it under the target', () => {
       // The sofa faces south from the North wall, z −1.5 to −0.6. Turned, the rug is 2.13 wide and 1.52 deep:
       // z −1.107 to 0.413, so 0.507 m of it is under the sofa.

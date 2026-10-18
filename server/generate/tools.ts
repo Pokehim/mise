@@ -15,6 +15,7 @@ import { partsFor } from '../../shared/parts';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, CatalogItem, Category, Edit, FitViolation, Hex, LibraryMaterial, Palette, Placement, RoomSetup, RoomState } from '../../shared/types';
 import { catalogEntry, m } from './forClaude';
+import { reviewDesign } from './review';
 
 export interface DesignContext extends AnchorOptions {
   setup: RoomSetup;
@@ -37,8 +38,8 @@ export interface DesignSession {
   readonly tools: BetaRunnableTool[];
 }
 
-/** How many tool calls a Design gets: about 24 for 8 to 15 Edits, with searches and a few retries (spec §13.3, raised for decorating). */
-const MAX_TOOL_CALLS = 24;
+/** How many tool calls a Design gets: about 30 for 8 to 15 Edits, with searches, a few retries and a review and its fixes (spec §13.3, raised for decorating). */
+const MAX_TOOL_CALLS = 30;
 /** How many Edits a decorated Design has, at least and at most. */
 export const EDIT_RANGE: [min: number, max: number] = [8, 15];
 /** How many large furniture changes a Design may make: decorating comes first. */
@@ -99,7 +100,7 @@ const anchorSchema = z.union([
     level: z.number().optional().describe('For a shelf: which of the shelf_levels place_piece gave, 0 at the bottom; without it, the top'),
   }).describe('Resting on a furniture top: decor and plants on desks, dressers, nightstands and shelves; pillows on a bed rest on its bedding'),
   z.object({ kind: z.literal('centered_under'), target_id: z.string() })
-    .describe('A rug centered under a bed or sofa, about a third of it under'),
+    .describe('A rug under furniture: about a third under a bed or sofa; centered under a table, so its chairs stand on it too'),
   z.object({ kind: z.literal('open_floor'), near_id: z.string().optional() })
     .describe('The largest free spot of floor, or the free spot nearest near_id'),
 ]);
@@ -110,13 +111,16 @@ const finishTarget = z.union([
   z.object({ kind: z.literal('original'), original_id: z.string(), part_id: z.string() }),
 ]);
 
-/** A new Design session, with the 7 tools of spec §13.2 that change it. */
+/** A new Design session, with the 7 tools of spec §13.2 that change it, plus review_design. */
 export function createSession({ setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS }: DesignContext): DesignSession {
   let edits: Edit[] = [];
   let state = replay(setup, catalog, edits);
   let finished: DesignSession['finished'];
   let toolCalls = 0;
   let sentBack = false;
+  /** How many Edits the Design had at its last review_design, or -1 before the first. */
+  let reviewedAt = -1;
+  let reviewSentBack = false;
 
   const catalogItem = (id: string) => catalog.items.find((candidate) => candidate.id === id);
   const pieces = () => Object.values(state.pieces).map((piece) => ({ ...piece, item: catalogItem(piece.catalogId)! }));
@@ -307,6 +311,17 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       },
     ),
     tool(
+      'review_design',
+      'Walk through the room as the Design leaves it, as a designer would before handing it over: what hangs on each wall and '
+        + 'what it is over, what rests on each top, what is on the floor, the accent colors and styles used, the money, and flags '
+        + 'for what breaks the design principles. Call it once everything is placed, fix what it flags, then call finish_design.',
+      z.object({}),
+      () => {
+        reviewedAt = edits.length;
+        return reviewDesign(setup, catalog, state, brief);
+      },
+    ),
+    tool(
       'finish_design',
       'End the Design: a name of 3 words or fewer, a one-line rationale that mentions the Brief, and its Palette.',
       z.object({
@@ -317,6 +332,10 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       ({ name, rationale, palette }) => {
         const words = name.trim().split(/\s+/).length;
         if (words > 3) fail(`The name "${name}" has ${words} words: use 3 or fewer`);
+        if (reviewedAt !== edits.length && !reviewSentBack && toolCalls < maxToolCalls) {
+          reviewSentBack = true;
+          fail('Call review_design first, to look at the room as it stands, and fix what it flags. Then call finish_design');
+        }
         const lacking = missing();
         if (lacking.length && !sentBack && toolCalls < maxToolCalls) {
           sentBack = true;

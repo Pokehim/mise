@@ -41,6 +41,7 @@ const decorate: Turn[] = [
   (request) => ({
     content: [
       use('toolu_poster', 'place_piece', { catalog_id: 'poster-city', anchor: { kind: 'on_wall_beside', target_id: pieceIdOf(request, 'toolu_print'), side: 'right' } }),
+      use('toolu_review', 'review_design', {}),
       finish(request.direction === 'literal' ? 'Sage Nook' : 'Quiet Corner'),
     ],
   }),
@@ -93,7 +94,7 @@ describe('generateDesigns', () => {
 
     const [{ body, headers }] = requests;
     expect(body).toMatchObject({ model: 'claude-opus-5-5', output_config: { effort: 'low' }, tool_choice: { type: 'auto' }, fallbacks: 'default' });
-    expect(body.tools!.map((tool) => 'strict' in tool && tool.strict)).toEqual([true, false, true, true, true, true, true]);
+    expect(body.tools!.map((tool) => 'strict' in tool && tool.strict)).toEqual([true, false, true, true, true, true, true, true]);
     expect(headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
   });
 
@@ -129,7 +130,7 @@ describe('generateDesigns', () => {
   it('asks once more when Claude stops without calling finish_design', async () => {
     const stops = () => ({ content: [{ type: 'text', text: 'All set!' }], stop_reason: 'end_turn' });
     // With one frame, the first finish_design is sent back for a second; the next one finishes anyway.
-    const finishes = () => ({ content: [finish('Late Nook', 'toolu_1'), finish('Late Nook', 'toolu_2')] });
+    const finishes = () => ({ content: [use('toolu_review', 'review_design', {}), finish('Late Nook', 'toolu_1'), finish('Late Nook', 'toolu_2')] });
     const { client, requests } = fakeClaude({ literal: [decorate[0], stops, finishes] });
 
     const { designs } = await generate(client).result;

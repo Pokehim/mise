@@ -1,16 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { replay } from '@shared/replay';
-import { catalog as testCatalog, onFloor, place, setup } from '@shared/test-room';
+import { catalog as testCatalog, item as catalogItem, onFloor, place, setup } from '@shared/test-room';
 import type { Catalog, CatalogItem, Category, Edit, RoomSetup, Vec3 } from '@shared/types';
 import type { NewEdit } from '../state/store';
 import { resizeCandidates, swapCandidates, swapEdit } from './swapResize';
 
-const item = (id: string, category: Category, size: Vec3): CatalogItem => ({
-  id, source: 'abo', title: id, category, mount: 'floor', size,
-  model: `/data/catalog/models/${id}.glb`, thumbnail: `/data/catalog/thumbs/${id}.jpg`,
-  colors: [], materials: [], styleTags: [], priceEstimateUsd: 100,
-  url: `https://www.amazon.com/dp/${id}`, attribution: 'Amazon Berkeley Objects (CC BY 4.0)',
-});
+const item = (id: string, category: Category, size: Vec3) => catalogItem(id, category, id, size);
 
 // Desks around a 1.20 × 0.60 m target: within 15% in width and depth, or not.
 const desks: Catalog = {
@@ -123,5 +118,13 @@ describe('swapEdit', () => {
     const edit = swapEdit(room(), { kind: 'original', id: 'og_desk' }, walnut);
     expect(edit).toMatchObject({ type: 'replace', originalId: 'og_desk', catalogId: 'desk-walnut', via: 'replace' });
     expect(edit).not.toHaveProperty('targetSize');
+  });
+
+  it('leaves a Piece turned off a wall where it was, instead of squaring it up', () => {
+    // Turned 15° from facing straight out of the North wall, its back 2 cm off it: a drag would snap it.
+    const turned = place('pc_1', 'desk-walnut', onFloor(0, -1.23, Math.PI / 12));
+    const oak = catalog.items.find(({ id }) => id === 'desk-oak')!;
+    const edit = swapEdit(room([turned]), { kind: 'piece', id: 'pc_1' }, oak);
+    expect(edit).toMatchObject({ placement: { rotationY: Math.PI / 12 } });
   });
 });

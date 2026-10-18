@@ -50,22 +50,23 @@ export function targetBox({ setup, catalog, roomState }: Room, { kind, id }: Swa
  * is a Resize.
  */
 export function swapEdit(room: Room, target: SwapTarget, item: CatalogItem, targetSize?: Vec3): NewEdit {
-  const box = targetBox(room, target)!;
-  const placement = swapPlacement(room.setup, box.placement, box.size[2], item.size[2]);
-  const resize = targetSize && { via: 'resize' as const, targetSize };
+  const fields = { catalogId: item.id, placement: swapPlacement(room, target, item.size[2])!, ...(targetSize && { targetSize }) };
   return target.kind === 'piece'
-    ? { type: 'swap', pieceId: target.id, catalogId: item.id, placement, ...(resize ?? { via: 'swap' }) }
-    : { type: 'replace', originalId: target.id, pieceId: newId('pc'), catalogId: item.id, placement, ...(resize ?? { via: 'replace' }) };
+    ? { type: 'swap', pieceId: target.id, via: targetSize ? 'resize' : 'swap', ...fields }
+    : { type: 'replace', originalId: target.id, pieceId: newId('pc'), via: targetSize ? 'resize' : 'replace', ...fields };
 }
 
 /**
- * Where an item `toDepth` deep goes in place of one `fromDepth` deep: with its back-center where
- * the old item's was, and, like a dragged Piece, flush against a wall that back is within 10 cm of
- * (spec §10.3).
+ * Where an item `depth` deep goes in place of a Piece or an Original: with its back-center where
+ * the old item's was. In place of an Original, it also goes flush against a wall that back is
+ * within 10 cm of, as a dragged Piece does (spec §10.3): a Room Setup box can stand a few cm off
+ * the wall the real item is against, while a Piece stands exactly where the Mover put it.
  */
-export function swapPlacement(setup: RoomSetup, placement: Placement, fromDepth: number, toDepth: number): Placement {
-  const [x, y, z] = placement.position;
-  const forward = (toDepth - fromDepth) / 2;
-  const moved = { ...placement, position: [x + Math.sin(placement.rotationY) * forward, y, z + Math.cos(placement.rotationY) * forward] } satisfies Placement;
-  return (moved.mount !== 'wall' && snapToWall(moved, toDepth, setup.walls)) || moved;
+export function swapPlacement(room: Room, target: SwapTarget, depth: number): Placement | undefined {
+  const box = targetBox(room, target);
+  if (!box) return undefined;
+  const { position: [x, y, z], rotationY } = box.placement;
+  const forward = (depth - box.size[2]) / 2;
+  const moved: Placement = { ...box.placement, position: [x + Math.sin(rotationY) * forward, y, z + Math.cos(rotationY) * forward] };
+  return (target.kind === 'original' && moved.mount !== 'wall' && snapToWall(moved, depth, room.setup.walls)) || moved;
 }

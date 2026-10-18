@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { SearchResult } from '@shared/catalog-search';
 import type { CatalogItem, Category, Vec3 } from '@shared/types';
 import { wallLength } from '../scene/floorPlan';
 import { removePiece, rotatePiece } from '../scene/pieceEdits';
-import { useResize } from '../scene/ResizeHandles';
-import { type Room, resizeCandidates, swapCandidates, swapEdit, type SwapTarget } from '../scene/swapResize';
+import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget } from '../scene/swapResize';
+import { setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
 import './inspector.css';
 
@@ -12,15 +13,18 @@ import './inspector.css';
 
 const inches = (meters: number) => (meters / 0.0254).toFixed(1);
 const cm = (meters: number) => Math.round(meters * 100);
+/** A size as width × depth × height in centimeters, the order a Size is read in. */
+const cmSize = ([width, height, depth]: Vec3) => `${cm(width)} × ${cm(depth)} × ${cm(height)} cm`;
 const categoryName = (category: Category) => category[0].toUpperCase() + category.slice(1).replace('_', ' ');
 
 /** A real size as width × depth × height, in inches and in centimeters. */
-function Size({ size: [width, height, depth] }: { size: Vec3 }) {
+function Size({ size }: { size: Vec3 }) {
+  const [width, height, depth] = size;
   return (
     <p>
       {inches(width)}″ W × {inches(depth)}″ D × {inches(height)}″ H
       <br />
-      <span className="muted">{cm(width)} × {cm(depth)} × {cm(height)} cm</span>
+      <span className="muted">{cmSize(size)}</span>
     </p>
   );
 }
@@ -29,16 +33,10 @@ const Slot = ({ name, issue }: { name: string; issue: string }) => (
   <button disabled title={`Coming in ${issue}`}>{name}</button>
 );
 
-/** The editor's state as a swap reads it. */
-function currentRoom(): Room {
-  const { setup, catalog, roomState } = useEditor.getState();
-  return { setup: setup!, catalog: catalog!, roomState: roomState! };
-}
-
 /** Puts a Catalog item in place of a Piece or an Original (spec §10.4, §10.5), and selects what now stands there. */
 function putInPlace(target: SwapTarget, item: CatalogItem, targetSize?: Vec3) {
-  const edit = swapEdit(currentRoom(), target, item, targetSize);
-  const { applyEdit, select } = useEditor.getState();
+  const { setup, catalog, roomState, applyEdit, select } = useEditor.getState();
+  const edit = swapEdit({ setup: setup!, catalog: catalog!, roomState: roomState! }, target, item, targetSize);
   applyEdit(edit);
   if (edit.type === 'replace') select({ kind: 'piece', id: edit.pieceId });
 }
@@ -46,7 +44,7 @@ function putInPlace(target: SwapTarget, item: CatalogItem, targetSize?: Vec3) {
 const LABELS = { fits: 'Fits', closest: 'Closest available' } as const;
 
 /** Catalog items to pick from: thumbnail, title, size and price, and how well each fits. */
-function Picks({ items, onPick }: { items: { item: CatalogItem; label?: 'fits' | 'closest' }[]; onPick: (item: CatalogItem) => void }) {
+function Picks({ items, onPick }: { items: { item: CatalogItem; label?: SearchResult['label'] }[]; onPick: (item: CatalogItem) => void }) {
   return (
     <ul className="picks">
       {items.map(({ item, label }) => (
@@ -55,7 +53,7 @@ function Picks({ items, onPick }: { items: { item: CatalogItem; label?: 'fits' |
             <img src={item.thumbnail} alt="" />
             <span>
               <span className="title" title={item.title}>{item.title}</span>
-              <span className="muted">{cm(item.size[0])} × {cm(item.size[2])} × {cm(item.size[1])} cm · ≈ ${item.priceEstimateUsd} (est.)</span>
+              <span className="muted">{cmSize(item.size)} · ≈ ${item.priceEstimateUsd} (est.)</span>
               {label && <span className={`fit-label ${label}`}>{LABELS[label]}</span>}
             </span>
           </button>
@@ -69,7 +67,7 @@ function Picks({ items, onPick }: { items: { item: CatalogItem; label?: 'fits' |
 function SwapList({ pieceId, item }: { pieceId: string; item: CatalogItem }) {
   const catalog = useEditor((s) => s.catalog!);
   const items = useMemo(() => swapCandidates(catalog, item), [catalog, item]);
-  if (!items.length) return <p className="muted">Nothing else in the Catalog is a {categoryName(item.category).toLowerCase()}.</p>;
+  if (!items.length) return <p className="muted">Nothing else in the Catalog is a {item.category.replace('_', ' ')}.</p>;
   return <Picks items={items.map((choice) => ({ item: choice }))} onPick={(choice) => putInPlace({ kind: 'piece', id: pieceId }, choice)} />;
 }
 
@@ -105,11 +103,7 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
   }, [kind, id, startSize]);
 
   const setSide = (axis: 0 | 2, centimeters: number) => {
-    const session = useResize.getState().session;
-    if (!session || !(centimeters > 0)) return;
-    const next: Vec3 = [...session.size];
-    next[axis] = centimeters / 100;
-    useResize.setState({ session: { ...session, size: next } });
+    if (centimeters > 0) setResizeSide(axis, centimeters / 100);
   };
 
   return (
@@ -133,7 +127,7 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
             putInPlace(target, item, size);
             onDone();
           }} />
-        : <p className="muted">Nothing in the Catalog is a {categoryName(category).toLowerCase()}.</p>}
+        : <p className="muted">Nothing in the Catalog is a {category.replace('_', ' ')}.</p>}
     </div>
   );
 }

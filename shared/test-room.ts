@@ -50,7 +50,8 @@ export const withLampAndMirror: RoomSetup = {
   ],
 };
 
-const item = (id: string, category: Category, title: string, size: Vec3, details: Partial<CatalogItem>): CatalogItem => ({
+/** A Catalog item with every field filled in: what a test doesn't pass gets a plain default. */
+export const item = (id: string, category: Category, title: string, size: Vec3, details: Partial<CatalogItem> = {}): CatalogItem => ({
   id, source: 'abo', title, category, mount: 'floor', size,
   model: `/data/catalog/models/${id}.glb`, thumbnail: `/data/catalog/thumbs/${id}.jpg`,
   colors: [], materials: [], styleTags: [], priceEstimateUsd: 100,

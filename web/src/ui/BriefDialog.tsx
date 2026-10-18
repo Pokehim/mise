@@ -72,9 +72,7 @@ export function BriefDialog() {
           // Once the Mover starts writing a Brief, Claude's cache gets the room, so that the takes start sooner.
           <form onSubmit={(event) => void submit(event)} onInput={() => warm(scanId)}>
             <p className="muted">
-              Say what you want, and AI designs the room for you automatically. It arranges real Catalog items in your
-              Scan: art on the walls, a rug, lamps, plants and pillows, and paint. You get three takes: literal, bolder, and
-              budget-conscious.
+              Say what you want, and the room will design itself for you.
             </p>
             <label className="field">
               <span>What do you want?</span>

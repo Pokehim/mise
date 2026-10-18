@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "id": "ds_uq96k7k7",
+  "scanId": "lounge",
+  "name": "Quiet Fuji",
+  "createdAt": "2026-10-18T12:17:09.949Z",
+  "updatedAt": "2026-10-18T12:17:09.949Z",
+  "origin": "claude",
+  "brief": {
+    "text": "a calm guest bedroom in soft neutrals, Japandi, under $500",
+    "budgetUsd": 500
+  },
+  "rationale": "A calm Japandi guest bedroom in soft neutrals under $500: a tucked-away twin XL bed, light oak and linen, with Red Fuji as the one memorable note.",
+  "palette": {
+    "wall": "#f2ede4",
+    "accents": [
+      "#cbbfae",
+      "#b5654a",
+      "#7d8a80"
+    ],
+    "materials": [
+      "oak",
+      "linen"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_utuvp31g",
+      "at": "2026-10-18T12:17:05.631Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_ig6wo8gf",
+      "at": "2026-10-18T12:17:05.631Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_1a7okxow",
+      "at": "2026-10-18T12:17:05.631Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_1",
+      "id": "ed_rbump7ey",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_cpk6w4vy",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_4owce5mk",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_a481f8qh",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_4s5pxjrg",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_lbxrv8ot",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_az2bwlft",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_6malu8wo",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_h6lnsna2",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_oa5vvf2v",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_oct5q65i",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_5g1r0ugc",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_xtmm9ie2",
+      "at": "2026-10-18T12:17:05.632Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_f5ppwnac",
+      "catalogId": "B073WQ8JLT",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0,
+          -2.5292
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_hr3t4s1k",
+      "at": "2026-10-18T12:17:05.880Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_sqochdz5",
+      "catalogId": "B07RR3K7M8",
+      "placement": {
+        "position": [
+          0.2598990000000003,
+          0,
+          -3.3752
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_sofe5oud",
+      "at": "2026-10-18T12:17:06.136Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#cbbfae"
+      },
+      "id": "ed_sof2ahg2",
+      "at": "2026-10-18T12:17:06.424Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_5ednua58",
+      "catalogId": "poster-red-fuji",
+      "placement": {
+        "position": [
+          1.5634000000000001,
+          1.125,
+          -2.2607
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_fwsb9x3q",
+      "at": "2026-10-18T12:17:06.716Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_2to30yc7",
+      "catalogId": "poster-sudden-shower",
+      "placement": {
+        "position": [
+          1.5744,
+          1.145,
+          -2.8177
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_u5uep75k",
+      "at": "2026-10-18T12:17:06.717Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_6g7is9nq",
+      "catalogId": "B07TS83QM9",
+      "placement": {
+        "position": [
+          0.813899,
+          0,
+          -1.3917
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_cy3t5hdr",
+      "at": "2026-10-18T12:17:06.922Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_fno0ol5n",
+      "catalogId": "B0825CP3NS",
+      "placement": {
+        "position": [
+          0.2598990000000003,
+          0.571,
+          -3.3752
+        ],
+        "rotationY": 0,
+        "mount": "surface"
+      },
+      "id": "ed_u4y0bhya",
+      "at": "2026-10-18T12:17:07.194Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_f5ppwnac",
+      "partId": "bedding",
+      "color": "#e8e1d6",
+      "id": "ed_4ovqocwx",
+      "at": "2026-10-18T12:17:07.462Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_sqochdz5",
+      "partId": "fronts",
+      "color": "#d8c8a8",
+      "id": "ed_0pin328p",
+      "at": "2026-10-18T12:17:07.718Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_epyjgr2v",
+      "catalogId": "B07JLGCKKJ",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0.66,
+          -3.3607
+        ],
+        "rotationY": 0,
+        "mount": "surface"
+      },
+      "id": "ed_q5mvrfkz",
+      "at": "2026-10-18T12:17:09.484Z",
+      "by": "claude"
+    }
+  ]
+}

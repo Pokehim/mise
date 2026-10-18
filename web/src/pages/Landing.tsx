@@ -1,15 +1,15 @@
 import { Link } from 'wouter';
 import { ArrowRight } from '../ui/icons';
 import { Credits } from './Credits';
-import demo from './landing-demo.webp';
+import { imageOf, ROOMS } from './landing/rooms';
 import './home.css';
 
 /** Where "Try the demo" goes: the Scans, with the study lounge. */
 const DEMO = '/scans';
 
 /**
- * `/`: what Mise is, and the demo: a still of the study lounge in the editor, which opens the Scans
- * like the button beside it.
+ * `/`: what Mise is, and the demo: the study lounge as 16 rooms Claude made of it, which opens the
+ * Scans like the button beside it.
  */
 export function Landing() {
   return (
@@ -23,13 +23,22 @@ export function Landing() {
         <Link href={DEMO} className="cta">Try the demo<ArrowRight /></Link>
       </header>
       <figure className="landing-demo">
-        <Link href={DEMO} className="landing-shot" aria-label="Try the demo: the Oliver Hall 6th Floor Study Lounge">
-          <img src={demo} width={1440} height={900} alt="" />
+        <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms Claude made of the Oliver Hall 6th Floor Study Lounge">
+          <ul>
+            {ROOMS.map(({ id, room, name }) => (
+              <li key={id}>
+                <img src={imageOf(id)} width={640} height={480} alt="" />
+                <span className="room-label"><b>{room}</b>{name}</span>
+              </li>
+            ))}
+          </ul>
         </Link>
-        {/* Labeled like a drawing: the Design's name lettered, then what it is. */}
+        {/* Labeled like a drawing: what it shows lettered, then how it was made. */}
         <figcaption>
-          <span className="landing-title">Quiet Window Nook <span className="price">≈ $380 (est.)</span></span>
-          <span className="muted">Oliver Hall 6th Floor Study Lounge · a Design Claude made from “cozy Japandi, under $400, I need a reading corner”</span>
+          <span className="landing-title">One study lounge, sixteen rooms</span>
+          <span className="muted">
+            Each is a Design Claude made of the Oliver Hall 6th Floor Study Lounge from a one-line Brief: a dorm bedroom, a game room, a library, a place to play records.
+          </span>
         </figcaption>
       </figure>
       <Credits />

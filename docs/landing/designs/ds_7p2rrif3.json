@@ -1,0 +1,413 @@
+{
+  "version": 1,
+  "id": "ds_7p2rrif3",
+  "scanId": "lounge",
+  "name": "Green Velvet Library",
+  "createdAt": "2026-10-18T12:17:10.846Z",
+  "updatedAt": "2026-10-18T12:17:10.846Z",
+  "origin": "claude",
+  "brief": {
+    "text": "a library: bookcases, deep reading chairs, warm lamps, dark academia"
+  },
+  "rationale": "The brief asked for a dark academia library: walnut bookcases on a deep green wall, two deep velvet reading chairs, each with a warm brass floor lamp, and a reading table lit by a banker's lamp under museum art.",
+  "palette": {
+    "wall": "#2f3d32",
+    "accents": [
+      "#6b2a2a",
+      "#b08d57",
+      "#efe6d2"
+    ],
+    "materials": [
+      "walnut",
+      "velvet"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_chair_1",
+      "id": "ed_4jkdtxyd",
+      "at": "2026-10-18T12:17:05.312Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_6cl213jg",
+      "at": "2026-10-18T12:17:05.312Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_paorqpu1",
+      "at": "2026-10-18T12:17:05.312Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_pm5m3orj",
+      "at": "2026-10-18T12:17:05.312Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_ivplq77f",
+      "at": "2026-10-18T12:17:05.313Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_10ga2de0",
+      "at": "2026-10-18T12:17:05.313Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_myyf6ym8",
+      "at": "2026-10-18T12:17:05.313Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_wxgy94dq",
+      "at": "2026-10-18T12:17:05.313Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_6u02s8q5",
+      "at": "2026-10-18T12:17:05.314Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_uv2mzi5q",
+      "at": "2026-10-18T12:17:05.314Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_m94bbxcu",
+      "at": "2026-10-18T12:17:05.314Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_g07o96mb",
+      "at": "2026-10-18T12:17:05.314Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_p0optb58",
+      "at": "2026-10-18T12:17:05.314Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_o49sc9av",
+      "at": "2026-10-18T12:17:05.315Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_m5ykeln3",
+      "at": "2026-10-18T12:17:05.315Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_qkeubgt8",
+      "catalogId": "B07PSZHDMW",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          0,
+          -0.5607639999999998
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_jaruy1pp",
+      "at": "2026-10-18T12:17:05.601Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_malz5bf6",
+      "catalogId": "B07PSZHDMW",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          0,
+          0.1296000000000003
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_u7l2jcz6",
+      "at": "2026-10-18T12:17:05.837Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_b303v9l3",
+      "catalogId": "B07PSZHDMW",
+      "placement": {
+        "position": [
+          1.3978990000000004,
+          0,
+          0.8199640000000004
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_cw6wuoq8",
+      "at": "2026-10-18T12:17:06.074Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#2f3d32"
+      },
+      "id": "ed_nque8egh",
+      "at": "2026-10-18T12:17:06.350Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_m9hc39it",
+      "catalogId": "poster-grande-jatte",
+      "placement": {
+        "position": [
+          -1.5782,
+          1.125,
+          -0.25560000000000027
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_c3p7f7uv",
+      "at": "2026-10-18T12:17:06.656Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_zioslqcn",
+      "catalogId": "ph-oval-frame",
+      "placement": {
+        "position": [
+          -1.5747,
+          1.1989999999999998,
+          -1.0051
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_g14yvq7p",
+      "at": "2026-10-18T12:17:06.656Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_sj8k0gvw",
+      "catalogId": "poster-mada-primavesi",
+      "placement": {
+        "position": [
+          -1.5782,
+          1.125,
+          0.5498999999999996
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_4"
+      },
+      "id": "ed_4cmswk4y",
+      "at": "2026-10-18T12:17:06.656Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_6dzkzcdj",
+      "catalogId": "B071W2XLQJ",
+      "placement": {
+        "position": [
+          -0.33899901260316895,
+          0,
+          -0.1996
+        ],
+        "rotationY": -0.02277,
+        "mount": "floor"
+      },
+      "id": "ed_f39mh94g",
+      "at": "2026-10-18T12:17:06.838Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_hg3b0yjm",
+      "catalogId": "B075X4N4S4",
+      "placement": {
+        "position": [
+          -0.9407,
+          0,
+          -3.1151999999999997
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_i2uwyisc",
+      "at": "2026-10-18T12:17:07.170Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_fak7s56g",
+      "catalogId": "ph-side-table",
+      "placement": {
+        "position": [
+          -0.20169999999999988,
+          0,
+          -3.3116999999999996
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_urglrygc",
+      "at": "2026-10-18T12:17:07.171Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ko3unglf",
+      "catalogId": "B073772DH1",
+      "placement": {
+        "position": [
+          -0.8407,
+          0,
+          -2.4151999999999996
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_jmxmce2b",
+      "at": "2026-10-18T12:17:07.193Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_fn0rerub",
+      "catalogId": "B075X4N4S4",
+      "placement": {
+        "position": [
+          1.1543990000000004,
+          0,
+          -1.4152
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_rk9qmxrv",
+      "at": "2026-10-18T12:17:07.519Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_xsi69ybg",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          1.2668990000000004,
+          0,
+          -1.9967000000000001
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_a8ahgppm",
+      "at": "2026-10-18T12:17:07.524Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_sj1w07dv",
+      "catalogId": "B07MHMSDJL",
+      "placement": {
+        "position": [
+          -0.803,
+          0.705,
+          -0.1996
+        ],
+        "rotationY": -0.02277,
+        "mount": "surface"
+      },
+      "id": "ed_dho59s7e",
+      "at": "2026-10-18T12:17:07.841Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_t8de2fed",
+      "catalogId": "B075HX9T8Y",
+      "placement": {
+        "position": [
+          -0.5030777675748812,
+          0.705,
+          -0.19276959026609458
+        ],
+        "rotationY": -0.02277,
+        "mount": "surface"
+      },
+      "id": "ed_ucboluzr",
+      "at": "2026-10-18T12:17:07.842Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_m7qll1mg",
+      "catalogId": "B075HR7LD2",
+      "placement": {
+        "position": [
+          -1.0029481549500792,
+          0.705,
+          -0.20415360648927028
+        ],
+        "rotationY": -0.02277,
+        "mount": "surface"
+      },
+      "id": "ed_8hks4dvh",
+      "at": "2026-10-18T12:17:07.842Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "og_table_2",
+      "partId": "*",
+      "color": "#4a2f22",
+      "id": "ed_oylvhd06",
+      "at": "2026-10-18T12:17:08.095Z",
+      "by": "claude"
+    }
+  ]
+}

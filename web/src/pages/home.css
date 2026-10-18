@@ -53,24 +53,58 @@
   .home a.cta:active { scale: 0.97; }
 }
 
-/* The demo: a still of the editor mounted on the sheet like a print, labeled like a drawing. */
+/* The demo: the 16 rooms mounted on the sheet together like a contact print, labeled like a drawing. */
 .landing-demo { margin: 0; }
-.home a.landing-shot {
+.home a.landing-rooms {
   display: block;
   padding: 6px;
   border: var(--line) solid var(--pencil-strong);
   border-radius: var(--r-3);
   background: var(--paper-raised);
+  color: var(--ink);
+  text-decoration: none;
   transition: border-color 120ms ease-out;
 }
-.landing-shot img { display: block; width: 100%; height: auto; border: var(--line) solid var(--pencil); border-radius: var(--r-2); }
+.landing-rooms ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.landing-rooms li { position: relative; }
+.landing-rooms img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-2);
+  outline: var(--line) solid var(--pencil);
+  outline-offset: -1px;
+  transition: opacity 150ms ease-out;
+}
+/* A room's name, on a slip of paper over its corner while it's pointed at. */
+.room-label {
+  position: absolute;
+  inset: auto 6px 6px;
+  display: grid;
+  padding: 3px 7px 4px;
+  border-radius: var(--r-1);
+  background: var(--paper-raised);
+  box-shadow: var(--lift);
+  color: var(--graphite);
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0;
+  translate: 0 3px;
+  transition: opacity 150ms ease-out, translate 200ms var(--ease-out);
+  pointer-events: none;
+}
+.room-label b { color: var(--ink); font: 400 15px/1.2 var(--font-hand); }
 @media (hover: hover) {
-  .home a.landing-shot:hover { border-color: var(--ink); }
+  .home a.landing-rooms:hover { border-color: var(--ink); }
+  .landing-rooms li:hover .room-label { opacity: 1; translate: 0 0; }
+  .landing-rooms ul:hover li:not(:hover) img { opacity: 0.72; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-label { translate: none; }
 }
 .landing-demo figcaption { display: grid; gap: 2px; margin-top: var(--s-3); padding-top: var(--s-3); border-top: var(--line) solid var(--pencil); }
-.landing-title { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); font: 400 20px/1.2 var(--font-hand); }
+.landing-title { font: 400 20px/1.2 var(--font-hand); }
 .landing-demo .muted { color: var(--graphite); font-size: 13px; line-height: 1.5; text-wrap: pretty; }
-.landing-demo .price { color: var(--ink); font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* ───────────── The Scans ───────────── */
 
@@ -206,6 +240,7 @@
   .home:not(.landing) { gap: var(--s-5); padding: var(--s-5) var(--s-4); }
   .home-intro h1 { font-size: 52px; }
   .home a.cta { margin-top: var(--s-5); }
+  .landing-rooms ul { gap: 4px; }
   .scan { grid-template-columns: 88px minmax(0, 1fr); column-gap: var(--s-4); padding: var(--s-4) var(--s-4) var(--s-2); }
   .plan { grid-row: 1; }
   .scan > :is(.designs, .empty, .error) { grid-column: 1 / -1; }

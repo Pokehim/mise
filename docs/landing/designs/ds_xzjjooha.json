@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "id": "ds_xzjjooha",
+  "scanId": "lounge",
+  "name": "Golden Hour Dorm",
+  "createdAt": "2026-10-18T12:17:07.691Z",
+  "updatedAt": "2026-10-18T12:17:07.691Z",
+  "origin": "claude",
+  "brief": {
+    "text": "turn this room into a cozy dorm bedroom: a bed, a desk to study at, a rug and warm lamps, under $600",
+    "budgetUsd": 600
+  },
+  "rationale": "A cozy dorm bedroom as the Brief asks: a bed, a study desk, a bold rug and warm lamps, all under $600. A rust accent wall and a big anime-sunset poster give it a strong point of view.",
+  "palette": {
+    "wall": "#f3ece0",
+    "accents": [
+      "#a0442a",
+      "#1f2f4a",
+      "#d9a441"
+    ],
+    "materials": [
+      "walnut",
+      "linen"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_f6mjkquj",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_q2i34lto",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_4wj65o1j",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_ohrgw0te",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_8ululh14",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_1vbrxzrm",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_or8i9ah8",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_sg6nbxhh",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_gaefpjcp",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_76ltshub",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_wyx2vgg5",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_900npnzo",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_uimg5vq1",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_6olk7wzb",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_fi5yfeig",
+      "at": "2026-10-18T12:17:04.781Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_9l7j1o66",
+      "catalogId": "B073WQ8JLT",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0,
+          -2.5292
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_8vitp5ed",
+      "at": "2026-10-18T12:17:05.017Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_4tj4pa2f",
+      "catalogId": "B0876PDMJR",
+      "placement": {
+        "position": [
+          -1.3367,
+          0,
+          -2.716368
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_fzka5dtb",
+      "at": "2026-10-18T12:17:05.279Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#a0442a"
+      },
+      "id": "ed_51boxaby",
+      "at": "2026-10-18T12:17:05.527Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_h5om3u9i",
+      "catalogId": "poster-rooftop-sunset",
+      "placement": {
+        "position": [
+          1.5634000000000001,
+          0.973,
+          -2.3497
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_fytkeu40",
+      "at": "2026-10-18T12:17:05.819Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_5h6oxuhs",
+      "catalogId": "poster-after-school",
+      "placement": {
+        "position": [
+          1.5744,
+          1.234,
+          -2.8942
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_p5hi3cy6",
+      "at": "2026-10-18T12:17:05.820Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_5uk4dlko",
+      "catalogId": "B0719FLQP3",
+      "placement": {
+        "position": [
+          0.1278990000000001,
+          0,
+          -1.1586999999999998
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_bu8yvnuy",
+      "at": "2026-10-18T12:17:06.024Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_srciacbu",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          -0.8021556288784536,
+          0,
+          -1.870366224470004
+        ],
+        "rotationY": 0.07973,
+        "mount": "floor"
+      },
+      "id": "ed_vlmjvtle",
+      "at": "2026-10-18T12:17:06.349Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_g4w9fykn",
+      "catalogId": "B07JL5PNGZ",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0.66,
+          -3.3712
+        ],
+        "rotationY": 0,
+        "mount": "surface"
+      },
+      "id": "ed_tb21ebm1",
+      "at": "2026-10-18T12:17:06.584Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_9l7j1o66",
+      "partId": "bedding",
+      "color": "#1f2f4a",
+      "id": "ed_v58gs2do",
+      "at": "2026-10-18T12:17:07.059Z",
+      "by": "claude"
+    }
+  ]
+}

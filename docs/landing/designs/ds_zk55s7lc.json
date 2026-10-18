@@ -1,0 +1,436 @@
+{
+  "version": 1,
+  "id": "ds_zk55s7lc",
+  "scanId": "lounge",
+  "name": "Cabaret Vinyl Lounge",
+  "createdAt": "2026-10-18T12:17:16.024Z",
+  "updatedAt": "2026-10-18T12:17:16.024Z",
+  "origin": "claude",
+  "brief": {
+    "text": "a music lounge for listening to records, with a record player, plants and comfy seats"
+  },
+  "rationale": "A music lounge for listening to records: a walnut turntable faces a green velvet sofa below Toulouse-Lautrec cabaret posters on a burnt orange wall, with comfy seats, brass light and plenty of plants.",
+  "palette": {
+    "wall": "#b4502a",
+    "accents": [
+      "#2f4a35",
+      "#c9a24a"
+    ],
+    "materials": [
+      "walnut",
+      "velvet"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_jo7x7zpl",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_0ft4lnoa",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_oecwuf6m",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_1",
+      "id": "ed_hr5jgci6",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_qea63jhl",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_xq32htkh",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_5jjclk1r",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_td7h6t5n",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_uaxasi34",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_5oljrnmc",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_9s11i2j7",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_6fbvtdyj",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_5g692rm1",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_2usp1t5y",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_ef1gq5ds",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_2xru6jee",
+      "at": "2026-10-18T12:17:07.456Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_oxbcddlb",
+      "catalogId": "B07BKK336B",
+      "placement": {
+        "position": [
+          1.1188990000000003,
+          0,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_whcbp0rs",
+      "at": "2026-10-18T12:17:07.696Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_u9jq3c3k",
+      "catalogId": "B07B7J8GGS",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0,
+          0.02959999999999985
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_mngsgnqv",
+      "at": "2026-10-18T12:17:07.950Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#b4502a"
+      },
+      "id": "ed_12lde226",
+      "at": "2026-10-18T12:17:08.205Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_lkon1mw9",
+      "catalogId": "poster-aristide-bruant",
+      "placement": {
+        "position": [
+          1.5744,
+          0.9929999999999999,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_bt7uxekd",
+      "at": "2026-10-18T12:17:08.516Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_vi9lr3p6",
+      "catalogId": "poster-divan-japonais",
+      "placement": {
+        "position": [
+          1.5634000000000001,
+          1.125,
+          0.6631000000000009
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_n3iv8nrn",
+      "at": "2026-10-18T12:17:08.516Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_0qxihxwd",
+      "catalogId": "poster-jane-avril",
+      "placement": {
+        "position": [
+          1.5634000000000001,
+          1.125,
+          -0.6038999999999999
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_0t2oe1ha",
+      "at": "2026-10-18T12:17:08.516Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_39epfr5j",
+      "catalogId": "B0719FLQP3",
+      "placement": {
+        "position": [
+          0.3273990000000002,
+          0,
+          0.02960000000000034
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_wwrrn68c",
+      "at": "2026-10-18T12:17:08.721Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_2q1p1k59",
+      "catalogId": "B075X4N4S4",
+      "placement": {
+        "position": [
+          -0.9407,
+          0,
+          -3.1151999999999997
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_suf4enxi",
+      "at": "2026-10-18T12:17:09.049Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_dp0wmler",
+      "catalogId": "B073772DH1",
+      "placement": {
+        "position": [
+          -0.8407,
+          0,
+          -2.4151999999999996
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_ddwkbehh",
+      "at": "2026-10-18T12:17:09.074Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_5bd4dy49",
+      "catalogId": "ph-money-tree-tall",
+      "placement": {
+        "position": [
+          0.45930000000000026,
+          0,
+          -2.4151999999999996
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_ctofef3j",
+      "at": "2026-10-18T12:17:09.106Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_eu7s7c2p",
+      "catalogId": "obj-turntable-walnut",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0.765,
+          0.02959999999999985
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_mkbi69s2",
+      "at": "2026-10-18T12:17:09.444Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_w0u0xh2y",
+      "catalogId": "B07DTFBDTL",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0.765,
+          -0.3704000000000002
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_i5np4qzk",
+      "at": "2026-10-18T12:17:09.445Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_xbiqv4v1",
+      "catalogId": "ph-calathea-ebony",
+      "placement": {
+        "position": [
+          -1.4102000000000001,
+          0.765,
+          0.42959999999999987
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_6m018avw",
+      "at": "2026-10-18T12:17:09.446Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_9cwwsn4q",
+      "catalogId": "ph-potted-plant-01",
+      "placement": {
+        "position": [
+          1.2588990000000004,
+          0,
+          -1.2028999999999996
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_ahbqsl9q",
+      "at": "2026-10-18T12:17:09.700Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_xflcw92i",
+      "catalogId": "B07JLGCKKJ",
+      "placement": {
+        "position": [
+          1.1188990000000003,
+          0.772,
+          0.029600000000000293
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "surface"
+      },
+      "id": "ed_yh130p71",
+      "at": "2026-10-18T12:17:11.404Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_75o3ks8j",
+      "catalogId": "B07B4FZXL1",
+      "placement": {
+        "position": [
+          -0.3407,
+          0,
+          -0.9151999999999996
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_9v3mj78a",
+      "at": "2026-10-18T12:17:11.652Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_t7w5husq",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          1.2668990000000004,
+          0,
+          1.0861000000000003
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_epcvmpjx",
+      "at": "2026-10-18T12:17:11.883Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_75o3ks8j",
+      "partId": "*",
+      "color": "#c9a24a",
+      "id": "ed_16cv0ohl",
+      "at": "2026-10-18T12:17:15.592Z",
+      "by": "claude"
+    }
+  ]
+}

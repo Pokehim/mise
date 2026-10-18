@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "id": "ds_x82lyiiw",
+  "scanId": "lounge",
+  "name": "Clay Wave Dorm",
+  "createdAt": "2026-10-18T12:17:12.500Z",
+  "updatedAt": "2026-10-18T12:17:12.500Z",
+  "origin": "claude",
+  "brief": {
+    "text": "turn this room into a cozy dorm bedroom: a bed, a desk to study at, a rug and warm lamps, under $600",
+    "budgetUsd": 600
+  },
+  "rationale": "A cozy dorm bedroom with a bed, a study desk, a rug and warm lamps, well under $600: a twin XL bed against a clay accent wall under Japanese prints, with the room's own table reused as the desk.",
+  "palette": {
+    "wall": "#c9825b",
+    "accents": [
+      "#b5562f",
+      "#2f4a6b",
+      "#e8dcc6"
+    ],
+    "materials": [
+      "oak",
+      "linen"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_6y4fo1eg",
+      "at": "2026-10-18T12:17:04.905Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_hn2abt5c",
+      "at": "2026-10-18T12:17:04.905Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_19lnrtho",
+      "at": "2026-10-18T12:17:04.905Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_1uwzf3yy",
+      "at": "2026-10-18T12:17:04.905Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_xi2n9tsn",
+      "at": "2026-10-18T12:17:04.905Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_4vd1d62h",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_9hj8xr3g",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_1amnd4uh",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_z5xn5ih5",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_p95k6qkb",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_5mvmma68",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_9sud63pt",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_3xk4nhyq",
+      "at": "2026-10-18T12:17:04.906Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#c9825b"
+      },
+      "id": "ed_r35gbtwk",
+      "at": "2026-10-18T12:17:05.397Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_h3doui30",
+      "catalogId": "B07374K536",
+      "placement": {
+        "position": [
+          -0.44069999999999987,
+          0,
+          -2.3152
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      },
+      "id": "ed_temg4eoi",
+      "at": "2026-10-18T12:17:06.226Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_pi06dsvu",
+      "catalogId": "B0825CP3NS",
+      "placement": {
+        "position": [
+          -0.8133,
+          0.705,
+          -1.576
+        ],
+        "rotationY": 0.02149,
+        "mount": "surface"
+      },
+      "id": "ed_chud8huf",
+      "at": "2026-10-18T12:17:06.651Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_8cxlwqt3",
+      "catalogId": "ph-potted-plant-04",
+      "placement": {
+        "position": [
+          -0.6133461802327124,
+          0.705,
+          -1.5802976691905073
+        ],
+        "rotationY": 0.02149,
+        "mount": "surface"
+      },
+      "id": "ed_xhsc8q7b",
+      "at": "2026-10-18T12:17:06.651Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "og_chair_2",
+      "partId": "seat_back",
+      "color": "#b5562f",
+      "id": "ed_nx1ovgdo",
+      "at": "2026-10-18T12:17:06.887Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "og_table_1",
+      "partId": "top",
+      "color": "#c8a27a",
+      "id": "ed_jcok58d9",
+      "at": "2026-10-18T12:17:07.143Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ndy8q9ov",
+      "catalogId": "B073WQ8JLT",
+      "placement": {
+        "position": [
+          1.030399000000001,
+          0,
+          1.8884000000000007
+        ],
+        "rotationY": -3.141592653589793,
+        "mount": "floor"
+      },
+      "id": "ed_34ovfiti",
+      "at": "2026-10-18T12:17:09.712Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_j35xzhqv",
+      "catalogId": "poster-great-wave",
+      "placement": {
+        "position": [
+          1.5744,
+          1.145,
+          2.156900000000001
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_d8a9clkg",
+      "at": "2026-10-18T12:17:10.729Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_n1tevs2o",
+      "catalogId": "poster-sudden-shower",
+      "placement": {
+        "position": [
+          1.5744,
+          1.145,
+          1.6199000000000012
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_xdvzrs5c",
+      "at": "2026-10-18T12:17:10.729Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_she01ov6",
+      "catalogId": "B07TS83QM9",
+      "placement": {
+        "position": [
+          0.8138990000000005,
+          0,
+          0.7509000000000008
+        ],
+        "rotationY": -3.141592653589793,
+        "mount": "floor"
+      },
+      "id": "ed_nhph6kjd",
+      "at": "2026-10-18T12:17:10.900Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_0ybpteam",
+      "catalogId": "B07JLGCKKJ",
+      "placement": {
+        "position": [
+          1.030399000000001,
+          0.66,
+          2.719900000000001
+        ],
+        "rotationY": -3.141592653589793,
+        "mount": "surface"
+      },
+      "id": "ed_pclndg3f",
+      "at": "2026-10-18T12:17:11.100Z",
+      "by": "claude"
+    }
+  ]
+}

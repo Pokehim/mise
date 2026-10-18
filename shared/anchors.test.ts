@@ -17,12 +17,13 @@ const sofa = item('sofa-gray', 'sofa', 'Gray Sofa', [2, 0.85, 0.9]);
 const chest = item('chest-tall', 'dresser', 'Tall Chest', [0.6, 1.1, 0.45]);
 const print = item('print-fern', 'wall_art', 'Fern Print', [0.6, 0.8, 0.03], { mount: 'wall' });
 const plant = item('plant-fig', 'plant', 'Fiddle Leaf Fig', [0.4, 1.2, 0.4]);
-const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant] };
+const cube = item('cube-storage', 'storage', 'Storage Cube', [0.5, 0.5, 0.5]);
+const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant, cube] };
 
 /** The room with nothing in it. */
 const empty: RoomSetup = { ...setup, originals: [] };
 
-/** What `item` resolves to with this Anchor, in the room after these Edits. */
+/** What `catalogItem` resolves to with this Anchor, in the room after these Edits. */
 const resolve = (catalogItem: CatalogItem, anchor: Anchor, edits: Edit[] = [], room: RoomSetup = setup) =>
   resolveAnchor(room, furnished, replay(room, furnished, edits), catalogItem, anchor);
 
@@ -78,6 +79,16 @@ describe('resolveAnchor', () => {
         error: 'The room has no wall "wl_9"', violations: [],
       });
     });
+
+    it('returns an error for a fraction past either end, or an item wider than the wall', () => {
+      expect(resolve(desk, { kind: 'against_wall', wall_id: 'wl_north', along: 1.5 })).toEqual({
+        error: 'along goes from 0 (the left end) to 1 (the right end), not 1.5', violations: [],
+      });
+      const counter = item('counter-long', 'table', 'Long Counter', [4.2, 0.9, 0.6]);
+      expect(resolve(counter, { kind: 'against_wall', wall_id: 'wl_north', along: 'center' })).toEqual({
+        error: 'Long Counter is wider than the North wall', violations: [],
+      });
+    });
   });
 
   describe('beside', () => {
@@ -89,6 +100,15 @@ describe('resolveAnchor', () => {
       // The desk faces west, so its right is south of it, z > −0.065; its back is on the East wall.
       expect(resolve(nightstand, { kind: 'beside', target_id: 'og_desk', side: 'right' })).toEqual({
         placement: { position: [closeTo(1.8), 0, closeTo(0.16)], rotationY: closeTo(-Math.PI / 2), mount: 'floor' },
+      });
+    });
+
+    it("slides along the target's side, so that it stays next to it", () => {
+      // A cube already stands at the bed's right, against the North wall, to z −1: 0.5 m toward the foot, the nightstand clears it.
+      const cubeByBed = place('pc_cube', 'cube-storage', onFloor(-0.76, -1.25));
+
+      expect(resolve(nightstand, { kind: 'beside', target_id: 'og_bed', side: 'right' }, [cubeByBed])).toEqual({
+        placement: { position: [closeTo(-0.785), 0, closeTo(-0.8)], rotationY: closeTo(0), mount: 'floor' },
       });
     });
 
@@ -132,7 +152,9 @@ describe('resolveAnchor', () => {
     it('hangs the item flat on the wall, its center 1.45 m up unless asked otherwise', () => {
       // 0.8 tall: from 1.05 to 1.85 m up. Facing the West wall from inside, its left end is the south one.
       expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_west', along: 'center' })).toEqual({
-        placement: { position: [closeTo(-1.985), closeTo(1.05), closeTo(0)], rotationY: closeTo(Math.PI / 2), mount: 'wall', wallId: 'wl_west' },
+        placement: {
+          position: [closeTo(-1.985), closeTo(1.05), closeTo(0)], rotationY: closeTo(Math.PI / 2), mount: 'wall', wallId: 'wl_west',
+        },
       });
       expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_west', along: 'left', center_height_m: 1.2 })).toMatchObject({
         placement: { position: [closeTo(-1.985), closeTo(0.8), closeTo(1.2)] },
@@ -145,6 +167,16 @@ describe('resolveAnchor', () => {
       });
       expect(resolve(sofa, { kind: 'on_wall', wall_id: 'wl_west', along: 'center' })).toEqual({
         error: 'Gray Sofa stands on the floor: on_wall is for wall items', violations: [],
+      });
+    });
+
+    it("slides along the wall off a window, and doesn't reach past the floor or the ceiling", () => {
+      // The window takes x −0.6 to 0.6, 0.9 to 2.1 m up: 0.9 m along, at x 0.6 to 1.2, the print is beside it.
+      expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_north', along: 'center' })).toMatchObject({
+        placement: { position: [closeTo(0.9), closeTo(1.05), closeTo(-1.485)] },
+      });
+      expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_north', along: 'left', center_height_m: 2.4 })).toEqual({
+        error: "Fern Print, 0.8 m tall, doesn't fit on the North wall 2.4 m up: the wall is 2.6 m tall", violations: [],
       });
     });
 
@@ -195,6 +227,14 @@ describe('resolveAnchor', () => {
 
       expect(resolve(rug, { kind: 'centered_under', target_id: 'pc_sofa' }, [sofaMidRoom], empty)).toMatchObject({
         placement: { position: [closeTo(0), 0, closeTo(0.7033)] },
+      });
+    });
+
+    it("returns an error when the target is too near a wall to center the rug on, as the bed is", () => {
+      // Turned across the bed, the rug is 2.13 m wide, but the bed's center is 0.495 m from the West wall.
+      expect(resolve(rug, { kind: 'centered_under', target_id: 'og_bed' })).toEqual({
+        error: "Mainstays 5×7 Rug doesn't fit there, even slid up to 1 m either way",
+        violations: [{ rule: 'outside-floor', subjectId: 'rug-gray', message: 'Outside the room' }],
       });
     });
 

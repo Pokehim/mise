@@ -196,6 +196,7 @@ describe('checkFit', () => {
         item('bench-storage', 'storage', 'Storage Bench', [2.45, 0.5, 0.9]),
       ],
     };
+    /** The walkway violations of the room after these Edits. */
     const walkwayAfter = (edits: Edit[], subjectIds?: string[]) =>
       checkFit(setup, furniture, replay(setup, furniture, edits), subjectIds).filter(({ rule }) => rule === 'walkway');
 
@@ -238,7 +239,7 @@ describe('checkFit', () => {
       ]);
     });
 
-    it('finds nothing wrong with a normal dorm layout', () => {
+    it('finds nothing wrong with a normal dorm room', () => {
       const dorm = [
         place('pc_nightstand', 'nightstand-oak', onFloor(-0.785, -1.3)), // beside the bed's head
         place('pc_chair', 'chair-ergo', onFloor(1.1, -0.6, Math.PI / 2)), // pulled up to the desk

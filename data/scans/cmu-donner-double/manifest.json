@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "cmu-donner-double",
+  "name": "CMU · Donner House traditional double",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  }
+}

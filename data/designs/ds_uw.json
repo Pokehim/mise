@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "id": "ds_uw",
+  "scanId": "uw-lander-double",
+  "name": "Move-in layout",
+  "createdAt": "2026-10-18T08:00:00.000Z",
+  "updatedAt": "2026-10-18T08:00:00.000Z",
+  "origin": "mover",
+  "edits": [
+    {
+      "id": "ed_1",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_1",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          -2.676,
+          0,
+          -1.303
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_2",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_2",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          -0.402,
+          0,
+          1.328
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_3",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_3",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          -0.742,
+          0,
+          -1.448
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_4",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_4",
+      "catalogId": "B07MDJXWGN",
+      "placement": {
+        "position": [
+          -0.569,
+          0,
+          -0.791
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_5",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_5",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          -3.118,
+          0,
+          1.242
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_6",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_6",
+      "catalogId": "B07MDJXWGN",
+      "placement": {
+        "position": [
+          -3.18,
+          0,
+          0.592
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_7",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_7",
+      "catalogId": "B07GFFPKFV",
+      "placement": {
+        "position": [
+          0.986,
+          0,
+          -1.53
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_8",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_8",
+      "catalogId": "B07GFFPKFV",
+      "placement": {
+        "position": [
+          1.993,
+          0,
+          -1.53
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_9",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_9",
+      "catalogId": "B082JH6LSF",
+      "placement": {
+        "position": [
+          -3.365,
+          0,
+          -0.611
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_10",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_10",
+      "catalogId": "B07PXFVNXR",
+      "placement": {
+        "position": [
+          0.227,
+          0,
+          0.371
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    }
+  ]
+}

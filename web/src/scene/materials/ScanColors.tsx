@@ -1,5 +1,7 @@
 import { useThree } from '@react-three/fiber';
 import { useLayoutEffect } from 'react';
+import type { Object3D } from 'three';
+import type { Finish } from '@shared/types';
 import { useEditor } from '../../state/store';
 import { recolorParts } from '../applyParts';
 import { forEachMaterial } from '../objects';
@@ -25,10 +27,14 @@ export function ScanColors() {
   const originals = useEditor((s) => s.roomState!.originals);
 
   useLayoutEffect(() => {
+    // A room with no Capture has trim, doors and glass in its Wall nodes (buildRoom), which paint leaves alone.
+    const finish = (node: Object3D, look: Finish | undefined, avgLuminance: number) => forEachMaterial(node, (material) => {
+      if (!material.userData.fixture) applyFinish(material, look, avgLuminance, library);
+    });
     scene.getObjectByName('scan')?.traverse((node) => {
       const { kind, id, avgLuminance } = node.userData as Partial<SplitNodeData>;
-      if (kind === 'wall' && id) forEachMaterial(node, (material) => applyFinish(material, walls[id], avgLuminance!, library));
-      if (kind === 'floor') forEachMaterial(node, (material) => applyFinish(material, floor, avgLuminance!, library));
+      if (kind === 'wall' && id) finish(node, walls[id], avgLuminance!);
+      if (kind === 'floor') finish(node, floor, avgLuminance!);
       if (kind === 'original' && id) {
         recolorParts(node, originals[id]?.partColors ?? {}, { partFinishes: originals[id]?.partFinishes ?? {}, library });
       }

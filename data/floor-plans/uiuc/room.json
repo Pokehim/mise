@@ -1,0 +1,144 @@
+{
+  "id": "uiuc-wassaja-double-2a",
+  "school": "University of Illinois Urbana-Champaign (substitute for Harvard)",
+  "hall": "Wassaja Hall (Ikenberry Commons)",
+  "roomType": "Double (type 2A, most common)",
+  "name": "UIUC · Wassaja Hall double",
+  "sourceUrls": [
+    "https://www.housing.illinois.edu/living-communities/halls/wassaja",
+    "https://www.housing.illinois.edu/sites/default/files/2023-01/wassaja-doubles.pdf",
+    "https://housing.illinois.edu/living-communities/halls/furniture-dimensions"
+  ],
+  "photoUrls": [
+    "https://www.housing.illinois.edu/sites/default/files/styles/image_gallery_full/public/2023-11/UH-231108-JK-web-001.JPG.jpg?itok=Io4pqx0O",
+    "https://www.housing.illinois.edu/sites/default/files/styles/image_gallery_full/public/2023-11/UH-231108-JK-web-002.JPG.jpg?itok=jnODKmW-",
+    "https://www.housing.illinois.edu/sites/default/files/styles/image_gallery_full/public/2023-01/wassaja_double_2a.jpeg.jpg?itok=SI1qgJoR"
+  ],
+  "planFile": "plan.png",
+  "derivedFrom": "printed dimensions (10'-6\" +/- width, 15'-2\" +/- closet front to window wall); entry vestibule, closets, wall jog and window scaled from the same drawing; furniture placed from the official furnished top-down render of type 2A",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "LVP",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "Official Wassaja double photos show wood-look plank flooring, smooth painted walls and a smooth ceiling with wall-mounted linear lights (https://www.housing.illinois.edu/sites/default/files/styles/image_gallery_full/public/2023-11/UH-231108-JK-web-001.JPG.jpg?itok=Io4pqx0O)."
+  },
+  "polygon": [
+    [-0.834, -2.938],
+    [0.836, -2.938],
+    [0.836, -1.685],
+    [1.662, -1.685],
+    [1.662, 2.938],
+    [-1.538, 2.938],
+    [-1.538, -1.043],
+    [-1.662, -1.043],
+    [-1.662, -1.685],
+    [-0.834, -1.685]
+  ],
+  "openings": [
+    {
+      "kind": "door",
+      "wall": 0,
+      "offsetM": 0.151,
+      "widthM": 0.911,
+      "swing": "in-left"
+    },
+    {
+      "kind": "door",
+      "wall": 1,
+      "offsetM": 0.133,
+      "widthM": 0.917,
+      "swing": "in-left"
+    },
+    {
+      "kind": "window",
+      "wall": 4,
+      "offsetM": 0.961,
+      "widthM": 1.205
+    },
+    {
+      "kind": "door",
+      "wall": 9,
+      "offsetM": 0.202,
+      "widthM": 0.917,
+      "swing": "in-right"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "HVAC fan-coil enclosure",
+      "category": "storage",
+      "center": [1.436, 2.526],
+      "size": [0.823, 0.8, 0.453],
+      "facing": "west",
+      "builtIn": true
+    },
+    {
+      "label": "Desk A",
+      "category": "desk",
+      "center": [-1.243, 1.782],
+      "size": [0.762, 0.762, 0.591],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair A",
+      "category": "chair",
+      "center": [-0.801, 1.782],
+      "size": [0.5, 0.85, 0.5],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk B",
+      "category": "desk",
+      "center": [1.367, 1.719],
+      "size": [0.762, 0.762, 0.591],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair B",
+      "category": "chair",
+      "center": [0.926, 1.719],
+      "size": [0.5, 0.85, 0.5],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Bed A (XL twin, mid-loft)",
+      "category": "bed",
+      "center": [-1.043, 0.075],
+      "size": [0.991, 0.965, 2.032],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Bed B (XL twin, mid-loft)",
+      "category": "bed",
+      "center": [1.167, 0.017],
+      "size": [0.991, 0.965, 2.032],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Three-drawer chest A (under bed)",
+      "category": "dresser",
+      "center": [-1.24, -0.585],
+      "size": [0.711, 0.762, 0.597],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Three-drawer chest B (under bed)",
+      "category": "dresser",
+      "center": [1.364, -0.644],
+      "size": [0.711, 0.762, 0.597],
+      "facing": "west",
+      "builtIn": false
+    }
+  ],
+  "confidence": "high for the shell (printed 10'-6\" x 15'-2\" plus a dimensioned vector drawing for the vestibule, closets and 4 ft window); medium for furniture, positioned from the official top-down render (not dimensioned) using official furniture sizes; ceiling height and window sill are not given.",
+  "notes": "Substitute for Harvard. Harvard's First-Year Experience office says 'Floor plans and room dimensions are not provided to students.' Polygon = main room + entry vestibule; the main room's west wall jogs out 0.12 m near the closets. Closets A (east) and B (west) are separate reach-in closets (~0.70 m deep x 1.12 m, 'typically 3 x 3 ft' per Housing) outside the polygon. Their hinged doors open into the vestibule and are listed as doors on walls 1 and 9. The entry door is hinged on its west jamb. Furniture per Housing: desk 30W x 23.25D x 30H in, 3-drawer chest 28 x 23.5 x 30, pedestal 19.25 x 23.25 x 30, bookshelf 28.75 x 11 x 27.75, hanging bed shelf 29 in, XL twin (beds default mid-loft, 38 in to mattress top). Pedestals and bookshelves are not placed. The chests are placed under the lofted beds, as the official photos show drawer units there, so they overlap the beds by design. Chair size is a default (not published). Bed frame width uses the generic 39 in XL twin."
+}

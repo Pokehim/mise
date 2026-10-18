@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "id": "ds_berkeley",
+  "scanId": "berkeley-blackwell-double",
+  "name": "Move-in layout",
+  "createdAt": "2026-10-18T08:00:00.000Z",
+  "updatedAt": "2026-10-18T08:00:00.000Z",
+  "origin": "mover",
+  "edits": [
+    {
+      "id": "ed_1",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_1",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          -1.725,
+          0,
+          -1.081
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_2",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_2",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          1.717,
+          0,
+          -1.081
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_3",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_3",
+      "catalogId": "B07M7MMPXB",
+      "placement": {
+        "position": [
+          0.004,
+          0,
+          -1.268
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_4",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_4",
+      "catalogId": "B07H8V7P3H",
+      "placement": {
+        "position": [
+          -1.829,
+          0,
+          1.286
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_5",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_5",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          -0.48,
+          0,
+          1.214
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_6",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_6",
+      "catalogId": "B07H8V7P3H",
+      "placement": {
+        "position": [
+          0.77,
+          0,
+          1.286
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_7",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_7",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          2.14,
+          0,
+          1.214
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_8",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_8",
+      "catalogId": "B07MDJXWGN",
+      "placement": {
+        "position": [
+          -0.476,
+          0,
+          0.563
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_9",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_9",
+      "catalogId": "B07MDJXWGN",
+      "placement": {
+        "position": [
+          2.144,
+          0,
+          0.563
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "berkeley-blackwell-double",
+  "name": "UC Berkeley · Blackwell Hall double",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  }
+}

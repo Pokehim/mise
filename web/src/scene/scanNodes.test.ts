@@ -25,18 +25,24 @@ describe('setupRoomNodes', () => {
     }
   });
 
-  it("keeps the stand-in Walls' and Floor's SplitNodeData", () => {
+  it("keeps the Walls' and Floor's SplitNodeData", () => {
     const { walls, floor } = setupRoomNodes(setup);
     expect(Object.keys(walls)).toEqual(setup.walls.map((wall) => wall.id));
     for (const [id, node] of Object.entries(walls)) {
       expect(node.userData).toEqual({ kind: 'wall', id, avgLuminance: expect.any(Number) });
     }
     expect(floor.userData).toEqual({ kind: 'floor', avgLuminance: expect.any(Number) });
-    // Painted as one Surface, so not split into Parts.
+    // Painted as one Surface, so not split into Parts: one material that takes paint, beside its fixtures.
     for (const node of [...Object.values(walls), floor]) {
-      expect(node).toBeInstanceOf(Mesh);
-      expect(Array.isArray((node as Mesh).material)).toBe(false);
-      expect(((node as Mesh).material as Material).userData.partId).toBeUndefined();
+      const paintable = new Set<Material>();
+      node.traverse((mesh) => {
+        if (!(mesh instanceof Mesh)) return;
+        expect(Array.isArray(mesh.material)).toBe(false);
+        const material = mesh.material as Material;
+        expect(material.userData.partId).toBeUndefined();
+        if (!material.userData.fixture) paintable.add(material);
+      });
+      expect(paintable.size).toBe(1);
     }
   });
 });

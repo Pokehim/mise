@@ -84,3 +84,19 @@ export const place = (pieceId: string, catalogId: string, placement: Placement, 
 
 /** A floor Placement at x, z. */
 export const onFloor = (x: number, z: number, rotationY = 0): Placement => ({ position: [x, 0, z], rotationY, mount: 'floor' });
+
+/** The room with three chairs drawn from one Master Copy, and a stool from another (lounge-v2, ADR-0009). */
+export const withMasterCopies: RoomSetup = {
+  ...setup,
+  originals: [
+    ...setup.originals,
+    ...[[-0.5, 0.8], [0.5, 0.8], [0, 1.2]].map(([x, z], i) => ({
+      id: `og_chair${i + 1}`, label: `Chair ${i + 1}`, category: 'chair' as const, kept: false, floorColor: '#a89f91' as const,
+      model: 'models/chair.glb', box: { position: [x, 0, z] as Vec3, size: [0.5, 0.85, 0.55] as Vec3, rotationY: 0 },
+    })),
+    {
+      id: 'og_stool', label: 'Stool', category: 'chair', kept: false, floorColor: '#a89f91',
+      model: 'models/stool.glb', box: { position: [0, 0, 0], size: [0.4, 0.6, 0.4], rotationY: 0 },
+    },
+  ],
+};

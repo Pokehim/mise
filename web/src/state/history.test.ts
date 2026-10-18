@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { replay } from '@shared/replay';
-import { catalog, edit, onFloor, place, setup } from '@shared/test-room';
-import type { Catalog, Design, Edit } from '@shared/types';
+import { catalog, edit, onFloor, place, setup, withMasterCopies } from '@shared/test-room';
+import type { Catalog, Design, Edit, RoomSetup } from '@shared/types';
 import { saveDesign } from '../api';
 import { connectHistory, deleteEdit, historyRows, putBack, redo, saveNow, shoppingList, undo, useSaveStatus } from './history';
 import { useEditor } from './store';
@@ -11,14 +11,14 @@ vi.mock(import('../api'), async (importOriginal) => ({ ...(await importOriginal(
 
 let opened = 0;
 
-/** Opens a new Design of the test room with these Edits, as load() does. */
-function open(edits: Edit[], withCatalog: Catalog = catalog) {
+/** Opens a new Design of the test room, or of another room, with these Edits, as load() does. */
+function open(edits: Edit[], withCatalog: Catalog = catalog, room: RoomSetup = setup) {
   const design: Design = {
-    version: 1, id: `ds_test${++opened}`, scanId: setup.scanId, name: 'Dorm', origin: 'mover',
+    version: 1, id: `ds_test${++opened}`, scanId: room.scanId, name: 'Dorm', origin: 'mover',
     createdAt: '2026-10-17T21:00:00.000Z', updatedAt: '2026-10-17T21:00:00.000Z', edits,
   };
   useEditor.setState({
-    status: 'ready', setup, catalog: withCatalog, design, roomState: replay(setup, withCatalog, edits), dirty: false, selection: null,
+    status: 'ready', setup: room, catalog: withCatalog, design, roomState: replay(room, withCatalog, edits), dirty: false, selection: null,
   });
 }
 
@@ -85,6 +85,19 @@ describe('redo', () => {
     redo();
 
     expect(room()!.pieces).toEqual({});
+  });
+});
+
+describe('History', () => {
+  it('shows a Recolor of every Original drawn from the same Master Copy as one row', () => {
+    open([], catalog, withMasterCopies);
+    applyEdit({ type: 'recolor', targetId: 'og_chair1', partId: 'legs', color: '#1c1c1c' });
+    applyEdit({ type: 'recolor', targetId: 'og_chair1', partId: 'legs', color: '#1c1c1c', sameModel: true });
+
+    expect(historyRows(useEditor.getState()).map(({ text }) => text)).toEqual([
+      'Recolored your chair 1 legs · Black',
+      'Legs → black on all 3 chairs',
+    ]);
   });
 });
 

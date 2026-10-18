@@ -16,6 +16,13 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
     const part = PART_NAMES.get(partId) ?? partId;
     return owner ? `${owner} ${part}` : part;
   };
+  /** "all 12 chairs": every Original drawn from the same Master Copy as this one, named by its label without the number. */
+  const allMatching = (originalId: string) => {
+    const original = setup.originals.find(({ id }) => id === originalId);
+    if (!original?.model) return undefined;
+    const count = setup.originals.filter(({ model }) => model === original.model).length;
+    return `all ${count} ${original.label.replace(/\s*\d+$/, '').toLowerCase()}s`;
+  };
 
   switch (edit.type) {
     case 'place':
@@ -34,10 +41,18 @@ export function describe(edit: Edit, setup: RoomSetup, catalog: Catalog): string
         ? `Resized ${original} → ${title(edit.catalogId)}`
         : `Replaced ${original} with ${title(edit.catalogId)}`;
     }
-    case 'recolor':
+    case 'recolor': {
+      const all = edit.sameModel && allMatching(edit.targetId);
+      if (all) {
+        const part = edit.partId === '*' ? null : PART_NAMES.get(edit.partId) ?? edit.partId;
+        if (!edit.color) return `Cleared the color of ${part ? `the ${part} on ` : ''}${all}`;
+        const color = colorName(edit.color).toLowerCase();
+        return part ? `${capitalize(part)} → ${color} on ${all}` : `${capitalize(all)} → ${color}`;
+      }
       return edit.color
         ? `Recolored ${whichParts(edit.targetId, edit.partId)} · ${colorName(edit.color)}`
         : `Cleared the color of ${whichParts(edit.targetId, edit.partId)}`;
+    }
     case 'finish': {
       const { target, finish } = edit;
       const targetName = target.kind === 'wall' ? setup.walls.find(({ id }) => id === target.wallId)?.name ?? 'a wall'
@@ -63,6 +78,8 @@ const CATEGORIES = Object.keys({
   dresser: true, wardrobe: true, shelf: true, storage: true,
   rug: true, lamp: true, wall_art: true, mirror: true, plant: true, decor: true,
 } satisfies Record<Category, true>) as Category[];
+
+const capitalize = (text: string) => text[0].toUpperCase() + text.slice(1);
 
 const PART_NAMES = new Map(CATEGORIES.flatMap(partsFor).map(({ id, name }) => [id, name.toLowerCase()]));
 

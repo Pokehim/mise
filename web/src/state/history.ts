@@ -147,7 +147,7 @@ export function shoppingList({ roomState, setup, catalog }: Omit<OpenDesign, 'de
 
 /* ───────────── Autosave (spec §10.3) ───────────── */
 
-/** The "Saved" indicator: 'saving' from a change until the Design is saved. */
+/** The "Saved" indicator: 'failed' while any Design's latest save failed, else 'saving' from a change until it is saved. */
 export const useSaveStatus = create<{ status: 'saved' | 'saving' | 'failed' }>()(() => ({ status: 'saved' }));
 
 /** How long autosave waits after the last change before it saves. */
@@ -155,77 +155,98 @@ const AUTOSAVE_MS = 500;
 /** How long it waits to try a failed save again. */
 const RETRY_MS = 5000;
 
-/** The latest change autosave hasn't sent yet, and the timer that sends it. */
-let waiting: { design: Design; timer: ReturnType<typeof setTimeout> } | null = null;
+/** Each Design's latest change autosave hasn't sent yet, and the timer that sends it. */
+const pending = new Map<string, { design: Design; timer: ReturnType<typeof setTimeout> }>();
+/** Each Design's latest change, from when it is made until it lands: pending, or on its way. */
+const unsaved = new Map<string, Design>();
+/** The Designs whose latest save failed. */
+const failed = new Set<string>();
 /** Saves run one at a time, so an older one can't land after a newer one. */
 let saving = Promise.resolve();
 
-/** The waiting change, taken off its timer. */
-function takeWaiting() {
-  if (!waiting) return undefined;
-  clearTimeout(waiting.timer);
-  const { design } = waiting;
-  waiting = null;
+/** Sets the Saved indicator from what has failed and what hasn't landed yet. */
+function showStatus() {
+  useSaveStatus.setState({ status: failed.size ? 'failed' : unsaved.size ? 'saving' : 'saved' });
+}
+
+/** Makes this the Design's pending change, sent in `ms` unless a newer change of the Design replaces it. */
+function wait(design: Design, ms: number) {
+  clearTimeout(pending.get(design.id)?.timer);
+  pending.set(design.id, { design, timer: setTimeout(() => autosave(design.id), ms) });
+}
+
+/** A Design's pending change, taken off its timer. */
+function take(id: string) {
+  const { design, timer } = pending.get(id)!;
+  clearTimeout(timer);
+  pending.delete(id);
   return design;
 }
 
-/**
- * Saves the waiting change now instead of when its 500 ms are up. It resolves once every save has
- * landed, and rejects if this one failed: the change then stays waiting, and is tried again.
- */
-export function saveNow(): Promise<void> {
-  const design = takeWaiting();
-  if (!design) return saving;
+/** Sends a Design's pending change, after the saves before it. It rejects if the save failed. */
+function send(id: string): Promise<void> {
+  const design = take(id);
   const done: Promise<void> = saving
     .then(() => saveDesign(design))
     .then(
       () => {
         // A change made while the save was on its way stays dirty, for the next save.
         if (useEditor.getState().design === design) useEditor.setState({ dirty: false });
-        if (!waiting && saving === quiet) useSaveStatus.setState({ status: 'saved' });
+        if (unsaved.get(id) === design) unsaved.delete(id);
+        failed.delete(id);
+        showStatus();
       },
       (error: Error) => {
-        console.error(`Could not save Design ${design.id}: ${error.message}`);
-        if (!waiting) {
-          waiting = { design, timer: setTimeout(autosave, RETRY_MS) };
-          useSaveStatus.setState({ status: 'failed' });
-        }
+        console.error(`Could not save Design ${id}: ${error.message}`);
+        failed.add(id);
+        // It is tried again, unless a newer change of the Design is pending or on its way.
+        if (unsaved.get(id) === design) wait(design, RETRY_MS);
+        showStatus();
         throw error;
       },
     );
   // The next save waits for this one, whether it landed or not.
-  const quiet = done.catch(() => {});
-  saving = quiet;
+  saving = done.catch(() => {});
   return done;
 }
 
-/** saveNow for autosave, whose failures show in the Saved indicator. */
-const autosave = () => void saveNow().catch(() => {});
+/** send for autosave, whose failures show in the Saved indicator. */
+const autosave = (id: string) => void send(id).catch(() => {});
+
+/**
+ * Saves every pending change now instead of when its timer is up. It resolves once every save has
+ * landed, and rejects if one of them failed: that change then stays pending, and is tried again.
+ */
+export async function saveNow(): Promise<void> {
+  const sent = await Promise.allSettled([...pending.keys()].map(send));
+  await saving;
+  const failure = sent.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+  if (failure) throw failure.reason;
+}
 
 /**
  * Autosaves the open Design: every change to it (an Edit, undo, a rename) PUTs the whole Design
- * once nothing has changed for 500 ms. It returns the function that stops it, which saves a
- * waiting change first.
+ * once nothing has changed for 500 ms. It returns the function that stops it, which saves every
+ * pending change first.
  */
 export function connectHistory() {
-  const unsubscribe = useEditor.subscribe((state, prev) => {
+  const unsubscribe = useEditor.subscribe(({ design, dirty }, prev) => {
     // Another Design opened: the last one's change goes now.
-    if (waiting && state.design?.id !== waiting.design.id) autosave();
-    if (!state.dirty || state.design === prev.design) return;
-    if (waiting) clearTimeout(waiting.timer);
-    waiting = { design: state.design!, timer: setTimeout(autosave, AUTOSAVE_MS) };
-    useSaveStatus.setState({ status: 'saving' });
+    if (prev.design && prev.design.id !== design?.id && pending.has(prev.design.id)) autosave(prev.design.id);
+    if (!dirty || design === prev.design) return;
+    unsaved.set(design!.id, design!);
+    wait(design!, AUTOSAVE_MS);
+    showStatus();
   });
   return () => {
     unsubscribe();
-    autosave();
+    void saveNow().catch(() => {});
   };
 }
 
-/** A change still waiting as the page closes goes at once, not after the saves before it, as a request that outlives the page. */
+/** Changes still pending as the page closes go at once, not after the saves before them, as requests that outlive the page. */
 function saveAsPageCloses() {
-  const design = takeWaiting();
-  if (design) void saveDesign(design, { keepalive: true });
+  for (const id of [...pending.keys()]) void saveDesign(take(id), { keepalive: true });
 }
 
 /** Autosaves the open Design while the editor is mounted. */

@@ -218,6 +218,82 @@ describe('autosave', () => {
     expect(useSaveStatus.getState().status).toBe('saved');
     expect(useEditor.getState().dirty).toBe(false);
   });
+
+  it('keeps a change to one Design whose save fails while another Design is waiting, and saves it on retry', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const a = useEditor.getState().design!.id;
+    let online = false;
+    vi.mocked(saveDesign).mockImplementation(async (design) => {
+      if (!online && design.id === a) throw new Error('offline');
+      saved.push(design);
+      return design;
+    });
+    applyEdit({ type: 'place', pieceId: 'pc_rug', catalogId: 'rug-gray', placement: onFloor(1, 1) });
+
+    // Opening B, as Designs ▾ does with no saveNow, sends A's change at once; it fails while B's change waits.
+    open([]);
+    const b = useEditor.getState().design!.id;
+    applyEdit({ type: 'place', pieceId: 'pc_lamp', catalogId: 'lamp-brass', placement: onFloor(-1, 1) });
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(saved.map(({ id }) => id)).toEqual([b]);
+    expect(useSaveStatus.getState().status).toBe('failed');
+
+    online = true;
+    await vi.advanceTimersByTimeAsync(4499);
+    expect(saved).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(saved.map(({ id, edits }) => [id, edits.length])).toEqual([[b, 1], [a, 2]]);
+    expect(useSaveStatus.getState().status).toBe('saved');
+  });
+
+  it('waits the full 5 s before retrying a failed Design, however often the store changes', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const a = useEditor.getState().design!.id;
+    let online = false;
+    let triesOfA = 0;
+    vi.mocked(saveDesign).mockImplementation(async (design) => {
+      if (design.id === a) triesOfA++;
+      if (!online && design.id === a) throw new Error('offline');
+      saved.push(design);
+      return design;
+    });
+    applyEdit({ type: 'place', pieceId: 'pc_rug', catalogId: 'rug-gray', placement: onFloor(1, 1) });
+    open([place('pc_chair', 'chair-ergo', onFloor(0, 0))]);
+
+    // Hovering History rows, every 100 ms for 4 s.
+    for (let i = 0; i < 40; i++) {
+      useEditor.getState().setHighlight(i % 2 ? null : { kind: 'piece', id: 'pc_chair' });
+      await vi.advanceTimersByTimeAsync(100);
+    }
+    expect(triesOfA).toBe(1);
+
+    online = true;
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(triesOfA).toBe(2);
+    expect(useSaveStatus.getState().status).toBe('saved');
+  });
+
+  it("sends the previous Design's change at once when another Design opens, and only then", async () => {
+    const a = useEditor.getState().design!.id;
+    applyEdit({ type: 'place', pieceId: 'pc_rug', catalogId: 'rug-gray', placement: onFloor(1, 1) });
+    const { select, setHighlight, setPreview } = useEditor.getState();
+    select({ kind: 'piece', id: 'pc_rug' });
+    setHighlight({ kind: 'piece', id: 'pc_chair' });
+    setPreview({ pieceId: 'pc_rug', placement: onFloor(1.2, 1) });
+    setPreview(null);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(saved).toEqual([]);
+
+    open([]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(saved.map(({ id, edits }) => [id, edits.length])).toEqual([[a, 2]]);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(saved).toHaveLength(1);
+  });
 });
 
 describe('shoppingList', () => {

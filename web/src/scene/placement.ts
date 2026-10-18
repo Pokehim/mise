@@ -1,7 +1,7 @@
 import { type Camera, MathUtils, Plane, type Ray, Raycaster, Vector2, Vector3 } from 'three';
 import { distanceToWall, footprint, gapTo, isBy, type OrientedRect, pushFootprintInside, reach, rectCorners, wallPoint } from '@shared/geometry';
 import type { CatalogItem, Placement, RoomSetup, Vec2, Vec3, Wall } from '@shared/types';
-import { wallCoordinates, wallLength, wallRotationY } from './floorPlan';
+import { wallLength, wallRotationY } from './floorPlan';
 
 /** Rugs lie flat: they stay on the floor, nothing rests on them, and they cast no blob shadow. */
 export const liesFlat = (item: Pick<CatalogItem, 'category'>) => item.category === 'rug';
@@ -110,8 +110,8 @@ function flushAgainst(wall: Wall, rect: OrientedRect): Vec2 {
 /**
  * Where an item on the floor, or on something on it, stands, as walls are solid: its whole footprint
  * inside the room, moved the shortest way, then snapped flush to a wall or into a corner near it,
- * unless `snap` is off (Alt).
- * Null when it can't fit in the room at all, so the caller can keep its last good placement.
+ * unless `snap` is off (Alt). Null when it can't fit in the room at all, so the caller can keep its
+ * last good placement.
  */
 export function keepInRoom(placement: Placement, size: Vec3, setup: RoomSetup, { snap = true } = {}): Placement | null {
   const { polygon } = setup.floor;

@@ -64,9 +64,9 @@ export function swapEdit(context: SwapContext, target: SwapTarget, item: Catalog
  * Where an item `depth` deep and `width` wide (by default, as wide as the old item) goes in place of
  * a Piece or an Original: with its back-center where the old item's was. Walls are solid: a bigger
  * item moves the shortest way to stay inside the room, or, when it can't fit at all, stays put for
- * the outside-floor Fit rule to report. In place of an Original, it also goes flush
- * against a wall or into a corner within 15 cm, as a dragged Piece does (spec §10.3): a Room Setup box
- * can stand a few cm off the wall the real item is against, while a Piece stands exactly where the Mover put it.
+ * the outside-floor Fit rule to report. In place of an Original, it also goes flush against a wall
+ * or into a corner within 15 cm, as a dragged Piece does (spec §10.3): a Room Setup box can stand a
+ * few cm off the wall the real item is against, while a Piece stands exactly where the Mover put it.
  */
 export function swapPlacement(context: SwapContext, target: SwapTarget, depth: number, width?: number): Placement | undefined {
   const box = targetBox(context, target);

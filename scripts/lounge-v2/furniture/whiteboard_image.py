@@ -43,10 +43,18 @@ for dy in range(-40, 41):
             best = (c, dx, dy)
 _, dx, dy = best
 g3 = np.roll(b3, (-dy, -dx), (0, 1))
-ring = (xx > 420) & (xx < 700) & (yy > 150) & (yy < 1000)
-g3 = g3 * (np.median(a[ring], 0) / np.median(g3[ring], 0))
 top = (xx >= 30) & (xx < 400) & (yy < 760)       # above the Amine line; GLB_3's own edge strip is the teal wall
-w = np.clip(ndi.gaussian_filter(top.astype(float), 12), 0, 1) * top
+# light matched to GLB_1 just around the patch, as a smooth gain that varies down the board (the corner is darker
+# at the top), so its edge doesn't show
+ring = ((xx >= 400) & (xx < 520) & (yy < 760)) | ((xx >= 30) & (xx < 520) & (yy >= 760) & (yy < 860))
+gain = np.ones((H, 3))
+for y0 in range(0, 860, 20):
+    band = ring & (yy >= y0 - 60) & (yy < y0 + 80)
+    gain[y0:y0 + 20] = np.median(a[band], 0) / np.median(g3[band], 0)
+gain[860:] = gain[859]
+gain = ndi.gaussian_filter1d(gain, 30, axis=0)
+g3 = g3 * gain[:, None, :]
+w = np.clip(ndi.gaussian_filter(top.astype(float), 30), 0, 1) * top
 a = a * (1 - w[..., None]) + g3 * w[..., None]
 print('North end from GLB_3: shift (%d, %d) px, correlation %.2f' % (dx, dy, best[0]))
 

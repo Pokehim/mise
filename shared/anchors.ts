@@ -4,6 +4,7 @@ import {
   rectInPolygon, spanFromLeft, spanFromStart, startIsLeft, wallLength, wallPoint,
 } from './geometry';
 import { BEDDING_RANGE, HEADBOARD_DEPTH } from './parts';
+import { pushIn } from './tuck';
 import type { Catalog, CatalogItem, FitViolation, PartParams, Placement, RoomSetup, RoomState, Vec2, Wall } from './types';
 
 /** How far, in meters, each step slides a Placement that breaks a Fit rule. */
@@ -40,7 +41,8 @@ export type Anchor =
   | { kind: 'against_wall'; wall_id: string; along: Along }
   /** Snug in the corner at a wall's end: a bed along the wall, long side flush and head in the corner; anything else back to the wall there. */
   | { kind: 'in_corner'; wall_id: string; end: 'left' | 'right' }
-  | { kind: 'beside'; target_id: string; side: 'left' | 'right' | 'front' }
+  /** With `tucked`, in front only: pushed in under the target, as far as it fits, as a chair at a desk. */
+  | { kind: 'beside'; target_id: string; side: 'left' | 'right' | 'front'; tucked?: boolean }
   | { kind: 'under_window'; opening_id: string }
   | { kind: 'on_wall'; wall_id: string; along: Along; center_height_m?: number }
   /** Hung centered over furniture against the wall, `offset_m` to the right seen facing it; clear of the furniture by default. */
@@ -72,14 +74,19 @@ type Candidates = Allowed | { error: string };
 export function resolveAnchor(
   setup: RoomSetup, catalog: Catalog, state: RoomState, item: CatalogItem, anchor: Anchor, { shelfLevels = {} }: AnchorOptions = {},
 ): Resolution {
-  const catalogId = (id: string) => (Object.hasOwn(state.pieces, id) ? state.pieces[id].catalogId : undefined);
-  const details: Details = { partParams: partParamsOf(setup, catalog, state), levels: (id) => shelfLevels[catalogId(id) ?? ''] };
-  const candidates = candidatesFor(setup, roomItems(setup, catalog, state), item, anchor, details);
-  if ('error' in candidates) return { error: candidates.error, violations: [] };
   const withItem = { ...catalog, items: [...catalog.items, item] };
   // The new Piece goes by its Catalog id while it is checked, so that is how violations name it.
-  const violations = (placement: Placement) =>
-    placementViolations(setup, withItem, { ...state, pieces: { ...state.pieces, [item.id]: { catalogId: item.id, placement, partColors: {} } } }, item.id);
+  const withPiece = (placement: Placement): RoomState =>
+    ({ ...state, pieces: { ...state.pieces, [item.id]: { catalogId: item.id, placement, partColors: {} } } });
+  const catalogId = (id: string) => (Object.hasOwn(state.pieces, id) ? state.pieces[id].catalogId : undefined);
+  const details: Details = {
+    partParams: partParamsOf(setup, catalog, state),
+    levels: (id) => shelfLevels[catalogId(id) ?? ''],
+    push: (placement, direction, maxDistance) => pushIn(setup, withItem, withPiece(placement), item.id, placement, direction, maxDistance),
+  };
+  const candidates = candidatesFor(setup, roomItems(setup, catalog, state), item, anchor, details);
+  if ('error' in candidates) return { error: candidates.error, violations: [] };
+  const violations = (placement: Placement) => placementViolations(setup, withItem, withPiece(placement), item.id);
   // Walls are solid: a spot that pokes through one moves the shortest way back inside, as a dragged item does.
   const inside = (placement: Placement) =>
     (placement.mount !== 'wall' && pushFootprintInside(placement, item.size, setup.floor.polygon)) || placement;
@@ -128,14 +135,18 @@ function clearOfWallItems(setup: RoomSetup, items: RoomItem[], subjectId: string
     .map((other) => ({ rule: 'overlap', subjectId, otherId: other.id, message: `Stands in front of ${other.name}` }));
 }
 
-/** What the resolver knows of an Original or a Piece beyond its box, by its id: its Part rule overrides, and its shelf levels. */
+/**
+ * What the resolver knows of an Original or a Piece beyond its box, by its id: its Part rule overrides,
+ * and its shelf levels; and how to push the new Piece in from a Placement until it touches (`pushIn`).
+ */
 interface Details {
   partParams: (id: string) => PartParams | undefined;
   levels: (id: string) => ShelfLevel[] | undefined;
+  push: (placement: Placement, direction: Vec2, maxDistance: number) => Placement;
 }
 
 /** The Placements an Anchor allows for `item`, before the Fit rules pick among them, or why it allows none. */
-function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, anchor: Anchor, { partParams, levels }: Details): Candidates {
+function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, anchor: Anchor, { partParams, levels, push }: Details): Candidates {
   const [width, height, depth] = item.size;
   /** The Placement, then the Placement slid along the unit vector [ax, az], from `min` to `max` meters. */
   const sliding = (placement: Placement, [ax, az]: Vec2, [min, max]: [number, number]): Allowed => {
@@ -259,9 +270,11 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
     case 'beside': {
       const target = targetOf(anchor.target_id);
       if (!target) return noTarget(anchor.target_id);
+      if (anchor.tucked && anchor.side !== 'front') return { error: `tucked is for side 'front' only, not '${anchor.side}'` };
       const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
-      // Beside it, backs in line; in front of it, facing it. It slides along the side it is at, but
-      // its center never past that side's ends, so that it stays next to the target.
+      // Beside it, backs in line; in front of it, facing it, and tucked, pushed in toward it as far as
+      // it fits, up to the target's depth. It slides along the side it is at, but its center never
+      // past that side's ends, so that it stays next to the target.
       const at = (side: 'left' | 'right' | 'front') => {
         const { across, out, turn, axis, min, max } = side === 'front'
           ? {
@@ -281,7 +294,9 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
             max: targetDepth - depth / 2,
           };
         const [x, z] = inFrameOf(target.placement, [across, out]);
-        return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, [min, max]);
+        const placement: Placement = { position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' };
+        const [fx, fz] = frontOf(rotationY);
+        return sliding(anchor.tucked ? push(placement, [-fx, -fz], targetDepth) : placement, axis, [min, max]);
       };
       if (anchor.side === 'front') return at('front');
       // The side asked for first; when nothing fits there, as when it's the wall a bed in a corner stands against, the other.

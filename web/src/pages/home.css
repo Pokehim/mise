@@ -13,7 +13,8 @@
 }
 
 .home-intro hgroup { margin-bottom: var(--s-4); }
-.home-intro h1 { margin: 0; font: 400 64px/1 var(--font-hand); letter-spacing: -0.01em; }
+/* Sized to keep "Mise Design" on one line beside the rooms; the line height leaves room for the g's tail. */
+.home-intro h1 { margin: 0; font: 400 clamp(40px, 4.6vw, 64px)/1.15 var(--font-hand); letter-spacing: -0.01em; }
 /* The heading's subtitle, lettered with it. */
 .home-intro .tagline { margin: var(--s-2) 0 0; font: 400 22px/1.3 var(--font-hand); }
 .home-intro p { max-width: 34ch; margin: 0; color: var(--graphite); font-size: 16px; line-height: 1.55; text-wrap: pretty; }
@@ -74,16 +75,8 @@
   box-shadow: var(--lift);
   rotate: -1.5deg;
 }
-.landing-real figcaption {
-  display: grid;
-  grid-template: 'title arrow' auto 'note note' auto / auto 1fr;
-  column-gap: var(--s-3);
-  color: var(--graphite);
-  font-size: 13px;
-}
-.landing-real .landing-title { grid-area: title; color: var(--ink); }
-.landing-real .note { grid-area: note; }
-.hand-arrow { grid-area: arrow; align-self: end; color: var(--pencil-strong); }
+.landing-real figcaption { display: flex; align-items: flex-end; gap: var(--s-3); }
+.hand-arrow { color: var(--pencil-strong); }
 
 /* The demo: the 16 rooms mounted on the sheet together like a contact print, labeled like a drawing. */
 .landing-demo { margin: 0; }
@@ -288,10 +281,8 @@
   .landing-rooms ul { gap: 4px; }
   .landing-side { gap: var(--s-6); }
   /* The rooms are under the photo here: the arrow turns to point down at them. */
-  .landing-real { max-width: none; }
-  .landing-real img { max-width: 280px; }
-  .landing-real figcaption { grid-template: 'title arrow' auto 'note arrow' auto / minmax(0, max-content) auto; justify-content: start; }
-  .hand-arrow { align-self: center; rotate: 70deg; }
+  .landing-real figcaption { align-items: center; }
+  .hand-arrow { rotate: 70deg; }
   .scan { grid-template-columns: 88px minmax(0, 1fr); column-gap: var(--s-4); padding: var(--s-4) var(--s-4) var(--s-2); }
   .plan { grid-row: 1; }
   .scan > :is(.designs, .empty, .error) { grid-column: 1 / -1; }

@@ -19,7 +19,7 @@ export function Landing() {
         <div className="landing-side">
           <header className="home-intro">
             <hgroup>
-              <h1>Mise</h1>
+              <h1>Mise Design</h1>
               <p className="tagline">A sketchbook for your real room.</p>
             </hgroup>
             <p>Redesign your real room before you buy a thing. Try Catalog furniture at true size in your Scan, then shop the Design.</p>
@@ -31,7 +31,6 @@ export function Landing() {
               alt="A photo of the real study lounge: rows of white tables and chairs on dark carpet, teal walls, a long whiteboard" />
             <figcaption>
               <span className="landing-title">The real room</span>
-              <span className="note">Scanned once, redesigned sixteen ways</span>
               <HandArrow />
             </figcaption>
           </figure>

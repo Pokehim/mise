@@ -74,6 +74,7 @@ With 1.170 the Master Copy's seat and back heights land within 4 mm of the room'
 ### Table (`measure/tpose.py`, `tpeaks.py`, `tthick.py`)
 
 - Two metal legs, both at the East end; the West end rests against the West wall. No legs there in any Capture.
+  The Master Copy mirrors the legs, casters and rail to the West end, so a table the Mover moves off the wall stands.
 - Legs 0.701 / 0.699 / 0.702 m apart (centers), 38 x 32 mm, dark (sRGB 84, 67, 57), casters in the bottom 75 mm.
 - Top 1.515 x 0.750 m: depth from the top's edge faces, which show as density peaks in the splat in each
   table's own frame (0.752 / 0.747 / 0.750 m). Length from the East edge (1.0-2.3 cm past the leg line) to the

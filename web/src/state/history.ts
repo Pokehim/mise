@@ -47,8 +47,10 @@ function setEditsKeeping(edits: Edit[], keep: Omit<UndoState, 'after'>) {
   useUndoState.setState({ ...keep, after: useEditor.getState().design!.edits });
 }
 
-/** Takes back the last Edit (⌘Z). */
+/** Takes back the last Edit (⌘Z), or a delete from History made just before. */
 export function undo() {
+  // Right after a delete from History, ⌘Z takes back the delete, not the Edit before it.
+  if (undoableNow().deleted) return putBack();
   const edits = useEditor.getState().design?.edits;
   if (!edits?.length) return;
   setEditsKeeping(edits.slice(0, -1), { redo: [...undoableNow().redo, edits.at(-1)!], deleted: null });

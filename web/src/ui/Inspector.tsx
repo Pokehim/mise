@@ -13,6 +13,7 @@ import { FinishPicker } from './inspector/FinishPicker';
 import { OriginalReplace } from './inspector/OriginalReplace';
 import { RecolorControl } from './inspector/RecolorControl';
 import './inspector.css';
+import { ProductLink } from './ProductLink';
 
 // The Inspector (spec §10.4): what is selected, and what can be done with it.
 
@@ -158,7 +159,7 @@ function PieceInspector({ pieceId }: { pieceId: string }) {
       <h2 title={item.title}>{item.title}</h2>
       <Size size={item.size} />
       <p className="price">{priceEstimate(item.priceEstimateUsd)}</p>
-      <p>{item.url ? <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a> : <span className="muted">Generated, so no product link</span>}</p>
+      <p><ProductLink item={item} /></p>
       <div className="actions">
         <ToolButton tool="swap" name="Swap" open={open} setOpen={setOpen} />
         <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} />

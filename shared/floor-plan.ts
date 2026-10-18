@@ -39,6 +39,14 @@ export type DraftRoom = z.infer<typeof DraftRoom>;
 export type DraftOpening = z.infer<typeof DraftOpening>;
 export type DraftPoint = z.infer<typeof Point>;
 
+/** What reading a plan gave: the draft, and whether Claude read it ('skipped' when the server has no API key). */
+export interface PlanReading {
+  draft: FloorPlanDraft;
+  read: 'ok' | 'failed' | 'skipped';
+  seconds: number;
+  error?: string;
+}
+
 /** A draft with nothing in it, for a plan Claude couldn't read, or wasn't asked to: the Mover traces it by hand. */
 export const emptyDraft = (): FloorPlanDraft => ({ rooms: [], scaleHints: [], ceilingHeight: null, notes: '' });
 

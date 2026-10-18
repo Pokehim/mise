@@ -2,18 +2,18 @@
    the pencil wobble of pressed controls, and empty states. Scoped to the Mover's pages; Room Setup
    (.rs) keeps its own look until it is restyled. */
 
-:is(.home, .editor, .app-status) {
+:is(.home, .editor, .fp-setup, .app-status) {
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
-:is(.home, .editor, .app-status) ::selection { background: var(--wash-tint-strong); color: var(--ink); }
+:is(.home, .editor, .fp-setup, .app-status) ::selection { background: var(--wash-tint-strong); color: var(--ink); }
 
 /* Keyboard focus: a solid wash ring, clear on every paper and in the 3D view. */
-:is(.home, .editor, .app-status) :focus-visible { outline: 2px solid var(--wash); outline-offset: 2px; }
+:is(.home, .editor, .fp-setup, .app-status) :focus-visible { outline: 2px solid var(--wash); outline-offset: 2px; }
 
-:is(.home, .editor, .app-status) a {
+:is(.home, .editor, .fp-setup, .app-status) a {
   color: var(--wash);
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
@@ -22,12 +22,12 @@
   transition: text-decoration-color 120ms ease-out;
 }
 @media (hover: hover) {
-  :is(.home, .editor, .app-status) a:hover { text-decoration-color: currentColor; }
+  :is(.home, .editor, .fp-setup, .app-status) a:hover { text-decoration-color: currentColor; }
 }
 
 /* ───────────── Controls ───────────── */
 
-:is(.home, .editor) button {
+:is(.home, .editor, .fp-setup) button {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -44,13 +44,13 @@
   transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out, scale var(--press) ease-out;
 }
 @media (hover: hover) {
-  :is(.home, .editor) button:hover:not(:disabled) { border-color: var(--ink); }
+  :is(.home, .editor, .fp-setup) button:hover:not(:disabled) { border-color: var(--ink); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  :is(.home, .editor) button:active:not(:disabled) { scale: 0.96; }
+  :is(.home, .editor, .fp-setup) button:active:not(:disabled) { scale: 0.96; }
 }
 /* Off: hatched, like an area of a drawing that isn't in play. */
-:is(.home, .editor) button:disabled {
+:is(.home, .editor, .fp-setup) button:disabled {
   border-style: dashed;
   background: var(--hatching), var(--paper);
   color: var(--graphite);
@@ -58,15 +58,15 @@
 }
 
 /* The one primary action of a place, in ink. */
-:is(.home, .editor) button.primary { border-color: var(--ink); background: var(--ink); color: var(--paper-raised); font-weight: 500; }
+:is(.home, .editor, .fp-setup) button.primary { border-color: var(--ink); background: var(--ink); color: var(--paper-raised); font-weight: 500; }
 @media (hover: hover) {
-  :is(.home, .editor) button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 84%, var(--paper)); }
+  :is(.home, .editor, .fp-setup) button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 84%, var(--paper)); }
 }
 
 /* A pressed control (a tab, a tool, a swatch), or a TopBar button whose panel is open: the wash
    under it, and a wobbly ink line around it. */
-.editor button[aria-pressed='true'] { border-color: transparent; background: var(--wash-tint); color: var(--ink); }
-.editor :is(button[aria-pressed='true'], .popover-button[aria-expanded='true'])::after {
+:is(.editor, .fp-setup) button[aria-pressed='true'] { border-color: transparent; background: var(--wash-tint); color: var(--ink); }
+:is(.editor, .fp-setup) :is(button[aria-pressed='true'], .popover-button[aria-expanded='true'])::after {
   content: '';
   position: absolute;
   inset: -1px;
@@ -75,7 +75,7 @@
   filter: url(#pencil);
   pointer-events: none;
 }
-.editor :is(button[aria-pressed='true'], .popover-button[aria-expanded='true']):nth-child(even)::after { filter: url(#pencil-2); }
+:is(.editor, .fp-setup) :is(button[aria-pressed='true'], .popover-button[aria-expanded='true']):nth-child(even)::after { filter: url(#pencil-2); }
 
 /* Chips (category tabs, Parts, the views): words with no box until chosen. */
 .editor :is(.tabs, .parts, .views) button { padding: 3px 8px; font-size: 13px; white-space: nowrap; }
@@ -85,7 +85,7 @@
 }
 
 /* Icon-only buttons: no box until hovered. */
-.editor .icon-button {
+:is(.editor, .fp-setup) .icon-button {
   display: inline-grid;
   place-items: center;
   width: 28px;
@@ -96,11 +96,11 @@
   color: var(--graphite);
 }
 @media (hover: hover) {
-  .editor .icon-button:hover:not(:disabled) { border-color: transparent; background: var(--ink-wash); color: var(--ink); }
+  :is(.editor, .fp-setup) .icon-button:hover:not(:disabled) { border-color: transparent; background: var(--ink-wash); color: var(--ink); }
 }
-.editor .icon-button:disabled { border-color: transparent; background: none; opacity: 0.4; }
+:is(.editor, .fp-setup) .icon-button:disabled { border-color: transparent; background: none; opacity: 0.4; }
 
-.editor :is(input[type='search'], input[type='number'], input:not([type]), select) {
+:is(.editor, .fp-setup) :is(input[type='search'], input[type='number'], input:not([type]), select) {
   box-sizing: border-box;
   min-width: 0;
   padding: 5px 8px;
@@ -110,16 +110,16 @@
   color: var(--ink);
   font: inherit;
 }
-.editor :is(input, select):focus-visible { outline-offset: 0; border-color: var(--wash); }
-.editor ::placeholder { color: var(--graphite); opacity: 1; }
+:is(.editor, .fp-setup) :is(input, select):focus-visible { outline-offset: 0; border-color: var(--wash); }
+:is(.editor, .fp-setup) ::placeholder { color: var(--graphite); opacity: 1; }
 
 /* ───────────── Text ───────────── */
 
 /* Numbers that are measured or priced. */
-.editor :is(.mono, .price, .dims) { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+:is(.editor, .fp-setup) :is(.mono, .price, .dims) { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 /* An empty state: a hatched area with a hand-lettered first line (<b>) over a plain hint. */
-:is(.home, .editor) .empty {
+:is(.home, .editor, .fp-setup) .empty {
   margin: 0;
   padding: var(--s-4);
   border: var(--line) dashed var(--pencil-strong);
@@ -130,7 +130,7 @@
   line-height: 1.5;
   text-wrap: pretty;
 }
-:is(.home, .editor) .empty b { display: block; margin-bottom: 2px; color: var(--ink); font: 400 18px/1.3 var(--font-hand); }
+:is(.home, .editor, .fp-setup) .empty b { display: block; margin-bottom: 2px; color: var(--ink); font: 400 18px/1.3 var(--font-hand); }
 
 .sr-only {
   position: absolute;

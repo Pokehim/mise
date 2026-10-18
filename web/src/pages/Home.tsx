@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import type { Design, ScanManifest } from '@shared/types';
 import { listDesigns, listScans } from '../api';
+import { FloorPlanDialog } from '../plan/FloorPlanDialog';
 import { count } from '../ui/format';
 import { ArrowRight, Plus } from '../ui/icons';
 import { useStartDesign } from '../ui/useStartDesign';
@@ -22,6 +23,7 @@ function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] 
           <h3 id={`scan-${scan.id}`}>{scan.name}</h3>
           <p className="muted">
             {count(designs.length, 'Design')} · <Link href={`/setup/${scan.id}`}>Room Setup</Link>
+            {scan.floorPlan && <> · <span className="scan-tag">From a floor plan</span></>}
           </p>
         </div>
         <button className="primary" disabled={starting} onClick={() => start({ scanId: scan.id })}><Plus />{starting ? 'Starting…' : 'New Design'}</button>
@@ -77,7 +79,10 @@ export function Home() {
         <p>Redesign your real room before you buy a thing. Try Catalog furniture at true size in your Scan, then shop the Design.</p>
       </header>
       <main className="home-scans">
-        <h2 className="home-heading">Your Scans</h2>
+        <div className="home-heading-row">
+          <h2 className="home-heading">Your Scans</h2>
+          <FloorPlanDialog />
+        </div>
         {error && (
           <p className="error" role="alert">Could not load the Scans ({error}). Check that the API server is running, then reload.</p>
         )}

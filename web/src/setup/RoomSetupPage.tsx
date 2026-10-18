@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import { useShallow } from 'zustand/react/shallow';
 import type { RoomSetup, ScanManifest } from '@shared/types';
+import { loadManifest } from '../api';
+import { FloorPlanSetup } from '../plan/FloorPlanSetup';
 import { fillsAligned } from './fills';
 import { UNBAKED_FLOOR_COLOR } from './originals';
 import { StepPanel } from './panels';
@@ -9,8 +11,23 @@ import { SetupCanvas } from './SetupCanvas';
 import { DEFAULT_CEILING_HEIGHT, hasUnsavedChanges, isLeveled, STEPS, type StepId, useSetup } from './store';
 import './setup.css';
 
-// Room Setup (spec §9.3): a stepper that turns a raw capture into a usable Scan.
+/**
+ * Room Setup: for a Floor Plan Scan (ADR-0011), correcting Claude's reading of the plan
+ * (FloorPlanSetup); for Captures, the stepper below.
+ */
 export function RoomSetupPage({ params }: { params: { scanId: string } }) {
+  const [manifest, setManifest] = useState<ScanManifest | null>();
+  useEffect(() => {
+    setManifest(undefined);
+    loadManifest(params.scanId).then(setManifest, () => setManifest(null));
+  }, [params.scanId]);
+  if (manifest === undefined) return <main className="rs-message">Loading the Scan…</main>;
+  if (manifest?.floorPlan) return <FloorPlanSetup key={manifest.id} manifest={manifest} />;
+  return <CaptureSetup params={params} />;
+}
+
+// Room Setup (spec §9.3): a stepper that turns a raw capture into a usable Scan.
+function CaptureSetup({ params }: { params: { scanId: string } }) {
   const status = useSetup((s) => s.status);
   const message = useSetup((s) => s.message);
   const load = useSetup((s) => s.load);

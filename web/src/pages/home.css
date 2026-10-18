@@ -104,7 +104,6 @@
 }
 .landing-demo figcaption { display: grid; gap: 2px; margin-top: var(--s-3); padding-top: var(--s-3); border-top: var(--line) solid var(--pencil); }
 .landing-title { font: 400 20px/1.2 var(--font-hand); }
-.landing-demo .muted { color: var(--graphite); font-size: 13px; line-height: 1.5; text-wrap: pretty; }
 
 /* ───────────── The Scans ───────────── */
 

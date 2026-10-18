@@ -26,12 +26,9 @@ export function Landing() {
         <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms Claude made of the Oliver Hall 6th Floor Study Lounge">
           <RoomGrid />
         </Link>
-        {/* Labeled like a drawing: what it shows lettered, then how it was made. */}
+        {/* Labeled like a drawing, lettered under it. */}
         <figcaption>
           <span className="landing-title">One study lounge, sixteen rooms</span>
-          <span className="muted">
-            Each is a Design Claude made of the Oliver Hall 6th Floor Study Lounge from a one-line Brief: a dorm bedroom, a game room, a library, a place to play records.
-          </span>
         </figcaption>
       </figure>
       <Credits />

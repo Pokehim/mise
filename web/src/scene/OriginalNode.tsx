@@ -2,7 +2,9 @@ import { Html, useCursor } from '@react-three/drei';
 import { useState } from 'react';
 import type { Object3D } from 'three';
 import { useEditor } from '../state/store';
+import { Lock } from '../ui/icons';
 import { useDragOriginal } from './DragControls';
+import { Z_KEPT } from './sketch/Label';
 
 /**
  * An Original's node from the split Scan (spec §9.4), shown at its placement (spec §11.1). Dragging
@@ -38,8 +40,8 @@ export function OriginalNode({ id, node }: { id: string; node: Object3D }) {
       onPointerOut={() => setHovered(false)}
     >
       {original.kept && (
-        <Html position={[0, original.box.size[1], 0]} center zIndexRange={[10, 0]} className="kept-lock">
-          <span role="img" aria-label="Kept: it stays in the room">🔒</span>
+        <Html position={[0, original.box.size[1], 0]} center zIndexRange={Z_KEPT} className="kept-lock">
+          <span role="img" aria-label="Kept: it stays in the room"><Lock /></span>
         </Html>
       )}
     </primitive>

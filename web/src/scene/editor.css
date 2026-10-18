@@ -1,127 +1,204 @@
-/* The editor layout of spec §10.1: TopBar, Catalog panel | 3D view | Inspector over History, footer. */
+/* The editor layout of spec §10.1: TopBar, Catalog panel | 3D view | Inspector over History, footer.
+   The panels are sheets of paper; the 3D view between them is the real room, untouched. Its size is
+   the same as before the sketch style (TopBar 44 px, footer 24 px, panels 280 and 300 px), so the
+   room renders pixel for pixel as it did (docs/design/iterations.md). */
 
 .editor {
-  --ink: #2b2722;
-  --muted: #8a8174;
-  --line: #e3ddd1;
-  --panel: #fbfaf7;
-  --accent: #1f7a6d;
-
   display: grid;
   grid-template:
-    'top top top' auto 'catalog view inspector' minmax(0, 1fr) 'catalog view history' minmax(0, 1fr) 'foot foot foot' auto
+    'top top top' auto 'catalog view inspector' minmax(0, 5fr) 'catalog view history' minmax(0, 3fr) 'foot foot foot' auto
     / 280px minmax(0, 1fr) 300px;
   height: 100%;
-  color: var(--ink);
-  background: var(--panel);
+  background: var(--grain), var(--paper);
   font-size: 14px;
+  line-height: 1.4;
 }
+/* A Swap, Resize or Replace list open in the Inspector gets most of the column. The rows split in
+   eighths: thirds or fifths of the height round to 1/64 px per row, and the view, which spans both
+   rows, would come out a fraction of a pixel short. */
+.editor:has(.inspector .picks) { grid-template-rows: auto minmax(0, 6fr) minmax(0, 2fr) auto; }
 
-.editor .muted { color: var(--muted); }
-.editor a { color: var(--accent); }
-.editor button {
-  font: inherit;
-  padding: 4px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: white;
-  color: var(--ink);
-  cursor: pointer;
-}
-.editor button:hover:not(:disabled) { border-color: var(--accent); }
-.editor button:disabled { color: var(--muted); cursor: default; }
-.editor button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: white; }
+.editor .muted { color: var(--graphite); }
+
+/* ───────────── TopBar ───────────── */
 
 .topbar {
   grid-area: top;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--line);
+  gap: var(--s-3);
+  box-sizing: border-box;
+  min-width: 0;
+  height: 44px;
+  padding: 0 var(--s-3) 0 var(--s-4);
+  border-bottom: var(--line) solid var(--pencil);
 }
 .topbar .spacer { flex: 1; }
-.topbar .views { display: flex; }
-.topbar .views button { border-radius: 0; }
-.topbar .views button:first-child { border-radius: 6px 0 0 6px; }
-.topbar .views button:last-child { border-radius: 0 6px 6px 0; }
-.topbar .views button + button { margin-left: -1px; }
+.editor .topbar .back { display: inline-flex; align-items: center; gap: 6px; color: var(--graphite); font-weight: 500; text-decoration: none; }
+@media (hover: hover) {
+  .editor .topbar .back:hover { color: var(--ink); }
+}
+.topbar .scan-name { overflow: hidden; color: var(--graphite); text-overflow: ellipsis; white-space: nowrap; }
+.topbar .scan-name::after { content: '/'; margin-left: var(--s-3); color: var(--pencil-strong); }
+
+.topbar .views { display: flex; gap: 2px; }
+
+/* ───────────── Catalog panel ───────────── */
 
 .catalog {
   grid-area: catalog;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--s-3);
   min-height: 0;
-  padding: 12px;
-  border-right: 1px solid var(--line);
+  padding: var(--s-4) var(--s-4) 0;
+  border-right: var(--line) solid var(--pencil);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.catalog .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
-.catalog .tabs button { padding: 2px 8px; font-size: 13px; }
-.catalog input[type='search'] {
-  font: inherit;
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-}
-.cards { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.catalog h2 { margin: 0; font: 400 22px/1.2 var(--font-hand); }
+.catalog .tabs { display: flex; flex-wrap: wrap; gap: 2px; margin: 0 -6px; }
+.catalog input[type='search'] { width: 100%; }
+
+.cards { display: flex; flex-direction: column; margin: 0 calc(-1 * var(--s-2)); padding: 0; list-style: none; }
 .card {
   display: grid;
-  grid-template-columns: 56px 1fr auto;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: white;
+  gap: var(--s-3);
+  padding: var(--s-2);
+  border-top: var(--line) solid var(--pencil);
+  border-radius: var(--r-2);
+  cursor: grab;
+  transition: background-color 120ms ease-out;
 }
-.card img { width: 56px; height: 56px; object-fit: contain; }
-.card .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.card:first-child { border-top-color: transparent; }
+@media (hover: hover) {
+  .card:hover { background: var(--ink-wash); }
+}
+.card img {
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  object-fit: contain;
+}
+.card .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 13px; line-height: 1.35; }
+.card .price { margin-top: 2px; color: var(--graphite); font-size: 12px; }
+.editor .card button { gap: 2px; padding: 3px 8px 3px 5px; font-size: 13px; }
+.catalog .empty { margin-bottom: var(--s-4); }
+
+/* ───────────── Inspector ───────────── */
 
 .inspector {
   grid-area: inspector;
   min-height: 0;
-  padding: 12px 16px;
-  border-left: 1px solid var(--line);
+  padding: var(--s-4) var(--s-5);
+  border-left: var(--line) solid var(--pencil);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.inspector h2 { margin: 0 0 8px; font-size: 18px; }
-.inspector .actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
-.inspector .badge {
-  display: inline-block;
-  margin: 0 0 8px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: white;
-  font-size: 12px;
+/* What is selected: "Piece · Table", "Original · Sofa", "Wall". */
+.inspector .kind { margin: 0 0 var(--s-1); color: var(--graphite); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.inspector h2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  margin: 0 0 var(--s-2);
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+.inspector h2 .icon { display: inline-block; margin-left: 6px; color: var(--graphite); vertical-align: -1px; }
+.inspector p { margin: 0 0 var(--s-2); }
+.inspector .dims { font-size: 12.5px; line-height: 1.5; }
+.inspector .dims span { color: var(--graphite); }
+.inspector .price { font-size: 13px; }
+.inspector .actions { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--s-3) 0; }
+.inspector .actions button { gap: 4px; }
+.inspector > .empty { margin-bottom: var(--s-4); }
+/* Kept, as a stamp on the drawing. */
+.editor .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 var(--s-2);
+  padding: 1px 6px;
+  border: var(--line) solid currentColor;
+  border-radius: var(--r-1);
+  color: var(--graphite);
+  font: 500 11px/1.5 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.view { grid-area: view; position: relative; min-height: 0; }
+/* ───────────── The 3D view ───────────── */
+
+/* The desk under the sheets. Nothing in the view is filtered or textured: the room is the real one. */
+.view { grid-area: view; position: relative; min-height: 0; background: var(--desk); }
 .view .stats { position: absolute !important; }   /* stats.js pins itself to the window */
+.view-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--graphite);
+  font-size: 15px;
+  pointer-events: none;
+}
 
 .editor-footer {
   grid-area: foot;
-  padding: 4px 16px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 12px;
+  padding: var(--s-1) var(--s-4);
+  border-top: var(--line) solid var(--pencil);
+  color: var(--graphite);
+  box-sizing: border-box;
+  height: 24px;
+  font-size: 11px;
+  line-height: 15px;
 }
 
-/* The 🔒 over a Kept Original (spec §11.1). It only marks the Original, so it never catches the pointer. */
+/* The lock over a Kept Original (spec §11.1). It only marks the Original, so it never catches the pointer. */
 .kept-lock {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  color: var(--ink);
   pointer-events: none;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 85%);
-  font-size: 14px;
-  line-height: 1.2;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
 }
 
-/* A Kept Original's Replace, Resize, rotate and Remove (spec §11.1): off, and it should look it. */
-.inspector button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+/* ───────────── Phones: the room on top, then the panels, as one scrolling page ───────────── */
+
+@media (max-width: 760px) {
+  .editor {
+    grid-template: 'top' auto 'view' 52dvh 'inspector' auto 'history' auto 'catalog' auto 'foot' auto / minmax(0, 1fr);
+    height: auto;
+    min-height: 100%;
+  }
+  .editor:has(.inspector .picks) { grid-template-rows: auto 52dvh auto auto auto auto; }
+  /* Two rows: back, the Design and the cart; then Realism on the left and the view on the right. */
+  .topbar { flex-wrap: wrap; gap: var(--s-1) var(--s-2); height: auto; padding: 6px var(--s-2) 6px var(--s-3); }
+  .topbar .back .label { display: none; }   /* the link keeps its name, "Scans" (TopBar) */
+  .topbar .scan-name { display: none; }
+  .topbar .designs-menu { flex: 1; }
+  .topbar .designs-menu .popover-anchor { min-width: 0; }
+  .editor .topbar .designs-menu .popover-button { max-width: 100%; }
+  .topbar .spacer { order: 1; flex-basis: 100%; }
+  .topbar .views { order: 2; }
+  .topbar .views[aria-label='View'] { margin-left: auto; }
+  .catalog, .inspector, .history { border: 0; border-top: var(--line) solid var(--pencil); overflow: visible; }
+  .catalog { padding-bottom: var(--s-4); }
+  .catalog .tabs { flex-wrap: nowrap; margin: 0 calc(-1 * var(--s-4)); padding: 0 var(--s-3); overflow-x: auto; scrollbar-width: none; }
+  .catalog .tabs button { flex: none; }
+  .cards { max-height: 60dvh; overflow-y: auto; }
+  .inspector { padding: var(--s-4); }
 }

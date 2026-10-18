@@ -1,0 +1,85 @@
+{
+  "name": "ROOM_1",
+  "floorPeakSplatUnits": 0.155,
+  "floorTiltDeg": 1.05,
+  "coarse": {
+    "yawDeg": 52.59,
+    "scale": 1.577,
+    "t": [
+      -0.92,
+      -0.24,
+      1.68
+    ],
+    "f1": null
+  },
+  "yawOnly": {
+    "axisFlip": "rotate 180deg about X first (y->-y, z->-z)",
+    "position": [
+      -0.916,
+      -0.243,
+      1.68
+    ],
+    "rotationY": 0.9185,
+    "rotationYDeg": 52.63,
+    "scale": 1.5773,
+    "residual": {
+      "pointsInRoom": 89912,
+      "medianM": 0.0209,
+      "p80M": 0.039,
+      "inlierShareLt10cm": 0.96,
+      "rmsInliersM": 0.0305
+    }
+  },
+  "full": {
+    "note": "room = t + scale * R * F * p_raw",
+    "R": [
+      [
+        0.608524,
+        0.011767,
+        0.793448
+      ],
+      [
+        -0.010223,
+        0.999923,
+        -0.006989
+      ],
+      [
+        -0.79347,
+        -0.003858,
+        0.608598
+      ]
+    ],
+    "scale": 1.5772,
+    "t": [
+      -0.9309,
+      -0.2224,
+      1.6813
+    ],
+    "tiltDeg": 0.71,
+    "yawDegApprox": 52.51,
+    "residual": {
+      "pointsInRoom": 89534,
+      "medianM": 0.0183,
+      "p80M": 0.0373,
+      "inlierShareLt10cm": 0.96,
+      "rmsInliersM": 0.0295
+    },
+    "matrixRaw": [
+      [
+        0.959769,
+        -0.018559,
+        -1.251432
+      ],
+      [
+        -0.016123,
+        -1.577087,
+        0.011023
+      ],
+      [
+        -1.251466,
+        0.006085,
+        -0.959885
+      ]
+    ]
+  }
+}

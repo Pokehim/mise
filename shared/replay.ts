@@ -1,6 +1,6 @@
-import { distanceToWall } from './geometry';
+import { wallPoint } from './geometry';
 import { partsFor } from './parts';
-import type { Catalog, Category, Edit, Original, Placement, RoomSetup, RoomState, SkipReason, Vec2, Wall } from './types';
+import type { Catalog, Category, Edit, Original, Placement, RoomSetup, RoomState, SkipReason, Wall } from './types';
 
 /**
  * The room a Design shows: its Scan, with the Edits applied in list order (spec §6, ADR-0001).
@@ -91,7 +91,11 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
         if (piece) return putParts(piece.partColors, catalogItems.get(piece.catalogId)!.category, edit.partId, edit.color);
         const original = scanned.get(edit.targetId);
         if (!original || !state.originals[original.id].visible) return 'missing-target';
-        return putParts(state.originals[original.id].partColors, original.category, edit.partId, edit.color);
+        const { partColors, partFinishes } = state.originals[original.id];
+        const reason = putParts(partColors, original.category, edit.partId, edit.color);
+        // A Part shows the look its last Edit gave it, so a color replaces a Finish. Reset color leaves the Finish.
+        if (!reason && edit.color !== null) putParts(partFinishes, original.category, edit.partId, null);
+        return reason;
       }
       case 'finish': {
         const { target } = edit;
@@ -108,7 +112,11 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
           case 'original': {
             const original = scanned.get(target.originalId);
             if (!original) return 'missing-target';
-            return putParts(state.originals[original.id].partFinishes, original.category, target.partId, finish);
+            const { partColors, partFinishes } = state.originals[original.id];
+            const reason = putParts(partFinishes, original.category, target.partId, finish);
+            // And a Finish replaces a color: { kind: 'none' } leaves the Part as scanned.
+            if (!reason) putParts(partColors, original.category, target.partId, null);
+            return reason;
           }
           default:
             target satisfies never; // a new FinishTarget kind needs a case
@@ -140,8 +148,15 @@ const WALL_CATEGORIES: Category[] = ['wall_art', 'mirror'];
 function startPlacement({ box: { position, rotationY }, category }: Original, walls: Wall[]): Placement {
   if (position[1] <= ABOVE_FLOOR) return { position, rotationY, mount: 'floor' };
   if (!WALL_CATEGORIES.includes(category)) return { position, rotationY, mount: 'surface' };
-  const point: Vec2 = [position[0], position[2]];
-  const distance = (wall: Wall) => Math.abs(distanceToWall(point, wall));
+  const [x, , z] = position;
+  // To the nearest point of the Wall itself, between its ends: in a room that isn't convex, two Walls can share a line.
+  const distance = (wall: Wall) => {
+    const { start: [sx, sz], end: [ex, ez] } = wall;
+    const length = Math.hypot(ex - sx, ez - sz);
+    const along = ((x - sx) * (ex - sx) + (z - sz) * (ez - sz)) / length;
+    const [wx, wz] = wallPoint(wall, Math.min(Math.max(along, 0), length));
+    return Math.hypot(x - wx, z - wz);
+  };
   const [nearest] = walls.toSorted((a, b) => distance(a) - distance(b));
   return { position, rotationY, mount: 'wall', wallId: nearest?.id };
 }

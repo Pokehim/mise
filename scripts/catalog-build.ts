@@ -46,7 +46,7 @@ export type Listing = AboListing & { model?: AboModel };
 export interface CatalogPick { id: string; category: Category; price?: number; colors?: string[]; styleTags?: string[] }
 
 /** §8.3: ABO has no prices, so each Category has a default estimate. */
-const DEFAULT_PRICE_USD: Record<Category, number> = {
+export const DEFAULT_PRICE_USD: Record<Category, number> = {
   chair: 120, desk: 180, table: 90, nightstand: 70, bed: 300, sofa: 450, dresser: 220, wardrobe: 260,
   shelf: 90, storage: 110, rug: 80, lamp: 45, wall_art: 40, mirror: 60, plant: 30, decor: 25,
 };
@@ -87,7 +87,10 @@ export function findListings(listings: Iterable<Listing>, category: Category, ke
     .sort((a, b) => Number(!a.model) - Number(!b.model) || titleOf(a).localeCompare(titleOf(b)));
 }
 
-const isCategory = (value: string): value is Category => Object.hasOwn(DEFAULT_PRICE_USD, value);
+export const isCategory = (value: string): value is Category => Object.hasOwn(DEFAULT_PRICE_USD, value);
+
+/** §8.1 step 5: wall art and mirrors hang on a wall; everything else stands on the floor. */
+export const mountOf = (category: Category): CatalogItem['mount'] => (category === 'wall_art' || category === 'mirror' ? 'wall' : 'floor');
 
 /** Every HTML entity in ABO's English text, such as the "&amp;" in 57 product names. */
 const ENTITIES: Record<string, string> = { amp: '&', quot: '"', apos: "'", nbsp: ' ', eacute: 'é' };
@@ -143,7 +146,7 @@ export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3
     title,
     brand,
     category: pick.category,
-    mount: pick.category === 'wall_art' || pick.category === 'mirror' ? 'wall' : 'floor',
+    mount: mountOf(pick.category),
     size,
     model: `/data/catalog/models/${id}.glb`,
     thumbnail: `/data/catalog/thumbs/${id}.jpg`,
@@ -245,6 +248,18 @@ async function gltfTransform(...args: string[]): Promise<string> {
 const megabytes = (bytes: number) => (bytes / 1e6).toFixed(2);
 
 /**
+ * §8.1 step 3 after centering: optimizes a GLB whose pivot is already at its bottom center into `glb`, checks it, and
+ * measures it. Center first: `center` decodes meshopt and writes the file uncompressed, so it must not run after this.
+ */
+export async function optimizeModel(centered: string, glb: string): Promise<{ size: Vec3; bytes: number }> {
+  await gltfTransform('optimize', centered, glb, '--texture-compress', 'webp', '--texture-size', '1024');
+  await gltfTransform('validate', glb);      // exits with an error when the glTF validator reports one
+  const bytes = (await stat(glb)).size;
+  if (bytes > MAX_GLB_BYTES) throw new Error(`${megabytes(bytes)} MB is over the 2 MB budget`);
+  return { size: sizeFromInspect(await gltfTransform('inspect', glb, '--format', 'csv')), bytes };
+}
+
+/**
  * Writes a listing's thumbnail: ABO's 256 px copy of the main image or, for listings without one (such as every
  * AmazonBasics bean bag), the first frame of its 360° spin, scaled to the same size.
  */
@@ -266,16 +281,11 @@ async function buildPick(pick: CatalogPick, listing: Listing | undefined, imageP
   const thumbnail = join(CACHE, 'build', `${pick.id}.jpg`);
   await writeThumbnail(listing, imagePaths, thumbnail);
   const original = await cached(`3dmodels/original/${listing.model.path}`);
-  // Center first: `center` decodes meshopt and writes the file uncompressed, so it must not run after `optimize`.
   const centered = join(CACHE, 'build', `${pick.id}.centered.glb`);
   const glb = join(CACHE, 'build', `${pick.id}.glb`);
   await gltfTransform('center', original, centered, '--pivot', 'below');
-  await gltfTransform('optimize', centered, glb, '--texture-compress', 'webp', '--texture-size', '1024');
-  await rm(centered);                         // as large as the original
-  await gltfTransform('validate', glb);      // exits with an error when the glTF validator reports one
-  const bytes = (await stat(glb)).size;
-  if (bytes > MAX_GLB_BYTES) throw new Error(`${megabytes(bytes)} MB is over the 2 MB budget`);
-  const item = toCatalogItem(pick, listing, sizeFromInspect(await gltfTransform('inspect', glb, '--format', 'csv')));
+  const { size, bytes } = await optimizeModel(centered, glb).finally(() => rm(centered));   // as large as the original
+  const item = toCatalogItem(pick, listing, size);
   await copyFile(glb, join(ROOT, item.model));
   await copyFile(thumbnail, join(ROOT, item.thumbnail));
   return { item, bytes };
@@ -314,8 +324,13 @@ async function build() {
   const catalog: Catalog = { version: 1, items: [...items, ...previous.items.filter((item) => item.source !== 'abo')] };
   await writeFile(file, `${JSON.stringify(catalog, null, 2)}\n`);
 
-  // Remove the files of items that left the Catalog, such as earlier picks.
-  const used = new Set(catalog.items.flatMap((item) => [item.model, item.thumbnail]));
+  // Remove the files of items that left the Catalog, such as earlier picks. Text-to-3D's items stay (generated.json, and
+  // its sandbox's generated-sandbox.json).
+  const generated = await Promise.all(['generated.json', 'generated-sandbox.json'].map(async (name): Promise<Catalog> => {
+    const generatedFile = join(CATALOG_DIR, name);
+    return existsSync(generatedFile) ? JSON.parse(await readFile(generatedFile, 'utf8')) : { version: 1, items: [] };
+  }));
+  const used = new Set([catalog, ...generated].flatMap(({ items }) => items.flatMap((item) => [item.model, item.thumbnail])));
   for (const dir of ['models', 'thumbs']) {
     for (const name of await readdir(join(CATALOG_DIR, dir))) {
       if (!used.has(`/data/catalog/${dir}/${name}`)) await rm(join(CATALOG_DIR, dir, name));

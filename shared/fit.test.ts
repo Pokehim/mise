@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkFit } from './fit';
 import { replay } from './replay';
-import { catalog, edit, onFloor, place, setup, withLampAndMirror } from './test-room';
+import { catalog, edit, item, onFloor, place, setup, withLampAndMirror } from './test-room';
 import type { Edit, Opening, Placement, Vec2 } from './types';
 
 // The room's floor is x −2 to 2, z −1.5 to 1.5. The bed covers x −2 to −1.01, z −1.5 to 0.53;
@@ -95,6 +95,14 @@ describe('checkFit', () => {
           place('pc_high', 'lamp-brass', onNorthWall(-1.5, 1.6)),
         ])).toEqual([]);
       });
+
+      it('reports a wall item over an Opening in its wall, but not one below the sill', () => {
+        // The window spans x −0.6 to 0.6, from 0.9 to 2.1 m up.
+        expect(fitAfter([place('pc_lamp', 'lamp-brass', onNorthWall(0, 1.2))])).toEqual([
+          { rule: 'overlap', subjectId: 'pc_lamp', otherId: 'op_window', message: 'Covers the window' },
+        ]);
+        expect(fitAfter([place('pc_lamp', 'lamp-brass', onNorthWall(0, 0.4))])).toEqual([]);
+      });
     });
   });
 
@@ -180,6 +188,129 @@ describe('checkFit', () => {
     it('lets an item lower than the sill stand under a window, and anything stand past the 0.4 m', () => {
       expect(fitAfter([place('pc_desk', 'desk-walnut', onFloor(0, -1.25))])).toEqual([]); // 0.75 m tall
       expect(fitAfter([place('pc_chair', 'chair-ergo', onFloor(0, -0.7))])).toEqual([]); // z −1 to −0.4
+    });
+  });
+
+  describe('walkway', () => {
+    // A walkway lets someone 0.6 m wide walk from each door to the front of every bed, desk and
+    // dresser. The door is at x 0.8–1.7 on the South wall (z = 1.5).
+    const furniture = {
+      ...catalog,
+      items: [
+        ...catalog.items,
+        item('sofa-gray', 'sofa', 'Gray Sofa', [2, 0.85, 0.9]),
+        item('dresser-oak', 'dresser', 'Oak Dresser', [0.8, 0.8, 0.45]),
+        item('nightstand-oak', 'nightstand', 'Oak Nightstand', [0.45, 0.6, 0.4]),
+        item('bench-storage', 'storage', 'Storage Bench', [2.45, 0.5, 0.9]),
+        item('cube-storage', 'storage', 'Storage Cube', [0.5, 0.5, 0.5]),
+      ],
+    };
+    /** The Fit violations, walkway included, of the room after these Edits. */
+    const fitWithWalkway = (edits: Edit[], subjectIds?: string[], room = setup) =>
+      checkFit(room, furniture, replay(room, furniture, edits), subjectIds, { walkway: true });
+
+    // Turned to run north–south, the sofa takes x −0.65 to 0.25 and z −1.05 to 0.95: 0.36 m from the bed's
+    // side, 0.45 m from the North wall and 0.55 m from the South wall. Nobody 0.6 m wide gets past it.
+    const sofaAcross = place('pc_sofa', 'sofa-gray', onFloor(-0.2, -0.05, Math.PI / 2));
+
+    it('reports a sofa that closes off the path from the door to the bed', () => {
+      expect(fitWithWalkway([sofaAcross], ['pc_sofa'])).toEqual([
+        { rule: 'walkway', subjectId: 'pc_sofa', otherId: 'og_bed', message: 'Blocks the path to your bed' },
+      ]);
+      expect(fitWithWalkway([sofaAcross])).toEqual([
+        { rule: 'walkway', subjectId: 'og_bed', otherId: 'op_door', message: 'No clear path from the door' },
+        { rule: 'walkway', subjectId: 'pc_sofa', otherId: 'og_bed', message: 'Blocks the path to your bed' },
+      ]);
+    });
+
+    it("is checked only when asked for: it is Claude's rule, not one the Mover's Edits are warned about", () => {
+      expect(checkFit(setup, furniture, replay(setup, furniture, [sofaAcross]))).toEqual([]);
+    });
+
+    it("still counts an item in the door's swing, when people can come in past it", () => {
+      // Run north–south, the bench takes x 0 to 0.9 and z −1.05 to 1.4: its south end is in the swing, by the
+      // hinge at x = 0.8. It shuts the bed off from the door, and leaves 0.5 m in front of the desk.
+      // Past x = 1.2, the doorway is open.
+      const bench = place('pc_bench', 'bench-storage', onFloor(0.45, 0.175, Math.PI / 2));
+
+      expect(fitWithWalkway([bench], ['pc_bench'])).toEqual([
+        { rule: 'door-swing', subjectId: 'pc_bench', otherId: 'op_door', message: 'Blocks the door' },
+        { rule: 'walkway', subjectId: 'pc_bench', otherId: 'og_bed', message: 'Blocks the path to your bed' },
+        { rule: 'walkway', subjectId: 'pc_bench', otherId: 'og_desk', message: 'Blocks the path to your desk' },
+      ]);
+    });
+
+    it("reports what shuts a door's way in when door-swing doesn't: just past the clear floor of a door that doesn't swing", () => {
+      // That door needs 0.6 m clear. The sofa, wider than the door, stands 0.62 m from the wall at z 0 to 0.88:
+      // outside that, but too near for anyone to come in past it on the 5 cm grid.
+      const noSwing = { ...setup, openings: setup.openings.map((opening) => ({ ...opening, swing: 'none' as const })) };
+      const sofa = place('pc_sofa', 'sofa-gray', onFloor(1, 0.43, Math.PI));
+
+      expect(fitWithWalkway([sofa], ['pc_sofa'], noSwing)).toEqual([
+        { rule: 'walkway', subjectId: 'pc_sofa', otherId: 'og_bed', message: 'Blocks the path to your bed' },
+        { rule: 'walkway', subjectId: 'pc_sofa', otherId: 'og_desk', message: 'Blocks the path to your desk' },
+      ]);
+    });
+
+    it("counts a bed's long side as its front: a sofa across its foot leaves the side to walk up to", () => {
+      // Back to the South wall, x −2 to 0 and z 0.6 to 1.5: 7 cm from the foot of the bed, which ends at z = 0.53.
+      expect(fitWithWalkway([place('pc_sofa', 'sofa-gray', onFloor(-1, 1.05, Math.PI))])).toEqual([]);
+    });
+
+    it("reports a desk whose own front can't be reached", () => {
+      // Facing the bed's side from 0.4 m away: its front, at x = −0.61, is too close to the bed to walk up to.
+      expect(fitWithWalkway([place('pc_desk', 'desk-walnut', onFloor(-0.36, -0.5, -Math.PI / 2))], ['pc_desk'])).toEqual([
+        { rule: 'walkway', subjectId: 'pc_desk', otherId: 'op_door', message: 'No clear path from the door' },
+      ]);
+    });
+
+    it('needs room to stand squarely in front of a target, not just at one end of it', () => {
+      // 2.5 cm in front of the desk, the dresser covers its front from z −1.135 to −0.465. The front runs on
+      // to z −0.065, but those 0.4 m are too narrow for someone 0.6 m wide to stand at.
+      const dresser = place('pc_dresser', 'dresser-oak', onFloor(1.15, -0.865, -Math.PI / 2));
+
+      expect(fitWithWalkway([dresser], ['pc_dresser'])).toEqual([
+        { rule: 'walkway', subjectId: 'pc_dresser', otherId: 'og_desk', message: 'Blocks the path to your desk' },
+      ]);
+    });
+
+    it('still checks every target when something already stands in the door', () => {
+      // A cube in the door's swing shuts it. The desk, facing the bed's side from 0.4 m away, still can't be reached.
+      const cubeInDoor = place('pc_cube', 'cube-storage', onFloor(1.25, 1.2));
+      const desk = place('pc_desk', 'desk-walnut', onFloor(-0.36, -0.5, -Math.PI / 2));
+
+      expect(fitWithWalkway([cubeInDoor, desk], ['pc_desk'])).toEqual([
+        { rule: 'walkway', subjectId: 'pc_desk', otherId: 'op_door', message: 'No clear path from the door' },
+      ]);
+    });
+
+    it('lets a chair stand pulled up to a desk: it gets pulled out to sit down', () => {
+      expect(fitWithWalkway([place('pc_chair', 'chair-ergo', onFloor(1.1, -0.6, Math.PI / 2))])).toEqual([]);
+    });
+
+    it('finds nothing wrong with a normal dorm room', () => {
+      const dorm = [
+        place('pc_nightstand', 'nightstand-oak', onFloor(-0.785, -1.3)), // beside the bed's head
+        place('pc_chair', 'chair-ergo', onFloor(1.1, -0.6, Math.PI / 2)), // pulled up to the desk
+        place('pc_dresser', 'dresser-oak', onFloor(-0.2, 1.275, Math.PI)), // against the South wall, west of the door
+        place('pc_rug', 'rug-gray', onFloor(0.2, 0, Math.PI / 2)), // mid-room
+        place('pc_lamp', 'lamp-brass', { position: [1.7, 0.76, -0.6], rotationY: 0, mount: 'surface' }), // on the desk
+      ];
+
+      expect(fitWithWalkway(dorm)).toEqual([]);
+    });
+
+    it('takes under 5 ms in the test room, even when it has to find what blocks the path', () => {
+      const state = replay(setup, furniture, [sofaAcross]);
+      const check = () => checkFit(setup, furniture, state, undefined, { walkway: true });
+      check(); // warm up
+      const times = Array.from({ length: 21 }, () => {
+        const start = performance.now();
+        check();
+        return performance.now() - start;
+      });
+
+      expect(times.toSorted((a, b) => a - b)[10]).toBeLessThan(5);
     });
   });
 });

@@ -1,5 +1,7 @@
 import type { Catalog, Design, RoomSetup, ScanManifest } from '@shared/types';
 import type { MergeSummary } from '../../scripts/scan-merge';
+import type { GenerateRequest } from '../../server/generate-object/pipeline';
+import type { Job } from '../../server/generate-object/routes';
 
 async function request<T>(method: string, url: string, body?: unknown, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -28,7 +30,15 @@ export async function savePatchImage(scanId: string, name: string, png: Blob): P
 /** Rebuilds a Scan's room.glb from its Main Capture and its lined-up Fill Captures (ADR-0007). */
 export const mergeScan = (scanId: string) => request<MergeSummary>('POST', `/api/scans/${scanId}/merge`);
 
-export const loadCatalog = () => request<Catalog>('GET', '/data/catalog/catalog.json');
+// The Catalog with the items text-to-3D made on this machine. That's a stretch feature, so failing to get them never
+// stops a load.
+export const loadCatalog = () => Promise.all([
+  request<Catalog>('GET', '/data/catalog/catalog.json'),
+  request<Catalog>('GET', '/api/catalog/generated').catch(() => ({ items: [] })),
+]).then(([catalog, generated]) => ({ ...catalog, items: [...catalog.items, ...generated.items] }));
+/** Starts generating a Catalog item for a search that found nothing (spec §13.3, Stretch). Poll the job with getJob. */
+export const generateObject = (body: GenerateRequest) => request<{ jobId: string }>('POST', '/api/generate-object', body);
+export const getJob = (jobId: string) => request<Job>('GET', `/api/jobs/${jobId}`);
 
 export const listDesigns = (scanId?: string) =>
   request<Design[]>('GET', scanId ? `/api/designs?scanId=${encodeURIComponent(scanId)}` : '/api/designs');

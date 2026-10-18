@@ -1,6 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import { replay } from './replay';
 import { catalog, edit, onFloor, place, setup, withLampAndMirror } from './test-room';
+import type { Finish, Hex, RoomSetup, RoomState, Vec2, Vec3, Wall } from './types';
+
+/**
+ * The test room reshaped to a floor polygon, with one Wall per edge (wl_1, wl_2, … in corner order)
+ * and one Original: wall art at `position`. The corners run the same way round as the test
+ * room's, so each normal, [−dz, dx] / length, points into the room.
+ */
+function withWallArt(polygon: Vec2[], position: Vec3, rotationY: number): RoomSetup {
+  const walls = polygon.map((start, i): Wall => {
+    const end = polygon[(i + 1) % polygon.length];
+    const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
+    const normal: Vec2 = [(start[1] - end[1]) / length, (end[0] - start[0]) / length];
+    return { id: `wl_${i + 1}`, name: `Wall ${i + 1}`, start, end, normal, height: 2.6 };
+  });
+  return {
+    ...setup,
+    floor: { polygon },
+    walls,
+    openings: [],
+    originals: [{
+      id: 'og_art', label: 'Wall art', category: 'wall_art', kept: false, floorColor: '#a89f91',
+      box: { position, size: [0.6, 0.8, 0.03], rotationY },
+    }],
+  };
+}
 
 describe('replay', () => {
   it('starts from the Scan: every Original visible at its Room Setup box, no Pieces, no Finishes', () => {
@@ -27,6 +52,33 @@ describe('replay', () => {
 
     expect(originals.og_lamp.placement).toEqual({ position: [1.7, 0.76, -0.6], rotationY: 0, mount: 'surface' });
     expect(originals.og_mirror.placement).toEqual({ position: [-1.985, 1, 0], rotationY: Math.PI / 2, mount: 'wall', wallId: 'wl_west' });
+  });
+
+  it('hangs wall art on the Wall it is beside in a U-shaped room', () => {
+    // wl_1 (x 0–2) and wl_5 (x 4–6) both lie on the line z = 0, with the notch between them.
+    const room = withWallArt([[0, 0], [2, 0], [2, 4], [4, 4], [4, 0], [6, 0], [6, 6], [0, 6]], [5, 1.4, 0.02], 0);
+
+    expect(replay(room, catalog, []).originals.og_art.placement).toEqual({
+      position: [5, 1.4, 0.02], rotationY: 0, mount: 'wall', wallId: 'wl_5',
+    });
+  });
+
+  it('hangs wall art on the Wall it is beside in an L-shaped room', () => {
+    // On the West wall (wl_6) at z = 2, the line of wl_3 (x 2–4), which is 2 m away.
+    const room = withWallArt([[0, 0], [4, 0], [4, 2], [2, 2], [2, 4], [0, 4]], [0.02, 1.4, 2], Math.PI / 2);
+
+    expect(replay(room, catalog, []).originals.og_art.placement).toEqual({
+      position: [0.02, 1.4, 2], rotationY: Math.PI / 2, mount: 'wall', wallId: 'wl_6',
+    });
+  });
+
+  it('still picks the nearest Wall in a rectangular room', () => {
+    // Near the north-east corner: 0.02 m from the East wall (wl_2), 0.5 m from the North wall (wl_1).
+    const room = withWallArt([[0, 0], [4, 0], [4, 3], [0, 3]], [3.98, 1.4, 0.5], -Math.PI / 2);
+
+    expect(replay(room, catalog, []).originals.og_art.placement).toEqual({
+      position: [3.98, 1.4, 0.5], rotationY: -Math.PI / 2, mount: 'wall', wallId: 'wl_2',
+    });
   });
 
   describe('place', () => {
@@ -383,6 +435,71 @@ describe('replay', () => {
         { editId: 'ed_2', reason: 'unknown-part' },
       ]);
       expect(state.originals.og_desk.partFinishes).toEqual({});
+    });
+  });
+
+  describe('one look per Part of an Original', () => {
+    const navy: Hex = '#1f2a44';
+    const oak = { kind: 'material', materialId: 'oak' } as const;
+    const walnut = { kind: 'material', materialId: 'walnut' } as const;
+    const recolorDesk = (id: string, partId: string, color: Hex | null) =>
+      edit(id, { type: 'recolor', targetId: 'og_desk', partId, color });
+    const finishDesk = (id: string, partId: string, finish: Finish) =>
+      edit(id, { type: 'finish', target: { kind: 'original', originalId: 'og_desk', partId }, finish });
+    // Both looks of the desk, each compared whole: a look left behind on a Part fails the test.
+    const deskLooks = ({ originals: { og_desk: { partColors, partFinishes } } }: RoomState) => ({ partColors, partFinishes });
+
+    it('a recolor after a material Finish replaces it on that Part', () => {
+      const state = replay(setup, catalog, [
+        finishDesk('ed_1', 'top', oak),
+        finishDesk('ed_2', 'legs', walnut),
+        recolorDesk('ed_3', 'top', navy),
+        recolorDesk('ed_4', 'cushions', '#1a1a1a'),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: { top: navy }, partFinishes: { legs: walnut } });
+      expect(state.skipped).toEqual([{ editId: 'ed_4', reason: 'unknown-part' }]);
+    });
+
+    it('a Finish after a recolor replaces it on that Part', () => {
+      const state = replay(setup, catalog, [
+        recolorDesk('ed_1', 'top', navy),
+        recolorDesk('ed_2', 'legs', '#1a1a1a'),
+        finishDesk('ed_3', 'top', oak),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: { legs: '#1a1a1a' }, partFinishes: { top: oak } });
+      expect(state.skipped).toEqual([]);
+    });
+
+    it("Reset color keeps a Part's material", () => {
+      const state = replay(setup, catalog, [
+        finishDesk('ed_1', 'top', oak),
+        recolorDesk('ed_2', 'legs', navy),
+        recolorDesk('ed_3', '*', null),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: {}, partFinishes: { top: oak } });
+    });
+
+    it("finish none clears a Part's paint too", () => {
+      const state = replay(setup, catalog, [
+        recolorDesk('ed_1', 'top', navy),
+        recolorDesk('ed_2', 'legs', navy),
+        finishDesk('ed_3', 'top', { kind: 'none' }),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: { legs: navy }, partFinishes: {} });
+    });
+
+    it("'*' clears the other look on every Part", () => {
+      const finishAll = finishDesk('ed_1', '*', oak);
+      const recolorAll = recolorDesk('ed_2', '*', navy);
+
+      expect(deskLooks(replay(setup, catalog, [finishAll, recolorAll])))
+        .toEqual({ partColors: { top: navy, legs: navy }, partFinishes: {} });
+      expect(deskLooks(replay(setup, catalog, [recolorAll, finishAll])))
+        .toEqual({ partColors: {}, partFinishes: { top: oak, legs: oak } });
     });
   });
 

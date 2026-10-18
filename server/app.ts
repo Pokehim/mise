@@ -1,11 +1,13 @@
+import { randomBytes } from 'node:crypto';
 import { existsSync, globSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { basename, join, resolve } from 'node:path';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import { MergeInputError, mergeScan } from '../scripts/scan-merge';
+import { generateObjectRoutes } from './generate-object/routes';
 import { newId } from '../shared/ids';
 import type { Design, ScanManifest } from '../shared/types';
 
@@ -27,15 +29,62 @@ async function readJson<T>(path: string): Promise<T | undefined> {
   }
 }
 
-/** Every file in the data folder that matches the glob pattern, parsed. */
-const readAll = <T>(pattern: string): Promise<T[]> =>
-  Promise.all(globSync(pattern, { cwd: dataDir() }).map(async (file) => JSON.parse(await readFile(join(dataDir(), file), 'utf8'))));
-
-async function writeJson(path: string, value: unknown) {
-  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
+/**
+ * Every file in the data folder that matches the glob pattern, parsed. Files named "_*" aren't records, so they are
+ * skipped; so is a file that doesn't parse, with a warning, so one bad file can't break the whole list.
+ */
+async function readAll<T>(pattern: string): Promise<T[]> {
+  const files = globSync(pattern, { cwd: dataDir() }).filter((file) => !basename(file).startsWith('_'));
+  const parsed = await Promise.all(files.map(async (file): Promise<T[]> => {
+    try {
+      return [JSON.parse(await readFile(join(dataDir(), file), 'utf8'))];
+    } catch (error) {
+      console.warn(`Skipping ${join(dataDir(), file)}: ${(error as Error).message}`);
+      return [];
+    }
+  }));
+  return parsed.flat();
 }
 
-const readBody = <T>(c: Context) => c.req.json<T>().catch(() => fail(400, 'The body must be JSON'));
+/** Writes a temp file next to the target, then renames it over the target, so no one ever sees a half-written file. */
+async function writeFileAtomic(file: string, data: string | Uint8Array) {
+  // pid and random bytes keep two writes of one file apart. Listings match only *.json, so they never read a .part file.
+  const part = `${file}.${process.pid}-${randomBytes(4).toString('hex')}.part`;
+  try {
+    await writeFile(part, data);
+    await rename(part, file);
+  } catch (error) {
+    await rm(part, { force: true });
+    throw error;
+  }
+}
+
+/** The last write queued for each file, by absolute path. */
+const writeQueues = new Map<string, Promise<void>>();
+
+/** Runs task after every earlier task with the same key (a file path) has settled, whether it succeeded or failed. */
+function serialize<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const path = resolve(key);
+  const result = (writeQueues.get(path) ?? Promise.resolve()).then(task);
+  // The queue moves on even when the task fails; the caller still gets the failure through result.
+  const settled: Promise<void> = result.catch(() => {}).then(() => {
+    if (writeQueues.get(path) === settled) writeQueues.delete(path);
+  });
+  writeQueues.set(path, settled);
+  return result;
+}
+
+/** Every write to the data folder goes through here: one at a time per file, and never half-written. */
+const saveFile = (file: string, data: string | Uint8Array) => serialize(file, () => writeFileAtomic(file, data));
+
+const writeJson = (path: string, value: unknown) => saveFile(path, `${JSON.stringify(value, null, 2)}\n`);
+
+/** The request body, which must be a JSON object: null, an array or a bare value would be saved as a broken file. */
+async function readBody<T>(c: Context): Promise<T> {
+  const body: unknown = await c.req.json().catch(() => fail(400, 'The body must be JSON'));
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) fail(400, 'The body must be a JSON object');
+  return body as T;
+}
 
 // Ids become file and folder names, so they may only use letters, digits, "_" and "-".
 const checkId = (id: string) => (/^[\w-]+$/.test(id) ? id : fail(400, `Not a valid id: ${id}`));
@@ -95,7 +144,7 @@ app.put(
     const png = Buffer.from(await c.req.arrayBuffer());
     if (!png.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) fail(400, 'The body must be a PNG');
     await mkdir(join(dir, 'patches'), { recursive: true });
-    await writeFile(join(dir, 'patches', name), png);
+    await saveFile(join(dir, 'patches', name), png);
     return c.json({ path: `patches/${name}` });
   },
 );
@@ -147,3 +196,6 @@ app.put('/api/designs/:id', async (c) => {
 
 // Phase 4: Brief → 3 Designs (spec §13).
 app.post('/api/generate', (c) => c.json({ error: 'Generate is not built yet (Phase 4)' }, 501));
+
+// Stretch: text-to-3D for categories the Catalog lacks (spec §13.3).
+app.route('/api', generateObjectRoutes(dataDir));

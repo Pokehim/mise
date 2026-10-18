@@ -7,7 +7,7 @@ import type { Opening, Original, Vec2, Vec3, Wall } from '@shared/types';
 import { BoxHandles } from './BoxHandles';
 import { mm } from './geometry/mesh';
 import { openingFromClicks } from './geometry/openings';
-import { type RoomBounds, wallAxis, withPolygon } from './geometry/walls';
+import { isNewCorner, type RoomBounds, wallAxis, withPolygon } from './geometry/walls';
 import { Label } from './Label';
 import { useSetup } from './store';
 import { ACCENT, clickOnly } from './ui';
@@ -38,7 +38,7 @@ export function CornersOverlay({ bounds }: { bounds: RoomBounds }) {
   const y = ceilingHeight - 0.1;   // above the furniture, below the clipped-off ceiling
   const onClick = clickOnly((e) => {
     const corner = e.nativeEvent.altKey ? ([mm(e.point.x), mm(e.point.z)] as Vec2) : snapCorner([e.point.x, e.point.z], polygon);
-    updateSetup((s) => withPolygon(s, [...s.floor.polygon, corner]));
+    updateSetup((s) => (isNewCorner(s.floor.polygon, corner) ? withPolygon(s, [...s.floor.polygon, corner]) : s));
   });
   const outline = polygon.length >= 3 ? [...polygon, polygon[0]] : polygon;
   return (

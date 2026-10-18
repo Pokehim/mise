@@ -1,16 +1,23 @@
-/* The message chips of Fit rule warnings (spec §10.6), over the 3D view. */
+/* Fit rule warnings over the 3D view (spec §10.6): a red-pencil loop round the item and a note beside
+   it (sketch/FitMark). Red pencil means a problem, and nothing else. */
 
-.fit-chip {
-  /* Centered on screen just above the top of the item, rather than over its middle. It is the
-     translate property, because <Html> sets an inline transform. */
-  translate: -50% calc(-100% - 8px);
-  padding: 3px 10px;
-  border-radius: 10px;
-  background: #d93025;
-  color: white;
-  font: 600 12px/1.4 system-ui, sans-serif;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
-  pointer-events: none;
+.fit-mark { position: absolute; left: 0; top: 0; pointer-events: none; user-select: none; }
+
+.pencil-loop { position: absolute; overflow: visible; }
+.pencil-loop path { fill: none; stroke: var(--red-pencil); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+@media (prefers-reduced-motion: no-preference) {
+  .pencil-loop path { stroke-dasharray: 1; animation: sketch-draw var(--draw) var(--ease-out) both; }
 }
-/* One line per problem, each kept short: checkFit names a Piece by its full Catalog title. */
-.fit-chip div { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The note: one line per problem, each kept short (checkFit names a Piece by its full Catalog title). */
+.fit-note {
+  position: absolute;
+  padding: 1px 7px 2px;
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  color: var(--red-pencil);
+  font: 400 15px/1.3 var(--font-hand);
+  translate: 0 -100%;
+  animation: sketch-fade 150ms 150ms ease-out both;
+}
+.fit-note div { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

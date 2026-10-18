@@ -1,0 +1,87 @@
+/* The sketch overlays' labels over the 3D view (docs/design/sketch-style.md). Each label is a slip of
+   paper laid on the room; the room itself is never tinted or filtered. */
+
+/* A dimension's length, along its line: Dimensions turns it (rotate, translate) each frame. */
+.sketch-dimension {
+  display: block;
+  padding: 0 4px;
+  border-radius: var(--r-1);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font: 500 11px/1.6 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ───────────── Callout: a leader from the top of the item to its name ───────────── */
+
+/* --rise is how far the leader climbs (Callout measures the item on screen): the label sits at its top. */
+.callout { --rise: 44px; position: absolute; left: 0; top: 0; pointer-events: none; user-select: none; }
+.callout-leader {
+  position: absolute;
+  left: -4px;
+  top: calc(-1 * var(--rise));
+  height: calc(var(--rise) + 4px);
+  overflow: visible;
+  transform-origin: 4px var(--rise);
+}
+.callout-leader path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.callout-leader .halo { stroke: var(--paper-raised); stroke-opacity: 0.7; stroke-width: 5; }
+.callout-leader .ink { stroke: var(--ink); stroke-width: 1.25; }
+.callout-leader circle { fill: var(--ink); stroke: var(--paper-raised); stroke-width: 1.5; }
+.callout[data-side='left'] .callout-leader { scale: -1 1; }
+
+.callout-label {
+  position: absolute;
+  top: calc(10px - var(--rise));
+  left: 60px;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  max-width: 180px;
+  margin: 0;
+  padding: 3px 8px 4px;
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  translate: 0 -50%;
+}
+.callout[data-side='left'] .callout-label { left: auto; right: 60px; text-align: right; }
+.callout-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--ink);
+  font: 400 15px/1.25 var(--font-hand);
+}
+.callout-detail { color: var(--graphite); font: 400 12px/1.5 var(--font-sans); }
+.callout-detail.mono { font-family: var(--font-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+/* The leader draws on, then the label fades in. */
+@media (prefers-reduced-motion: no-preference) {
+  .callout-leader .ink { stroke-dasharray: 1; animation: sketch-draw var(--draw) var(--ease-out) both; }
+  .callout-leader .halo, .callout-leader circle { animation: sketch-fade var(--draw) ease-out both; }
+}
+.callout-label { animation: sketch-fade 150ms 120ms ease-out both; }
+
+@keyframes sketch-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes sketch-fade {
+  from { opacity: 0; }
+}
+
+/* ───────────── The view's Sketch lines switch ───────────── */
+
+.editor .sketch-toggle {
+  position: absolute;
+  left: var(--s-3);
+  bottom: var(--s-3);
+  padding: 4px 10px 4px 8px;
+  border-color: var(--pencil-strong);
+  font-size: 13px;
+}

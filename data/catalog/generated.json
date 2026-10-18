@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "gen_09f860ad",
+      "source": "generated",
+      "title": "Aquarium",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.409,
+        0.378,
+        0.41
+      ],
+      "model": "/data/catalog/models/gen_09f860ad.glb",
+      "thumbnail": "/data/catalog/thumbs/gen_09f860ad.jpg",
+      "colors": [],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 110,
+      "url": "",
+      "attribution": "Generated with FLUX.1 [schnell] and TRELLIS.2 (MIT) on fal"
+    }
+  ]
+}

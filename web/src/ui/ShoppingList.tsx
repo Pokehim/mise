@@ -2,12 +2,9 @@ import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { shoppingList } from '../state/history';
 import { useEditor } from '../state/store';
-import { count } from './format';
+import { count, dollars, priceEstimate } from './format';
 import { Cart } from './icons';
 import { Popover } from './Popover';
-
-/** Whole dollars, as "$1,240". */
-const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format;
 
 /** The list under 🛒: each Piece with its estimate and link, the total, and the Originals the Mover keeps. */
 function List({ list: { pieces, totalUsd, alreadyInRoom } }: { list: ReturnType<typeof shoppingList> }) {
@@ -24,15 +21,15 @@ function List({ list: { pieces, totalUsd, alreadyInRoom } }: { list: ReturnType<
               <img src={item.thumbnail} alt="" width={48} height={48} loading="lazy" />
               <div className="cart-piece">
                 <span className="title" title={item.title}>{item.title}</span>
-                <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a>
+                {item.url ? <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a> : <span className="muted">Generated, so no product link</span>}
               </div>
               {/* A price is always an estimate (spec §8.3). */}
-              <span className="price">≈ {dollars(item.priceEstimateUsd)} (est.)</span>
+              <span className="price">{priceEstimate(item.priceEstimateUsd)}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="empty">Nothing to buy yet. Pieces you add from the Catalog show up here with their prices.</p>
+        <p className="empty"><b>Nothing to buy yet.</b> Pieces you add from the Catalog show up here with their prices.</p>
       )}
       <p className="cart-total">
         <span>Total</span>

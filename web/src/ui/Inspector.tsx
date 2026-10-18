@@ -6,6 +6,9 @@ import { removeOriginal, removePiece, rotateOriginal, rotatePiece } from '../sce
 import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget, targetBox } from '../scene/swapResize';
 import { closeResize, openResize, setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
+import { cm, cmSize, inches, priceEstimate } from './format';
+import { GenerateItem } from './GenerateItem';
+import { Lock, RotateLeft, RotateRight, Unlock } from './icons';
 import { FinishPicker } from './inspector/FinishPicker';
 import { OriginalReplace } from './inspector/OriginalReplace';
 import { RecolorControl } from './inspector/RecolorControl';
@@ -13,17 +16,13 @@ import './inspector.css';
 
 // The Inspector (spec §10.4): what is selected, and what can be done with it.
 
-const inches = (meters: number) => (meters / 0.0254).toFixed(1);
-const cm = (meters: number) => Math.round(meters * 100);
-/** A size as width × depth × height in centimeters, the order a Size is read in. */
-const cmSize = ([width, height, depth]: Vec3) => `${cm(width)} × ${cm(depth)} × ${cm(height)} cm`;
 const categoryName = (category: Category) => category[0].toUpperCase() + category.slice(1).replace('_', ' ');
 
 /** A real size as width × depth × height, in inches and in centimeters. */
 function Size({ size }: { size: Vec3 }) {
   const [width, height, depth] = size;
   return (
-    <p>
+    <p className="dims">
       {inches(width)}″ W × {inches(depth)}″ D × {inches(height)}″ H
       <br />
       <span className="muted">{cmSize(size)}</span>
@@ -51,7 +50,7 @@ function Picks({ items, onPick }: { items: { item: CatalogItem; label?: SearchRe
             <img src={item.thumbnail} alt="" />
             <span>
               <span className="title" title={item.title}>{item.title}</span>
-              <span className="muted">{cmSize(item.size)} · ≈ ${item.priceEstimateUsd} (est.)</span>
+              <span className="muted">{cmSize(item.size)} · {priceEstimate(item.priceEstimateUsd)}</span>
               {label && <span className={`fit-label ${label}`}>{LABELS[label]}</span>}
             </span>
           </button>
@@ -117,7 +116,7 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
         <label>W <input type="number" min={1} value={cm(size[0])} onChange={(e) => setSide(0, e.target.valueAsNumber)} /> cm</label>
         <label>D <input type="number" min={1} value={cm(size[2])} onChange={(e) => setSide(2, e.target.valueAsNumber)} /> cm</label>
         <button aria-pressed={lockHeight} title="Count the height too" onClick={() => setLockHeight(!lockHeight)}>
-          {lockHeight ? '🔒' : '🔓'} H {cm(size[1])} cm
+          {lockHeight ? <Lock /> : <Unlock />} H {cm(size[1])} cm
         </button>
       </div>
       <label className="fields">
@@ -132,6 +131,7 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
             onDone();
           }} />
         : <p className="muted">Nothing {currentId && category === startCategory ? 'else ' : ''}in the Catalog is a {category.replace('_', ' ')}.</p>}
+      {!candidates.length && <GenerateItem key={category} query={categoryName(category)} category={category} targetSize={size} />}
     </div>
   );
 }
@@ -154,10 +154,11 @@ function PieceInspector({ pieceId }: { pieceId: string }) {
   if (!item) return null;
   return (
     <>
-      <h2>{item.title}</h2>
+      <p className="kind">Piece · {categoryName(item.category)}</p>
+      <h2 title={item.title}>{item.title}</h2>
       <Size size={item.size} />
-      <p>≈ ${item.priceEstimateUsd} (est.)</p>
-      <p><a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a></p>
+      <p className="price">{priceEstimate(item.priceEstimateUsd)}</p>
+      <p>{item.url ? <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a> : <span className="muted">Generated, so no product link</span>}</p>
       <div className="actions">
         <ToolButton tool="swap" name="Swap" open={open} setOpen={setOpen} />
         <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} />
@@ -173,8 +174,8 @@ function PieceInspector({ pieceId }: { pieceId: string }) {
         />
       )}
       <div className="actions">
-        <button title="R" onClick={() => rotatePiece(pieceId, 1)}>↺ 15°</button>
-        <button title="Shift+R" onClick={() => rotatePiece(pieceId, -1)}>↻ 15°</button>
+        <button title="R" aria-label="Rotate left 15°" onClick={() => rotatePiece(pieceId, 1)}><RotateLeft />15°</button>
+        <button title="Shift+R" aria-label="Rotate right 15°" onClick={() => rotatePiece(pieceId, -1)}><RotateRight />15°</button>
         <button title="Delete" onClick={() => removePiece(pieceId)}>Remove</button>
       </div>
       <RecolorControl targetId={pieceId} category={item.category} />
@@ -188,16 +189,17 @@ function OriginalInspector({ originalId }: { originalId: string }) {
   if (!original) return null;
   return (
     <>
-      <h2>{original.label}{original.kept && <span title={KEPT_HINT}> 🔒</span>}</h2>
+      <p className="kind">Original · {categoryName(original.category)}</p>
+      <h2>{original.label}</h2>
       <Size size={original.box.size} />
-      {original.kept && <p className="badge" title={KEPT_HINT}>Kept</p>}
+      {original.kept && <p className="badge" title={KEPT_HINT}><Lock />Kept</p>}
       <div className="actions">
         <ToolButton tool="replace" name="Replace" open={open} setOpen={setOpen} disabled={original.kept} title={original.kept ? KEPT_HINT : undefined} />
         <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} disabled={original.kept} title={original.kept ? KEPT_HINT : undefined} />
       </div>
       <div className="actions">
-        <button title={original.kept ? KEPT_HINT : 'R'} disabled={original.kept} onClick={() => rotateOriginal(originalId, 1)}>↺ 15°</button>
-        <button title={original.kept ? KEPT_HINT : 'Shift+R'} disabled={original.kept} onClick={() => rotateOriginal(originalId, -1)}>↻ 15°</button>
+        <button title={original.kept ? KEPT_HINT : 'R'} aria-label="Rotate left 15°" disabled={original.kept} onClick={() => rotateOriginal(originalId, 1)}><RotateLeft />15°</button>
+        <button title={original.kept ? KEPT_HINT : 'Shift+R'} aria-label="Rotate right 15°" disabled={original.kept} onClick={() => rotateOriginal(originalId, -1)}><RotateRight />15°</button>
         <button title={original.kept ? KEPT_HINT : 'Delete'} disabled={original.kept} onClick={() => removeOriginal(originalId)}>Remove</button>
       </div>
       {open === 'replace' && <OriginalReplace original={original} onPick={(item) => putInPlace({ kind: 'original', id: originalId }, item)} />}
@@ -220,6 +222,7 @@ function WallInspector({ wallId }: { wallId: string }) {
   if (!wall) return null;
   return (
     <>
+      <p className="kind">Surface</p>
       <h2>{wall.name}</h2>
       <p className="muted">{wallLength(wall).toFixed(2)} m long, {wall.height.toFixed(2)} m high</p>
       <FinishPicker target={{ kind: 'wall', wallId }} />
@@ -232,8 +235,8 @@ export function Inspector() {
   const selection = useEditor((s) => s.selection);
   return (
     <aside className="inspector">
-      {!selection && <p className="muted">Select a Piece, an Original, or a Wall.</p>}
-      {!selection && <><h2>Floor</h2><FinishPicker target={{ kind: 'floor' }} /></>}
+      {!selection && <p className="muted empty"><b>Nothing selected.</b> Select a Piece, an Original, or a Wall in the room.</p>}
+      {!selection && <><p className="kind">Surface</p><h2>Floor</h2><FinishPicker target={{ kind: 'floor' }} /></>}
       {selection?.kind === 'piece' && <PieceInspector key={selection.id} pieceId={selection.id} />}
       {selection?.kind === 'original' && <OriginalInspector key={selection.id} originalId={selection.id} />}
       {selection?.kind === 'wall' && <WallInspector key={selection.id} wallId={selection.id} />}

@@ -1,10 +1,10 @@
 // The Room Setup page's state: the Scan being set up, the RoomSetup being edited, and the tool's UI state.
-import { Mesh, type Object3D, type WebGLRenderer } from 'three';
+import { type Material, Mesh, type Object3D, type WebGLRenderer } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { create } from 'zustand';
 import type { Category, Opening, Original, RoomSetup, ScanManifest, Vec2, Vec3, YawTransform } from '@shared/types';
-import { listScans, loadSetup, saveManifest, saveSetup, scanFileUrl } from '../api';
+import { listScans, loadSetup, saveManifest, savePatchImage, saveSetup, scanFileUrl } from '../api';
 import { unlit } from '../scene/splitScan';
 import type { TriangleMesh } from './geometry/mesh';
 import { sceneTriangles } from './sceneTriangles';
@@ -19,6 +19,9 @@ export const STEPS = [
   { id: 'bake', title: 'Bake' },
 ] as const;
 export type StepId = (typeof STEPS)[number]['id'];
+
+/** A new setup's ceiling height, in meters: step 2 is done once it changes, or once there are Walls. */
+export const DEFAULT_CEILING_HEIGHT = 2.5;
 
 interface SetupState {
   status: 'loading' | 'ready' | 'saving' | 'error';
@@ -47,6 +50,8 @@ interface SetupState {
   renderer?: WebGLRenderer;
   /** Step 6: the Fill Capture being lined up (ADR-0007). */
   fill?: FillDraft;
+  /** Step 7: the last Bake's Patch images by file name, which Save uploads to patches/ before the setup. */
+  patchImages: Map<string, Blob>;
 
   load(scanId: string): Promise<void>;
   setStep(step: StepId): void;
@@ -98,10 +103,17 @@ export const useSetup = create<SetupState>()((set, get) => ({
   tagCategory: 'bed',
   preview: false,
   hiddenOriginals: {},
+  patchImages: new Map(),
 
   async load(scanId) {
     const token = ++latestLoad;
-    set({ status: 'loading', message: undefined, manifest: undefined, setup: undefined, scene: undefined, hiddenOriginals: {} });
+    const { fill } = get();
+    // The open Fill Capture belongs to the Scan before: step 6 there would write it into this one's manifest.
+    set({
+      status: 'loading', message: undefined, manifest: undefined, setup: undefined, scene: undefined, fill: undefined,
+      hiddenOriginals: {}, patchImages: new Map(),
+    });
+    if (fill?.scene) disposeScene(fill.scene);
     try {
       const manifest = listScans().then((scans) => scans.find((m) => m.id === scanId) ?? fail(`There is no Scan "${scanId}".`));
       const [setup, scene] = await Promise.all([
@@ -124,10 +136,14 @@ export const useSetup = create<SetupState>()((set, get) => ({
     }
   },
 
-  setStep: (step) => set({
-    step, selectedOriginalId: undefined, notice: undefined, openingDraft: { ...get().openingDraft, first: undefined },
-    fill: step === 'fills' ? get().fill : undefined,
-  }),
+  setStep: (step) => {
+    const { fill } = get();
+    set({
+      step, selectedOriginalId: undefined, notice: undefined, openingDraft: { ...get().openingDraft, first: undefined },
+      fill: step === 'fills' ? fill : undefined,
+    });
+    if (step !== 'fills' && fill?.scene) disposeScene(fill.scene);
+  },
 
   setMeshTransform: (meshTransform) => set({ manifest: { ...get().manifest!, meshTransform } }),
 
@@ -156,12 +172,18 @@ export const useSetup = create<SetupState>()((set, get) => ({
   selectWall: (id) => set({ selectedWallId: id, openingDraft: { ...get().openingDraft, first: undefined } }),
 
   async save() {
-    const { manifest, setup, saved } = get();
+    const { manifest, setup, saved, patchImages } = get();
     if (!manifest || !setup) return;
     set({ status: 'saving' });
     try {
+      // The images first, so setup.json never names a Patch image the server doesn't have yet.
+      await Promise.all(Array.from(patchImages, ([name, png]) => savePatchImage(manifest.id, name, png)));
       await Promise.all([manifest !== saved.manifest && saveManifest(manifest), saveSetup(setup)]);
-      set({ status: 'ready', message: undefined, saved: { manifest, setup } });
+      // A Bake during the Save staged newer images; those wait for the next Save.
+      set((s) => ({
+        status: 'ready', message: undefined, saved: { manifest, setup },
+        patchImages: s.patchImages === patchImages ? new Map() : s.patchImages,
+      }));
     } catch (error) {
       set({ status: 'ready', message: `Not saved: ${(error as Error).message}` });
     }
@@ -179,7 +201,7 @@ const fail = (message: string): never => {
 };
 
 const emptySetup = (scanId: string): RoomSetup => ({
-  version: 1, scanId, ceilingHeight: 2.5, floor: { polygon: [] }, walls: [], openings: [], originals: [],
+  version: 1, scanId, ceilingHeight: DEFAULT_CEILING_HEIGHT, floor: { polygon: [] }, walls: [], openings: [], originals: [],
 });
 
 export async function loadScene(url: string): Promise<Object3D> {
@@ -194,6 +216,17 @@ export async function loadScene(url: string): Promise<Object3D> {
     }
   });
   return scene;
+}
+
+/** Frees the GPU memory of a scene that is no longer drawn: its geometries, materials and textures. */
+export function disposeScene(scene: Object3D) {
+  scene.traverse((object) => {
+    if (!(object instanceof Mesh)) return;
+    object.geometry.dispose();
+    const material = object.material as Material & { map?: { dispose(): void } | null };
+    material.map?.dispose();
+    material.dispose();
+  });
 }
 
 // The scan's triangles, computed once per scene in the capture's frame, and once per meshTransform in the room frame.

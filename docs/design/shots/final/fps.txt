@@ -1,0 +1,1 @@
+60.2 fps (headless, 1440×900, a Piece selected, orbiting)

@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react';
 import type { CatalogItem, Category } from '@shared/types';
 import { search } from '../state/core';
 import { useEditor } from '../state/store';
+import { priceEstimate } from './format';
+import { GenerateItem } from './GenerateItem';
+import { Plus } from './icons';
 
 const CATEGORY_NAMES: Record<Category, string> = {
   chair: 'Chairs', desk: 'Desks', table: 'Tables', nightstand: 'Nightstands', bed: 'Beds', sofa: 'Sofas',
@@ -23,14 +26,23 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
   const shown = search(catalog, { category: category ?? undefined, text, limit: Infinity }).map(({ item }) => item);
 
   return (
-    <aside className="catalog">
-      <div className="tabs">
+    <aside className="catalog" aria-labelledby="catalog-title">
+      <h2 id="catalog-title">Catalog</h2>
+      <div className="tabs" role="group" aria-label="Category">
         <button aria-pressed={!category} onClick={() => setCategory(null)}>All</button>
         {categories.map((c) => (
           <button key={c} aria-pressed={c === category} onClick={() => setCategory(c)}>{CATEGORY_NAMES[c]}</button>
         ))}
       </div>
-      <input type="search" placeholder="Search by name or style" value={text} onChange={(e) => setText(e.target.value)} />
+      <input
+        type="search"
+        name="catalogSearch"
+        aria-label="Search the Catalog"
+        autoComplete="off"
+        placeholder="Search by name or style…"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
       <ul className="cards">
         {shown.map((item) => (
           <li
@@ -42,16 +54,17 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
               event.dataTransfer.effectAllowed = 'copy';
             }}
           >
-            <img src={item.thumbnail} alt="" />
+            <img src={item.thumbnail} alt="" width={56} height={56} loading="lazy" />
             <div>
               <div className="title" title={item.title}>{item.title}</div>
-              <div className="muted">≈ ${item.priceEstimateUsd} (est.)</div>
+              <div className="muted price">{priceEstimate(item.priceEstimateUsd)}</div>
             </div>
-            <button onClick={() => onAdd(item)}>Add</button>
+            <button aria-label={`Add ${item.title}`} onClick={() => onAdd(item)}><Plus />Add</button>
           </li>
         ))}
       </ul>
-      {shown.length === 0 && <p className="muted">Nothing in the Catalog matches.</p>}
+      {shown.length === 0 && <p className="muted empty"><b>Nothing matches.</b> Try another word, or another category.</p>}
+      {shown.length === 0 && <GenerateItem key={`${category}:${text}`} query={text} category={category} />}
     </aside>
   );
 }

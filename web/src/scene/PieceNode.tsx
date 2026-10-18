@@ -1,4 +1,4 @@
-import { Bvh, Shadow, useCursor } from '@react-three/drei';
+import { Bvh, Edges, Shadow, useCursor } from '@react-three/drei';
 import { createPortal, useLoader } from '@react-three/fiber';
 import { Fragment, memo, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { Mesh } from 'three';
@@ -6,25 +6,28 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useShallow } from 'zustand/react/shallow';
 import type { CatalogItem, Hex, Vec3 } from '@shared/types';
 import { useRealism } from '../state/realism';
-import { pieceItem, type Selection, useEditor } from '../state/store';
+import { pieceItem, useEditor } from '../state/store';
 import { applyParts, recolorParts } from './applyParts';
 import { useDragPiece } from './DragControls';
 import { withMeshopt } from './gltf';
 import { forEachMaterial, ignoreRaycast } from './objects';
 import { liesFlat } from './placement';
-import { Outline } from './SelectionOutline';
+import { useSketchLines } from './sketch/SketchLines';
+import { token } from './sketch/tokens';
 
 /** A soft radial-gradient plane under a floor Piece: 110% of its footprint at 35% opacity (spec §10.6). */
 function BlobShadow({ size: [width, , depth] }: { size: Vec3 }) {
   return <Shadow scale={[width * 1.1, depth * 1.1, 1]} position-y={0.005} opacity={0.35} raycast={ignoreRaycast} />;
 }
 
-const isPiece = (it: Selection | null, pieceId: string) => it?.kind === 'piece' && it.id === pieceId;
+interface PieceModelProps { item: CatalogItem; partColors: Record<string, Hex> }
 
-interface PieceModelProps { item: CatalogItem; partColors: Record<string, Hex>; selected: boolean }
-
-/** One Catalog model, its Parts recolored, outlined when selected. Memoized, so a drag doesn't re-render it. */
-const PieceModel = memo(function PieceModel({ item, partColors, selected }: PieceModelProps) {
+/**
+ * One Catalog model, its Parts recolored, with ink edges when Sketch lines are on. Memoized, so a
+ * drag doesn't re-render it. Its selection is sketched over the scene (sketch/SketchSelection).
+ */
+const PieceModel = memo(function PieceModel({ item, partColors }: PieceModelProps) {
+  const sketchLines = useSketchLines((s) => s.on);
   const gltf = useLoader(GLTFLoader, item.model, withMeshopt);
   // Each Piece gets its own geometry, so Bvh gives each one its own raycast tree, even several
   // Pieces of the same item, and its own material per Part. Textures stay shared.
@@ -55,7 +58,9 @@ const PieceModel = memo(function PieceModel({ item, partColors, selected }: Piec
       <Bvh>
         <primitive object={model} />
       </Bvh>
-      {selected && meshes.map((mesh) => <Fragment key={mesh.uuid}>{createPortal(<Outline />, mesh)}</Fragment>)}
+      {sketchLines && meshes.map((mesh) => (
+        <Fragment key={mesh.uuid}>{createPortal(<Edges threshold={30} color={token('--ink')} raycast={ignoreRaycast} />, mesh)}</Fragment>
+      ))}
     </>
   );
 });
@@ -67,8 +72,6 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
   const item = useEditor((s) => pieceItem(s, pieceId));
   // Shallow, as replay makes a new partColors object for every Piece on every Edit.
   const partColors = useEditor(useShallow((s) => s.roomState!.pieces[pieceId]?.partColors));
-  // Outlined when selected, or when a hovered History row changed it (#11).
-  const selected = useEditor((s) => isPiece(s.selection, pieceId) || isPiece(s.highlight, pieceId));
   // Max draws the shadows Pieces really cast instead.
   const showBlobShadow = useRealism() !== 'max';
   const onPointerDown = useDragPiece(pieceId);
@@ -90,7 +93,7 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
       }}
       onPointerOut={() => setHovered(false)}
     >
-      <PieceModel item={item} partColors={partColors} selected={selected} />
+      <PieceModel item={item} partColors={partColors} />
       {showBlobShadow && placement.mount === 'floor' && !liesFlat(item) && <BlobShadow size={item.size} />}
     </group>
   );

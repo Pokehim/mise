@@ -61,7 +61,7 @@ export function GenerateItem({ query, category, targetSize }: { query: string; c
   if (run?.status === 'done') return <p className="muted">“{run.item.title}” is in the Catalog now.</p>;
   return (
     <div className="generate">
-      {run?.status === 'failed' && <p className="muted" role="alert">Couldn't generate it: {run.error}</p>}
+      {run?.status === 'failed' && <p role="alert">Couldn't generate it: {run.error}</p>}
       {category
         ? <button onClick={() => generate(category)}>Can't find it? Generate “{text}” (1–2 min)</button>
         : <p className="muted">Can't find it? Pick a category above to generate “{text}”.</p>}

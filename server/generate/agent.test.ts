@@ -87,13 +87,13 @@ describe('generateDesigns', () => {
     });
   });
 
-  it('asks Claude Opus 5.5 at low effort, with strict tools, auto tool choice and the default refusal fallback', async () => {
+  it('asks Claude Opus 5.5 at low effort, with strict tools (but place_piece), auto tool choice and the default refusal fallback', async () => {
     const { client, requests } = fakeClaude({ literal: decorate });
     await generate(client).result;
 
     const [{ body, headers }] = requests;
     expect(body).toMatchObject({ model: 'claude-opus-5-5', output_config: { effort: 'low' }, tool_choice: { type: 'auto' }, fallbacks: 'default' });
-    expect(body.tools!.map((tool) => 'strict' in tool && tool.strict)).toEqual(Array(7).fill(true));
+    expect(body.tools!.map((tool) => 'strict' in tool && tool.strict)).toEqual([true, false, true, true, true, true, true]);
     expect(headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
   });
 

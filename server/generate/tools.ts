@@ -160,8 +160,11 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
     ...(brief.budgetUsd !== undefined && { budget_left_usd: brief.budgetUsd - totalUsd() }),
   });
 
-  /** A tool of the session: strict, counted, and closed once the Design is finished. */
-  function tool<Input extends z.ZodObject>(name: string, description: string, inputSchema: Input, run: (input: z.infer<Input>) => object) {
+  /**
+   * A tool of the session: counted, closed once the Design is finished, and strict unless `strict` is
+   * false. betaZodTool checks every input against its schema either way.
+   */
+  function tool<Input extends z.ZodObject>(name: string, description: string, inputSchema: Input, run: (input: z.infer<Input>) => object, strict = true) {
     return {
       ...betaZodTool({
         name,
@@ -174,7 +177,7 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
           return JSON.stringify(run(input));
         },
       }),
-      strict: true,
+      ...(strict && { strict: true }),
     };
   }
 
@@ -216,6 +219,9 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
         }));
         return { piece_id: pieceId, placement: placementForClaude(setup, placement, item), ...(levels && { shelf_levels: levels }), ...spent() };
       },
+      // Not strict: its Anchor union over the room's ids compiles to a grammar the API rejects as too
+      // large ("The compiled grammar is too large", 400 on every request).
+      false,
     ),
     tool(
       'replace_original',

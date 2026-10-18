@@ -33,9 +33,9 @@ async function call(session: DesignSession, name: string, input: unknown) {
 }
 
 describe('the Design tools', () => {
-  it('are the 7 tools of spec §13.2, each with a strict schema', () => {
+  it('are the 7 tools of spec §13.2, each with a strict schema but place_piece, whose grammar is too large', () => {
     expect(start().tools.map(({ name, strict }) => [name, strict])).toEqual([
-      ['search_catalog', true], ['place_piece', true], ['replace_original', true], ['recolor', true],
+      ['search_catalog', true], ['place_piece', undefined], ['replace_original', true], ['recolor', true],
       ['apply_finish', true], ['remove', true], ['finish_design', true],
     ]);
   });

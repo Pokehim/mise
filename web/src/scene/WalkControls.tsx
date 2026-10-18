@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import { useEditor } from '../state/store';
 import { NOTCH_PX, scrolledPx } from './DollhouseCamera';
 import { floorGeometry, keepInside, roomBounds } from './floorPlan';
-import { CLICK_TOLERANCE_PX } from './objects';
+import { clickTolerancePx } from './objects';
 import { floorPointInView } from './placement';
 import type { Shot } from './shots';
 
@@ -226,7 +226,7 @@ export function WalkControls({ start }: { start?: Shot['pose'] }) {
 
   // Clicks on the floor that nothing else took, such as a Piece or an Original.
   const onFloorClick = (event: ThreeEvent<MouseEvent>) => {
-    if (event.delta <= CLICK_TOLERANCE_PX) glideTo(event.point.x, event.point.z);
+    if (event.delta <= clickTolerancePx()) glideTo(event.point.x, event.point.z);
   };
   return (
     <mesh geometry={floor} position-y={0.001} onClick={onFloorClick}>

@@ -5,7 +5,7 @@ import type { Object3D } from 'three';
 import { useEditor } from '../state/store';
 import { Lock } from '../ui/icons';
 import { useDragOriginal } from './DragControls';
-import { CLICK_TOLERANCE_PX } from './objects';
+import { clickTolerancePx } from './objects';
 import { Z_KEPT } from './sketch/Label';
 
 /** ?empty=1 hides every Original, to show the Empty Room (lounge-v2 spec §3), for screenshots and the walk-through. */
@@ -49,7 +49,7 @@ export function OriginalNode({ id, node }: { id: string; node: Object3D }) {
       onClick={(event: { stopPropagation(): void; delta: number }) => {
         if (!visible) return;
         event.stopPropagation();
-        if (event.delta <= CLICK_TOLERANCE_PX) useEditor.getState().select({ kind: 'original', id });
+        if (event.delta <= clickTolerancePx()) useEditor.getState().select({ kind: 'original', id });
       }}
       onPointerOver={(event: { stopPropagation(): void }) => {
         if (!visible) return;

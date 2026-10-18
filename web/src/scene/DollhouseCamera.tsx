@@ -7,7 +7,7 @@ import type { Vec3 } from '@shared/types';
 import { useEditor } from '../state/store';
 import { ControlsHint, hideControlsHint } from './ControlsHint';
 import { roomBounds } from './floorPlan';
-import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
+import { clickTolerancePx, isDrawn } from './objects';
 import type { Shot } from './shots';
 
 /** How many times closer one mouse-wheel notch takes the camera: 5 go from the whole room to one chair. */
@@ -168,7 +168,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       if (!cameraControls.enabled) return;
       event.preventDefault();
       const { timeStamp: time, clientX: x, clientY: y } = event;
-      if (time - last.time > GESTURE_GAP_MS || Math.hypot(x - last.x, y - last.y) > CLICK_TOLERANCE_PX) aimAt(x, y);
+      if (time - last.time > GESTURE_GAP_MS || Math.hypot(x - last.x, y - last.y) > clickTolerancePx()) aimAt(x, y);
       last = { time, x, y };
 
       const radius = cameraControls.getSpherical(new Spherical(), true).radius;
@@ -213,7 +213,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       if (event.pointerId !== drag?.pointerId) return;
       // A Piece drag can start on this same press, and turns the controls off.
       if (!cameraControls.enabled) return endDrag();
-      if (Math.hypot(event.clientX - drag.downX, event.clientY - drag.downY) > CLICK_TOLERANCE_PX) hideControlsHint();
+      if (Math.hypot(event.clientX - drag.downX, event.clientY - drag.downY) > clickTolerancePx()) hideControlsHint();
       if (!drag.turn) {
         const { grabbed } = drag;
         if (!grabbed) return;

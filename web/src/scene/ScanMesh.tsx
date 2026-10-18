@@ -9,7 +9,7 @@ import { type Selection, useEditor } from '../state/store';
 import { withMeshopt } from './gltf';
 import { MasterCopies } from './MasterCopies';
 import { sharpen } from './masterCopy';
-import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
+import { clickTolerancePx, forEachMaterial } from './objects';
 import { OriginalNode } from './OriginalNode';
 import { hasNoCapture } from './room/buildRoom';
 import { Patches } from './Patch';
@@ -112,7 +112,7 @@ export function ScanMesh() {
   }, [nodes, masterCopies, anisotropy]);
 
   const onClick = (event: ThreeEvent<MouseEvent>) => {
-    if (event.delta > CLICK_TOLERANCE_PX) return;   // the end of a drag that moved the camera
+    if (event.delta > clickTolerancePx()) return;   // the end of a drag that moved the camera
     // R3F calls this once for each Scan surface under the pointer, nearest first. Only the nearest
     // counts, so a click on the Shell doesn't select the Wall behind it.
     if (event.intersections.find((hit) => hit.eventObject === event.eventObject)?.object !== event.object) return;

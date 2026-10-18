@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import type { ScanManifest, Vec3 } from '@shared/types';
 import { saveManifest } from '../api';
 import { useEditor } from '../state/store';
-import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
+import { clickTolerancePx, isDrawn } from './objects';
 
 export type SplatTransform = NonNullable<ScanManifest['splatTransform']>;
 
@@ -129,7 +129,7 @@ export function AlignPicker() {
     // Captured on the canvas, so the click picks a point instead of selecting or walking.
     const onClick = (event: MouseEvent) => {
       event.stopPropagation();
-      if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > CLICK_TOLERANCE_PX) return;
+      if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > clickTolerancePx()) return;
       const { left, top, width, height } = canvas.getBoundingClientRect();
       const raycaster = new Raycaster();
       raycaster.setFromCamera(new Vector2(((event.clientX - left) / width) * 2 - 1, -((event.clientY - top) / height) * 2 + 1), camera);

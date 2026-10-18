@@ -6,7 +6,7 @@ import { wallPoint } from '@shared/geometry';
 import type { CatalogItem, Placement, RoomSetup, Vec2, Wall } from '@shared/types';
 import { pieceItem, useEditor } from '../state/store';
 import { faces, nearestWall, wallCoordinates, wallLength } from './floorPlan';
-import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
+import { clickTolerancePx, isDrawn } from './objects';
 import { floorHit, keepInRoom, liesFlat, onWall } from './placement';
 import type { SplitNodeData } from './splitScan';
 
@@ -241,7 +241,7 @@ function useDrag(target: DragTarget) {
     setEvents({ enabled: false });
 
     const onMove = (e: PointerEvent) => {
-      if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) <= CLICK_TOLERANCE_PX) return;
+      if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) <= clickTolerancePx()) return;
       dragging = true;
       element.dataset.item = 'moving';
       aim(e);

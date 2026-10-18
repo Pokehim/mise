@@ -83,8 +83,9 @@ export function SketchSelection() {
       {selection && selected && (
         <group position={selected.placement.position} rotation-y={selected.placement.rotationY}>
           {/* While it is being resized, the Resize box's guide stands in for it. */}
-          {!resizing && <InkBox key={keyOf(selection)} size={selected.size} seed={keyOf(selection)} />}
-          <Callout key={keyOf(selection)} size={selected.size} title={selected.title} detail={selected.detail} mono={selected.mono} />
+          {/* Siblings need keys of their own: with one key, React kept each old box drawn over the next selection. */}
+          {!resizing && <InkBox key={`box:${keyOf(selection)}`} size={selected.size} seed={keyOf(selection)} />}
+          <Callout key={`callout:${keyOf(selection)}`} size={selected.size} title={selected.title} detail={selected.detail} mono={selected.mono} />
         </group>
       )}
       {selection && selected && measured && selection.kind !== 'wall' && (

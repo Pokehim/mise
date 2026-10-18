@@ -5,7 +5,9 @@ baseboard, the North window's sill, the South door's frame, and the frames and m
 main door. Every face takes its image by projection onto its surface's texture (textures.py), so a box's front
 shows what the Captures saw there. Materials are unlit (KHR_materials_unlit): the images carry the real light.
 
-Nodes: floor, ceiling, wall-north, wall-east, wall-south, wall-west (a wall's boxes are in its node).
+Nodes: floor, ceiling, wall-north, wall-east, wall-south, wall-west (a wall's boxes and frames are in its node).
+The window, glass-wall, and door frames (common.GLAZING) have their own material: dark bronze anodized aluminum,
+its face beveled and grooved, with black gaskets at the glass, and darker sides.
 """
 import io
 import json
@@ -15,7 +17,7 @@ import numpy as np
 import pygltflib as gl
 from PIL import Image
 
-from common import H, V2, WX0, WX1, WZ0, WZ1, X0, X1, Z0, Z1
+from common import GLAZING, H, V2, WX0, WX1, WZ0, WZ1, X0, X1, Z0, Z1
 
 TEX = os.path.join(os.path.dirname(__file__), '..', '..', '.cache', 'lounge-v2', 'tex')
 JPEG_QUALITY = 90
@@ -35,17 +37,74 @@ BASE_H, BASE_D = 0.072, 0.008   # baseboard height and how far it sticks out
 # Boxes on each wall: (u0, u1, y0, y1, depth out of the wall), u along the wall from its start.
 BOXES = {
     'north': [(None, None, 0, BASE_H, BASE_D),
-              (0.50, 2.22, 0.85, 0.89, 0.05),                               # the window sill
-              (1.335, 1.39, 0.93, 2.30, 0.02)],                             # and its center mullion
+              (0.50, 2.26, 0.85, 0.89, 0.05)],                              # the window sill
     'east': [(None, None, 0, BASE_H, BASE_D)],
-    'south': [(0.0, 0.03, 0, 2.33, 0.015), (0.95, 1.01, 0, 2.33, 0.015),  # the door frame's jambs
-              (0.0, 1.01, 2.27, 2.33, 0.015),                               # and head
-              (1.60, 1.69, 0, 2.21, 0.015), (2.30, 2.39, 0, 2.21, 0.015),   # the glass wall's mullions
-              (1.01, 3.118, 2.20, 2.27, 0.015), (1.01, 3.118, 0, 0.05, 0.015)],  # its head and bottom rail
-    'west': [(1.82, None, 0, BASE_H, BASE_D),
-             (0.0, 0.09, 0, 2.25, 0.015), (0.58, 0.69, 0, 2.17, 0.015), (1.20, 1.30, 0, 2.17, 0.015),
-             (1.76, 1.82, 0, 2.25, 0.015), (0.0, 1.82, 2.15, 2.25, 0.015), (0.03, 1.82, 0, 0.05, 0.015)],
+    'south': [],
+    'west': [(1.82, None, 0, BASE_H, BASE_D)],
 }
+# The frame material's image: across a member's face (and its sides) by along it, repeating every FRAME_REPEAT m.
+FRAME_REPEAT = 0.5
+BRONZE = np.array([110, 99, 80]) / 255          # the lit face, as the splat shows it
+BRONZE_SIDE = np.array([62, 56, 45]) / 255      # its sides
+GASKET = np.array([28, 27, 25]) / 255
+
+
+def frame_image(path):
+    """256 x 256: the face's profile across columns 0-127 (black gasket, bevel, face, a center groove, face,
+    bevel, gasket), the sides in 128-191 (darker toward the wall), the ends in 192-255."""
+    x = np.linspace(0, 1, 128)
+    cols = []
+    for xi in x:
+        c = (GASKET if xi < 0.05 or xi >= 0.95 else BRONZE * 1.18 if xi < 0.12 else BRONZE if xi < 0.48
+             else BRONZE * 0.72 if xi < 0.52 else BRONZE * 0.95 if xi < 0.88 else BRONZE * 0.78)
+        cols.append(c)
+    face = np.array(cols)
+    side = BRONZE_SIDE[None] * np.linspace(0.75, 1.1, 64)[:, None]
+    end = np.tile(BRONZE_SIDE * 1.2, (64, 1))
+    row = np.concatenate([face, side, end])                                    # 256 x 3
+    rng = np.random.default_rng(4)
+    # Brushed anodizing: faint streaks along the member, and a slow change along it.
+    streak = 1 + 0.025 * rng.standard_normal((1, 256, 1))
+    streak[:, 128:] = 1   # not on the sides and ends: seen edge-on, streaks alias into dots
+    slow = 1 + 0.03 * np.sin(np.linspace(0, 2 * np.pi, 256))[:, None, None]
+    im = np.clip(row[None] * streak * slow, 0, 1)
+    Image.fromarray((im * 255).astype(np.uint8)).save(path)
+
+
+def frame_geometry(name):
+    """Each frame member as a box standing out of the wall, with UVs into the frame image: the face across its
+    width, the sides across its depth, both along its length."""
+    start, along, inward, length = wall_frame(name)
+    origin = start + inward * SHIFT[name]
+    up = np.array([0, 1, 0])
+    P = lambda u, y, d=0: origin + along * u + up * y + inward * d
+    pts, uvs, tris = [], [], []
+
+    def quad(corners, uv):
+        base = len(pts)
+        pts.extend(corners)
+        uvs.extend(uv)
+        tris.extend([(base, base + 1, base + 2), (base, base + 2, base + 3)])
+
+    F0, F1, S0, S1, E0, E1 = 0.5 / 256, 127.5 / 256, 128.5 / 256, 191.5 / 256, 192.5 / 256, 255.5 / 256
+    for u0, u1, y0, y1, dd in GLAZING[name]['frames']:
+        vertical = (y1 - y0) >= (u1 - u0)
+        L = (y1 - y0 if vertical else u1 - u0) / FRAME_REPEAT
+        if vertical:   # across = u, along = y
+            quad([P(u0, y0, dd), P(u1, y0, dd), P(u1, y1, dd), P(u0, y1, dd)], [(F0, 0), (F1, 0), (F1, L), (F0, L)])
+            quad([P(u0, y0), P(u0, y0, dd), P(u0, y1, dd), P(u0, y1)], [(S0, 0), (S1, 0), (S1, L), (S0, L)])
+            quad([P(u1, y0), P(u1, y1), P(u1, y1, dd), P(u1, y0, dd)], [(S0, 0), (S0, L), (S1, L), (S1, 0)])
+            quad([P(u0, y1), P(u0, y1, dd), P(u1, y1, dd), P(u1, y1)], [(E0, 0), (E1, 0), (E1, 0.1), (E0, 0.1)])
+            quad([P(u0, y0), P(u1, y0), P(u1, y0, dd), P(u0, y0, dd)], [(E0, 0), (E0, 0.1), (E1, 0.1), (E1, 0)])
+        else:          # across = y, along = u
+            quad([P(u0, y0, dd), P(u1, y0, dd), P(u1, y1, dd), P(u0, y1, dd)], [(F1, 0), (F1, L), (F0, L), (F0, 0)])
+            quad([P(u0, y1), P(u0, y1, dd), P(u1, y1, dd), P(u1, y1)], [(S0, 0), (S1, 0), (S1, L), (S0, L)])
+            quad([P(u0, y0), P(u1, y0), P(u1, y0, dd), P(u0, y0, dd)], [(S0, 0), (S0, L), (S1, L), (S1, 0)])
+            quad([P(u0, y0), P(u0, y0, dd), P(u0, y1, dd), P(u0, y1)], [(E0, 0), (E1, 0), (E1, 0.1), (E0, 0.1)])
+            quad([P(u1, y0), P(u1, y1), P(u1, y1, dd), P(u1, y0, dd)], [(E0, 0), (E0, 0.1), (E1, 0.1), (E1, 0)])
+    if not pts:
+        return None
+    return np.array(pts, np.float32), np.array(uvs, np.float32), np.array(tris, np.uint32)
 
 
 def wall_frame(name):
@@ -100,6 +159,7 @@ class Builder:
         self.g = gl.GLTF2(asset=gl.Asset(generator='scripts/lounge-v2/room/glb.py (#77)'), scene=0,
                           scenes=[gl.Scene(nodes=[])], extensionsUsed=['KHR_materials_unlit'])
         self.blob = bytearray()
+        self.mats = {}
 
     def view(self, data, target=None):
         while len(self.blob) % 4:
@@ -119,25 +179,32 @@ class Builder:
         return len(self.g.accessors) - 1
 
     def material(self, name):
+        if name in self.mats:
+            return self.mats[name]
         im = Image.open(os.path.join(TEX, f'{name}.png')).convert('RGB')
         buf = io.BytesIO()
         im.save(buf, 'JPEG', quality=JPEG_QUALITY, subsampling=0)
         self.g.images.append(gl.Image(bufferView=self.view(buf.getvalue()), mimeType='image/jpeg', name=name))
-        self.g.samplers.append(gl.Sampler(magFilter=gl.LINEAR, minFilter=gl.LINEAR_MIPMAP_LINEAR, wrapS=gl.CLAMP_TO_EDGE, wrapT=gl.CLAMP_TO_EDGE))
+        wrap = gl.REPEAT if name == 'frame' else gl.CLAMP_TO_EDGE
+        self.g.samplers.append(gl.Sampler(magFilter=gl.LINEAR, minFilter=gl.LINEAR_MIPMAP_LINEAR, wrapS=gl.CLAMP_TO_EDGE, wrapT=wrap))
         self.g.textures.append(gl.Texture(source=len(self.g.images) - 1, sampler=len(self.g.samplers) - 1))
         self.g.materials.append(gl.Material(
             name=name, doubleSided=False,
             pbrMetallicRoughness=gl.PbrMetallicRoughness(baseColorTexture=gl.TextureInfo(index=len(self.g.textures) - 1),
                                                          metallicFactor=0, roughnessFactor=1),
             extensions={'KHR_materials_unlit': {}}))
-        return len(self.g.materials) - 1
+        self.mats[name] = len(self.g.materials) - 1
+        return self.mats[name]
 
-    def node(self, name, pts, uv, tris):
-        prim = gl.Primitive(attributes=gl.Attributes(POSITION=self.accessor(pts, 'VEC3', gl.ARRAY_BUFFER),
-                                                     TEXCOORD_0=self.accessor(uv, 'VEC2', gl.ARRAY_BUFFER)),
-                            indices=self.accessor(tris.reshape(-1), 'SCALAR', gl.ELEMENT_ARRAY_BUFFER),
-                            material=self.material(name.split('-')[-1]))
-        self.g.meshes.append(gl.Mesh(name=name, primitives=[prim]))
+    def node(self, name, *prims):
+        """A node of one mesh: each prim is (points, uvs, triangles, material name)."""
+        out = []
+        for pts, uv, tris, mat in prims:
+            out.append(gl.Primitive(attributes=gl.Attributes(POSITION=self.accessor(pts, 'VEC3', gl.ARRAY_BUFFER),
+                                                             TEXCOORD_0=self.accessor(uv, 'VEC2', gl.ARRAY_BUFFER)),
+                                    indices=self.accessor(tris.reshape(-1), 'SCALAR', gl.ELEMENT_ARRAY_BUFFER),
+                                    material=self.material(mat)))
+        self.g.meshes.append(gl.Mesh(name=name, primitives=out))
         self.g.nodes.append(gl.Node(name=name, mesh=len(self.g.meshes) - 1))
         self.g.scenes[0].nodes.append(len(self.g.nodes) - 1)
 
@@ -148,11 +215,13 @@ class Builder:
 
 
 def main():
+    frame_image(os.path.join(TEX, 'frame.png'))
     b = Builder()
     for name in ['floor', 'ceiling']:
-        b.node(name, *flat(name))
+        b.node(name, (*flat(name), name))
     for name in WALLS:
-        b.node(f'wall-{name}', *wall_geometry(name))
+        frames = frame_geometry(name)
+        b.node(f'wall-{name}', (*wall_geometry(name), name), *([(*frames, 'frame')] if frames else []))
     path = os.path.join(V2, 'empty-room.glb')
     b.save(path)
     print('wrote', path, f'{os.path.getsize(path) / 1e6:.1f} MB')

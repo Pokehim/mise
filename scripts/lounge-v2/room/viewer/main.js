@@ -136,8 +136,9 @@ window.__measureFps = (ms = 5000) => new Promise((resolve) => {
   try {
     const { scan, noSplat } = SOURCES[src];
     const manifest = await (await fetch(`${REPO}/data/scans/${scan}/manifest.json`)).json();
-    await loadMesh({ mesh: `${scan}/${manifest.mesh}` }, manifest);
-    if (manifest.splat && !noSplat) await loadSplat({ splat: `${scan}/${manifest.splat}` }, manifest);
+    const only = params.get('only');   // mesh or splat, for looking at one layer
+    if (only !== 'splat') await loadMesh({ mesh: `${scan}/${manifest.mesh}` }, manifest);
+    if (manifest.splat && !noSplat && only !== 'mesh') await loadSplat({ splat: `${scan}/${manifest.splat}` }, manifest);
     state.loadMs = Math.round(performance.now() - t0);
     // Let Spark sort and settle: wait until no sort is pending for 30 frames in a row.
     let calm = 0;

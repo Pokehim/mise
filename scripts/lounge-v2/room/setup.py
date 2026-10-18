@@ -17,14 +17,14 @@ with open(os.path.join(V1, 'setup.json')) as f:
 
 OPENINGS = [
     # North wall (wl_1, from x = -1.568): the one window, its frame as KIRI's scene shows it sharply (the Main
-    # Capture's is fogged by glare; KIRI's Layout says offset 0.644, width 1.532).
-    {'id': 'op_1', 'kind': 'window', 'wallId': 'wl_1', 'offset': 0.555, 'width': 1.615, 'bottom': 0.89, 'height': 1.47},
+    # Capture's is fogged by glare; KIRI's Layout says offset 0.644, width 1.532). As common.GLAZING frames it.
+    {'id': 'op_1', 'kind': 'window', 'wallId': 'wl_1', 'offset': 0.555, 'width': 1.65, 'bottom': 0.89, 'height': 1.47},
     # West wall (wl_4, from z = 3.673): the main door, a glass storefront with two mullions.
     {'id': 'op_2', 'kind': 'door', 'wallId': 'wl_4', 'offset': 0.03, 'width': 1.79, 'bottom': 0, 'height': 2.25, 'swing': 'none'},
     # South wall (wl_3, from x = 1.55): the wood door at the East end, then the glass wall to the West corner.
     # KIRI reads both as one 3.1 m door.
-    {'id': 'op_3', 'kind': 'door', 'wallId': 'wl_3', 'offset': 0.02, 'width': 0.94, 'bottom': 0, 'height': 2.27, 'swing': 'none'},
-    {'id': 'op_4', 'kind': 'window', 'wallId': 'wl_3', 'offset': 1.0, 'width': 2.14, 'bottom': 0, 'height': 2.26},
+    {'id': 'op_3', 'kind': 'door', 'wallId': 'wl_3', 'offset': 0.03, 'width': 0.92, 'bottom': 0, 'height': 2.28, 'swing': 'none'},
+    {'id': 'op_4', 'kind': 'window', 'wallId': 'wl_3', 'offset': 1.01, 'width': 2.1307, 'bottom': 0, 'height': 2.27},
 ]
 
 

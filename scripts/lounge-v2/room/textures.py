@@ -9,7 +9,10 @@ Input: ortho.py's views of each source (scripts/.cache/lounge-v2/ortho/<source>/
    fill from around the hole; behind the whiteboard it's the West wall's light at the same z (the ceiling lights
    are symmetric), corrected smoothly to the light around the hole. The floor under the tables is the clean half
    mirrored about x = 0 (mirror_floor).
-3. Glass is painted as an opaque frosted pane, with its frame bars.
+3. The East wall is repainted whole as one clean coat (repaint_east), and the South door's leaf is rebuilt smooth
+   from its clean middle (clean_door).
+4. Glass is painted as an opaque frosted pane with a black gasket around it (common.GLAZING; glb.py builds the
+   frames).
 
 Output: scripts/.cache/lounge-v2/tex/<view>.png, and debug masks.
 """
@@ -20,7 +23,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from common import CACHE, H, X0, X1, Z0, Z1
+from common import CACHE, GLAZING, H, X0, X1, Z0, Z1
 
 P = 0.0025  # m per texel
 ORTHO = os.path.join(CACHE, 'ortho')
@@ -38,7 +41,9 @@ TABLE_Z = [(-2.0, -1.14), (-0.55, 0.26), (1.37, 2.35)]   # layout.json's tables 
 MASKS = {
     # The whiteboard, its tray, and the tray's shadow (to 0.61 m, 0.53 m at the North end); the corner strip.
     'east': [(0.0, 6.15, 0.59, 2.40), (0.0, 1.3, 0.53, 0.62), (0.0, 0.10, 0.072, 2.431)],
-    'west': [(Z1 - z1 - 0.28, Z1 - z0 + 0.28, 0.0, 0.97) for z0, z1 in TABLE_Z],  # table ends and chair backs
+    # Table ends and chair backs, and their shadows; the main door frame's old edge and the wall above it.
+    'west': [(Z1 - z1 - 0.40, Z1 - z0 + 0.40, 0.0, 0.97) for z0, z1 in TABLE_Z]
+            + [(1.82, 1.97, 0.072, 2.431), (0.0, 1.97, 2.25, 2.431)],
     'north': [], 'south': [], 'ceiling': [],
 }
 # The floor under and around the tables and chairs, shadows included: (x0, x1, z0, z1).
@@ -47,26 +52,15 @@ FLOOR_MASK = [(X0, 0.32, -3.15, 2.85)]   # to -3.15: a dark stick lies in the No
 BASEBOARD = 0.072  # m: the dark rubber base along the walls
 # Plain paint with nothing on it, per wall: (u0, u1, y0, y1). A wall's fills above the baseboard tile its detail.
 EXEMPLAR = {'east': (2.3, 5.5, 0.22, 0.52), 'west': (2.5, 5.5, 1.2, 2.0)}
-FRAME_COLOR = np.array([128, 129, 127], np.float32) / 255   # anodized aluminum, as the Captures show it
 CORNERS = ('north', 'east', 'west')
 # Where a wall's bottom is an opening (doors and the glass wall), along u: no baseboard there.
 NO_BASE = {'south': [(0, 3.118)], 'west': [(0, 1.82)]}
 CLEAN_TO = {'north': 0.12, 'east': 0.20, 'west': 0.16, 'south': 0.12}   # m: how high the floor smears up
 GLASS_COLOR = np.array([214, 217, 218], np.float32) / 255
 # Opening glass and its frame bars, per wall: glass (u0, u1, y0, y1), then bars (u0, u1, y0, y1).
-GLASS = {
-    # KIRI's frame: 0.555-2.17 m along the wall, 0.89-2.36 m high, on a sill.
-    'north': {'glass': [(0.61, 2.15, 0.93, 2.30)],
-              'bars': [(0.555, 0.61, 0.89, 2.36), (2.15, 2.17, 0.89, 2.36), (0.555, 2.17, 2.30, 2.36), (0.555, 2.17, 0.89, 0.93),
-                       (1.335, 1.39, 0.93, 2.30)]},                     # and its center mullion
-    'south': {'glass': [(1.01, 3.118, 0.0, 2.21)],
-              'bars': [(0.95, 1.01, 0.0, 2.27), (1.60, 1.69, 0.0, 2.21), (2.30, 2.39, 0.0, 2.21),
-                       (3.03, 3.118, 0.0, 2.21), (0.95, 3.118, 2.20, 2.27), (1.01, 3.118, 0.0, 0.05)]},
-    'west': {'glass': [(0.03, 1.82, 0.0, 2.17)],
-             'bars': [(0.0, 0.09, 0.0, 2.25), (0.58, 0.69, 0.0, 2.17), (1.20, 1.30, 0.0, 2.17),
-                      (1.76, 1.82, 0.0, 2.25), (0.0, 1.82, 2.15, 2.25), (0.03, 1.82, 0.0, 0.05)]},
-    'east': {'glass': [], 'bars': []},
-}
+# Panes, and the frames around them (painted dark here; glb.py builds them as bronze boxes), from common.GLAZING.
+GLASS = {k: {'glass': v['panes'], 'bars': [f[:4] for f in v['frames']]} for k, v in GLAZING.items()}
+GASKET_W = 0.006   # m: the black rubber where each pane meets its frame
 
 
 def load(src, view):
@@ -259,7 +253,9 @@ def build(view, guide_fn=None):
         mask |= rect_mask(img.shape, [(0, 0.06, BASEBOARD, H), (L - 0.06, L, BASEBOARD, H)], view)
     glass = rect_mask(img.shape, GLASS.get(view, {}).get('glass', []), view)
     hole = (~known | mask) & ~glass
-    good = known & ~mask & ~glass
+    # Frames are painted over later; what the Captures show there (bright edges, the hallway) mustn't steer fills.
+    frames = cv2.dilate(rect_mask(img.shape, GLASS.get(view, {}).get('bars', []), view).astype(np.uint8), np.ones((9, 9))) > 0
+    good = known & ~mask & ~glass & ~frames
     # The local mean, as light and shading: 4 cm on walls; 10 cm on the floor, so its planks' tone is detail.
     M, _ = nc(img, good, 40 if view == 'floor' else 16)
     D = img / np.maximum(M, 1e-3)                 # fine detail
@@ -298,13 +294,118 @@ def build(view, guide_fn=None):
         out = np.where(near[..., None], wk * img + (1 - wk) * np.clip(tiled * Mfill, 0, 1), out)
     if view != 'ceiling':
         out = clean_bottom(out, view)
+    if view == 'south':
+        out = clean_door(out)
+    if view == 'east':
+        out = repaint_east(out, out)   # after clean_bottom, so its light has a clean bottom
     # 3. Glass and frame bars.
     g = GLASS.get(view, {})
     if g.get('glass'):
         out = paint_glass(out, glass, view)
         bars = rect_mask(out.shape, g['bars'], view)
-        out[bars] = np.clip(FRAME_COLOR * (1 + 0.02 * np.random.default_rng(1).standard_normal((bars.sum(), 1))), 0, 1)
+        out[bars] = 0.11   # behind glb.py's frame boxes
     return save(view, out, glass, hole)
+
+
+# The East wall's fixtures, kept as the Main Capture shows them: three outlet plates, the sign, and a sensor.
+EAST_FIXTURES = [(1.73, 1.825, 0.39, 0.53), (1.995, 2.135, 0.385, 0.52), (5.72, 5.825, 0.40, 0.535),
+                 (6.14, 6.325, 1.44, 1.57), (6.265, 6.35, 2.04, 2.18)]
+
+
+def repaint_east(img, out):
+    """The whole East wall as one clean coat of paint (behind the whiteboard it was a fill, elsewhere scuffed):
+    its light is the wall's own falloff from floor to ceiling (its clean strip by the South end) times its falloff
+    along the wall (below the whiteboard), and on top, the fine texture of the paint (EXEMPLAR), tiled. The
+    fixtures stay as they were."""
+    nr, nc = img.shape[:2]
+    rows = H - (np.arange(nr) + 0.5) * P
+    cols = (np.arange(nc) + 0.5) * P
+    fix = rect_mask(img.shape, EAST_FIXTURES, 'east')
+    lum = img.mean(axis=2)
+    # Floor to ceiling: the strip at u 6.40-7.05, without the sign and the sensor.
+    strip = np.zeros(img.shape[:2], bool)
+    strip[:, int(6.40 / P):int(7.05 / P)] = True
+    strip &= ~cv2.dilate(fix.astype(np.uint8), np.ones((15, 15))).astype(bool)
+    k = strip.astype(np.float32)[..., None]
+    b = (img * k).sum(axis=1) / np.maximum(k.sum(axis=1), 1)
+    b = cv2.GaussianBlur(b[:, None, :], (0, 0), sigmaX=1e-3, sigmaY=32)[:, 0, :]
+    # Along the wall: the band 0.25-0.55 m up, without the outlets, relative to the strip.
+    band = np.zeros(img.shape[:2], bool)
+    band[int((H - 0.55) / P):int((H - 0.25) / P)] = True
+    band &= ~cv2.dilate(fix.astype(np.uint8), np.ones((15, 15))).astype(bool)
+    kb = band.astype(np.float32)
+    a = (lum * kb).sum(axis=0) / np.maximum(kb.sum(axis=0), 1)
+    a = cv2.GaussianBlur(a[None, :], (0, 0), sigmaX=160, sigmaY=1e-3)[0]
+    a = a / a[int(6.40 / P):int(7.05 / P)].mean()
+    light = b[:, None, :] * a[None, :, None]
+    # The paint's fine texture: the exemplar's detail finer than 1.5 cm, tiled (mirrored, so seamless).
+    u0, u1, y0, y1 = EXEMPLAR['east']
+    ex = img[int((H - y1) / P):int((H - y0) / P), int(u0 / P):int(u1 / P)]
+    detail = ex / np.maximum(cv2.GaussianBlur(ex, (0, 0), 6), 1e-3)
+    detail = 1 + 0.7 * (detail - 1)
+    paint = np.clip(light * detail[pingpong(np.arange(nr), len(detail))][:, pingpong(np.arange(nc), detail.shape[1])], 0, 1)
+    # Within each fixture's box, only what differs from the paint (the fixture itself), so no old wall shows.
+    differs = np.abs(out.mean(axis=2) - paint.mean(axis=2)) > 0.12 * paint.mean(axis=2)
+    own = cv2.dilate((fix & differs).astype(np.uint8), np.ones((5, 5))).astype(bool) & fix
+    keep = cv2.GaussianBlur(own.astype(np.float32), (0, 0), 1.2)[..., None]
+    above = (rows > BASEBOARD)[:, None, None]
+    return np.where(above, keep * out + (1 - keep) * paint, out)
+
+
+# The South door's leaf (u0, u1, y0, y1); its clean, sharp middle (no door closer, hinge-side smear, glare, or
+# kick marks); and what stays as the Captures saw it (the handle).
+DOOR = (0.03, 0.95, 0.0, 2.28)
+DOOR_CLEAN = (0.15, 0.89, 0.32, 1.90)
+DOOR_KEEP = [(0.77, 0.94, 0.85, 1.06)]
+
+
+def clean_door(out):
+    """The door leaf, smooth: the light is a smooth fit over the leaf's clean middle, and the wood's grain
+    (finer than 3 cm) is mirrored out from there to the leaf's edges. The handle is kept."""
+    rc = lambda u0, u1, y0, y1: (int((H - y1) / P), min(int(np.ceil((H - y0) / P)), out.shape[0]), int(u0 / P), int(np.ceil(u1 / P)))
+    r0, r1, c0, c1 = rc(*DOOR)
+    q0, q1, d0, d1 = rc(*DOOR_CLEAN)
+    I = out.copy()
+    C = I[q0:q1, d0:d1]
+    detail = C / np.maximum(cv2.GaussianBlur(C, (0, 0), 12), 1e-3)
+    # The light: a quadratic in (u, v) fitted to the clean part's log color, held constant past its edges.
+    vv, uu = np.mgrid[q0:q1, d0:d1]
+    feats = lambda u, v: np.stack([np.ones_like(u), u, v, u * u, u * v, v * v], -1).reshape(-1, 6)
+    norm = lambda u, v: ((u - d0) / (d1 - d0), (v - q0) / (q1 - q0))
+    A = feats(*norm(uu, vv))[::7]
+    coef = np.linalg.lstsq(A, np.log(np.maximum(C.reshape(-1, 3), 1e-3))[::7], rcond=None)[0]
+    lv, lu = np.mgrid[r0:r1, c0:c1]
+    nu, nv = norm(np.clip(lu, d0, d1 - 1), np.clip(lv, q0, q1 - 1))
+    light = np.exp(feats(nu, nv) @ coef).reshape(r1 - r0, c1 - c0, 3)
+    # Past the clean part's edges, the grain is a copy from further in (a mirror would make symmetric figures),
+    # shifted so it skips the handle: 0.6 m down at the top, 0.5 m up at the bottom, 0.3 m in on the hinge side.
+    # Right at the edge it blends in from a mirror over 2.5 cm, so there's no seam.
+    def index(lo, hi, a, b, before, after):
+        i = np.arange(a, b) - lo
+        n = hi - lo
+        mirror = pingpong(i, n)
+        shift = np.where(i < 0, i + before, np.where(i >= n, i - after, i))
+        dist = np.maximum(-i, i - (n - 1)).clip(0)
+        return mirror, np.clip(shift, 0, n - 1), np.clip(dist / 10, 0, 1)
+    rm, rs, rw = index(q0, q1, r0, r1, int(0.6 / P), int(0.5 / P))
+    cm, cs, cw = index(d0, d1, c0, c1, int(0.3 / P), int(0.3 / P))
+    w = np.maximum(rw[:, None], cw[None, :])[..., None]
+    grain = (1 - w) * detail[rm][:, cm] + w * detail[rs][:, cs]
+    leaf = np.clip(light * grain, 0, 1)
+    # The handle, feathered in over 1 cm.
+    keep = np.zeros(leaf.shape[:2], np.float32)
+    for u0, u1, y0, y1 in DOOR_KEEP:
+        k0, k1, e0, e1 = rc(u0, u1, y0, y1)
+        keep[k0 - r0:k1 - r0, e0 - c0:e1 - c0] = 1
+    keep = cv2.GaussianBlur(keep, (0, 0), 2)[..., None]
+    leaf = keep * I[r0:r1, c0:c1] + (1 - keep) * leaf
+    # The gap around the leaf reads as a thin dark line.
+    leaf[:, :2] *= 0.55
+    leaf[:, -2:] *= 0.55
+    leaf[:2] *= 0.55
+    out = out.copy()
+    out[r0:r1, c0:c1] = leaf
+    return out
 
 
 def save(view, out, glass, hole):
@@ -342,10 +443,10 @@ def clean_bottom(out, view):
 
 
 # The floor's fine grain comes from a chair Detail Capture (spec §3: "the closest, sharpest sample"): ortho.py's
-# floor view of POLYCAM_CHAIR_1 at 1 mm per pixel (scripts/.cache/lounge-v2/ortho1mm/CHAIR_1), in this clean, sharp
-# patch away from the chair: x0, x1, z0, z1.
+# floor view of POLYCAM_CHAIR_1 at 1 mm per pixel (scripts/.cache/lounge-v2/ortho1mm/CHAIR_1), at true scale
+# (align.py SCALE), in this clean, sharp patch away from the chair and its shadow: x0, x1, z0, z1.
 FINE_SRC = os.path.join(CACHE, 'ortho1mm', 'CHAIR_1', 'floor.png')
-FINE_RECT = (-1.50, -0.62, 0.87, 1.31)
+FINE_RECT = (-1.10, 1.30, -3.45, -3.06)   # no holes in the capture here
 FINE_P = 0.0015   # the floor image's m per texel
 
 
@@ -435,7 +536,14 @@ def paint_glass(out, glass, view):
     rng = np.random.default_rng(2)
     grain = cv2.GaussianBlur(rng.standard_normal(out.shape[:2]).astype(np.float32), (0, 0), 1.2)[..., None] * 0.012
     pane = np.clip(GLASS_COLOR * shade * (1 + grain), 0, 1)
-    return np.where(glass[..., None], pane, out)
+    out = np.where(glass[..., None], pane, out)
+    g = int(round(GASKET_W / P))
+    for u0, u1, y0, y1 in GLASS[view]['glass']:
+        c0, c1, r0, r1 = int(u0 / P), int(np.ceil(u1 / P)), int((H - y1) / P), int(np.ceil((H - y0) / P))
+        for sl in [(slice(r0, r0 + g), slice(c0, c1)), (slice(r1 - g, r1), slice(c0, c1)),
+                   (slice(r0, r1), slice(c0, c0 + g)), (slice(r0, r1), slice(c1 - g, c1))]:
+            out[sl] = 0.11
+    return out
 
 
 def tile(D, rect, shape):

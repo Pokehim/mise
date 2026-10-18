@@ -21,7 +21,7 @@ const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, d
 for (const src of srcs) for (const shot of shots) {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log(`[pageerror ${src}/${shot}]`, String(e).slice(0, 300)));
-  await page.goto(`http://localhost:5198/?src=${src}&shot=${shot}`);
+  await page.goto(`http://localhost:5198/?src=${src}&shot=${shot}${opt('--extra', '') ? '&' + opt('--extra', '') : ''}`);
   await page.waitForFunction(() => window.__state?.ready || window.__state?.error, null, { timeout: 300000, polling: 250 });
   const st = await page.evaluate(() => window.__state);
   if (st.error) console.log('ERROR', src, shot, st.error);

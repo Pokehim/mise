@@ -377,8 +377,15 @@ describe('resolveAnchor', () => {
     });
 
     it('returns an error when the item is bigger than the top', () => {
+      const wideShelf = item('shelf-wide', 'shelf', 'Wide Shelf', [1.5, 0.8, 0.4]);
+      expect(resolve(wideShelf, { kind: 'on_top_of', target_id: 'og_desk' })).toEqual({
+        error: "Wide Shelf doesn't fit on top of your desk", violations: [],
+      });
+    });
+
+    it('returns an error for a big item, which stands on the floor', () => {
       expect(resolve(sofa, { kind: 'on_top_of', target_id: 'og_desk' })).toEqual({
-        error: "Gray Sofa doesn't fit on top of your desk", violations: [],
+        error: 'Gray Sofa stands on the floor, never on top of your desk: place it against_wall, beside or open_floor', violations: [],
       });
     });
 

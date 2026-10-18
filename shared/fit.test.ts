@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { checkFit } from './fit';
+import { checkFit, restsOnFloorOnly } from './fit';
 import { replay } from './replay';
 import { catalog, edit, item, lShaped, onFloor, place, setup, withLampAndMirror } from './test-room';
-import type { Edit, Opening, Placement, Vec2 } from './types';
+import type { Catalog, CollisionBox, Edit, Opening, Placement, RoomSetup, Vec2, Vec3 } from './types';
 
 // The room's floor is x −2 to 2, z −1.5 to 1.5. The bed covers x −2 to −1.01, z −1.5 to 0.53;
 // the desk x 1.4 to 2, z −1.135 to −0.065. The chair is 0.6 × 0.6 m, the lamp 0.2 × 0.2 m.
@@ -72,6 +72,84 @@ describe('checkFit', () => {
         { rule: 'overlap', subjectId: 'pc_lamp2', otherId: 'pc_lamp', message: 'Overlaps Brass Desk Lamp' },
       ]);
       expect(fitAfter(lamps(-0.8, -0.4))).toEqual([]);
+    });
+
+    describe('by collision boxes, so a chair tucks under a desk', () => {
+      /** A box from `min` to `max`, in an item's own frame. */
+      const box = (min: Vec3, max: Vec3): CollisionBox => ({ min, max });
+      // A desk 1.07 × 0.76 × 0.6 m: a 4 cm top on two 4 cm side panels, with the knee space between them open.
+      const desk: CollisionBox[] = [
+        box([-0.535, 0.72, -0.3], [0.535, 0.76, 0.3]),
+        box([-0.535, 0, -0.3], [-0.495, 0.72, 0.3]),
+        box([0.495, 0, -0.3], [0.535, 0.72, 0.3]),
+      ];
+      // A chair 0.5 × 0.9 × 0.55 m: its seat 0.5 m up over its base, and its back, 7.5 cm deep, up to 0.9 m.
+      const chair: CollisionBox[] = [box([-0.25, 0, -0.2], [0.25, 0.5, 0.275]), box([-0.25, 0, -0.275], [0.25, 0.9, -0.2])];
+      const withBoxes: Catalog = {
+        ...catalog,
+        items: [
+          ...catalog.items,
+          item('chair-tuck', 'chair', 'Tucking Chair', [0.5, 0.9, 0.55], { collision: chair }),
+          item('desk-open', 'desk', 'Open Desk', [1.07, 0.76, 0.6], { collision: desk }),
+          item('bin-low', 'storage', 'Low Bin', [0.4, 0.2, 0.5]),
+          // Slats 0.25 m up, on four 5 cm legs at its corners.
+          item('bed-frame', 'bed', 'Bed Frame', [1, 0.45, 2], {
+            collision: [box([-0.5, 0.25, -1], [0.5, 0.45, 1]), ...[[-0.475, -0.975], [0.475, -0.975], [-0.475, 0.975], [0.475, 0.975]]
+              .map(([x, z]) => box([x - 0.025, 0, z - 0.025], [x + 0.025, 0.25, z + 0.025]))],
+          }),
+        ],
+      };
+      /** The room's desk, with the open desk's boxes: x 1.4–2, z −1.135 to −0.065, its front facing West. */
+      const room: RoomSetup = { ...setup, originals: setup.originals.map((original) => (original.id === 'og_desk' ? { ...original, collision: desk } : original)) };
+      const fitIn = (edits: Edit[], subjectIds?: string[]) => checkFit(room, withBoxes, replay(room, withBoxes, edits), subjectIds);
+      /** The chair at x, facing the desk (East): its back spans x − 0.275 to x − 0.2. */
+      const facingDesk = (x: number) => place('pc_chair', 'chair-tuck', onFloor(x, -0.6, Math.PI / 2));
+
+      it('lets a chair stand with its seat under the desk top and its back at the edge', () => {
+        // The back's front face is at x − 0.2: at the desk's front edge, x = 1.4, and 1 cm past it.
+        expect(fitIn([facingDesk(1.6)])).toEqual([]);
+        expect(fitIn([facingDesk(1.608)])).toEqual([]);
+      });
+
+      it('reports the chair pushed further, so its back goes through the top', () => {
+        expect(fitIn([facingDesk(1.65)], ['pc_chair'])).toEqual([
+          { rule: 'overlap', subjectId: 'pc_chair', otherId: 'og_desk', message: 'Overlaps your desk' },
+        ]);
+      });
+
+      it('still takes an item with no collision boxes as one solid box', () => {
+        expect(fitIn([place('pc_chair', 'chair-ergo', onFloor(1.5, -0.6))], ['pc_chair'])).toMatchObject([{ rule: 'overlap' }]);
+      });
+
+      it("reports a chair's seat against a side panel", () => {
+        // Side on to the desk, its seat reaches z −0.035: through the panel at z −0.105 to −0.065.
+        expect(fitIn([place('pc_chair', 'chair-tuck', onFloor(1.7, -0.31))], ['pc_chair'])).toMatchObject([{ rule: 'overlap', otherId: 'og_desk' }]);
+      });
+
+      it('turns the boxes with their items, at any angle', () => {
+        // A desk in the open, turned 30°, and a chair `out` m in front of its center, facing it: the
+        // chair's back spans out + 0.2 to out + 0.275, and the desk's front edge is 0.3 m out.
+        const turn = Math.PI / 6;
+        const at = (out: number) => onFloor(-0.3 + out * Math.sin(turn), out * Math.cos(turn), turn);
+        const desk = place('pc_desk', 'desk-open', at(0));
+        const chairAt = (out: number) => place('pc_chair', 'chair-tuck', { ...at(out), rotationY: turn + Math.PI });
+        expect(fitIn([desk, chairAt(0.1)])).toEqual([]);
+        expect(fitIn([desk, chairAt(0.05)], ['pc_chair'])).toMatchObject([{ rule: 'overlap', otherId: 'pc_desk' }]);
+      });
+
+      it('lets a low bin go under a bed frame, but not a tall one', () => {
+        const frame = place('pc_bed', 'bed-frame', onFloor(0, 0));
+        expect(fitIn([frame, place('pc_bin', 'bin-low', onFloor(0, 0.3))])).toEqual([]);
+        expect(fitIn([frame, place('pc_chair', 'chair-tuck', onFloor(0, 0.3))], ['pc_chair'])).toMatchObject([{ rule: 'overlap', otherId: 'pc_bed' }]);
+        // Against a leg.
+        expect(fitIn([frame, place('pc_bin', 'bin-low', onFloor(0.45, 0.9))], ['pc_bin'])).toMatchObject([{ rule: 'overlap', otherId: 'pc_bed' }]);
+      });
+
+      it('keeps the other rules on the outer footprint: a desk through the West wall is outside the room', () => {
+        expect(fitIn([place('pc_desk', 'desk-open', onFloor(-1.6, 1.2))], ['pc_desk'])).toEqual([
+          { rule: 'outside-floor', subjectId: 'pc_desk', message: 'Outside the room' },
+        ]);
+      });
     });
 
     describe('wall items, such as a lamp hung as a sconce', () => {
@@ -336,5 +414,14 @@ describe('checkFit', () => {
 
       expect(times.toSorted((a, b) => a - b)[10]).toBeLessThan(5);
     });
+  });
+});
+
+describe('restsOnFloorOnly', () => {
+  it('keeps big items on the floor, and lets small ones rest on tops', () => {
+    const floorOnly = ['bed', 'sofa', 'chair', 'desk', 'table', 'dresser', 'wardrobe', 'nightstand', 'storage'] as const;
+    const onTops = ['shelf', 'lamp', 'decor', 'plant', 'mirror'] as const;
+    expect(floorOnly.filter((category) => !restsOnFloorOnly(category))).toEqual([]);
+    expect(onTops.filter(restsOnFloorOnly)).toEqual([]);
   });
 });

@@ -4,7 +4,7 @@ import type { ScanManifest } from '@shared/types';
 import type { ImportStep } from '../../../server/app';
 import { createDesign, importScanFiles, saveDesign, saveManifest } from '../api';
 import { type LibraryScan, moveInLayoutId, planImageBase, searchLibrary } from '../plan/library';
-import { ArrowRight, Close } from '../ui/icons';
+import { ArrowRight, Close, Import } from '../ui/icons';
 import { addScanFiles, missingFile, nameFromFile, type ScanFiles } from './importFiles';
 import { ScanPlan } from './ScanPlan';
 
@@ -29,7 +29,7 @@ export function ImportDialog({ scans }: { scans: ScanManifest[] }) {
 
   return (
     <>
-      <button type="button" onClick={open}>Import</button>
+      <button type="button" onClick={open}><Import />Import</button>
       <dialog
         ref={dialog}
         className="import-dialog"

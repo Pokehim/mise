@@ -77,7 +77,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
       <main className="app-status">
         <h1>This Design didn't open</h1>
         <p>Could not open Design {designId}: {error}</p>
-        <Link href="/">Back to your Scans</Link>
+        <Link href="/scans">Back to your Scans</Link>
       </main>
     );
   }
@@ -103,7 +103,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
       <RefineBox />
       <Inspector />
       <HistoryPanel />
-      <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
+      <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com, and Google Scanned Objects (CC BY 4.0), Google LLC. Materials: Poly Haven and ambientCG (CC0).</footer>
     </div>
   );
 }

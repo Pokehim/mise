@@ -195,7 +195,7 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
   return (
     <div className="fp-setup">
       <header className="fp-header">
-        <Link href="/">← Scans</Link>
+        <Link href="/scans">← Scans</Link>
         <h1>Room Setup <span>· {manifest.name}</span></h1>
         <span className="fp-status" role="status">
           {status.busy === 'reading' ? 'Reading the floor plan… usually under a minute' : status.busy === 'building' ? 'Building the room…' : ''}

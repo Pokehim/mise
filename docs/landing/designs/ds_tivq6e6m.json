@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "id": "ds_tivq6e6m",
+  "scanId": "lounge",
+  "name": "Indigo Night Snow",
+  "createdAt": "2026-10-18T12:17:15.324Z",
+  "updatedAt": "2026-10-18T12:17:15.324Z",
+  "origin": "claude",
+  "brief": {
+    "text": "a calm guest bedroom in soft neutrals, Japandi, under $500",
+    "budgetUsd": 500
+  },
+  "rationale": "A calm Japandi guest bedroom in soft neutrals under $500, made bolder with a deep indigo wall and a Hiroshige–Hokusai trio over the bed.",
+  "palette": {
+    "wall": "#f1ece3",
+    "accents": [
+      "#2f3e55",
+      "#e8e0d2",
+      "#b5653a"
+    ],
+    "materials": [
+      "oak",
+      "linen"
+    ]
+  },
+  "edits": [
+    {
+      "type": "remove",
+      "targetId": "og_table_1",
+      "id": "ed_b5quv4jx",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_2",
+      "id": "ed_ke5k3ux1",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_table_3",
+      "id": "ed_613fxdpy",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_1",
+      "id": "ed_p1b8s4az",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_2",
+      "id": "ed_9kapblsl",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_3",
+      "id": "ed_0dqkmvta",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_4",
+      "id": "ed_epbbw1d0",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_5",
+      "id": "ed_1zuew29w",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_6",
+      "id": "ed_fdzep67v",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_7",
+      "id": "ed_n0kh9waj",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_8",
+      "id": "ed_q83t9bxz",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_9",
+      "id": "ed_mttxgym0",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_10",
+      "id": "ed_0ys0e24v",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_11",
+      "id": "ed_tjydf39p",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_chair_12",
+      "id": "ed_q25qf8c5",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "og_whiteboard",
+      "id": "ed_nmnqw4k2",
+      "at": "2026-10-18T12:17:06.634Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_37ef70zp",
+      "catalogId": "B073WQ8JLT",
+      "placement": {
+        "position": [
+          1.0303990000000003,
+          0,
+          -2.5292
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_ep4jozqm",
+      "at": "2026-10-18T12:17:06.872Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_2dhr1xwn",
+      "catalogId": "B07RR3K7M8",
+      "placement": {
+        "position": [
+          -0.6865500000000001,
+          0,
+          -3.3752
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_a7lqkliy",
+      "at": "2026-10-18T12:17:07.126Z",
+      "by": "claude"
+    },
+    {
+      "type": "finish",
+      "target": {
+        "kind": "wall",
+        "wallId": "wl_2"
+      },
+      "finish": {
+        "kind": "paint",
+        "color": "#2f3e55"
+      },
+      "id": "ed_bjh6mmdg",
+      "at": "2026-10-18T12:17:07.378Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_ov3lvy42",
+      "catalogId": "poster-kambara-night-snow",
+      "placement": {
+        "position": [
+          1.5634000000000001,
+          1.125,
+          -2.5292
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_glwa0fjq",
+      "at": "2026-10-18T12:17:07.672Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_yhzfz6cn",
+      "catalogId": "B07B4SMRBS",
+      "placement": {
+        "position": [
+          0.35539900000000024,
+          0,
+          -1.3691999999999998
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      },
+      "id": "ed_q9tt1d00",
+      "at": "2026-10-18T12:17:07.874Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_jiqqluuh",
+      "catalogId": "B0825CP3NS",
+      "placement": {
+        "position": [
+          -0.6865500000000001,
+          0.571,
+          -3.3752
+        ],
+        "rotationY": 0,
+        "mount": "surface"
+      },
+      "id": "ed_i5khe5cl",
+      "at": "2026-10-18T12:17:08.053Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_37ef70zp",
+      "partId": "bedding",
+      "color": "#e8e0d2",
+      "id": "ed_kq2xg451",
+      "at": "2026-10-18T12:17:08.331Z",
+      "by": "claude"
+    },
+    {
+      "type": "recolor",
+      "targetId": "pc_2dhr1xwn",
+      "partId": "fronts",
+      "color": "#d9cbb4",
+      "id": "ed_wk5l7qs4",
+      "at": "2026-10-18T12:17:08.635Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_yhzfz6cn",
+      "id": "ed_jzl4jbtb",
+      "at": "2026-10-18T12:17:12.669Z",
+      "by": "claude"
+    },
+    {
+      "type": "remove",
+      "targetId": "pc_ov3lvy42",
+      "id": "ed_93359v3f",
+      "at": "2026-10-18T12:17:12.669Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_qip5hs0t",
+      "catalogId": "poster-kambara-night-snow",
+      "placement": {
+        "position": [
+          1.5634000000000001,
+          1.125,
+          -2.5092
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_rux12sfd",
+      "at": "2026-10-18T12:17:12.982Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_lpbadfzb",
+      "catalogId": "poster-sudden-shower",
+      "placement": {
+        "position": [
+          1.5744,
+          1.145,
+          -1.9522
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_vei7srvu",
+      "at": "2026-10-18T12:17:12.982Z",
+      "by": "claude"
+    },
+    {
+      "type": "place",
+      "pieceId": "pc_4l1vg9f1",
+      "catalogId": "poster-red-fuji",
+      "placement": {
+        "position": [
+          1.5634000000000001,
+          1.125,
+          -3.0862
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "wall",
+        "wallId": "wl_2"
+      },
+      "id": "ed_htcj5ao7",
+      "at": "2026-10-18T12:17:12.982Z",
+      "by": "claude"
+    }
+  ]
+}

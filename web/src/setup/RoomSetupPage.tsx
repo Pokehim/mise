@@ -45,7 +45,7 @@ function CaptureSetup({ params }: { params: { scanId: string } }) {
   }, [unsaved]);
 
   if (status === 'loading') return <main className="rs-message">Loading the Scan…</main>;
-  if (status === 'error') return <main className="rs-message">Could not open Room Setup: {message} <Link href="/">← Scans</Link></main>;
+  if (status === 'error') return <main className="rs-message">Could not open Room Setup: {message} <Link href="/scans">← Scans</Link></main>;
   return <SetupLayout />;
 }
 
@@ -59,7 +59,7 @@ function SetupLayout() {
   return (
     <div className="rs">
       <header className="rs-header">
-        <Link href="/">← Scans</Link>
+        <Link href="/scans">← Scans</Link>
         <h1>Room Setup <span>· {name}</span></h1>
         <label className="rs-toggle">
           <input type="checkbox" checked={preview} onChange={(e) => useSetup.setState({ preview: e.target.checked })} />

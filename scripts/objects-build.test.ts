@@ -15,7 +15,8 @@ describe('OBJECTS', () => {
       if (spec.mount === 'wall') expect(min[2]).toBeCloseTo(0, 2);
       expect(min[1]).toBeCloseTo(0, 2);
       expect(Math.abs(min[0] + max[0])).toBeLessThan(0.02);
-      expect(Math.max(...size)).toBeLessThan(1.5);   // a 55" TV is 1.23 m wide
+      // A 55" TV is 1.23 m wide; a library bookcase, 2 m tall.
+      expect(Math.max(...size)).toBeLessThan(spec.category === 'decor' || spec.mount === 'wall' ? 1.5 : 2.1);
       expect(Math.min(...size)).toBeGreaterThan(0.005);
     }
   });

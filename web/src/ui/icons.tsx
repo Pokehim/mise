@@ -16,6 +16,7 @@ export const Undo = () => <Icon><path d="M6 3.5 2.5 7 6 10.5" /><path d="M2.5 7h
 export const Redo = () => <Icon><path d="M10 3.5 13.5 7 10 10.5" /><path d="M13.5 7h-7a4 4 0 0 0 0 8h2" /></Icon>;
 export const ArrowRight = () => <Icon><path d="M3 8h10M9 4l4 4-4 4" /></Icon>;
 export const ArrowLeft = () => <Icon><path d="M13 8H3m4-4L3 8l4 4" /></Icon>;
+export const Import = () => <Icon><path d="M8 2.5v7.5M5 7l3 3 3-3" /><path d="M2.5 10v2.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V10" /></Icon>;
 export const Plus = () => <Icon><path d="M8 3.5v9M3.5 8h9" /></Icon>;
 export const RotateLeft = () => <Icon><path d="M3 3.5v3h3" /><path d="M3.4 6.5A5 5 0 1 1 3 9.5" /></Icon>;
 export const RotateRight = () => <Icon><path d="M13 3.5v3h-3" /><path d="M12.6 6.5A5 5 0 1 0 13 9.5" /></Icon>;

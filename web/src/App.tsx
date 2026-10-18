@@ -1,5 +1,6 @@
 import { Link, Route, Switch } from 'wouter';
 import { Home } from './pages/Home';
+import { Landing } from './pages/Landing';
 import { EditorPage } from './scene/EditorPage';
 import { RoomSetupPage } from './setup/RoomSetupPage';
 
@@ -7,11 +8,12 @@ import { RoomSetupPage } from './setup/RoomSetupPage';
 export function App() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={Landing} />
+      <Route path="/scans" component={Home} />
       <Route path="/setup/:scanId" component={RoomSetupPage} />
       <Route path="/d/:designId" component={EditorPage} />
       <Route>
-        <main>Page not found. <Link href="/">Back to Scans</Link></main>
+        <main>Page not found. <Link href="/scans">Back to Scans</Link></main>
       </Route>
     </Switch>
   );

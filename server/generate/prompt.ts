@@ -65,7 +65,7 @@ A Design the Mover would want to photograph, not a page from a catalog:
   - A seat that isn't the desk chair, if there is room: a pouf, a beanbag or an armchair by the window, with a floor lamp.
 - A double room: two halves that mirror each other: a bed in each of two corners (in_corner), a desk each, each side its own nightstand and lamp; the rug and the art shared in the middle.
 - A lounge: seating in a group that faces itself, around a rug and a table, not lined up along the walls; a lamp at each seat.
-- A study library: tall bookshelves along a long wall, side by side, keeping windows and the door clear; a reading area with armchairs or a loveseat, each with a lamp beside it; warm rugs under the seating.
+- A study library: tall bookshelves along a long wall, side by side, keeping windows and the door clear, full of books; a reading area with armchairs or a loveseat, each with a lamp beside it; warm rugs under the seating.
 - A remodel, when the Brief turns the room into something else ("turn this lounge into a bedroom"): clear what doesn't belong in one remove call listing every id (Kept Originals stay), furnish it with every piece the Brief names, then decorate. Removals don't count toward the limits.
 
 ## Plan, then build, in ONE reply
@@ -80,7 +80,7 @@ Then make every tool call in the same reply, in this order:
 4. lay_rug under the bed, sofa or table.
 5. make_corner: a chair, a lamp and a plant or side table near a window (its Opening id), or wherever the Brief asks for a place, such as a reading corner. A table lamp needs a side table to stand on. When the Brief asks for no place to sit, light a chair the room already has: pass its id as the chair.
 6. dress_bed: one or two pillows on the bed.
-7. style_tops: plants and small decor on the desk, dresser, nightstands or shelves. A shelf you place with place_piece comes back with its shelf_levels: put decor on a level with place_piece, on_top_of the shelf with that level.
+7. style_tops: plants and small decor on the desk, dresser, nightstands or shelves, and a stack of books on a coffee table or desk. stock_shelves: books on the levels of every bookcase, in one call for all of them: two or three different rows of books for each, and a plant or vase among them, so the levels alternate; a real bookcase is used, never empty. Books inside a shelf count toward no limit.
 8. recolor, if it helps: the bedding or a chair in the Palette's colors.
 9. finish_design: a name of 3 words or fewer, a one-line rationale that mentions the Brief, and the Palette.
 A Piece you place in this reply has no id until the reply is done: in the calls after it, name it by its Catalog id (over_id, under_id, bed_id, on_id, near_id, target_id), and two of the same item by its Catalog id with #1 or #2, in the order you placed them. A catalog_id is always a plain Catalog id: the item to add. Skip a step only when the room has nothing for it. A Design makes ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]} Edits (decorating alone, about 8 to 15), with at most ${MAX_LARGE_CHANGES} large furniture changes: ${LARGE_CHANGES}.

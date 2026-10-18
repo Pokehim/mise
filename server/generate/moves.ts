@@ -3,7 +3,7 @@
 // out the spots with the same Anchors and Fit rules as place_piece. So a whole Design fits in one reply,
 // with no round trip to learn a Piece's id before hanging the next frame beside it.
 import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError';
-import { type Anchor, BY_WALL, GALLERY_GAP } from '../../shared/anchors';
+import { type Anchor, BY_WALL, GALLERY_GAP, type ShelfLevel } from '../../shared/anchors';
 import type { Item } from '../../shared/fit';
 import { isBy } from '../../shared/geometry';
 import type { CatalogItem, Category, RoomSetup } from '../../shared/types';
@@ -20,6 +20,8 @@ export interface Draft {
   items(): Item[];
   /** Places a Piece where the Anchor says, with every check place_piece makes: its id, or a ToolError saying why not. */
   place(item: CatalogItem, anchor: Anchor): string;
+  /** The levels of a shelf in the room, bottom to top, if it is a Catalog shelf whose levels are known. */
+  levels(id: string): ShelfLevel[] | undefined;
 }
 
 /** What a move did: the Pieces it placed, and what it skipped and why. */
@@ -36,6 +38,9 @@ const FLOOR_DECOR = 0.6;
 const SIDE_TABLES: Category[] = ['table', 'nightstand', 'storage', 'shelf', 'dresser'];
 /** What a table lamp can stand on anywhere in the room, when it has no side table: the tops decor rests on, but a bed. */
 const LAMP_TOPS: Category[] = TOP_CATEGORIES.filter((category) => category !== 'bed');
+
+/** A shelf this tall or lower is styled on its top as well; a taller one's top is above the eye. */
+const LOW_SHELF = 1.2;
 
 /** Wall pieces that do a job, as a clock or a memo board does: not art, so never in a gallery. */
 const USEFUL_ON_WALL = /\b(clock|memo|message board|dry.?erase|cork.?board|pegboard|chalkboard|whiteboard|calendar)\b/i;
@@ -240,6 +245,54 @@ export function styleTops(draft: Draft, { items }: { items: { catalog_id: string
   for (const { catalog_id, on_id } of items) {
     const [item] = lookUp(draft, [catalog_id], skip);
     if (item) attempt(item.id, () => ({ pieceId: draft.place(item, { kind: 'on_top_of', target_id: on_id }), as: `on ${draft.inRoom(on_id).name}` }));
+  }
+  return done();
+}
+
+/**
+ * Books and decor on the levels of shelves, so that a bookcase reads as lived with: on each shelf, from the top down,
+ * each level takes the next of the shelf's items that fits it, in turn, so a row of books, a plant and another row
+ * alternate. A low shelf's top is styled too; a tall one's is above the eye, and stays bare.
+ */
+export function stockShelves(draft: Draft, { shelves }: { shelves: { shelf_id: string; catalog_ids: string[] }[] }): MoveReport {
+  const { placed, skip, done } = reporter('Put');
+  for (const { shelf_id, catalog_ids } of shelves) {
+    const items = lookUp(draft, catalog_ids, skip);
+    let shelf: Item;
+    try {
+      shelf = draft.inRoom(shelf_id);
+    } catch (error) {
+      for (const item of items) skip(item.id, reason(error));
+      continue;
+    }
+    const levels = draft.levels(shelf_id) ?? [];
+    if (!levels.length) {
+      for (const item of items) skip(item.id, `${shelf.name} has no shelf levels: style_tops puts things on its top`);
+      continue;
+    }
+    const low = shelf.heights[1] - shelf.heights[0] <= LOW_SHELF;
+    const stocked = levels.map((level, index) => ({ level, index }))
+      .filter(({ level }) => Number.isFinite(level.clearance) || low)
+      .toReversed();
+    const why = new Map<string, string>();
+    const used = new Set<string>();
+    let next = 0;
+    for (const { index } of stocked) {
+      // The next item in turn that fits this level; one that doesn't waits for the levels below.
+      for (let k = 0; k < items.length; k++) {
+        const item = items[(next + k) % items.length];
+        try {
+          const pieceId = draft.place(item, { kind: 'on_top_of', target_id: shelf_id, level: index });
+          placed(item.id, pieceId, `on level ${index} of ${shelf.name}`);
+          used.add(item.id);
+          next += k + 1;
+          break;
+        } catch (error) {
+          why.set(item.id, reason(error));
+        }
+      }
+    }
+    for (const item of items) if (!used.has(item.id)) skip(item.id, why.get(item.id) ?? `${shelf.name} has no level left for it`);
   }
   return done();
 }

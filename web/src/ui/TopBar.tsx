@@ -13,7 +13,7 @@ export function TopBar() {
   const view = useEditor((s) => s.view);
   return (
     <header className="topbar">
-      <Link href="/" className="back" aria-label="Scans"><ArrowLeft /><span className="label">Scans</span></Link>
+      <Link href="/scans" className="back" aria-label="Scans"><ArrowLeft /><span className="label">Scans</span></Link>
       <span className="muted scan-name">{scanName}</span>
       <DesignsMenu />
       <BriefDialog />

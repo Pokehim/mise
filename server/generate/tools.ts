@@ -26,6 +26,11 @@ export interface DesignContext extends AnchorOptions {
   materials: LibraryMaterial[];
   /** The Design's Edits so far, which the session starts from: a Refine's (spec §13.1, step 7). A new Design starts empty. */
   edits?: Edit[];
+  /**
+   * Another Design's Edits a new Design starts from instead: Generate from the current Design. Its Pieces are the
+   * room's furniture, not this Design's: they count toward neither the budget nor the large furniture changes.
+   */
+  startsFrom?: Edit[];
   /** How many Edits this session makes, at least and at most, not counting removals; EDIT_RANGE by default. */
   editRange?: [min: number, max: number];
   /** The most tool calls Claude gets for this Design; finish_design always runs. */
@@ -137,11 +142,16 @@ const finishTarget = z.union([
 
 /** A new Design session, with the 7 tools of spec §13.2 that change it. */
 export function createSession({
-  setup, catalog, brief, materials, shelfLevels = {}, edits: earlier, editRange = EDIT_RANGE, maxToolCalls = MAX_TOOL_CALLS,
+  setup, catalog, brief, materials, shelfLevels = {}, edits: earlier, startsFrom, editRange = EDIT_RANGE, maxToolCalls = MAX_TOOL_CALLS,
   maxLargeChanges = MAX_LARGE_CHANGES, onEdit, takenNames, random = Math.random,
 }: DesignContext): DesignSession {
-  let edits: Edit[] = earlier ?? [];
+  /** The Edits the session starts from, which it doesn't count as its own. */
+  const before = earlier ?? startsFrom ?? [];
+  let edits: Edit[] = before;
   let state = replay(setup, catalog, edits);
+  /** The Pieces and moved Originals of the Design a new Design starts from: the room's, not this Design's. */
+  const theRoomsPieces = new Set(startsFrom ? Object.keys(state.pieces) : []);
+  const theRoomsMoves = new Set(startsFrom ? Object.keys(state.originals).filter((id) => state.originals[id].moved) : []);
   let finished: DesignSession['finished'];
   let toolCalls = 0;
   // finish_design sends Claude back at most once for what the Design lacks, and once for a name another take has.
@@ -151,19 +161,21 @@ export function createSession({
   const catalogItems = new Map(catalog.items.map((item) => [item.id, item]));
   const catalogItem = (id: string) => catalogItems.get(id);
   const pieces = () => Object.values(state.pieces).map((piece) => ({ ...piece, item: catalogItem(piece.catalogId)! }));
-  const totalUsd = () => pieces().reduce((total, { item }) => total + item.priceEstimateUsd, 0);
+  /** The Pieces this Design adds: all of them, but for those of a Design it starts from. */
+  const added = () => Object.entries(state.pieces).filter(([id]) => !theRoomsPieces.has(id)).map(([, piece]) => ({ ...piece, item: catalogItem(piece.catalogId)! }));
+  const totalUsd = () => added().reduce((total, { item }) => total + item.priceEstimateUsd, 0);
   /** Each Original replaced, removed or moved (Kept ones can't be), and each large Piece placed new. */
   /** Each Original replaced or moved (Kept ones can't be), and each large Piece placed new. Removing an Original doesn't count. */
-  const largeChanges = () => pieces().filter(({ replacesOriginalId }) => replacesOriginalId).length
-    + Object.values(state.originals).filter(({ moved }) => moved).length
-    + pieces().filter(({ item, replacesOriginalId }) => !replacesOriginalId && isLarge(item)).length;
+  const largeChanges = () => added().filter(({ replacesOriginalId }) => replacesOriginalId).length
+    + Object.entries(state.originals).filter(([id, { moved }]) => moved && !theRoomsMoves.has(id)).length
+    + added().filter(({ item, replacesOriginalId }) => !replacesOriginalId && isLarge(item)).length;
   /** What this session makes: a new Design, or a Refine of one, which starts from the Design's Edits. */
   const refining = earlier !== undefined;
   const what = refining ? 'Refine' : 'Design';
-  /** What the review flagged in the Design before this session, which finish_design doesn't send a Refine back for. */
-  const flaggedBefore = new Set(refining ? reviewFlags(setup, catalog, state) : []);
+  /** What the review flagged in the room before this session, which finish_design doesn't send the Design back for. */
+  const flaggedBefore = new Set(before.length ? reviewFlags(setup, catalog, state) : []);
   /** The Edits that count toward editRange: all this session made but removals. */
-  const counted = () => edits.slice(earlier?.length).filter(({ type }) => type !== 'remove').length;
+  const counted = () => edits.slice(before.length).filter(({ type }) => type !== 'remove').length;
   const original = (id: string) => setup.originals.find((candidate) => candidate.id === id);
   const inRoom = (id: string) => roomItems(setup, catalog, state).find((candidate) => candidate.id === id)
     ?? fail(`The room has no Original or Piece "${id}"`);

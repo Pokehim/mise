@@ -3,9 +3,11 @@
 // context (Room Summary and Catalog shortlist) is the same for all three takes of a Scan, and can be
 // written to the cache before the Brief is sent; only the short first message differs.
 import type { Direction } from '../../shared/generate';
-import type { Brief, Catalog } from '../../shared/types';
+import { replay } from '../../shared/replay';
+import type { Brief, Catalog, Design, RoomSetup } from '../../shared/types';
 import { catalogList } from './catalogList';
-import type { RoomSummary } from './roomSummary';
+import { designInWords } from './forClaude';
+import { roomSummary, type RoomSummary } from './roomSummary';
 import { EDIT_RANGE, LARGE_CHANGES, MAX_LARGE_CHANGES } from './tools';
 
 const DIRECTION_TEXT: Record<Direction, string> = {
@@ -108,13 +110,38 @@ export function roomContext(summary: RoomSummary, catalog: Catalog): string {
   ].join('\n\n');
 }
 
-/** The first message of one take: the Brief, and this take's direction. */
-export function briefMessage(brief: Brief, direction: Direction): string {
+/** The first message of one take: the Brief, this take's direction, and the room as the current Design has it when the take starts from one. */
+export function briefMessage(brief: Brief, direction: Direction, current?: string): string {
   return [
     `Brief: "${brief.text}"`,
     `Styles: ${brief.styles?.length ? brief.styles.join(', ') : 'none named'}`,
     `Budget: ${brief.budgetUsd !== undefined ? `$${brief.budgetUsd} for the Pieces you add` : 'none given: get everything the Brief asks for, choosing sensibly priced Pieces'}`,
     '',
     DIRECTION_TEXT[direction],
+    ...(current ? ['', current] : []),
+  ].join('\n');
+}
+
+/**
+ * The room as the Mover's current Design has it, for takes that start from that Design instead of the Scan
+ * as it is: the same for the three takes, after the Brief, so the cached room context still serves them.
+ */
+export function currentRoom(setup: RoomSetup, catalog: Catalog, design: Design): string {
+  const state = replay(setup, catalog, design.edits);
+  const { pieces, finishes, originals } = designInWords(setup, catalog, state);
+  return [
+    `Start from the Mover's current Design, "${design.name}", not the room in the Room Summary above. The room already has its Pieces, `
+      + 'Finishes and changes, listed below: they are the room\'s furniture now. If its Pieces furnish the room, it is a furnished room: '
+      + 'skip step 1 unless the Brief asks for furniture the room lacks. Keep its Pieces where they are and design around them, '
+      + 'naming each by its id in your tool calls (in your plan, which the Mover reads, call it what it is, such as "the bed by the window"); '
+      + 'remove or replace one only when the Brief asks for it, or when it can\'t go with the Brief at all. '
+      + 'Its Pieces don\'t count toward the budget or the large furniture changes: only what you add does.',
+    '',
+    `Its Pieces: ${JSON.stringify(pieces)}`,
+    `Its Finishes: ${JSON.stringify(finishes)}`,
+    `Originals it changed: ${JSON.stringify(originals)}`,
+    '',
+    'The room as the Design has it now (meters; along a wall is measured from its left end, seen from inside the room facing it):',
+    JSON.stringify(roomSummary(setup, catalog, state)),
   ].join('\n');
 }

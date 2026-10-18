@@ -55,6 +55,8 @@ export function DesignCards({ onOpen, onBack }: { onOpen: () => void; onBack: ()
  */
 function TakeCard({ direction, take: { plan, edits, design, report, error }, onOpen }: { direction: Direction; take: Take; onOpen: (design: Design) => void }) {
   const { setup, catalog, openId } = useEditor(useShallow(({ setup, catalog, design }) => ({ setup: setup!, catalog: catalog!, openId: design?.id })));
+  // A take that starts from a Design draws on top of it; a finished one's Edits already hold it.
+  const from = useGenerate((s) => s.from?.edits);
   const last = edits.at(-1);
   const isOpen = design !== undefined && design.id === openId;
   return (
@@ -68,7 +70,7 @@ function TakeCard({ direction, take: { plan, edits, design, report, error }, onO
     >
       <span className="direction">{DIRECTION_NAMES[direction]}</span>
       {/* While the take is drawn, the plan outlines the Piece the latest Edit put in the room. */}
-      <PlanSketch setup={setup} catalog={catalog} edits={edits} latest={!design && last && 'pieceId' in last ? last.pieceId : undefined} />
+      <PlanSketch setup={setup} catalog={catalog} edits={design || !from ? edits : [...from, ...edits]} latest={!design && last && 'pieceId' in last ? last.pieceId : undefined} />
       {design ? <Summary setup={setup} catalog={catalog} design={design} seconds={report?.seconds} isOpen={isOpen} />
         : error ? <span className="error">This take didn't finish: {error}</span>
         : (
@@ -84,7 +86,12 @@ function TakeCard({ direction, take: { plan, edits, design, report, error }, onO
 
 /** A finished take: its name, rationale and Palette, what it costs, and how long it took. */
 function Summary({ setup, catalog, design, seconds, isOpen }: { setup: RoomSetup; catalog: Catalog; design: Design; seconds?: number; isOpen: boolean }) {
-  const { pieces, totalUsd } = shoppingList({ roomState: replay(setup, catalog, design.edits), setup, catalog });
+  // What this take adds: a take that starts from a Design counts neither its Edits nor its Pieces.
+  const start = design.startedFrom?.edits ?? 0;
+  const before = new Set(Object.keys(replay(setup, catalog, design.edits.slice(0, start)).pieces));
+  const all = shoppingList({ roomState: replay(setup, catalog, design.edits), setup, catalog }).pieces;
+  const pieces = all.filter(({ pieceId }) => !before.has(pieceId));
+  const totalUsd = pieces.reduce((total, { item }) => total + item.priceEstimateUsd, 0);
   const budget = design.brief?.budgetUsd;
   const swatches = design.palette ? [design.palette.wall, ...design.palette.accents] : [];
   return (
@@ -98,7 +105,7 @@ function Summary({ setup, catalog, design, seconds, isOpen }: { setup: RoomSetup
       )}
       <span className="card-foot">
         <span className="total">{priceEstimate(totalUsd)}{budget !== undefined && ` of ${dollars(budget)}`}</span>
-        <span className="counts">{count(design.edits.length, 'Edit')} · {count(pieces.length, 'Piece')}{seconds !== undefined && ` · ${seconds} s`}</span>
+        <span className="counts">{count(design.edits.length - start, start ? 'new Edit' : 'Edit')} · {count(pieces.length, start ? 'new Piece' : 'Piece')}{seconds !== undefined && ` · ${seconds} s`}</span>
       </span>
       <span className="open">{isOpen ? 'In the editor' : <>Open <ArrowRight /></>}</span>
     </>

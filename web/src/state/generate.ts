@@ -3,9 +3,10 @@
  * it, and each Design as soon as it is finished. It lives outside the editor, which remounts when a
  * Design opens, so the other takes keep arriving while the Mover looks at the first.
  *
- *   useGenerate(selector)   status 'brief' | 'designing' | 'done'; the Scan and Brief; the takes by direction;
- *                           since (when the Brief was sent), seconds (once done); error (why the Brief was refused).
- *   generate(scanId, brief) Sends the Brief and reads the stream to its end.
+ *   useGenerate(selector)   status 'brief' | 'designing' | 'done'; the Scan and Brief; the Design the takes start from,
+ *                           if any; the takes by direction; since (when the Brief was sent), seconds (once done);
+ *                           error (why the Brief was refused).
+ *   generate(scanId, brief, from?) Sends the Brief, with the Design to start from, and reads the stream to its end.
  *   warm(scanId)            Has the server cache what the Scan's Designs read first, so they start sooner.
  */
 import { create } from 'zustand';
@@ -20,6 +21,8 @@ interface Generating {
   status: 'brief' | 'designing' | 'done';
   scanId?: string;
   brief?: Brief;
+  /** The Design the takes start from (its id and Edits then), or none: they start from the Scan as it is. */
+  from?: { designId: string; edits: Edit[] };
   takes: Record<Direction, Take>;
   since?: number;
   seconds?: number;
@@ -30,16 +33,22 @@ const noTakes = (): Record<Direction, Take> => ({ literal: { edits: [] }, bolder
 
 export const useGenerate = create<Generating>()(() => ({ status: 'brief', takes: noTakes() }));
 
-/** Sends the Brief, and keeps each take up to date from the server's stream until every take is done. */
-export async function generate(scanId: string, brief: Brief): Promise<void> {
+/**
+ * Sends the Brief, and keeps each take up to date from the server's stream until every take is done. With
+ * `from`, a saved Design of the Scan, the takes start from it instead of the Scan as it is.
+ */
+export async function generate(scanId: string, brief: Brief, from?: Design): Promise<void> {
   // The takes' requests keep the cache warm as warm() would.
   warmed.set(scanId, Date.now());
-  useGenerate.setState({ status: 'designing', scanId, brief, takes: noTakes(), since: Date.now(), seconds: undefined, error: undefined });
+  useGenerate.setState({
+    status: 'designing', scanId, brief, from: from && { designId: from.id, edits: from.edits },
+    takes: noTakes(), since: Date.now(), seconds: undefined, error: undefined,
+  });
   try {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
-      body: JSON.stringify({ scanId, brief }),
+      body: JSON.stringify({ scanId, brief, ...(from && { fromDesignId: from.id }) }),
     });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? `The server answered ${res.status}`);
     for await (const event of ndjson<GenerateEvent>(res.body!)) receive(event);

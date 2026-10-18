@@ -3,8 +3,10 @@ import { useShallow } from 'zustand/react/shallow';
 import { budgetInText } from '@shared/generate';
 import type { Brief } from '@shared/types';
 import { generate, useGenerate, warm } from '../state/generate';
+import { saveNow } from '../state/history';
 import { useEditor } from '../state/store';
 import { DesignCards } from './DesignCards';
+import { count } from './format';
 import { Close, Sparkle } from './icons';
 import './brief.css';
 
@@ -19,6 +21,9 @@ const EXAMPLE = 'cozy Japandi, under $400, I need a reading corner';
  */
 export function BriefDialog() {
   const scanId = useEditor((s) => s.design!.scanId);
+  const { designName, designEdits, hasOriginals } = useEditor(useShallow((s) => ({
+    designName: s.design!.name, designEdits: s.design!.edits.length, hasOriginals: !!s.setup?.originals.length,
+  })));
   // The Brief of this Scan the Mover last sent, if any: the takes on it, or the form again to change it.
   const sent = useGenerate(useShallow((s) => (s.scanId === scanId ? { status: s.status, brief: s.brief, error: s.error } : undefined)));
   const step = sent?.status ?? 'brief';
@@ -31,12 +36,18 @@ export function BriefDialog() {
     return budgetUsd && budgetUsd !== budgetInText(sentText) ? String(budgetUsd) : '';
   });
   const textBudget = budgetInText(text);
+  // Where the takes start: the room as the open Design has it, or the Scan as it is. A Design with no Edits is the Scan as it is.
+  const [start, setStart] = useState<'current' | 'empty'>(designEdits ? 'current' : 'empty');
+  const fromCurrent = start === 'current' && designEdits > 0;
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
     const budgetUsd = budget ? Number(budget) : textBudget;
     const brief: Brief = { text: text.trim(), ...(styles.length && { styles }), ...(budgetUsd && { budgetUsd }) };
-    void generate(scanId, brief);
+    if (!fromCurrent) return generate(scanId, brief);
+    // The server reads the Design from its file: its latest change goes first. If that save fails, the last one saved stands.
+    await saveNow().catch(() => {});
+    void generate(scanId, brief, useEditor.getState().design!);
   }
 
   return (
@@ -59,7 +70,7 @@ export function BriefDialog() {
           <DesignCards onOpen={() => dialog.current!.close()} onBack={() => useGenerate.setState({ status: 'brief' })} />
         ) : (
           // Once the Mover starts writing a Brief, Claude's cache gets the room, so that the takes start sooner.
-          <form onSubmit={submit} onInput={() => warm(scanId)}>
+          <form onSubmit={(event) => void submit(event)} onInput={() => warm(scanId)}>
             <p className="muted">
               Claude arranges real Catalog items in your Scan: art on the walls, a rug, lamps, plants and pillows, and paint.
               You get three takes: literal, bolder, and budget-conscious.
@@ -90,6 +101,18 @@ export function BriefDialog() {
                   </button>
                 ))}
               </div>
+            </fieldset>
+            <fieldset className="field start-from">
+              <legend>Start from</legend>
+              <div className="chips">
+                <button type="button" aria-pressed={fromCurrent} disabled={!designEdits} onClick={() => setStart('current')}>Current room</button>
+                <button type="button" aria-pressed={!fromCurrent} onClick={() => setStart('empty')}>{hasOriginals ? 'Room as scanned' : 'Empty room'}</button>
+              </div>
+              <span className="hint">
+                {!designEdits ? 'This Design has no Edits yet, so Claude starts from the room as it is.'
+                  : fromCurrent ? `"${designName}" as it is now: Claude keeps its ${count(designEdits, 'Edit')} and designs around them. Its Pieces don't count toward the budget.`
+                  : hasOriginals ? "The room as it was scanned, without this Design's Edits." : "The room with nothing in it: Claude furnishes it from scratch."}
+              </span>
             </fieldset>
             <label className="field budget">
               <span>Budget <span className="muted">(optional)</span></span>

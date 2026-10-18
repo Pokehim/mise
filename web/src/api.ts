@@ -1,6 +1,7 @@
 import type { FloorPlanDraft, PlanReading } from '@shared/floor-plan';
 import type { Catalog, Design, RoomSetup, ScanManifest } from '@shared/types';
 import type { MergeSummary } from '../../scripts/scan-merge';
+import type { ImportEvent } from '../../server/app';
 import type { GenerateRequest } from '../../server/generate-object/pipeline';
 import type { Job } from '../../server/generate-object/routes';
 
@@ -32,7 +33,51 @@ export async function uploadFloorPlan(file: Blob, name: string): Promise<PlanUpl
   if (!res.ok) throw new Error(body.error ?? `The server answered ${res.status}`);
   return body;
 }
-export const readFloorPlanAgain = (scanId: string) => request<PlanUpload>('POST', `/api/floor-plans/${scanId}/read`);
+/* Import (on Home): a room's GLB, with its PLY if there is one, becomes a new Scan of the Mover's. */
+export type ImportProgress = { type: 'upload'; fraction: number } | ImportEvent;
+/**
+ * Uploads a room's scan, reporting the upload and then each step the server streams; resolves to the
+ * new Scan's id. It uses XMLHttpRequest, since fetch can't report how much of a request is sent.
+ */
+export function importScanFiles(
+  { mesh, splat, name }: { mesh: File; splat?: File; name: string },
+  onProgress: (event: ImportProgress) => void,
+): Promise<string> {
+  const form = new FormData();
+  form.set('mesh', mesh, mesh.name);
+  if (splat) form.set('splat', splat, splat.name);
+  form.set('name', name);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    let read = 0;
+    let last: ImportEvent | undefined;
+    // Each whole line of the stream so far that hasn't been read yet is one ImportEvent.
+    const readLines = () => {
+      if (xhr.status !== 200) return;
+      const end = xhr.responseText.lastIndexOf('\n') + 1;
+      for (const line of xhr.responseText.slice(read, end).split('\n').filter(Boolean)) {
+        last = JSON.parse(line);
+        onProgress(last!);
+      }
+      read = end;
+    };
+    xhr.upload.onprogress = (event) => event.lengthComputable && onProgress({ type: 'upload', fraction: event.loaded / event.total });
+    xhr.onprogress = readLines;
+    xhr.onload = () => {
+      if (xhr.status !== 200) {
+        const { error } = (() => { try { return JSON.parse(xhr.responseText); } catch { return {}; } })();
+        return reject(new Error(error ?? `The server answered ${xhr.status}`));
+      }
+      readLines();
+      if (last?.type === 'done') resolve(last.scanId);
+      else reject(new Error(last?.type === 'error' ? last.error : 'The import stopped before it finished'));
+    };
+    xhr.onerror = () => reject(new Error("Couldn't reach the API server"));
+    xhr.open('POST', '/api/scans/import');
+    xhr.send(form);
+  });
+}
+export const readFloorPlanAgain =(scanId: string) => request<PlanUpload>('POST', `/api/floor-plans/${scanId}/read`);
 export const loadFloorPlanDraft = ({ id, floorPlan }: ScanManifest) => request<FloorPlanDraft>('GET', scanFileUrl(id, floorPlan!.draft));
 export const saveFloorPlanDraft = (scanId: string, draft: FloorPlanDraft) =>
   request<FloorPlanDraft>('PUT', `/api/floor-plans/${scanId}/draft`, draft);

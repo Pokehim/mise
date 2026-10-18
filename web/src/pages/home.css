@@ -130,15 +130,63 @@
   .bone { animation: none; }
 }
 
-/* The Scans' heading, with the way to start one from a Floor Plan (ADR-0011) beside it. */
+/* The Scans' heading, with Import beside it. */
 .home-heading-row { display: flex; align-items: center; gap: var(--s-4); }
 .home-heading-row .home-heading { flex: 1; }
 .scan-tag { color: var(--wash); }
 
-/* ───────────── The floor plan library, in "Import from floor plan" ───────────── */
+/* ───────────── Import: the drop zone, then the library search ───────────── */
 
-.library > p { margin: 0 0 var(--s-4); color: var(--graphite); }
-.library .error { margin: 0 0 var(--s-3); }
+.import-dialog {
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 24vh);
+  /* Held near the top, so the dialog doesn't jump as the results under the field come and go. */
+  margin-top: 12vh;
+  padding: var(--s-4) var(--s-5) var(--s-5);
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--grain), var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--lift);
+  font: 14px/1.5 var(--font-sans);
+}
+.import-dialog::backdrop { background: transparent; }
+.import-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-3); }
+.import-dialog h2 { margin: 0; font: 400 24px/1.2 var(--font-hand); }
+.import-part { min-width: 0; margin: 0; padding: 0; border: 0; }
+.import-field { display: grid; gap: var(--s-1); margin-bottom: var(--s-3); }
+.import-field > span:first-child { font-weight: 600; }
+.import-field .muted, .import-dialog .muted { color: var(--graphite); font-size: 13px; }
+.import-dialog input {
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font: inherit;
+}
+.import-dialog .error { margin: 0 0 var(--s-3); color: var(--red-pencil); }
+.import-dialog footer { display: flex; justify-content: flex-end; gap: var(--s-2); }
+
+/* Icon-only buttons: no box until hovered. */
+.home .icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--graphite);
+}
+@media (hover: hover) {
+  .home .icon-button:hover:not(:disabled) { border-color: transparent; background: var(--ink-wash); color: var(--ink); }
+}
+.home .icon-button:disabled { border-color: transparent; background: none; opacity: 0.4; }
+
+/* The floor plan library. */
 .library-results {
   max-height: min(52vh, 440px);
   margin: 0 0 var(--s-3);
@@ -189,22 +237,62 @@
 .library-thumb .plan { width: 100%; height: 100%; }
 .library-thumb .plan figcaption { border: 0; font-size: 11px; }
 
-.home .library-none { display: grid; justify-items: start; gap: var(--s-3); margin: 0 0 var(--s-1); }
-.library-none p { margin: 0; }
-.library-other { margin: 0; font-size: 13px; }
-.home button.link {
-  display: inline;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--wash);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
-  text-underline-offset: 3px;
+.home .library-none { margin: 0 0 var(--s-3); }
+/* About three rooms, so the whole library under the drop zone doesn't stretch the dialog. */
+.import-dialog .library-results { max-height: min(30vh, 272px); margin-bottom: 0; }
+
+/* The library search, under a rule below the drop zone. */
+.library-part { margin-top: var(--s-4); padding-top: var(--s-4); border-top: var(--line) solid var(--pencil); }
+.home button.drop-zone {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  width: 100%;
+  margin-bottom: var(--s-3);
+  padding: var(--s-5) var(--s-4);
+  border: var(--line-strong) dashed var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--paper);
+  text-align: center;
 }
+.drop-zone .drop-title { font-weight: 500; text-wrap: balance; }
+/* A file held over it: the wash, as on a chosen control. */
+.home button.drop-zone.over { border-color: var(--wash); background: var(--wash-tint); }
+.home button.drop-zone[aria-disabled='true'] { background: var(--hatching), var(--paper); color: var(--graphite); cursor: not-allowed; }
 @media (hover: hover) {
-  .home button.link:hover:not(:disabled) { text-decoration-color: currentColor; }
+  .home button.drop-zone:hover:not([aria-disabled='true']) { border-color: var(--ink); }
 }
-.library-other button.link:active { scale: none; }
-/* Held near the top, so the dialog doesn't jump as the results under the field come and go. */
-.home .fp-dialog { margin-top: 12vh; }
+.home button.drop-zone:active { scale: none; }
+
+.drop-files { margin: 0 0 var(--s-3); padding: 0; border-block: var(--line) solid var(--pencil); list-style: none; }
+.drop-files li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto 28px; align-items: center; gap: var(--s-3); padding: var(--s-1) 0; }
+.drop-files li + li { border-top: var(--line) solid var(--pencil); }
+.drop-kind { color: var(--graphite); font-size: 12px; }
+.drop-name { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.drop-files .muted { font-variant-numeric: tabular-nums; }
+
+/* The import's steps: done ones ticked, the running one in ink, the rest in pencil. */
+.import-steps { display: grid; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
+.import-steps li { position: relative; padding-left: 22px; }
+.import-steps li::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border: var(--line-strong) solid var(--pencil-strong);
+  border-radius: 50%;
+}
+.import-steps li.todo { color: var(--graphite); }
+.import-steps li.running::before { border-color: var(--ink); border-top-color: transparent; animation: step-spin 900ms linear infinite; }
+.import-steps li.done::before { content: '✓'; top: 0; border: 0; color: var(--wash); font-weight: 600; line-height: 20px; }
+.import-steps li.note { padding-left: 0; }
+.import-steps li.note::before { content: none; }
+.step-label { font-variant-numeric: tabular-nums; }
+@keyframes step-spin {
+  to { rotate: 1turn; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .import-steps li.running::before { animation: none; border-top-color: var(--ink); }
+}

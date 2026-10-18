@@ -1,12 +1,17 @@
+import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync, globSync } from 'node:fs';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { basename, join, relative, resolve } from 'node:path';
+import { createInterface } from 'node:readline';
+import { fileURLToPath } from 'node:url';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import { stream } from 'hono/streaming';
+import { importScan, scanManifest } from '../scripts/scan-import';
 import { MergeInputError, mergeScan } from '../scripts/scan-merge';
 import { generateObjectRoutes } from './generate-object/routes';
 import { budgetInText, type GenerateEvent } from '../shared/generate';
@@ -277,8 +282,8 @@ const refuseInDemo = () => process.env.MISE_DEMO === '1' && fail(403, 'Floor Pla
 const planReader = () => (process.env.ANTHROPIC_API_KEY ? anthropic() : null);
 
 /** A Scan id from a name, "Maple Hall 412" → "maple-hall-412", with "-2", "-3"… if it's taken. */
-function newScanId(name: string) {
-  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'floor-plan';
+function newScanId(name: string, fallback = 'floor-plan') {
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40).replace(/^-|-$/g, '') || fallback;
   let id = base;
   for (let n = 2; existsSync(join(dataDir(), 'scans', id)); n++) id = `${base}-${n}`;
   return id;
@@ -345,6 +350,102 @@ app.put('/api/floor-plans/:id/draft', async (c) => {
   await writeJson(join(dir, manifest.floorPlan.draft), checked.data);
   return c.json(checked.data);
 });
+
+// Import, on Home: a room's GLB becomes a new Scan of the Mover's, as scripts/scan-import.ts makes one,
+// for Room Setup to mark up. A PLY dropped with it becomes the Scan's splat: a Splat PLY as it is, a point
+// cloud through scripts/pointcloud-splat.ts first, then scripts/splat.sh. The splat keeps its own frame
+// (an identity splatTransform) until the AlignPanel lines it up. Each step streams as one JSON line as it starts.
+const MAX_IMPORT_BYTES = 1024 ** 3;
+const SCRIPTS = fileURLToPath(new URL('../scripts/', import.meta.url));
+/** A Splat PLY's vertices are Gaussians; a point cloud's are only points and their colors. */
+const SPLAT_PROPERTIES = ['scale_0', 'rot_0', 'opacity', 'f_dc_0'];
+
+/** What an import does, in order: optimize the mesh, turn a point cloud into a Splat PLY, build splat.spz. */
+export type ImportStep = 'mesh' | 'points' | 'splat';
+export type ImportEvent =
+  | { type: 'step'; step: ImportStep }     // the step has started
+  | { type: 'done'; scanId: string }
+  | { type: 'error'; error: string };
+
+/** 'splat' or 'points', read from a PLY's header; undefined when the file isn't a PLY. */
+async function plyKind(file: File): Promise<'splat' | 'points' | undefined> {
+  const head = Buffer.from(await file.slice(0, 64 * 1024).arrayBuffer()).toString('latin1');
+  const end = head.indexOf('end_header');
+  if (!/^ply\r?\n/.test(head) || end < 0) return undefined;
+  const properties = new Set(head.slice(0, end).split('\n')
+    .map((line) => line.trim().split(/\s+/))
+    .filter(([keyword]) => keyword === 'property')
+    .map((words) => words.at(-1)));
+  return SPLAT_PROPERTIES.every((name) => properties.has(name)) ? 'splat' : 'points';
+}
+
+/** Runs a script; a failure carries the last line of its errors. */
+function run(command: string, args: string[]) {
+  const child = spawn(command, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+  let lastError = '';
+  createInterface({ input: child.stderr }).on('line', (line) => {
+    if (line.trim()) lastError = line;
+  });
+  return new Promise<void>((done, failed) => {
+    child.on('error', failed);
+    child.on('close', (code) => (code === 0 ? done() : failed(new Error(lastError || `${basename(args[0])} exited with code ${code}`))));
+  });
+}
+
+app.post(
+  '/api/scans/import',
+  bodyLimit({ maxSize: MAX_IMPORT_BYTES, onError: (c) => c.json({ error: 'A scan can be at most 1 GB' }, 413) }),
+  async (c) => {
+    if (process.env.MISE_DEMO === '1') fail(403, 'Importing scans is turned off in the demo');
+    const body = await c.req.parseBody().catch(() => fail(400, 'Send the scan as a form: mesh, splat and name'));
+    const { mesh, splat } = body;
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    if (!(mesh instanceof File)) fail(400, splat instanceof File ? "A PLY needs its room's GLB: drop both." : 'Send the room\'s GLB in "mesh"');
+    if (splat !== undefined && !(splat instanceof File)) fail(400, 'Send the PLY as a file in "splat"');
+    if (!name) fail(400, 'Name the room in "name"');
+    if (Buffer.from(await mesh.slice(0, 4).arrayBuffer()).toString('latin1') !== 'glTF') fail(400, `${mesh.name} isn't a GLB`);
+    const kind = splat && ((await plyKind(splat)) ?? fail(400, `${splat.name} isn't a PLY`));
+
+    const scansDir = resolve(dataDir(), 'scans');
+    const scanId = newScanId(name, 'scan');
+    // Made now, so a second import of the same name can't take the id; a folder without a manifest isn't listed yet.
+    await mkdir(scansDir, { recursive: true });
+    await mkdir(join(scansDir, scanId));
+    c.header('Content-Type', 'application/x-ndjson');
+    return stream(c, async (out) => {
+      const send = (event: ImportEvent) => out.write(`${JSON.stringify(event)}\n`);
+      const work = await mkdtemp(join(tmpdir(), 'mise-import-'));
+      try {
+        await send({ type: 'step', step: 'mesh' });
+        await writeFile(join(work, 'room.glb'), mesh.stream());
+        await importScan({ input: join(work, 'room.glb'), scanId, name, scansDir });
+        const manifest: ScanManifest = { ...scanManifest(scanId, name), mine: true };
+        if (splat) {
+          let ply = join(work, 'splat.ply');
+          await writeFile(ply, splat.stream());
+          if (kind === 'points') {
+            await send({ type: 'step', step: 'points' });
+            const points = ply;
+            ply = join(work, 'points-splat.ply');
+            await run(process.execPath, ['--import', 'tsx', join(SCRIPTS, 'pointcloud-splat.ts'), points, ply]);
+          }
+          await send({ type: 'step', step: 'splat' });
+          // splat.sh writes into the repo's data/scans/<--scan>/; a relative --scan reaches DATA_DIR's folder from there.
+          await run('bash', [join(SCRIPTS, 'splat.sh'), ply, '--scan', relative(join(SCRIPTS, '../data/scans'), join(scansDir, scanId))]);
+          Object.assign(manifest, { splat: 'splat.spz', splatTransform: { position: [0, 0, 0], rotationY: 0, scale: 1 } });
+        }
+        await writeJson(join(scansDir, scanId, 'manifest.json'), manifest);
+        await send({ type: 'done', scanId });
+      } catch (error) {
+        // Nothing half-made stays behind, so dropping the files again starts over.
+        await rm(join(scansDir, scanId), { recursive: true, force: true });
+        await send({ type: 'error', error: (error as Error).message });
+      } finally {
+        await rm(work, { recursive: true, force: true });
+      }
+    });
+  },
+);
 
 // Stretch: text-to-3D for categories the Catalog lacks (spec §13.3).
 app.route('/api', generateObjectRoutes(dataDir));

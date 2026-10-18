@@ -2,9 +2,11 @@ import { existsSync } from 'node:fs';
 import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { Document } from '@gltf-transform/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fixtureDesign from '../data/designs/ds_fixture1.json';
 import fixtureSetup from '../data/scans/fixture/setup.json';
+import { io } from '../scripts/scan-import';
 import type { Design, ScanManifest } from '../shared/types';
 import { app } from './app';
 
@@ -137,6 +139,106 @@ describe('POST /api/scans/:id/merge', () => {
 
   it('404s for a Scan that does not exist', async () => {
     expect((await app.request('/api/scans/nowhere/merge', { method: 'POST' })).status).toBe(404);
+  });
+});
+
+describe('POST /api/scans/import', () => {
+  /** A one-triangle room mesh, 2.5 m tall, as a GLB. */
+  async function smallGlb() {
+    const document = new Document();
+    const buffer = document.createBuffer();
+    const position = document.createAccessor().setType('VEC3').setBuffer(buffer)
+      .setArray(new Float32Array([0, 0, 0, 3, 0, 0, 0, 2.5, 0]));
+    const mesh = document.createMesh().addPrimitive(document.createPrimitive().setAttribute('POSITION', position));
+    document.createScene().addChild(document.createNode().setMesh(mesh));
+    return io.writeBinary(document);
+  }
+
+  /** A binary point cloud as Polycam exports it: x, y, z doubles and red, green, blue per point. */
+  function pointCloud(points: [number, number, number][]) {
+    const header = Buffer.from([
+      'ply', 'format binary_little_endian 1.0', `element vertex ${points.length}`,
+      ...['x', 'y', 'z'].map((axis) => `property double ${axis}`), ...['red', 'green', 'blue'].map((c) => `property uchar ${c}`),
+      'end_header', '',
+    ].join('\n'), 'latin1');
+    const body = Buffer.alloc(points.length * 27);
+    points.forEach(([x, y, z], i) => {
+      [x, y, z].forEach((v, a) => body.writeDoubleLE(v, i * 27 + a * 8));
+      body.set([200, 120, 40], i * 27 + 24);
+    });
+    return Buffer.concat([header, body]);
+  }
+
+  const importForm = (files: { mesh?: [Uint8Array, string]; splat?: [Uint8Array, string] }, name = 'Maple Hall 412') => {
+    const form = new FormData();
+    for (const [field, file] of Object.entries(files)) form.set(field, new Blob([file[0] as Uint8Array<ArrayBuffer>]), file[1]);
+    form.set('name', name);
+    return app.request('/api/scans/import', { method: 'POST', body: form });
+  };
+  const events = async (res: Response) => (await res.text()).trim().split('\n').map((line) => JSON.parse(line));
+  const manifestOf = async (id: string): Promise<ScanManifest> => JSON.parse(await readFile(join(dataDir, 'scans', id, 'manifest.json'), 'utf8'));
+
+  it('makes a GLB a new Scan of the Mover\'s, named after the room, and streams its steps', async () => {
+    const res = await importForm({ mesh: [await smallGlb(), 'room.glb'] });
+
+    expect(res.status).toBe(200);
+    expect(await events(res)).toEqual([{ type: 'step', step: 'mesh' }, { type: 'done', scanId: 'maple-hall-412' }]);
+    expect(await manifestOf('maple-hall-412')).toEqual({
+      version: 1, id: 'maple-hall-412', name: 'Maple Hall 412', mesh: 'room.glb', meshTransform: { position: [0, 0, 0], rotationY: 0 }, mine: true,
+    });
+    expect(existsSync(join(dataDir, 'scans/maple-hall-412/room.glb'))).toBe(true);
+  }, 30_000);
+
+  it('adds "-2" when the name\'s id is taken', async () => {
+    await events(await importForm({ mesh: [await smallGlb(), 'room.glb'] }));
+    const res = await importForm({ mesh: [await smallGlb(), 'room.glb'] });
+    expect((await events(res)).at(-1)).toEqual({ type: 'done', scanId: 'maple-hall-412-2' });
+  }, 30_000);
+
+  it('turns a point cloud dropped with the GLB into the Scan\'s splat, in its own frame', async () => {
+    const points = Array.from({ length: 200 }, (_, i): [number, number, number] => [(i % 10) * 0.1, Math.floor(i / 10) * 0.1, 1]);
+
+    const res = await importForm({ mesh: [await smallGlb(), 'room.glb'], splat: [pointCloud(points), 'room.ply'] });
+
+    expect(await events(res)).toEqual([
+      { type: 'step', step: 'mesh' }, { type: 'step', step: 'points' }, { type: 'step', step: 'splat' }, { type: 'done', scanId: 'maple-hall-412' },
+    ]);
+    expect(await manifestOf('maple-hall-412')).toMatchObject({
+      mine: true, splat: 'splat.spz', splatTransform: { position: [0, 0, 0], rotationY: 0, scale: 1 },
+    });
+    expect(existsSync(join(dataDir, 'scans/maple-hall-412/splat.spz'))).toBe(true);
+  }, 120_000);
+
+  it('400s for a PLY alone, and says to drop both', async () => {
+    const res = await importForm({ splat: [pointCloud([[0, 0, 0]]), 'room.ply'] });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "A PLY needs its room's GLB: drop both." });
+  });
+
+  it('400s for a mesh that isn\'t a GLB, or a splat that isn\'t a PLY, before making a Scan', async () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const notGlb = await importForm({ mesh: [png, 'plan.png'] });
+    expect(notGlb.status).toBe(400);
+    expect((await notGlb.json()).error).toBe("plan.png isn't a GLB");
+
+    const notPly = await importForm({ mesh: [await smallGlb(), 'room.glb'], splat: [png, 'room.ply'] });
+    expect(notPly.status).toBe(400);
+    expect((await notPly.json()).error).toBe("room.ply isn't a PLY");
+    expect(await readdir(join(dataDir, 'scans'))).toEqual(['fixture']);
+  });
+
+  it('400s without a name', async () => {
+    const res = await importForm({ mesh: [await smallGlb(), 'room.glb'] }, ' ');
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/Name the room/);
+  });
+
+  it('removes the Scan when a step fails, and streams why', async () => {
+    const res = await importForm({ mesh: [Buffer.from('glTF but not really'), 'room.glb'] });
+
+    const last = (await events(res)).at(-1);
+    expect(last.type).toBe('error');
+    expect(await readdir(join(dataDir, 'scans'))).toEqual(['fixture']);
   });
 });
 

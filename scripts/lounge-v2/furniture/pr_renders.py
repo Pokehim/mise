@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 root, originals_path, c1, c2, out = sys.argv[1:6]
 HERE = os.path.dirname(os.path.abspath(__file__))
 BLENDER = '/Applications/Blender.app/Contents/MacOS/Blender'
-M = f'{root}/data/scans/lounge-v2/models'
+M = f'{root}/data/scans/lounge/models'
 GLB1 = {'path': f'{root}/data/scans/real-scans/POLYCAM_ROOM_GLB_1.glb', 'pos': [-0.044, 1.202, 0.029], 'rotY': -0.008005}
 originals = json.load(open(originals_path))
 os.makedirs(out, exist_ok=True)
@@ -37,7 +37,7 @@ def sheet(rows, row_labels, col_labels, path):
 
 def placed(o):
     p = o['box']['position']
-    return {'path': f'{root}/data/scans/lounge-v2/{o["model"]}', 'pos': p, 'rotY': o['box']['rotationY']}
+    return {'path': f'{root}/data/scans/lounge/{o["model"]}', 'pos': p, 'rotY': o['box']['rotationY']}
 
 def sides(cx, cy, cz, yaw, dist, ortho):
     """front/back/left/right of an item turned by yaw (front = its +Z)"""

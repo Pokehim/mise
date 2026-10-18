@@ -1,6 +1,6 @@
 # lounge-v2: the Empty Room (#77)
 
-Scripts for `data/scans/lounge-v2/` (spec `.plans/lounge-v2-spec.md` §1–3, §5–7). They hard-code the study lounge.
+Scripts for `data/scans/lounge/` (spec `.plans/lounge-v2-spec.md` §1–3, §5–7). They hard-code the study lounge.
 
 Set up once:
 
@@ -13,14 +13,13 @@ Run from `scripts/lounge-v2/room/` with `../.venv/bin/python`:
 
 | Script | Writes |
 |---|---|
-| `splat_v1.py` | `lounge-v1/splat.spz` upright and cropped to the room, and `lounge-v1/manifest.json` → `splatTransform` |
-| `layout.py` | `lounge-v2/layout.json`: the KIRI Layout in the room frame |
-| `align.py` | `lounge-v2/align.json`: every source's transform into the room frame (needs `layout.json`) |
-| `setup.py` | `lounge-v2/setup.json` (keeps `originals`) and `lounge-v2/manifest.json` |
+| `layout.py` | `lounge/layout.json`: the KIRI Layout in the room frame |
+| `align.py` | `lounge/align.json`: every source's transform into the room frame (needs `layout.json`) |
+| `setup.py` | `lounge/setup.json` (keeps `originals`) and `lounge/manifest.json` |
 | `ortho.py` | Run in Blender: unlit orthographic views of a source, one per room surface |
 | `textures.py` | The Empty Room's images, from the views below |
-| `glb.py` | `lounge-v2/empty-room.glb` |
-| `splat_empty.py` | `lounge-v2/empty-room.spz`, when a surface is set to use a splat. None is: see its `SOURCE` |
+| `glb.py` | `lounge/empty-room.glb` |
+| `splat_empty.py` | `lounge/empty-room.spz`, when a surface is set to use a splat. None is: see its `SOURCE` |
 | `grain.py` | A floor view's grain direction (it fixed the chair Detail Captures' yaw in `align.py`) |
 
 Intermediate files go to `scripts/.cache/lounge-v2/` (gitignored).
@@ -42,7 +41,7 @@ $B -b --factory-startup -P ortho.py -- POLYCAM_CHAIR_1.glb ../../.cache/lounge-v
 ```sh
 (cd docs/research/lounge-compare && npm install)   # playwright-core, once
 npx vite --config scripts/lounge-v2/room/viewer/vite.config.mjs &
-node scripts/lounge-v2/room/shoot.mjs empty all --fps   # also: v1 (lounge-v1, furnished)
+node scripts/lounge-v2/room/shoot.mjs empty all --fps
 scripts/lounge-v2/.venv/bin/python scripts/lounge-v2/room/sheet.py scripts/.cache/lounge-v2/shots empty sheet.jpg
 ```
 

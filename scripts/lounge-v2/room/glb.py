@@ -20,7 +20,7 @@ import numpy as np
 import pygltflib as gl
 from PIL import Image
 
-from common import GLAZING, H, V2, WX0, WX1, WZ0, WZ1, X0, X1, Z0, Z1
+from common import GLAZING, H, SCAN, WX0, WX1, WZ0, WZ1, X0, X1, Z0, Z1
 
 TEX = os.path.join(os.path.dirname(__file__), '..', '..', '.cache', 'lounge-v2', 'tex')
 JPEG_QUALITY = 90
@@ -135,7 +135,7 @@ def cuts(edges):
 
 def openings():
     """setup.json's Openings per wall, as (u0, u1, y0, y1) along lounge-v1's line (as the images are laid out)."""
-    with open(os.path.join(V2, 'setup.json')) as f:
+    with open(os.path.join(SCAN, 'setup.json')) as f:
         setup = json.load(f)
     names = {'wl_1': 'north', 'wl_2': 'east', 'wl_3': 'south', 'wl_4': 'west'}
     out = {n: [] for n in names.values()}
@@ -315,7 +315,7 @@ def main():
         prims += [(*door, f'{name}-door-back')] if door else []
         prims += [(*glass, 'glass-back')] if glass else []
         b.node(f'wall-{name}', *prims)
-    path = os.path.join(V2, 'empty-room.glb')
+    path = os.path.join(SCAN, 'empty-room.glb')
     b.save(path)
     print('wrote', path, f'{os.path.getsize(path) / 1e6:.1f} MB')
 

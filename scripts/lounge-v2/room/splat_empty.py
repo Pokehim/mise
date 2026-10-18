@@ -13,7 +13,7 @@ import sys
 
 import numpy as np
 
-from common import CACHE, F, H, REAL, V2, X0, X1, Z0, Z1, read_ply, splat_fit, to_spz, transform_splats, write_ply
+from common import CACHE, F, H, REAL, SCAN, X0, X1, Z0, Z1, read_ply, splat_fit, to_spz, transform_splats, write_ply
 from textures import FLOOR_MASK, GLASS, MASKS
 
 # Chosen from the 8 shots of spec §6 (#77's second PR): with ROOM_1 on every surface, the walls get smeared
@@ -68,7 +68,7 @@ def main():
     for arg in sys.argv[1:]:
         k, v = arg.split('=')
         choice[k] = None if v == 'none' else v
-    with open(os.path.join(V2, 'layout.json')) as f:
+    with open(os.path.join(SCAN, 'layout.json')) as f:
         boxes = [it['box'] for it in json.load(f)['items']]
     parts = []
     cache = {}
@@ -92,7 +92,7 @@ def main():
     os.makedirs(CACHE, exist_ok=True)
     ply = os.path.join(CACHE, 'empty-room.ply')
     write_ply(ply, out)
-    to_spz(ply, 'lounge-v2', out_name='empty-room.spz')
+    to_spz(ply, 'lounge', out_name='empty-room.spz')
 
 
 if __name__ == '__main__':

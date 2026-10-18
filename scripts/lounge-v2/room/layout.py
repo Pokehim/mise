@@ -13,7 +13,7 @@ import os
 import numpy as np
 from pxr import Usd, UsdGeom
 
-from common import REAL, V2, X0, X1, Z0, Z1, mat4, rot_y, rounded, write_json
+from common import REAL, SCAN, X0, X1, Z0, Z1, mat4, rot_y, rounded, write_json
 
 # Which way each Layout is turned in the room (found from its windows and doors; see the docstring).
 TURN = {'KIRI_ENGINE_ROOM_1': np.pi, 'KIRI_ENGINE_ROOM_2': -np.pi / 2}
@@ -107,7 +107,7 @@ def main():
             'KIRI_ENGINE_ROOM_2/room.usdz': [rounded(r, 6) for r in M2],
         },
     }
-    write_json(os.path.join(V2, 'layout.json'), out)
+    write_json(os.path.join(SCAN, 'layout.json'), out)
     print('walls', [(w['wall'], w['start'], w['end']) for w in main_layout['walls']])
     print('openings', [(o['kind'], o['wall'], o['start'], o['end'], o['bottom'], o['height']) for o in main_layout['openings']])
     print('items', len(main_layout['items']), 'cross-check', out['crossCheck']['boxCenterDistanceM'])

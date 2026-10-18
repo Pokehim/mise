@@ -27,8 +27,8 @@ const GPU_ARGS = ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist']
 /** The most a screenshot may weigh: it is saved at the best WebP quality that fits. */
 const MAX_BYTES = 300_000;
 
-/** The real Polycam Scan of the study lounge: three tables along the west wall, a window north, a doorway west. */
-const SCAN = 'lounge-v1';
+/** The study lounge: three tables along the west wall, a window north, a doorway west. */
+const SCAN = 'lounge';
 const floor = (x: number, z: number, rotationY = 0): Placement => ({ position: [x, 0, z], rotationY, mount: 'floor' });
 const START = Date.parse('2026-10-17T18:00:00Z');
 let edits = 0;
@@ -40,7 +40,7 @@ const stamp = (edit: NewEdit) =>
 const EDITS: Edit[] = [
   stamp({ type: 'place', pieceId: 'pc_shoot_sofa', catalogId: 'B07P6JVMJL', placement: floor(1.115, 0.3, -Math.PI / 2) }),
   stamp({ type: 'place', pieceId: 'pc_shoot_rug', catalogId: 'B0732J9VG6', placement: floor(0.5, 0.3, Math.PI / 2) }),
-  stamp({ type: 'replace', originalId: 'og_table', pieceId: 'pc_shoot_table', catalogId: 'B07B78LZQC', placement: floor(-0.8, -1.63, Math.PI / 2), via: 'replace' }),
+  stamp({ type: 'replace', originalId: 'og_table_1', pieceId: 'pc_shoot_table', catalogId: 'B07B78LZQC', placement: floor(-0.8, -1.63, Math.PI / 2), via: 'replace' }),
   stamp({ type: 'place', pieceId: 'pc_shoot_lamp', catalogId: 'B07374SBFL', placement: floor(1.3, -0.8, -Math.PI / 2) }),
   stamp({ type: 'place', pieceId: 'pc_shoot_shelf', catalogId: 'B07PSZHDMW', placement: floor(1.37, -2.6, -Math.PI / 2) }),
   stamp({ type: 'finish', target: { kind: 'wall', wallId: 'wl_2' }, finish: { kind: 'paint', color: '#9caf88' } }),

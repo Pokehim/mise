@@ -10,10 +10,13 @@ import numpy as np
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 REAL = os.path.join(ROOT, 'data', 'scans', 'real-scans')
-V1 = os.path.join(ROOT, 'data', 'scans', 'lounge-v1')
-V2 = os.path.join(ROOT, 'data', 'scans', 'lounge-v2')
+SCAN = os.path.join(ROOT, 'data', 'scans', 'lounge')
 COMPARE = os.path.join(ROOT, 'docs', 'research', 'lounge-compare')
 CACHE = os.path.join(ROOT, 'scripts', '.cache', 'lounge-v2')  # gitignored
+
+# The Main Capture's place in the room frame: lounge-v1's meshTransform (lounge-v1 was the Main Capture as
+# imported; it is gone now, so its placement is kept here).
+MAIN_CAPTURE = {'position': [-0.044, 1.202, 0.029], 'rotationY': -0.008005}
 
 # lounge-v1's room frame: inner faces of the walls, floor at y = 0. Images (ortho.py, textures.py) are laid out on
 # these lines.

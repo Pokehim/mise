@@ -1,0 +1,1360 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "poster-great-wave",
+      "source": "publicdomain",
+      "title": "The Great Wave",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-great-wave.glb",
+      "thumbnail": "/data/catalog/posters/poster-great-wave.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Blue"
+      ],
+      "colorHex": "#eedfc0",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "orange",
+        "gray",
+        "blue"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.metmuseum.org/art/collection/search/45434",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-the-bedroom",
+      "source": "publicdomain",
+      "title": "The Bedroom",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-the-bedroom.glb",
+      "thumbnail": "/data/catalog/posters/poster-the-bedroom.jpg",
+      "colors": [
+        "Gray",
+        "Blue",
+        "Brown"
+      ],
+      "colorHex": "#979991",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "gray",
+        "blue",
+        "brown"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.artic.edu/artworks/28560",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-water-lilies",
+      "source": "publicdomain",
+      "title": "Water Lilies",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-water-lilies.glb",
+      "thumbnail": "/data/catalog/posters/poster-water-lilies.jpg",
+      "colors": [
+        "Blue",
+        "Teal"
+      ],
+      "colorHex": "#4f7189",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "blue",
+        "teal"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.artic.edu/artworks/16568",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-grande-jatte",
+      "source": "publicdomain",
+      "title": "A Sunday on La Grande Jatte",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.954,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-grande-jatte.glb",
+      "thumbnail": "/data/catalog/posters/poster-grande-jatte.jpg",
+      "colors": [
+        "Gray",
+        "Green",
+        "Yellow"
+      ],
+      "colorHex": "#6c6d6c",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "gray",
+        "green",
+        "yellow"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://www.artic.edu/artworks/27992",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-mada-primavesi",
+      "source": "publicdomain",
+      "title": "Mäda Primavesi",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-mada-primavesi.glb",
+      "thumbnail": "/data/catalog/posters/poster-mada-primavesi.jpg",
+      "colors": [
+        "Gray",
+        "Pink",
+        "Orange"
+      ],
+      "colorHex": "#adaaaa",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "gray",
+        "pink",
+        "orange"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.metmuseum.org/art/collection/search/436819",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-sudden-shower",
+      "source": "publicdomain",
+      "title": "Sudden Shower",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-sudden-shower.glb",
+      "thumbnail": "/data/catalog/posters/poster-sudden-shower.jpg",
+      "colors": [
+        "Gray",
+        "Orange"
+      ],
+      "colorHex": "#7c7f75",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "museum",
+        "gray",
+        "orange"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.artic.edu/artworks/64447",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-grand-tour",
+      "source": "publicdomain",
+      "title": "The Grand Tour",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.61,
+        0.914,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-grand-tour.glb",
+      "thumbnail": "/data/catalog/posters/poster-grand-tour.jpg",
+      "colors": [
+        "Orange",
+        "Green",
+        "Red"
+      ],
+      "colorHex": "#efd6b7",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "orange",
+        "green",
+        "red"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://www.jpl.nasa.gov/galleries/visions-of-the-future",
+      "attribution": "Courtesy NASA/JPL-Caltech"
+    },
+    {
+      "id": "poster-visit-mars",
+      "source": "publicdomain",
+      "title": "Visit Historic Mars",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.61,
+        0.914,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-visit-mars.glb",
+      "thumbnail": "/data/catalog/posters/poster-visit-mars.jpg",
+      "colors": [
+        "Red",
+        "Orange"
+      ],
+      "colorHex": "#e0332c",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "red",
+        "orange"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://www.jpl.nasa.gov/galleries/visions-of-the-future",
+      "attribution": "Courtesy NASA/JPL-Caltech"
+    },
+    {
+      "id": "poster-enceladus",
+      "source": "publicdomain",
+      "title": "Visit Enceladus",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-enceladus.glb",
+      "thumbnail": "/data/catalog/posters/poster-enceladus.jpg",
+      "colors": [
+        "Black",
+        "Green",
+        "Red"
+      ],
+      "colorHex": "#241117",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "black",
+        "green",
+        "red"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://www.jpl.nasa.gov/galleries/visions-of-the-future",
+      "attribution": "Courtesy NASA/JPL-Caltech"
+    },
+    {
+      "id": "poster-lunar-holiday",
+      "source": "generated",
+      "title": "Lunar Holiday",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-lunar-holiday.glb",
+      "thumbnail": "/data/catalog/posters/poster-lunar-holiday.jpg",
+      "colors": [
+        "Blue",
+        "Gray",
+        "Orange"
+      ],
+      "colorHex": "#1b2d40",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "blue",
+        "gray",
+        "orange"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-ring-station",
+      "source": "generated",
+      "title": "Ring Station One",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.954,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-ring-station.glb",
+      "thumbnail": "/data/catalog/posters/poster-ring-station.jpg",
+      "colors": [
+        "Blue",
+        "Orange",
+        "Gray"
+      ],
+      "colorHex": "#7293b3",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "blue",
+        "orange",
+        "gray"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-saturn-line",
+      "source": "generated",
+      "title": "See the Rings",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-saturn-line.glb",
+      "thumbnail": "/data/catalog/posters/poster-saturn-line.jpg",
+      "colors": [
+        "Blue",
+        "Orange"
+      ],
+      "colorHex": "#203248",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "blue",
+        "orange"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-away-message",
+      "source": "generated",
+      "title": "Away Message",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-away-message.glb",
+      "thumbnail": "/data/catalog/posters/poster-away-message.jpg",
+      "colors": [
+        "Blue",
+        "Pink"
+      ],
+      "colorHex": "#b8c8e1",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "y2k",
+        "blue",
+        "pink"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-call-me-later",
+      "source": "generated",
+      "title": "Call Me Later",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.319,
+        0.472,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-call-me-later.glb",
+      "thumbnail": "/data/catalog/posters/poster-call-me-later.jpg",
+      "colors": [
+        "Pink",
+        "Gray"
+      ],
+      "colorHex": "#d68ca3",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "y2k",
+        "pink",
+        "gray"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-dial-up-dreams",
+      "source": "generated",
+      "title": "Dial-Up Dreams",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-dial-up-dreams.glb",
+      "thumbnail": "/data/catalog/posters/poster-dial-up-dreams.jpg",
+      "colors": [
+        "Teal",
+        "Blue"
+      ],
+      "colorHex": "#bddadf",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "y2k",
+        "teal",
+        "blue"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-butterfly-club",
+      "source": "generated",
+      "title": "Butterfly Club",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-butterfly-club.glb",
+      "thumbnail": "/data/catalog/posters/poster-butterfly-club.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "colorHex": "#bd79a1",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "y2k",
+        "pink"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-cyber-angel",
+      "source": "generated",
+      "title": "Cyber Angel",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-cyber-angel.glb",
+      "thumbnail": "/data/catalog/posters/poster-cyber-angel.jpg",
+      "colors": [
+        "Blue",
+        "Black"
+      ],
+      "colorHex": "#314f7e",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "y2k",
+        "blue",
+        "black"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-mix-vol-2",
+      "source": "generated",
+      "title": "Mix Vol. 2",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-mix-vol-2.glb",
+      "thumbnail": "/data/catalog/posters/poster-mix-vol-2.jpg",
+      "colors": [
+        "Pink",
+        "Gray"
+      ],
+      "colorHex": "#a68496",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "y2k",
+        "pink",
+        "gray"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-starfruit-racer",
+      "source": "generated",
+      "title": "Starfruit Racer",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-starfruit-racer.glb",
+      "thumbnail": "/data/catalog/posters/poster-starfruit-racer.jpg",
+      "colors": [
+        "Pink",
+        "Orange",
+        "Red"
+      ],
+      "colorHex": "#852f62",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "retro gaming",
+        "pink",
+        "orange",
+        "red"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-lantern-keep",
+      "source": "generated",
+      "title": "Lantern Keep",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-lantern-keep.glb",
+      "thumbnail": "/data/catalog/posters/poster-lantern-keep.jpg",
+      "colors": [
+        "Blue",
+        "Black"
+      ],
+      "colorHex": "#242462",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "retro gaming",
+        "blue",
+        "black"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-comet-courier",
+      "source": "generated",
+      "title": "Comet Courier",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-comet-courier.glb",
+      "thumbnail": "/data/catalog/posters/poster-comet-courier.jpg",
+      "colors": [
+        "Purple"
+      ],
+      "colorHex": "#43265c",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "retro gaming",
+        "purple"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-mossback-island",
+      "source": "generated",
+      "title": "Mossback Island",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.954,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-mossback-island.glb",
+      "thumbnail": "/data/catalog/posters/poster-mossback-island.jpg",
+      "colors": [
+        "Teal",
+        "Green"
+      ],
+      "colorHex": "#2fc0b5",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "retro gaming",
+        "teal",
+        "green"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-insert-coin",
+      "source": "generated",
+      "title": "Insert Coin",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-insert-coin.glb",
+      "thumbnail": "/data/catalog/posters/poster-insert-coin.jpg",
+      "colors": [
+        "Black",
+        "Pink",
+        "Blue"
+      ],
+      "colorHex": "#11101b",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "retro gaming",
+        "black",
+        "pink",
+        "blue"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-neon-kite",
+      "source": "generated",
+      "title": "Neon Kite",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-neon-kite.glb",
+      "thumbnail": "/data/catalog/posters/poster-neon-kite.jpg",
+      "colors": [
+        "Pink",
+        "Orange",
+        "Purple"
+      ],
+      "colorHex": "#c78584",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "retro gaming",
+        "pink",
+        "orange",
+        "purple"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-rooftop-sunset",
+      "source": "generated",
+      "title": "Rooftop Sunset",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.954,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-rooftop-sunset.glb",
+      "thumbnail": "/data/catalog/posters/poster-rooftop-sunset.jpg",
+      "colors": [
+        "Orange",
+        "Blue",
+        "Gray"
+      ],
+      "colorHex": "#d58452",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "anime sunsets",
+        "orange",
+        "blue",
+        "gray"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-railroad-crossing",
+      "source": "generated",
+      "title": "Railroad Crossing",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-railroad-crossing.glb",
+      "thumbnail": "/data/catalog/posters/poster-railroad-crossing.jpg",
+      "colors": [
+        "Blue",
+        "Gray"
+      ],
+      "colorHex": "#4282ac",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "anime sunsets",
+        "blue",
+        "gray"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-riverbank",
+      "source": "generated",
+      "title": "Riverbank",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.914,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-riverbank.glb",
+      "thumbnail": "/data/catalog/posters/poster-riverbank.jpg",
+      "colors": [
+        "Pink",
+        "Green",
+        "Blue"
+      ],
+      "colorHex": "#d7aeb0",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "anime sunsets",
+        "pink",
+        "green",
+        "blue"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-corner-store",
+      "source": "generated",
+      "title": "Corner Store",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-corner-store.glb",
+      "thumbnail": "/data/catalog/posters/poster-corner-store.jpg",
+      "colors": [
+        "Gray",
+        "Blue"
+      ],
+      "colorHex": "#56565a",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "anime sunsets",
+        "gray",
+        "blue"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-after-school",
+      "source": "generated",
+      "title": "After School",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-after-school.glb",
+      "thumbnail": "/data/catalog/posters/poster-after-school.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Brown"
+      ],
+      "colorHex": "#c0976a",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "anime sunsets",
+        "orange",
+        "gray",
+        "brown"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-seaside-town",
+      "source": "generated",
+      "title": "Seaside Town",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-seaside-town.glb",
+      "thumbnail": "/data/catalog/posters/poster-seaside-town.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Pink"
+      ],
+      "colorHex": "#c8a98b",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "anime sunsets",
+        "orange",
+        "gray",
+        "pink"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-glass-orchard",
+      "source": "generated",
+      "title": "Glass Orchard, Live",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-glass-orchard.glb",
+      "thumbnail": "/data/catalog/posters/poster-glass-orchard.jpg",
+      "colors": [
+        "Beige",
+        "Pink"
+      ],
+      "colorHex": "#f5ece3",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "beige",
+        "pink"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-moth-and-kettle",
+      "source": "generated",
+      "title": "Moth & Kettle, Live",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-moth-and-kettle.glb",
+      "thumbnail": "/data/catalog/posters/poster-moth-and-kettle.jpg",
+      "colors": [
+        "Orange",
+        "Beige",
+        "Gray"
+      ],
+      "colorHex": "#efdecb",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "orange",
+        "beige",
+        "gray"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-saturday-ghosts",
+      "source": "generated",
+      "title": "The Saturday Ghosts, Live",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-saturday-ghosts.glb",
+      "thumbnail": "/data/catalog/posters/poster-saturday-ghosts.jpg",
+      "colors": [
+        "Yellow",
+        "Blue"
+      ],
+      "colorHex": "#f2e8a9",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "yellow",
+        "blue"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-kite-weather",
+      "source": "generated",
+      "title": "Kite Weather Fest",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-kite-weather.glb",
+      "thumbnail": "/data/catalog/posters/poster-kite-weather.jpg",
+      "colors": [
+        "White",
+        "Red"
+      ],
+      "colorHex": "#f7f4f3",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "white",
+        "red"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-soft-arcade",
+      "source": "generated",
+      "title": "Soft Arcade, Live",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-soft-arcade.glb",
+      "thumbnail": "/data/catalog/posters/poster-soft-arcade.jpg",
+      "colors": [
+        "Orange",
+        "Pink",
+        "Purple"
+      ],
+      "colorHex": "#f9ebd9",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "orange",
+        "pink",
+        "purple"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-paper-satellites",
+      "source": "generated",
+      "title": "Paper Satellites, Live",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-paper-satellites.glb",
+      "thumbnail": "/data/catalog/posters/poster-paper-satellites.jpg",
+      "colors": [
+        "Beige",
+        "Orange"
+      ],
+      "colorHex": "#ede7da",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "beige",
+        "orange"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-see-america-arches",
+      "source": "publicdomain",
+      "title": "See America: Arches",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-see-america-arches.glb",
+      "thumbnail": "/data/catalog/posters/poster-see-america-arches.jpg",
+      "colors": [
+        "Orange",
+        "Pink",
+        "Red"
+      ],
+      "colorHex": "#c6a47f",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "orange",
+        "pink",
+        "red"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/item/93505613/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-welcome-to-montana",
+      "source": "publicdomain",
+      "title": "See America: Welcome to Montana",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-welcome-to-montana.glb",
+      "thumbnail": "/data/catalog/posters/poster-welcome-to-montana.jpg",
+      "colors": [
+        "Gray",
+        "Beige",
+        "Orange"
+      ],
+      "colorHex": "#404243",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "gray",
+        "beige",
+        "orange"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.loc.gov/item/96503136/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-parks-wild-life",
+      "source": "publicdomain",
+      "title": "The National Parks Preserve Wild Life",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-parks-wild-life.glb",
+      "thumbnail": "/data/catalog/posters/poster-parks-wild-life.jpg",
+      "colors": [
+        "Orange",
+        "Gray"
+      ],
+      "colorHex": "#cd8d67",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "orange",
+        "gray"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/item/98518597/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-pine-hollow",
+      "source": "generated",
+      "title": "Pine Hollow State Park",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-pine-hollow.glb",
+      "thumbnail": "/data/catalog/posters/poster-pine-hollow.jpg",
+      "colors": [
+        "Teal",
+        "Orange",
+        "Green"
+      ],
+      "colorHex": "#2a5b59",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "teal",
+        "orange",
+        "green"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-red-mesa",
+      "source": "generated",
+      "title": "Red Mesa",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.65,
+        0.954,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-red-mesa.glb",
+      "thumbnail": "/data/catalog/posters/poster-red-mesa.jpg",
+      "colors": [
+        "Red",
+        "Orange",
+        "Pink"
+      ],
+      "colorHex": "#7e3c34",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "red",
+        "orange",
+        "pink"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    },
+    {
+      "id": "poster-coastal-route",
+      "source": "generated",
+      "title": "Coastal Route",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-coastal-route.glb",
+      "thumbnail": "/data/catalog/posters/poster-coastal-route.jpg",
+      "colors": [
+        "Orange",
+        "Teal"
+      ],
+      "colorHex": "#e6caa3",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "orange",
+        "teal"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Generated with FLUX on fal"
+    }
+  ]
+}

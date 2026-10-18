@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "synthetic-study",
+  "name": "Synthetic study lounge (3.12 × 7.22 m)",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  }
+}

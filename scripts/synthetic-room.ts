@@ -1,17 +1,19 @@
-// Synthetic Scans to build against before the real ones exist. Run: npx tsx scripts/synthetic-room.ts
+// Synthetic Scans to build against before the real ones exist. Run: npx tsx scripts/synthetic-room.ts [scanId...]
 //
 // - data/scans/synthetic/: a dorm, one Capture.
 // - data/scans/synthetic-lounge/: a lounge with a Main Capture and a Fill Capture (ADR-0007). In the
 //   Fill Capture the furniture has moved, the exposure is 10% darker, and everything is seen from
 //   another frame, as a second walk-through with Polycam would see it.
+// - data/scans/synthetic-study/: the real study lounge (lounge-v1) at its size, one Capture.
 //
 // Each room is built in the room frame (meters, +Y up, floor at y = 0), saved as a raw .glb, and
 // imported with scan-import, so it goes through the same pipeline as a Polycam export. The room's true
 // setup.json is written too, which Room Setup can be checked against.
+import { readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Document, type TypedArray } from '@gltf-transform/core';
 import { PNG } from 'pngjs';
 import type { Box, Hex, Opening, Original, RoomSetup, ScanManifest, Vec2, Vec3, Wall, YawTransform } from '../shared/types';
@@ -34,7 +36,9 @@ interface Shape { name: string; texture: PNG; positions: number[]; uvs: number[]
 /** An Original, with its Parts as boxes in its own frame: bottom-center origin, +Z front. */
 interface Furniture {
   original: Omit<Original, 'floorColor'>;
-  parts: { name: string; color: Rgb; boxes: [Vec3, Vec3][]; raised?: boolean }[];
+  /** texture: a photo (a PNG file) spread over each face of the part, instead of its color. */
+  /** noBack: leave out each box's back (−Z) face, so the part is see-through from behind (faces are one-sided). */
+  parts: { name: string; color: Rgb; boxes: [Vec3, Vec3][]; raised?: boolean; texture?: string; noBack?: boolean }[];
 }
 
 /** A room: its size (width x, depth z, height y, centered on the origin), Openings, colors and furniture. */
@@ -45,6 +49,21 @@ interface Room {
   openings: Opening[];
   colors: { floor: Rgb; ceiling: Rgb; walls: Rgb[] };
   furniture: Furniture[];
+  /** Built-in parts of the room that aren't Originals, such as window frames, as room-frame boxes. */
+  fixtures?: { name: string; color: Rgb; boxes: [Vec3, Vec3][]; texture?: string }[];
+  /** Colors for openingFixtures, when the room's real ones are known. */
+  fixtureColors?: { frame: Rgb; glass: Rgb; door: Rgb };
+  /**
+   * Photos (PNG files) for the room's surfaces, used instead of their colors: each spans its
+   * whole surface, left to right along a wall from its start, and with the North end up on the floor.
+   * `openings` maps an Opening id to the photo for its glass or its door slab.
+   */
+  textures?: { floor?: string; ceiling?: string; walls?: (string | undefined)[]; openings?: Record<string, string> };
+  /**
+   * The color of the room's outside: a skin 1 cm outside each wall (with its Openings cut), over the
+   * ceiling and under the floor. Doors look the same on both sides. Without it, the outside isn't drawn.
+   */
+  exterior?: Rgb;
 }
 
 /** How one Capture of a room differs from another: its random seeds, its exposure, and where moved furniture stood. */
@@ -85,8 +104,11 @@ const rotateY = ([x, y, z]: Vec3, angle: number): Vec3 => [
 function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, exposure, moved, occluded }: Capture): Shape[] {
   const noise = seededRandom(noiseSeed);
   let seed = textureSeed;
-  const shape = (name: string, color: Rgb): Shape =>
-    ({ name, texture: noiseTexture(color.map((c) => c * exposure) as Rgb, ++seed), positions: [], uvs: [], indices: [] });
+  const shape = (name: string, color: Rgb, photo?: string): Shape => ({
+    name,
+    texture: photo ? PNG.sync.read(readFileSync(photo)) : noiseTexture(color.map((c) => c * exposure) as Rgb, ++seed),
+    positions: [], uvs: [], indices: [],
+  });
 
   /**
    * Adds the rectangle corner + s·u + t·v (s, t in 0–1) as a grid of cells no larger than CELL, facing u × v.
@@ -118,12 +140,12 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
   }
 
   /** Adds the outside of the box min–max, given in an Original's frame, placed where it stands. */
-  function addBox(target: Shape, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { position, rotationY }: Pose, raised = false) {
+  function addBox(target: Shape, [x0, y0, z0]: Vec3, [x1, y1, z1]: Vec3, { position, rotationY }: Pose, raised = false, noBack = false) {
     const [dx, dy, dz] = [x1 - x0, y1 - y0, z1 - z0];
     const faces: [Vec3, Vec3, Vec3][] = [
       [[x0, y1, z1], [dx, 0, 0], [0, 0, -dz]], // top
       [[x0, y0, z1], [dx, 0, 0], [0, dy, 0]], // front
-      [[x1, y0, z0], [-dx, 0, 0], [0, dy, 0]], // back
+      ...(noBack ? [] : [[[x1, y0, z0], [-dx, 0, 0], [0, dy, 0]] as [Vec3, Vec3, Vec3]]), // back
       [[x1, y0, z1], [0, 0, -dz], [0, dy, 0]], // right
       [[x0, y0, z0], [0, 0, dz], [0, dy, 0]], // left
     ];
@@ -164,13 +186,13 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
   });
 
   const [W, D, H] = room.size;
-  const floor = shape('Floor', room.colors.floor);
+  const floor = shape('Floor', room.colors.floor, room.textures?.floor);
   addGrid(floor, [-W / 2, 0, D / 2], [W, 0, 0], [0, 0, -D], [], occluded ? underFurniture : undefined);
-  const ceiling = shape('Ceiling', room.colors.ceiling);
+  const ceiling = shape('Ceiling', room.colors.ceiling, room.textures?.ceiling);
   addGrid(ceiling, [-W / 2, H, -D / 2], [W, 0, 0], [0, 0, D]);
 
   const wallShapes = walls.map((wall, i) => {
-    const wallShape = shape(wall.name, room.colors.walls[i]);
+    const wallShape = shape(wall.name, room.colors.walls[i], room.textures?.walls?.[i]);
     const [dx, dz] = [wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]];
     const length = Math.hypot(dx, dz);
     const openingRects = room.openings
@@ -183,12 +205,38 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
   });
 
   const partShapes = room.furniture.flatMap(({ original, parts }) =>
-    parts.map(({ name, color, boxes, raised }) => {
-      const partShape = shape(name, color);
-      for (const [min, max] of boxes) addBox(partShape, min, max, moved[original.id] ?? original.box, raised);
+    parts.map(({ name, color, boxes, raised, texture, noBack }) => {
+      const partShape = shape(name, color, texture);
+      for (const [min, max] of boxes) addBox(partShape, min, max, moved[original.id] ?? original.box, raised, noBack);
       return partShape;
     }));
-  return [floor, ceiling, ...wallShapes, ...partShapes];
+  const fixtureShapes = (room.fixtures ?? []).map(({ name, color, boxes, texture }) => {
+    const fixtureShape = shape(name, color, texture);
+    for (const [min, max] of boxes) addBox(fixtureShape, min, max, { position: [0, 0, 0], rotationY: 0 }, true);
+    return fixtureShape;
+  });
+  // The outside: each wall's skin faces out (its grid runs from the wall's end back to its start), so
+  // the split gives it to its wall and it fades with it.
+  const exteriorShapes: Shape[] = [];
+  if (room.exterior) {
+    const SKIN = 0.01;
+    walls.forEach((wall, i) => {
+      const skin = shape(`${wall.name} outside`, room.exterior!);
+      const [dx, dz] = [wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]];
+      const length = Math.hypot(dx, dz);
+      const openingRects = room.openings
+        .filter((opening) => opening.wallId === wall.id)
+        .map(({ offset, width, bottom, height }): Rect => [1 - (offset + width) / length, bottom / H, 1 - offset / length, (bottom + height) / H]);
+      addGrid(skin, [wall.end[0] - wall.normal[0] * SKIN, 0, wall.end[1] - wall.normal[1] * SKIN], [-dx, 0, -dz], [0, H, 0], openingRects);
+      exteriorShapes.push(skin);
+    });
+    const top = shape('Ceiling outside', room.exterior);
+    addGrid(top, [-W / 2, H + SKIN, D / 2], [W, 0, 0], [0, 0, -D]);
+    const under = shape('Floor outside', room.exterior);
+    addGrid(under, [-W / 2, -SKIN, -D / 2], [W, 0, 0], [0, 0, D]);
+    exteriorShapes.push(top, under);
+  }
+  return [floor, ceiling, ...wallShapes, ...partShapes, ...fixtureShapes, ...exteriorShapes];
 }
 
 /** The four walls of a rectangular room, North (−Z) first, clockwise seen from above. */
@@ -413,6 +461,152 @@ export const LOUNGE: Room = {
   ],
 };
 
+/** A study table: a white top on four metal legs, long side along X, at x, z in the room. */
+/** Flat photos of lounge-v1's real surfaces, rendered straight-on from its mesh (see lounge-v1-textures/README.md). */
+const LOUNGE_PHOTO = (name: string) => fileURLToPath(new URL(`../data/scans/real-scans/lounge-v1-textures/${name}.png`, import.meta.url));
+
+const studyTable = (n: number, x: number, z: number): Furniture => ({
+  original: {
+    id: `og_table_${n}`, label: `Table ${n}`, category: 'table', kept: false,
+    box: { position: [x, 0, z], size: [1.49, 0.75, 1.05], rotationY: 0 },
+  },
+  parts: [
+    { name: `Table ${n} top`, color: [232, 216, 193], boxes: [[[-0.745, 0.72, -0.525], [0.745, 0.75, 0.525]]], raised: true, texture: LOUNGE_PHOTO('table_top') },
+    { name: `Table ${n} legs`, color: [61, 54, 43], boxes: legs(1.49, 1.05, 0.05, 0.72) },
+  ],
+});
+
+/** Four shell chairs around a study table, two on each long side, tucked 0.3 m under it. */
+const studyChairs = (n: number, x: number, z: number): Furniture[] =>
+  [[-1, 'north'], [1, 'south']].flatMap(([side, name]) => [-0.37, 0.37].map((dx, i): Furniture => ({
+    // A north chair faces +Z, toward the table; a south chair faces −Z.
+    original: {
+      id: `og_chair_${n}_${name}_${i + 1}`, label: `Chair ${n}${name === 'north' ? 'N' : 'S'}${i + 1}`, category: 'chair', kept: false,
+      box: { position: [x + dx, 0, z + (side as number) * 0.45], size: [0.45, 0.85, 0.45], rotationY: side === -1 ? 0 : Math.PI },
+    },
+    parts: [
+      { name: 'Chair seat', color: [173, 168, 156], boxes: [[[-0.225, 0.42, -0.225], [0.225, 0.45, 0.225]]], raised: true },
+      { name: 'Chair back', color: [173, 168, 156], boxes: [[[-0.225, 0.45, -0.225], [0.225, 0.85, -0.195]]] },
+      { name: 'Chair legs', color: [148, 109, 69], boxes: legs(0.45, 0.45, 0.03, 0.42) },
+    ],
+  })));
+
+/**
+ * Frames, glass and doors for a room's Openings, as room-frame boxes. Every box stays inside its
+ * Opening's outline, so the load-time split gives it to the Shell and painting the wall leaves it alone.
+ * A window gets a frame, glass just outside the wall line, a mullion every 0.6–0.9 m, and a sill when
+ * it doesn't reach the floor; a door gets a frame, a slab and a handle on the side away from its hinge.
+ */
+function openingFixtures(room: Room): NonNullable<Room['fixtures']> {
+  const { walls } = roomWalls(room.size);
+  const frames: [Vec3, Vec3][] = [];
+  const glass: NonNullable<Room['fixtures']> = [];
+  const sills: [Vec3, Vec3][] = [];
+  const doors: NonNullable<Room['fixtures']> = [];
+  const handles: [Vec3, Vec3][] = [];
+  const F = 0.05; // frame width
+  for (const { id, wallId, kind, offset, width, bottom, height, swing } of room.openings) {
+    const photo = room.textures?.openings?.[id];
+    const wall = walls.find((w) => w.id === wallId)!;
+    const length = Math.hypot(wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]);
+    const dir: Vec2 = [(wall.end[0] - wall.start[0]) / length, (wall.end[1] - wall.start[1]) / length];
+    /** A box from along a0–a1, up y0–y1, out o0–o1 (out is into the room), in room-frame min–max. */
+    const box = (a0: number, a1: number, y0: number, y1: number, o0: number, o1: number): [Vec3, Vec3] => {
+      const at = (a: number, o: number) => [wall.start[0] + dir[0] * a + wall.normal[0] * o, wall.start[1] + dir[1] * a + wall.normal[1] * o];
+      const [p, q] = [at(a0, o0), at(a1, o1)];
+      return [[Math.min(p[0], q[0]), y0, Math.min(p[1], q[1])], [Math.max(p[0], q[0]), y1, Math.max(p[1], q[1])]];
+    };
+    const [a0, a1, y0, y1] = [offset, offset + width, bottom, bottom + height];
+    if (kind === 'door') {
+      frames.push(box(a0, a0 + F, y0, y1, -0.03, 0.05), box(a1 - F, a1, y0, y1, -0.03, 0.05), box(a0, a1, y1 - F, y1, -0.03, 0.05));
+      doors.push({ name: `Door ${id}`, color: room.fixtureColors?.door ?? [196, 138, 72], boxes: [box(a0 + F, a1 - F, y0, y1 - F, -0.02, 0.02)], texture: photo });
+      // Seen from inside, the hinge is on the right for in-right; along runs right to left from inside.
+      const handleAt = swing === 'in-right' ? a0 + F + 0.06 : a1 - F - 0.11;
+      handles.push(box(handleAt, handleAt + 0.05, 0.95, 1.05, 0.02, 0.07));
+      continue;
+    }
+    frames.push(box(a0, a0 + F, y0, y1, -0.03, 0.05), box(a1 - F, a1, y0, y1, -0.03, 0.05), box(a0, a1, y1 - F, y1, -0.03, 0.05));
+    if (bottom > 0) {
+      frames.push(box(a0, a1, y0, y0 + F, -0.03, 0.05));
+      sills.push(box(a0, a1, y0, y0 + 0.03, 0.05, 0.16));
+    } else {
+      frames.push(box(a0, a1, 0, 0.1, -0.03, 0.05)); // a kick rail along the floor
+    }
+    const panes = Math.max(1, Math.round((width - 2 * F) / 0.75));
+    for (let i = 1; i < panes; i++) {
+      const at = a0 + F + ((width - 2 * F) * i) / panes;
+      frames.push(box(at - 0.025, at + 0.025, y0, y1, -0.03, 0.05));
+    }
+    glass.push({ name: `Glass ${id}`, color: room.fixtureColors?.glass ?? [168, 192, 204], boxes: [box(a0 + F, a1 - F, y0 + (bottom > 0 ? F : 0.1), y1 - F, -0.025, -0.015)], texture: photo });
+  }
+  return [
+    { name: 'Window frames', color: room.fixtureColors?.frame ?? [74, 76, 80], boxes: frames },
+    { name: 'Window sills', color: [232, 230, 222], boxes: sills },
+    { name: 'Door handle', color: [150, 150, 154], boxes: handles },
+    ...glass,
+    ...doors,
+  ].filter(({ boxes }) => boxes.length > 0) as NonNullable<Room['fixtures']>;
+}
+
+/**
+ * A whiteboard on a wall: a white board in an aluminium frame with a marker tray, see-through from
+ * behind. It stands 2.5 cm off the wall, so the load-time split gives its triangles to it and not to
+ * the wall.
+ */
+const whiteboard = (position: Vec3, rotationY: number, width: number, height: number, photo?: string): Furniture => ({
+  original: { id: 'og_whiteboard', label: 'Whiteboard', category: 'wall_art', kept: false, box: { position, rotationY, size: [width, height, 0.08] } },
+  parts: [
+    { name: 'Whiteboard surface', color: [204, 192, 175], boxes: [[[-width / 2 + 0.03, 0.03, -0.015], [width / 2 - 0.03, height - 0.03, 0.01]]], raised: true, texture: photo, noBack: true },
+    {
+      name: 'Whiteboard frame', color: [168, 170, 174], raised: true, noBack: true, boxes: [
+        [[-width / 2, 0, -0.015], [width / 2, 0.03, 0.015]], [[-width / 2, height - 0.03, -0.015], [width / 2, height, 0.015]],
+        [[-width / 2, 0.03, -0.015], [-width / 2 + 0.03, height - 0.03, 0.015]], [[width / 2 - 0.03, 0.03, -0.015], [width / 2, height - 0.03, 0.015]],
+      ],
+    },
+    { name: 'Marker tray', color: [150, 152, 156], boxes: [[[-width / 2 + 0.2, 0, 0.015], [width / 2 - 0.2, 0.03, 0.055]]], raised: true, noBack: true },
+  ],
+});
+
+/**
+ * The real study lounge (lounge-v1) at its Room Setup size and in its real colors: the window at
+ * the North end, the door in the South-East corner, floor-to-ceiling glass in the South-West corner,
+ * the whiteboard along the East wall, and its three tables against the West wall where the splat
+ * shows them.
+ */
+const STUDY_TABLES: [x: number, z: number][] = [[-0.784, -1.691], [-0.784, -0.307], [-0.784, 1.734]];
+export const STUDY: Room = {
+  scanId: 'synthetic-study',
+  name: 'Synthetic study lounge (3.12 × 7.22 m)',
+  size: [3.118, 7.218, 2.431],
+  openings: [
+    // The window at the North end, opposite the door.
+    { id: 'op_1', kind: 'window', wallId: 'wl_1', offset: 0.508, width: 1.717, bottom: 0.861, height: 1.467 },
+    // Floor-to-ceiling glass in the South-West corner, along the West wall (which starts at that corner).
+    { id: 'op_2', kind: 'window', wallId: 'wl_4', offset: 0.053, width: 1.731, bottom: 0, height: 2.431 },
+    // The door at the South end, in its South-East corner, where the splat shows it (the South wall
+    // starts at that corner).
+    { id: 'op_3', kind: 'door', wallId: 'wl_3', offset: 0.03, width: 0.95, bottom: 0, height: 2.15, swing: 'in-right' },
+  ],
+  // Median texture colors of the real lounge-v1 mesh, region by region.
+  colors: { floor: [113, 97, 85], ceiling: [136, 128, 114], walls: [[102, 119, 107], [106, 121, 110], [113, 105, 77], [111, 125, 113]] },
+  // The glass blacked out.
+  fixtureColors: { frame: [24, 34, 40], glass: [0, 0, 0], door: [159, 121, 76] },
+  exterior: [0, 0, 0],
+  textures: {
+    floor: LOUNGE_PHOTO('floor'),
+    ceiling: LOUNGE_PHOTO('ceiling'),
+    walls: ['wall_n', 'wall_e', 'wall_s', 'wall_w'].map(LOUNGE_PHOTO),
+    openings: { op_3: LOUNGE_PHOTO('door') },
+  },
+  furniture: [
+    ...STUDY_TABLES.flatMap(([x, z], i) => [studyTable(i + 1, x, z), ...studyChairs(i + 1, x, z)]),
+    // The length of the East wall, at the height the mesh shows (0.85–2.02 m), with the real board's
+    // writing stretched along it: facing −X, its back 2.5 cm off the wall.
+    whiteboard([3.118 / 2 - 0.04, 0.851, 0], -Math.PI / 2, 7.118, 1.165, LOUNGE_PHOTO('whiteboard')),
+  ],
+};
+STUDY.fixtures = openingFixtures(STUDY);
+
 /** Where each non-Kept lounge Original stood during the Fill Capture: upright, and off every Original's spot. */
 export const LOUNGE_FILL_MOVED: Record<string, Pose> = {
   og_sofa: { position: [0.9, 0, -1.6], rotationY: -Math.PI / 2 },   // turned around: its back faces the room
@@ -441,17 +635,24 @@ async function importCapture(shapes: Shape[], room: Room, fill: boolean, frame?:
   }
 }
 
+/** A room with one Capture: its room.glb, manifest.json and true setup.json. */
+async function singleCapture(room: Room, noiseSeed: number, textureSeed: number) {
+  const { corners, walls } = roomWalls(room.size);
+  const shapes = captureShapes(room, walls, { noiseSeed, textureSeed, exposure: 1, moved: {} });
+  const { dir, stats } = await importCapture(shapes, room, false);
+  await writeJson(join(dir, 'setup.json'), roomSetup(room, walls, corners, shapes[0].texture));
+  console.log(`Wrote ${dir}: room.glb, manifest.json, and setup.json\n\n${formatSummary(stats)}\n`);
+}
+
 async function main() {
+  // Only the rooms named on the command line, by scan id, or all of them.
+  const only = process.argv.slice(2);
+  const wanted = (scanId: string) => only.length === 0 || only.includes(scanId);
+  if (wanted(STUDY.scanId)) await singleCapture(STUDY, 301, 300);
   // The dorm: one Capture.
-  {
-    const { corners, walls } = roomWalls(DORM.size);
-    const shapes = captureShapes(DORM, walls, { noiseSeed: 1, textureSeed: 0, exposure: 1, moved: {} });
-    const { dir, stats } = await importCapture(shapes, DORM, false);
-    await writeJson(join(dir, 'setup.json'), roomSetup(DORM, walls, corners, shapes[0].texture));
-    console.log(`Wrote ${dir}: room.glb, manifest.json, and setup.json\n\n${formatSummary(stats)}\n`);
-  }
+  if (wanted(DORM.scanId)) await singleCapture(DORM, 1, 0);
   // The lounge: a Main Capture, then a Fill Capture with the furniture moved, seen from another frame.
-  {
+  if (wanted(LOUNGE.scanId)) {
     const { corners, walls } = roomWalls(LOUNGE.size);
     const main = captureShapes(LOUNGE, walls, { noiseSeed: 101, textureSeed: 100, exposure: 1, moved: {}, occluded: true });
     const fill = captureShapes(LOUNGE, walls, { noiseSeed: 202, textureSeed: 200, exposure: 0.9, moved: LOUNGE_FILL_MOVED, occluded: true });

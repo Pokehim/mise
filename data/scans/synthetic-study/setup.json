@@ -1,0 +1,447 @@
+{
+  "version": 1,
+  "scanId": "synthetic-study",
+  "ceilingHeight": 2.431,
+  "floor": {
+    "polygon": [
+      [
+        -1.559,
+        -3.609
+      ],
+      [
+        1.559,
+        -3.609
+      ],
+      [
+        1.559,
+        3.609
+      ],
+      [
+        -1.559,
+        3.609
+      ]
+    ]
+  },
+  "walls": [
+    {
+      "id": "wl_1",
+      "name": "North wall",
+      "start": [
+        -1.559,
+        -3.609
+      ],
+      "end": [
+        1.559,
+        -3.609
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_2",
+      "name": "East wall",
+      "start": [
+        1.559,
+        -3.609
+      ],
+      "end": [
+        1.559,
+        3.609
+      ],
+      "normal": [
+        -1,
+        0
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_3",
+      "name": "South wall",
+      "start": [
+        1.559,
+        3.609
+      ],
+      "end": [
+        -1.559,
+        3.609
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_4",
+      "name": "West wall",
+      "start": [
+        -1.559,
+        3.609
+      ],
+      "end": [
+        -1.559,
+        -3.609
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.431
+    }
+  ],
+  "openings": [
+    {
+      "id": "op_1",
+      "kind": "window",
+      "wallId": "wl_1",
+      "offset": 0.508,
+      "width": 1.717,
+      "bottom": 0.861,
+      "height": 1.467
+    },
+    {
+      "id": "op_2",
+      "kind": "window",
+      "wallId": "wl_4",
+      "offset": 0.053,
+      "width": 1.731,
+      "bottom": 0,
+      "height": 2.431
+    },
+    {
+      "id": "op_3",
+      "kind": "door",
+      "wallId": "wl_3",
+      "offset": 0.03,
+      "width": 0.95,
+      "bottom": 0,
+      "height": 2.15,
+      "swing": "in-right"
+    }
+  ],
+  "originals": [
+    {
+      "id": "og_table_1",
+      "label": "Table 1",
+      "category": "table",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.784,
+          0,
+          -1.691
+        ],
+        "size": [
+          1.49,
+          0.75,
+          1.05
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#7f6f61"
+    },
+    {
+      "id": "og_chair_1_north_1",
+      "label": "Chair 1N1",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          -2.141
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#7f7062"
+    },
+    {
+      "id": "og_chair_1_north_2",
+      "label": "Chair 1N2",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.41400000000000003,
+          0,
+          -2.141
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#7f6f61"
+    },
+    {
+      "id": "og_chair_1_south_1",
+      "label": "Chair 1S1",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          -1.241
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "floorColor": "#7d6e60"
+    },
+    {
+      "id": "og_chair_1_south_2",
+      "label": "Chair 1S2",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.41400000000000003,
+          0,
+          -1.241
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "floorColor": "#7d6e61"
+    },
+    {
+      "id": "og_table_2",
+      "label": "Table 2",
+      "category": "table",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.784,
+          0,
+          -0.307
+        ],
+        "size": [
+          1.49,
+          0.75,
+          1.05
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#7e7062"
+    },
+    {
+      "id": "og_chair_2_north_1",
+      "label": "Chair 2N1",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          -0.757
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#7d6e60"
+    },
+    {
+      "id": "og_chair_2_north_2",
+      "label": "Chair 2N2",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.41400000000000003,
+          0,
+          -0.757
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#7f7063"
+    },
+    {
+      "id": "og_chair_2_south_1",
+      "label": "Chair 2S1",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          0.14300000000000002
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "floorColor": "#807163"
+    },
+    {
+      "id": "og_chair_2_south_2",
+      "label": "Chair 2S2",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.41400000000000003,
+          0,
+          0.14300000000000002
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "floorColor": "#807062"
+    },
+    {
+      "id": "og_table_3",
+      "label": "Table 3",
+      "category": "table",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.784,
+          0,
+          1.734
+        ],
+        "size": [
+          1.49,
+          0.75,
+          1.05
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#827264"
+    },
+    {
+      "id": "og_chair_3_north_1",
+      "label": "Chair 3N1",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          1.284
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#817264"
+    },
+    {
+      "id": "og_chair_3_north_2",
+      "label": "Chair 3N2",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.41400000000000003,
+          0,
+          1.284
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 0
+      },
+      "floorColor": "#837567"
+    },
+    {
+      "id": "og_chair_3_south_1",
+      "label": "Chair 3S1",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -1.154,
+          0,
+          2.184
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "floorColor": "#837567"
+    },
+    {
+      "id": "og_chair_3_south_2",
+      "label": "Chair 3S2",
+      "category": "chair",
+      "kept": false,
+      "box": {
+        "position": [
+          -0.41400000000000003,
+          0,
+          2.184
+        ],
+        "size": [
+          0.45,
+          0.85,
+          0.45
+        ],
+        "rotationY": 3.141592653589793
+      },
+      "floorColor": "#837364"
+    },
+    {
+      "id": "og_whiteboard",
+      "label": "Whiteboard",
+      "category": "wall_art",
+      "kept": false,
+      "box": {
+        "position": [
+          1.519,
+          0.851,
+          0
+        ],
+        "rotationY": -1.5707963267948966,
+        "size": [
+          7.118,
+          1.165,
+          0.08
+        ]
+      },
+      "floorColor": "#807162"
+    }
+  ]
+}

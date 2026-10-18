@@ -91,7 +91,11 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
         if (piece) return putParts(piece.partColors, catalogItems.get(piece.catalogId)!.category, edit.partId, edit.color);
         const original = scanned.get(edit.targetId);
         if (!original || !state.originals[original.id].visible) return 'missing-target';
-        return putParts(state.originals[original.id].partColors, original.category, edit.partId, edit.color);
+        const { partColors, partFinishes } = state.originals[original.id];
+        const reason = putParts(partColors, original.category, edit.partId, edit.color);
+        // A Part shows the look its last Edit gave it, so a color replaces a Finish. Reset color leaves the Finish.
+        if (!reason && edit.color !== null) putParts(partFinishes, original.category, edit.partId, null);
+        return reason;
       }
       case 'finish': {
         const { target } = edit;
@@ -108,7 +112,11 @@ export function replay(setup: RoomSetup, catalog: Catalog, edits: Edit[]): RoomS
           case 'original': {
             const original = scanned.get(target.originalId);
             if (!original) return 'missing-target';
-            return putParts(state.originals[original.id].partFinishes, original.category, target.partId, finish);
+            const { partColors, partFinishes } = state.originals[original.id];
+            const reason = putParts(partFinishes, original.category, target.partId, finish);
+            // And a Finish replaces a color: { kind: 'none' } leaves the Part as scanned.
+            if (!reason) putParts(partColors, original.category, target.partId, null);
+            return reason;
           }
           default:
             target satisfies never; // a new FinishTarget kind needs a case

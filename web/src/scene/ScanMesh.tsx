@@ -8,6 +8,7 @@ import { type Selection, useEditor } from '../state/store';
 import { withMeshopt } from './gltf';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
 import { OriginalNode } from './OriginalNode';
+import { hasNoCapture } from './room/buildRoom';
 import { Patches } from './Patch';
 import { setupRoomNodes } from './scanNodes';
 import { type SplitNodeData, disposeSplit, splitNodes, splitScan } from './splitScan';
@@ -17,6 +18,8 @@ const scanLoads = new Map<string, Promise<GLTF | null>>();
 // three-mesh-bvh's CENTER split: builds the raycast tree for a 300k-triangle Scan several times
 // faster than the default, and a drag only casts a few rays per move.
 const CENTER = 0;
+
+const NO_MESH: Promise<GLTF | null> = Promise.resolve(null);
 
 /** A Scan's mesh file, or null when it has none yet (404). Cached, so suspending on it resolves once. */
 function loadScanMesh(url: string) {
@@ -50,7 +53,8 @@ export function ScanMesh() {
   // Originals lifted or removed: their Patch, from a Fill Capture, shows (ADR-0007).
   const patched = useEditor((s) => s.roomState!.patches);
   const view = useEditor((s) => s.view);
-  const gltf = use(loadScanMesh(scanFileUrl(manifest.id, manifest.mesh)));
+  // A room with no Capture has no mesh file to fetch (ADR-0010, ADR-0011).
+  const gltf = use(hasNoCapture(manifest, setup) ? NO_MESH : loadScanMesh(scanFileUrl(manifest.id, manifest.mesh)));
 
   // The split nodes are already in the room frame, so they go in the scene as they are.
   const nodes = useMemo(() => (gltf ? splitScan(gltf.scene, setup, manifest) : setupRoomNodes(setup)), [gltf, setup, manifest]);

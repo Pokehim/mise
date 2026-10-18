@@ -10,12 +10,19 @@ import {
   TextureLoader, Vector2, Vector3, type WebGLProgramParametersWithUniforms,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import type { Hex, Opening, RoomSetup, RoomSurfaces, Wall } from '@shared/types';
+import type { Hex, Opening, RoomSetup, RoomSurfaces, ScanManifest, Wall } from '@shared/types';
 import { luminance } from '../../setup/geometry/color';
 import { floorGeometry } from '../floorPlan';
 import { loadMaterialLibrary } from '../materials/triplanar';
 import { bakeRoomLight, lampPositions, type LightGrid, type RGB, type RoomLight } from './bakeLight';
 import { BUILT_FLOORS, surfaceTexture, VIEW_HORIZON, windowViewTexture } from './textures';
+
+/**
+ * Whether a Scan is a room with no Capture, drawn from its Room Setup alone: a Floor Plan Scan
+ * (ADR-0011), or one whose setup says what it's made of (ADR-0010). It has no mesh file, and never a Patch.
+ */
+export const hasNoCapture = (manifest: Pick<ScanManifest, 'floorPlan'>, setup: Pick<RoomSetup, 'surfaces'>) =>
+  Boolean(manifest.floorPlan || setup.surfaces);
 
 /** What a room is made of when its setup doesn't say: painted drywall, gray carpet, rubber base. */
 export const DEFAULT_SURFACES: RoomSurfaces = {

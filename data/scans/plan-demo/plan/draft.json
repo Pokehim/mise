@@ -1,0 +1,189 @@
+{
+  "rooms": [
+    {
+      "label": "Traditional double (TD)",
+      "corners": [
+        {
+          "x": 406.5,
+          "y": 272
+        },
+        {
+          "x": 723.5,
+          "y": 272
+        },
+        {
+          "x": 723.5,
+          "y": 653
+        },
+        {
+          "x": 406.5,
+          "y": 653
+        }
+      ],
+      "openings": [
+        {
+          "kind": "window",
+          "from": {
+            "x": 410,
+            "y": 272
+          },
+          "to": {
+            "x": 720,
+            "y": 272
+          },
+          "swing": null
+        },
+        {
+          "kind": "door",
+          "from": {
+            "x": 525.5,
+            "y": 653
+          },
+          "to": {
+            "x": 591.5,
+            "y": 653
+          },
+          "swing": "in-right"
+        }
+      ],
+      "furniture": [
+        {
+          "label": "Bed (west)",
+          "category": "bed",
+          "center": {
+            "x": 448.5,
+            "y": 370.5
+          },
+          "width": 77,
+          "depth": 167,
+          "rotation": 0,
+          "builtIn": false
+        },
+        {
+          "label": "Bed (east)",
+          "category": "bed",
+          "center": {
+            "x": 682,
+            "y": 362
+          },
+          "width": 78,
+          "depth": 156,
+          "rotation": 0,
+          "builtIn": false
+        },
+        {
+          "label": "Desk",
+          "category": "desk",
+          "center": {
+            "x": 563,
+            "y": 308
+          },
+          "width": 96,
+          "depth": 48,
+          "rotation": 0,
+          "builtIn": false
+        },
+        {
+          "label": "Desk chair",
+          "category": "chair",
+          "center": {
+            "x": 563,
+            "y": 352
+          },
+          "width": 36,
+          "depth": 36,
+          "rotation": 0,
+          "builtIn": false
+        },
+        {
+          "label": "Chair",
+          "category": "chair",
+          "center": {
+            "x": 506,
+            "y": 405
+          },
+          "width": 36,
+          "depth": 36,
+          "rotation": 0,
+          "builtIn": false
+        },
+        {
+          "label": "Dresser (west)",
+          "category": "dresser",
+          "center": {
+            "x": 429,
+            "y": 490
+          },
+          "width": 64,
+          "depth": 40,
+          "rotation": 90,
+          "builtIn": false
+        },
+        {
+          "label": "Dresser (east)",
+          "category": "dresser",
+          "center": {
+            "x": 700,
+            "y": 477
+          },
+          "width": 64,
+          "depth": 40,
+          "rotation": 90,
+          "builtIn": false
+        },
+        {
+          "label": "Closet (west)",
+          "category": "wardrobe",
+          "center": {
+            "x": 462.25,
+            "y": 628
+          },
+          "width": 111.5,
+          "depth": 50,
+          "rotation": 0,
+          "builtIn": true
+        },
+        {
+          "label": "Closet (east)",
+          "category": "wardrobe",
+          "center": {
+            "x": 670.75,
+            "y": 628
+          },
+          "width": 105.5,
+          "depth": 50,
+          "rotation": 0,
+          "builtIn": true
+        }
+      ]
+    }
+  ],
+  "scaleHints": [
+    {
+      "text": "13'-3 1/8\"",
+      "meters": 4.0418,
+      "from": {
+        "x": 406.5,
+        "y": 155
+      },
+      "to": {
+        "x": 723.5,
+        "y": 155
+      }
+    },
+    {
+      "text": "15'-11 1/16\"",
+      "meters": 4.853,
+      "from": {
+        "x": 811,
+        "y": 272
+      },
+      "to": {
+        "x": 811,
+        "y": 653
+      }
+    }
+  ],
+  "ceilingHeight": null,
+  "notes": "Read by hand from CMU's Donner House traditional double plan (data/floor-plans/cmu/plan.png) for the seeded demo. The window's extent along the North wall is estimated."
+}

@@ -20,6 +20,13 @@ export interface ScanManifest {
   splat?: string;                    // Phase 3: "splat.spz"
   splatTransform?: YawTransform & { scale: number }; // Phase 3: splat frame → room frame
   captures?: ScanCaptures;           // Phase 2 (ADR-0007): what room.glb was merged from
+  floorPlan?: FloorPlanSource;       // ADR-0011: built from a Floor Plan; there are no Captures and no room.glb
+}
+
+export interface FloorPlanSource {
+  image: string;                     // "plan/floor-plan.png": what Claude read, and Room Setup's backdrop
+  draft: string;                     // "plan/draft.json": Claude's reading of it, in that image's pixels
+  metersPerPixel: number;            // set in Room Setup from a printed dimension
 }
 
 export interface YawTransform { position: Vec3; rotationY: number }
@@ -97,6 +104,7 @@ export interface Original {
   kept: boolean;                     // can't leave the real room (e.g. a building-owned sofa)
   partParams?: PartParams;           // overrides for the category Part rule (ADR-0006)
   floorColor: Hex;                   // average floor color around the footprint → simple Patch
+  standInId?: string;                // ADR-0011: the Catalog item drawn in place of scanned geometry
   patch?: {                          // Phase 2: generated fill (Patch v2) for the spots no Capture saw
     floor?: string;                  // "patches/og_sofa.floor.png"
     walls?: Record<string, string>;  // wallId → "patches/og_sofa.wl_2.png"

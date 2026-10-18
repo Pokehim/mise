@@ -1,10 +1,11 @@
 import { Html, useCursor } from '@react-three/drei';
-import { useState } from 'react';
+import { Suspense, useLayoutEffect, useState } from 'react';
 import type { Object3D } from 'three';
 import { useEditor } from '../state/store';
 import { Lock } from '../ui/icons';
 import { useDragOriginal } from './DragControls';
 import { Z_KEPT } from './sketch/Label';
+import { hideBox, StandIn } from './StandIn';
 
 /**
  * An Original's node from the split Scan (spec §9.4), shown at its placement (spec §11.1). Dragging
@@ -20,6 +21,12 @@ export function OriginalNode({ id, node }: { id: string; node: Object3D }) {
   const onPointerDown = useDragOriginal(id);
   const [hovered, setHovered] = useState(false);
   useCursor(hovered && visible, original?.kept ? 'not-allowed' : 'grab');
+  // An Original no Capture saw is drawn by its Stand-in (ADR-0011), when the Catalog has it.
+  const standIn = useEditor((s) => (original?.standInId ? s.catalog?.items.find((item) => item.id === original.standInId) : undefined));
+  useLayoutEffect(() => {
+    hideBox(node, Boolean(standIn));
+    return () => hideBox(node, false);
+  }, [node, standIn]);
   if (!placement || !original) return <primitive object={node} visible={visible} />;
 
   return (
@@ -39,6 +46,11 @@ export function OriginalNode({ id, node }: { id: string; node: Object3D }) {
       }}
       onPointerOut={() => setHovered(false)}
     >
+      {standIn && (
+        <Suspense fallback={null}>
+          <StandIn originalId={id} item={standIn} size={original.box.size} />
+        </Suspense>
+      )}
       {original.kept && (
         <Html position={[0, original.box.size[1], 0]} center zIndexRange={Z_KEPT} className="kept-lock">
           <span role="img" aria-label="Kept: it stays in the room"><Lock /></span>

@@ -7,10 +7,10 @@
 import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { search } from '../shared/catalog-search';
 import { checkFit } from '../shared/fit';
 import { distanceToWall } from '../shared/geometry';
 import { replay } from '../shared/replay';
+import { standInFor } from '../shared/stand-ins';
 import type {
   Catalog, CatalogItem, Category, Design, Edit, Hex, Opening, RoomSetup, RoomSurfaces, ScanManifest, Vec2, Vec3,
 } from '../shared/types';
@@ -119,33 +119,10 @@ const FACING: Record<PlanRoom['furniture'][number]['facing'], { dir: Vec2; rotat
   west: { dir: [-1, 0], rotationY: -Math.PI / 2 },
 };
 
-/**
- * The Catalog item closest to a piece of the plan's furniture: by size, a swivel chair at a desk, and
- * a low bed, as dorm beds are, which clears a window sill.
- */
+/** The Catalog item closest to a piece of the plan's furniture (standInFor): by size, a swivel chair at a desk, a low bed. */
 export function catalogFor(catalog: Catalog, piece: PlanRoom['furniture'][number]): CatalogItem | undefined {
-  const real = {
-    ...catalog,
-    items: catalog.items.filter((item) => !item.id.startsWith('placeholder') && (piece.category !== 'bed' || item.size[1] < 0.8)),
-  };
-  if (piece.category === 'chair' && /desk/i.test(piece.label)) {
-    const [swivel] = search(real, { category: 'chair', text: 'swivel', limit: 1 });
-    if (swivel) return swivel.item;
-  }
-  const [best] = search(real, { category: piece.category, targetSize: piece.size, limit: 1 });
-  if (best && best.score <= 0.25) return best.item;
-  // Far off in size: a kind of furniture that does the same job, if one is closer.
-  const others = (RELATED[piece.category] ?? []).flatMap((category) => search(real, { category, targetSize: piece.size, limit: 1 }));
-  return [best, ...others].filter(Boolean).sort((a, b) => a.score - b.score)[0]?.item;
+  return standInFor(catalog, piece);
 }
-
-/** Furniture that can stand in for another kind when the Catalog has none near its size: a small dresser is a chest. */
-const RELATED: Partial<Record<Category, Category[]>> = {
-  dresser: ['nightstand', 'storage'],
-  nightstand: ['dresser', 'storage'],
-  wardrobe: ['shelf'],
-  desk: ['table'],
-};
 
 /**
  * The room's furniture as a Design of `place` Edits. Each item keeps its back where the plan's

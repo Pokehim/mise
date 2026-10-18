@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "plan-demo",
+  "name": "CMU · Donner double, from its floor plan",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  },
+  "floorPlan": {
+    "image": "plan/floor-plan.png",
+    "draft": "plan/draft.json",
+    "metersPerPixel": 0.0127502
+  }
+}

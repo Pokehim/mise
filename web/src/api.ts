@@ -1,11 +1,11 @@
 import type { Catalog, Design, RoomSetup, ScanManifest } from '@shared/types';
 import type { MergeSummary } from '../../scripts/scan-merge';
 
-async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
-  const res = await fetch(url, body === undefined ? { method } : {
+async function request<T>(method: string, url: string, body?: unknown, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    ...init,
     method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    ...(body !== undefined && { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
   });
   if (!res.ok) throw new Error(`${method} ${url}: ${res.status} ${await res.text()}`);
   return res.json();
@@ -30,4 +30,6 @@ export const loadDesign = (id: string) => request<Design>('GET', `/api/designs/$
 /** A new empty Design of a Scan, or a copy of an existing Design. */
 export const createDesign = (from: { scanId: string } | { duplicateOf: string }) =>
   request<Design>('POST', '/api/designs', from);
-export const saveDesign = (design: Design) => request<Design>('PUT', `/api/designs/${design.id}`, design);
+/** Saves the whole Design. With { keepalive: true }, the save lands even if the page closes first. */
+export const saveDesign = (design: Design, init?: Pick<RequestInit, 'keepalive'>) =>
+  request<Design>('PUT', `/api/designs/${design.id}`, design, init);

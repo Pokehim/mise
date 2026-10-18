@@ -42,7 +42,8 @@ function selectedBox(selection: Selection | null, setup: RoomSetup, roomState: R
  * color, so the Outline shows only around its silhouette.
  */
 export function SelectionOutline() {
-  const selection = useEditor((s) => s.selection);
+  // A hovered History row's Original or Wall (#11) shows instead; a Piece outlines itself (PieceNode).
+  const selection = useEditor((s) => (s.highlight && s.highlight.kind !== 'piece' ? s.highlight : s.selection));
   const setup = useEditor((s) => s.setup!);
   const roomState = useEditor((s) => s.roomState!);
   const box = selectedBox(selection, setup, roomState);

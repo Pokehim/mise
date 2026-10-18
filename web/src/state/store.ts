@@ -9,9 +9,10 @@
  *   manifest, setup, catalog,  What load() fetched; null until status is 'ready'. The editor mounts only
  *   design                     when it is, so code under it reads them as useEditor((s) => s.setup!).
  *   roomState                  replay(setup, catalog, design.edits), recomputed after every change.
- *   dirty                      true once the Edit list changes; whoever saves the Design sets it back
- *                              with useEditor.setState({ dirty: false }) (autosave, #11).
+ *   dirty                      true once the Design changes (its Edits, or its name on Rename); whoever saves
+ *                              the Design sets it back with useEditor.setState({ dirty: false }) (autosave, #11).
  *   selection                  The selected Piece, Original or Wall, or null.
+ *   highlight                  The item a hovered History row changed (#11): outlined like the selection.
  *   view                       'dollhouse' | 'walk'.
  *   preview                    A Piece's placement while it is being dragged: shown instead of its
  *                              roomState placement, and committed as one move Edit when the drag ends.
@@ -20,9 +21,10 @@
  *   applyEdit(edit)            Stamps the Edit's id, time and actor (the Mover), appends it, recomputes
  *                              roomState and sets dirty.
  *   setEdits(edits)            Replaces the whole Edit list (undo, deleting from History). applyEdit uses it.
- *   select(selection), setView(view), setPreview(preview)
+ *   select(selection), setView(view), setPreview(preview), setHighlight(highlight)
  *
  *   pieceItem(state, pieceId)  The Catalog item a Piece shows, for selectors: useEditor((s) => pieceItem(s, id)).
+ *   inRoom(selection, roomState)  Whether a selection still points at something in the room.
  */
 import { create } from 'zustand';
 import { newId } from '@shared/ids';
@@ -48,6 +50,7 @@ interface EditorState {
   roomState: RoomState | null;
   dirty: boolean;
   selection: Selection | null;
+  highlight: Selection | null;
   view: View;
   preview: Preview | null;
   load(designId: string): Promise<void>;
@@ -56,6 +59,7 @@ interface EditorState {
   select(selection: Selection | null): void;
   setView(view: View): void;
   setPreview(preview: Preview | null): void;
+  setHighlight(highlight: Selection | null): void;
 }
 
 export function pieceItem(state: EditorState, pieceId: string): CatalogItem | undefined {
@@ -64,7 +68,7 @@ export function pieceItem(state: EditorState, pieceId: string): CatalogItem | un
 }
 
 /** Whether a selection still points at something in the room. */
-function inRoom(selection: Selection, roomState: RoomState) {
+export function inRoom(selection: Selection, roomState: RoomState) {
   if (selection.kind === 'piece') return selection.id in roomState.pieces;
   if (selection.kind === 'original') return roomState.originals[selection.id]?.visible === true;
   return true;
@@ -82,6 +86,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
   roomState: null,
   dirty: false,
   selection: null,
+  highlight: null,
   view: 'dollhouse',
   preview: null,
 
@@ -119,4 +124,5 @@ export const useEditor = create<EditorState>()((set, get) => ({
   select: (selection) => set({ selection }),
   setView: (view) => set({ view }),
   setPreview: (preview) => set({ preview }),
+  setHighlight: (highlight) => set({ highlight }),
 }));

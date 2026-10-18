@@ -4,7 +4,7 @@ import { Fragment, memo, useEffect, useMemo, useState } from 'react';
 import type { Mesh } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Vec3 } from '@shared/types';
-import { pieceItem, useEditor } from '../state/store';
+import { pieceItem, type Selection, useEditor } from '../state/store';
 import { useDragPiece } from './DragControls';
 import { withMeshopt } from './gltf';
 import { ignoreRaycast } from './objects';
@@ -15,6 +15,8 @@ import { Outline } from './SelectionOutline';
 function BlobShadow({ size: [width, , depth] }: { size: Vec3 }) {
   return <Shadow scale={[width * 1.1, depth * 1.1, 1]} position-y={0.005} opacity={0.35} raycast={ignoreRaycast} />;
 }
+
+const isPiece = (it: Selection | null, pieceId: string) => it?.kind === 'piece' && it.id === pieceId;
 
 /** One Catalog model, outlined when selected. Memoized, so a drag doesn't re-render it. */
 const PieceModel = memo(function PieceModel({ url, selected }: { url: string; selected: boolean }) {
@@ -49,7 +51,8 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
   const placement = useEditor((s) =>
     s.preview?.pieceId === pieceId ? s.preview.placement : s.roomState!.pieces[pieceId]?.placement);
   const item = useEditor((s) => pieceItem(s, pieceId));
-  const selected = useEditor((s) => s.selection?.kind === 'piece' && s.selection.id === pieceId);
+  // Outlined when selected, or when a hovered History row changed it (#11).
+  const selected = useEditor((s) => isPiece(s.selection, pieceId) || isPiece(s.highlight, pieceId));
   const onPointerDown = useDragPiece(pieceId);
   const [hovered, setHovered] = useState(false);
   useCursor(hovered, 'grab');

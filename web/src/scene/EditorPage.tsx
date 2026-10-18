@@ -1,21 +1,33 @@
 import { useEffect, useRef } from 'react';
 import type { Camera } from 'three';
 import { Link } from 'wouter';
+import { redo, undo, useAutosave } from '../state/history';
 import { useEditor } from '../state/store';
 import { CatalogPanel } from '../ui/CatalogPanel';
+import { HistoryPanel } from '../ui/HistoryPanel';
 import { Inspector } from '../ui/Inspector';
 import { TopBar } from '../ui/TopBar';
 import { addPiece, removePiece, rotatePiece } from './pieceEdits';
 import { SceneCanvas } from './SceneCanvas';
 import './editor.css';
+import '../ui/designs.css';
 
-/** Editor shortcuts (spec §10.3): Esc deselects, R / Shift+R rotate the selected Piece, Delete removes it. */
+/**
+ * Editor shortcuts (spec §10.3): Esc deselects, ⌘Z / ⇧⌘Z undo and redo, R / Shift+R rotate the
+ * selected Piece, Delete removes it.
+ */
 function useEditorKeys() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) return;
       const { selection, preview, select } = useEditor.getState();
       if (event.key === 'Escape') select(null);
+      // A drag finishes before undo.
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z' && !preview) {
+        event.preventDefault();
+        if (event.shiftKey) redo();
+        else undo();
+      }
       if (selection?.kind !== 'piece' || preview || event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.key.toLowerCase() === 'r') rotatePiece(selection.id, event.shiftKey ? -1 : 1);
       // Backspace is the key labeled "delete" on a Mac.
@@ -35,6 +47,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
   const error = useEditor((s) => s.error);
   const camera = useRef<Camera>(null);
   useEditorKeys();
+  useAutosave();
 
   useEffect(() => {
     void useEditor.getState().load(designId);
@@ -54,6 +67,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
         }}
       />
       <Inspector />
+      <HistoryPanel />
       <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>
     </div>
   );

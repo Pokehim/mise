@@ -16,12 +16,14 @@ export interface SplitScan {
   ceiling: Object3D;
   walls: Record<string, Object3D>;      // by Wall id
   originals: Record<string, Object3D>;  // by Original id
+  /** By Original id: the floor and wall a Fill Capture saw under and behind it (ADR-0007). Hidden; show it once the Original is lifted or removed. */
+  patches: Record<string, Object3D>;
 }
 
 /** The userData of every node splitScan returns. */
 export interface SplitNodeData {
-  kind: SplitGroup['kind'];
-  id?: string;                          // the Wall or Original id
+  kind: SplitGroup['kind'] | 'patch';
+  id?: string;                          // the Wall or Original id (a Patch's is its Original's)
   /** Average linear-light luminance of the node's texture, for recolor's relLum (spec §10.6). */
   avgLuminance: number;
 }
@@ -42,22 +44,35 @@ const FALLBACK_LUMINANCE = 0.5;
  * - An Original's node has its origin at the box's bottom-center and its rotationY, so a Placement
  *   can be applied to its position and rotation directly to move it.
  * - Each node's userData is a SplitNodeData.
+ * - Rule 0 (ADR-0007): primitives that scan-merge tagged as fill skip the other rules. A Patch's go to
+ *   `patches[originalId]`, hidden and drawn over the floor and wall they lie on; a completion's go to
+ *   its Original's node.
  */
 export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanManifest): SplitScan {
   const started = performance.now();
   const { groups, classify } = triangleClassifier(setup);
   const primitives = roomFramePrimitives(gltfScene, manifest);
   const slices: Slice[][] = groups.map(() => []);
+  const patchSlices = new Map<string, Slice[]>();
+  const originalGroup = (id: string) => groups.findIndex((g) => g.kind === 'original' && g.id === id);
   const info = newTriangleInfo();
   let total = 0;
 
   for (const primitive of primitives) {
     const { index } = primitive.mesh;
     const count = index.length / 3;
+    total += count;
+    // Rule 0: fill from a Fill Capture.
+    if (primitive.fill?.kind === 'patch') {
+      const list = patchSlices.get(primitive.fill.originalId) ?? [];
+      patchSlices.set(primitive.fill.originalId, [...list, { primitive, index }]);
+      continue;
+    }
+    const completes = primitive.fill?.kind === 'completion' ? originalGroup(primitive.fill.originalId) : -1;
     const assigned = new Uint16Array(count);
     const counts = new Uint32Array(groups.length);
     for (let t = 0; t < count; t++) {
-      const group = classify(triangleInfo(primitive.mesh, t, info));
+      const group = completes >= 0 ? completes : classify(triangleInfo(primitive.mesh, t, info));
       assigned[t] = group;
       counts[group]++;
     }
@@ -74,7 +89,6 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
     lists.forEach((list, group) => {
       if (list.length > 0) slices[group].push({ primitive, index: list });
     });
-    total += count;
   }
 
   const random = mulberry32(1);
@@ -90,17 +104,30 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
     return node;
   });
 
+  const patches = Object.fromEntries([...patchSlices].map(([id, patchSlice]) => {
+    const node = new Group();
+    node.name = `Patch: ${setup.originals.find((o) => o.id === id)?.label ?? id}`;
+    for (const slice of patchSlice) node.add(sliceMesh(slice, true));
+    const data: SplitNodeData = { kind: 'patch', id, avgLuminance: averageLuminance(patchSlice, random) };
+    node.userData = data;
+    node.visible = false;
+    return [id, node];
+  }));
+
   const ms = performance.now() - started;
-  console.info(`splitScan: ${total.toLocaleString('en-US')} triangles → ${nodes.length} nodes in ${Math.round(ms)} ms`);
+  const nodeCount = nodes.length + patchSlices.size;
+  console.info(`splitScan: ${total.toLocaleString('en-US')} triangles → ${nodeCount} nodes in ${Math.round(ms)} ms`);
 
   const byId = (kind: 'wall' | 'original') => Object.fromEntries(groups.flatMap((group, g) =>
     group.kind === kind ? [[group.id, nodes[g]]] : []));
-  return { shell: nodes[0], floor: nodes[1], ceiling: nodes[2], walls: byId('wall'), originals: byId('original') };
+  return { shell: nodes[0], floor: nodes[1], ceiling: nodes[2], walls: byId('wall'), originals: byId('original'), patches };
 }
 
-/** Every node of a split: Shell, Floor, Ceiling, the Walls, then the Originals. */
-export const splitNodes = (split: SplitScan): Object3D[] =>
-  [split.shell, split.floor, split.ceiling, ...Object.values(split.walls), ...Object.values(split.originals)];
+/** Every node of a split: Shell, Floor, Ceiling, the Walls, the Originals, then the Patches. */
+export const splitNodes = (split: SplitScan): Object3D[] => [
+  split.shell, split.floor, split.ceiling, ...Object.values(split.walls), ...Object.values(split.originals),
+  ...Object.values(split.patches),
+];
 
 /** Frees the split's geometries and materials. The textures belong to the glTF and are kept. */
 export function disposeSplit(split: SplitScan) {
@@ -118,6 +145,8 @@ export function disposeSplit(split: SplitScan) {
 interface Primitive {
   mesh: TriangleMesh;
   material: Material;
+  /** scan-merge's tag on fill from a Fill Capture (extras.mise.fill in the glTF). */
+  fill?: { kind: 'patch' | 'completion'; originalId: string };
   /** Room-frame attributes, shared by every slice cut from this primitive. */
   attributes: Record<string, BufferAttribute>;
 }
@@ -160,7 +189,10 @@ function roomFramePrimitives(gltfScene: Object3D, { meshTransform }: ScanManifes
       ? geometry.groups.map((g) => ({ start: g.start, count: g.count, material: object.material[g.materialIndex ?? 0] }))
       : [{ start: 0, count: index.length, material: object.material as Material }];
     for (const { start, count, material } of ranges) {
-      primitives.push({ mesh: { positions, index: index.subarray(start, start + count - (count % 3)) }, material, attributes });
+      primitives.push({
+        mesh: { positions, index: index.subarray(start, start + count - (count % 3)) }, material, attributes,
+        fill: (object.userData as { mise?: { fill?: Primitive['fill'] } }).mise?.fill,
+      });
     }
   });
   return primitives;
@@ -190,7 +222,8 @@ function emptyNode(group: SplitGroup, setup: RoomSetup): { node: Object3D; conte
   return { node, content: node };
 }
 
-function sliceMesh({ primitive, index }: Slice): Mesh {
+/** A mesh of one slice. An overlay (a Patch) draws over the surfaces at the same depth, such as the floor it lies on. */
+function sliceMesh({ primitive, index }: Slice, overlay = false): Mesh {
   const geometry = new BufferGeometry();
   for (const [name, attribute] of Object.entries(primitive.attributes)) geometry.setAttribute(name, attribute);
   geometry.setIndex(new BufferAttribute(index, 1));
@@ -205,7 +238,9 @@ function sliceMesh({ primitive, index }: Slice): Mesh {
   }
   geometry.boundingBox = new Box3(min, max);
   geometry.boundingSphere = geometry.boundingBox.getBoundingSphere(new Sphere());
-  return new Mesh(geometry, unlit(primitive.material, 'color' in primitive.attributes));
+  const material = unlit(primitive.material, 'color' in primitive.attributes);
+  if (overlay) Object.assign(material, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  return new Mesh(geometry, material);
 }
 
 /** Scan nodes are unlit (spec §10.6): the texture already holds the room's real lighting. */

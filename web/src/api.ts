@@ -1,4 +1,5 @@
 import type { Catalog, Design, RoomSetup, ScanManifest } from '@shared/types';
+import type { MergeSummary } from '../../scripts/scan-merge';
 
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, body === undefined ? { method } : {
@@ -18,6 +19,8 @@ export const saveManifest = (manifest: ScanManifest) =>
   request<ScanManifest>('PUT', `/api/scans/${manifest.id}/manifest`, manifest);
 export const loadSetup = (scanId: string) => request<RoomSetup>('GET', scanFileUrl(scanId, 'setup.json'));
 export const saveSetup = (setup: RoomSetup) => request<RoomSetup>('PUT', `/api/scans/${setup.scanId}/setup`, setup);
+/** Rebuilds a Scan's room.glb from its Main Capture and its lined-up Fill Captures (ADR-0007). */
+export const mergeScan = (scanId: string) => request<MergeSummary>('POST', `/api/scans/${scanId}/merge`);
 
 export const loadCatalog = () => request<Catalog>('GET', '/data/catalog/catalog.json');
 

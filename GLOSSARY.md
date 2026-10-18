@@ -9,11 +9,23 @@ The person the product serves: someone about to move into, or who has just moved
 _Avoid_: User (too generic), customer, designer
 
 **Scan**:
-The captured copy of one real room: it looks like the room, and it knows the room's walls, floor, Openings, and furniture with their real-world dimensions. A Scan is made once, by a capture plus Room Setup, and is never changed by Designs.
+The captured copy of one real room: it looks like the room, and it knows the room's walls, floor, Openings, and furniture with their real-world dimensions. A Scan is made once, from its Captures plus Room Setup, and is never changed by Designs.
 _Avoid_: Model, capture, room (when you mean the digital copy)
 
+**Capture**:
+One walk-through of the real room with Polycam. A Scan is built from one Main Capture and any number of Fill Captures.
+_Avoid_: Scan (a Scan is what the Captures and Room Setup produce), take, pass
+
+**Main Capture**:
+The Capture taken with the furniture in its usual places. Room Setup, the Originals, and the photoreal look all come from it.
+_Avoid_: Primary scan, base scan
+
+**Fill Capture**:
+A Capture taken after moving furniture, used only for what the furniture hid in the Main Capture: the floor and walls under and behind it, and the furniture's own backs and sides.
+_Avoid_: Clean plate, reveal scan, empty scan
+
 **Room Setup**:
-The one-time step that turns a raw capture into a usable Scan by marking its floor, walls, Openings, and Originals.
+The one-time step that turns the Captures into a usable Scan: it marks the floor, walls, Openings, and Originals on the Main Capture and lines up each Fill Capture with it.
 _Avoid_: Annotation, labeling, calibration
 
 **Opening**:
@@ -84,6 +96,10 @@ _Avoid_: Slot, snap point, position
 Separating an Original from the rest of the Scan so it can be moved or changed on its own.
 _Avoid_: Extract, cut out, segment
 
+**Completion**:
+The parts of a moved Original that only a Fill Capture saw, such as its back against the wall, added so the Original looks whole once it moves.
+_Avoid_: Reconstruction, infill
+
 **Patch**:
-The generated fill that covers the spot an Original used to occupy, after it has been lifted away or removed.
-_Avoid_: Hole fill, inpaint (that is how a Patch is made, not what it is)
+What covers the spot an Original used to occupy, including the wall behind it, after it has been lifted away or removed: the real floor and wall from a Fill Capture wherever one saw them, and a generated fill where none did.
+_Avoid_: Hole fill, inpaint (that is how part of a Patch is made, not what it is)

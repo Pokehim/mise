@@ -3,7 +3,7 @@ import { Mesh, type Object3D, type WebGLRenderer } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { create } from 'zustand';
-import type { Category, Opening, Original, RoomSetup, ScanManifest, Vec3, YawTransform } from '@shared/types';
+import type { Category, Opening, Original, RoomSetup, ScanManifest, Vec2, Vec3, YawTransform } from '@shared/types';
 import { listScans, loadSetup, saveManifest, saveSetup, scanFileUrl } from '../api';
 import { unlit } from '../scene/splitScan';
 import type { TriangleMesh } from './geometry/mesh';
@@ -15,6 +15,7 @@ export const STEPS = [
   { id: 'corners', title: 'Corners' },
   { id: 'openings', title: 'Openings' },
   { id: 'originals', title: 'Originals' },
+  { id: 'fills', title: 'Fill Captures' },
   { id: 'bake', title: 'Bake' },
 ] as const;
 export type StepId = (typeof STEPS)[number]['id'];
@@ -44,6 +45,8 @@ interface SetupState {
   /** How long the preview's last splitScan took, in ms. */
   lastSplitMs?: number;
   renderer?: WebGLRenderer;
+  /** Step 6: the Fill Capture being lined up (ADR-0007). */
+  fill?: FillDraft;
 
   load(scanId: string): Promise<void>;
   setStep(step: StepId): void;
@@ -55,6 +58,34 @@ interface SetupState {
   updateOpening(id: string, change: Partial<Opening>): void;
   selectWall(id: string): void;
   save(): Promise<void>;
+}
+
+/**
+ * Step 6's work on one Fill Capture. Its transform and moved Originals live in the manifest
+ * (captures.fills), so Save keeps them; this holds what the step needs while you click.
+ */
+export interface FillDraft {
+  /** Index in manifest.captures.fills. */
+  index: number;
+  /** The Fill Capture's mesh, in its own frame, once loaded. */
+  scene?: Object3D;
+  /** Its frame → the room frame, as shown now: beside the room until it is lined up, then on it. */
+  transform: YawTransform;
+  /** Its floor height in its own frame, which step 1's histogram finds. */
+  floorHeight: number;
+  /** Corners clicked in pairs: on the room (room frame), then on the Fill Capture (its frame). */
+  roomCorners: Vec2[];
+  fillCorners: Vec2[];
+  /** The last line-up's median distance between the two shells, in meters. */
+  residual?: number;
+  /** The Original whose moved copy the next click on the Fill Capture marks. */
+  markingId?: string;
+  /** Where each moved copy was found, in the room frame, to draw it. */
+  copies: Record<string, { box: Original['box']; residual: number }>;
+  /** What the last merge added. */
+  merged?: string;
+  /** How it is drawn: solid over the room, as a wireframe to compare the two, or hidden. */
+  look: 'solid' | 'wireframe' | 'hidden';
 }
 
 let latestLoad = 0;
@@ -79,7 +110,8 @@ export const useSetup = create<SetupState>()((set, get) => ({
           if (/: 404 /.test(error.message)) return emptySetup(scanId);
           throw error;
         }),
-        manifest.then((m) => loadScene(scanFileUrl(scanId, m.mesh))),
+        // Room Setup works on the Main Capture; room.glb may also hold merged Fill Capture triangles (ADR-0007).
+        manifest.then((m) => loadScene(scanFileUrl(scanId, m.captures?.main ?? m.mesh))),
       ]);
       if (token !== latestLoad) return;   // a later load (another Scan, or StrictMode's second run) wins
       set({
@@ -92,7 +124,10 @@ export const useSetup = create<SetupState>()((set, get) => ({
     }
   },
 
-  setStep: (step) => set({ step, selectedOriginalId: undefined, notice: undefined, openingDraft: { ...get().openingDraft, first: undefined } }),
+  setStep: (step) => set({
+    step, selectedOriginalId: undefined, notice: undefined, openingDraft: { ...get().openingDraft, first: undefined },
+    fill: step === 'fills' ? get().fill : undefined,
+  }),
 
   setMeshTransform: (meshTransform) => set({ manifest: { ...get().manifest!, meshTransform } }),
 
@@ -147,7 +182,7 @@ const emptySetup = (scanId: string): RoomSetup => ({
   version: 1, scanId, ceilingHeight: 2.5, floor: { polygon: [] }, walls: [], openings: [], originals: [],
 });
 
-async function loadScene(url: string): Promise<Object3D> {
+export async function loadScene(url: string): Promise<Object3D> {
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   const { scene } = await loader.loadAsync(url);
   // Unlit, like the editor (spec §10.6): the texture already holds the room's lighting.

@@ -13,15 +13,32 @@ export type Category =
 
 export interface ScanManifest {
   version: 1;
-  id: string;                        // "dorm-v1"
+  id: string;                        // "lounge-v1"
   name: string;                      // "Maple Hall 412"
   mesh: string;                      // file in the scan folder: "room.glb"
   meshTransform: YawTransform;       // Polycam frame → room frame (set by Room Setup step 1)
   splat?: string;                    // Phase 3: "splat.spz"
   splatTransform?: YawTransform & { scale: number }; // Phase 3: splat frame → room frame
+  captures?: ScanCaptures;           // Phase 2 (ADR-0007): what room.glb was merged from
 }
 
 export interface YawTransform { position: Vec3; rotationY: number }
+
+export interface ScanCaptures {
+  main: string;                      // "captures/main.glb": the Main Capture as imported
+  fills: FillCapture[];
+}
+
+export interface FillCapture {
+  mesh: string;                      // "captures/fill-1.glb"
+  transform: YawTransform;           // this Capture's frame → the Main Capture's frame
+  moved: MovedOriginal[];            // Originals this Capture saw somewhere else
+}
+
+export interface MovedOriginal {
+  originalId: string;
+  transform: YawTransform;           // its copy here (in the Main Capture's frame) → where it stands in the Main Capture
+}
 
 export interface RoomSetup {
   version: 1;
@@ -64,10 +81,13 @@ export interface Original {
   label: string;                     // "Bed"
   category: Category;
   box: Box;
-  kept: boolean;                     // can't leave the real room (e.g. dorm-owned bed)
+  kept: boolean;                     // can't leave the real room (e.g. a building-owned sofa)
   partParams?: PartParams;           // overrides for the category Part rule (ADR-0006)
   floorColor: Hex;                   // average floor color around the footprint → simple Patch
-  patch?: string;                    // Phase 2: "patches/og_bed.png" inpainted floor decal
+  patch?: {                          // Phase 2: generated fill (Patch v2) for the spots no Capture saw
+    floor?: string;                  // "patches/og_sofa.floor.png"
+    walls?: Record<string, string>;  // wallId → "patches/og_sofa.wl_2.png"
+  };
 }
 
 export interface PartParams {

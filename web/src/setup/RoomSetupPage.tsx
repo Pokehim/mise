@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'wouter';
 import { useShallow } from 'zustand/react/shallow';
 import type { RoomSetup, ScanManifest } from '@shared/types';
+import { fillsAligned } from './fills';
 import { UNBAKED_FLOOR_COLOR } from './originals';
 import { StepPanel } from './panels';
 import { SetupCanvas } from './SetupCanvas';
@@ -81,6 +82,7 @@ function isDone(step: StepId, manifest: ScanManifest, setup: RoomSetup): boolean
     case 'corners': return setup.walls.length >= 3;
     case 'openings': return setup.openings.length > 0;
     case 'originals': return setup.originals.length > 0;
+    case 'fills': return fillsAligned(manifest);
     case 'bake': return setup.originals.length > 0 && setup.originals.every((o) => o.floorColor !== UNBAKED_FLOOR_COLOR);
   }
 }

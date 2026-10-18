@@ -24,7 +24,7 @@ export function defaultPartParams(category: Category): PartParams | undefined {
   }
 }
 
-/** Before Bake (step 6) measures it. */
+/** Before Bake (step 7) measures it. */
 export const UNBAKED_FLOOR_COLOR = '#808080';
 
 /** A new Original of a category, with an id and label that no other Original has, such as og_chair_2 and "Chair 2". */

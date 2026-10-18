@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "id": "synthetic-lounge",
+  "name": "Synthetic lounge (5.4 × 6 m)",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  },
+  "captures": {
+    "main": "captures/main.glb",
+    "fills": [
+      {
+        "mesh": "captures/fill-1.glb",
+        "transform": {
+          "position": [
+            1.2,
+            -0.8,
+            -0.6
+          ],
+          "rotationY": 0.37
+        },
+        "moved": [
+          {
+            "originalId": "og_sofa",
+            "transform": {
+              "position": [
+                -1.3199999999999998,
+                0,
+                -1.6
+              ],
+              "rotationY": 3.141592653589793
+            }
+          },
+          {
+            "originalId": "og_coffee_table",
+            "transform": {
+              "position": [
+                -1.9,
+                0,
+                1.2
+              ],
+              "rotationY": 1.5707963267948966
+            }
+          },
+          {
+            "originalId": "og_side_table",
+            "transform": {
+              "position": [
+                -4.45,
+                0,
+                1.7
+              ],
+              "rotationY": 1.5707963267948966
+            }
+          },
+          {
+            "originalId": "og_armchair",
+            "transform": {
+              "position": [
+                -2.9,
+                0,
+                3.8
+              ],
+              "rotationY": 1.5707963267948966
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

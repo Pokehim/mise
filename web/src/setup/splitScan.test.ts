@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RoomSetup, ScanManifest } from '@shared/types';
 import { splitScan } from '../scene/splitScan';
 import type { TriangleMesh } from './geometry/mesh';
-import { box } from './geometry/testShapes';
+import { box, horizontal } from './geometry/testShapes';
 
 const setup: RoomSetup = {
   version: 1,
@@ -120,16 +120,47 @@ describe('splitScan', () => {
     expect(split.originals.og_bed.userData.avgLuminance).toBeCloseTo(1, 3);
   });
 
-  it('splits 300k triangles in under 300 ms, and logs the time', () => {
+  it('splits the 500k triangles a room.glb may hold in under 500 ms (spec §9.4), and logs the time', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    // 6 faces × 2 × 158² ≈ 300k triangles.
-    const big = new Group().add(primitive(box([-2, 0, -1.5], [2, 2.6, 1.5], true, 158), gray));
+    // 6 faces × 2 × 204² ≈ 500k triangles.
+    const big = new Group().add(primitive(box([-2, 0, -1.5], [2, 2.6, 1.5], true, 204), gray));
     splitScan(big, setup, manifest);
     const started = performance.now();
     splitScan(big, setup, manifest);
     const elapsed = performance.now() - started;
-    expect(elapsed).toBeLessThan(300);
-    expect(info).toHaveBeenLastCalledWith(expect.stringMatching(/^splitScan: 299,568 triangles .* in \d+ ms$/));
+    expect(elapsed).toBeLessThan(500);
+    expect(info).toHaveBeenLastCalledWith(expect.stringMatching(/^splitScan: 499,392 triangles .* in \d+ ms$/));
     info.mockRestore();
+  });
+});
+
+describe('splitScan with fill from a Fill Capture (rule 0, ADR-0007)', () => {
+  /** A primitive scan-merge added, tagged as it tags them. */
+  const tagged = (mesh: TriangleMesh, kind: 'patch' | 'completion', originalId: string) => {
+    const fill = primitive(mesh, white);
+    fill.userData = { mise: { fill: { kind, originalId, capture: 0 } } };
+    return fill;
+  };
+  // The floor under the lamp, as the Fill Capture saw it, and the back of the bed, which only the Fill Capture
+  // saw. The back is within 2 cm of the North wall, where rule 1 would leave it to the wall.
+  const lampPatch = tagged(horizontal([0.75, 0.75], [1.25, 1.25], 0.001), 'patch', 'og_lamp');
+  const bedBack = tagged(box([-1.8, 0.1, -1.495], [-1.2, 0.5, -1.485]), 'completion', 'og_bed');
+  const split = splitScan(new Group().add(room, primitive(box([-2, 0, -1.5], [-1.01, 0.6, 0.53]), white), lampPatch, bedBack), setup, manifest);
+
+  it("puts a Patch's triangles in its own node for that Original, hidden until the Original is lifted or removed", () => {
+    expect(Object.keys(split.patches)).toEqual(['og_lamp']);
+    expect(triangles(split.patches.og_lamp)).toBe(2);
+    expect(split.patches.og_lamp.visible).toBe(false);
+    expect(split.patches.og_lamp.userData).toMatchObject({ kind: 'patch', id: 'og_lamp' });
+    expect(triangles(split.floor)).toBe(2);
+  });
+
+  it('draws a Patch over the Main Capture floor and wall it lies on', () => {
+    const [{ mesh }] = meshes(split.patches.og_lamp);
+    expect(mesh.material).toMatchObject({ polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  });
+
+  it("adds a completion to its Original's node, so it moves with it", () => {
+    expect(triangles(split.originals.og_bed)).toBe(6 + 12);
   });
 });

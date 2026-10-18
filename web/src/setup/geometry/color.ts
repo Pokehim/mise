@@ -1,5 +1,5 @@
 // Colors read from images: a texture's luminance (for avgLuminance, spec §9.4) and the floor's
-// color around an Original (floorColor, Room Setup step 6).
+// color around an Original (floorColor, Room Setup step 7).
 import type { Box, Hex, Vec2 } from '@shared/types';
 
 /** RGBA pixels, 4 bytes each, row by row from the top. */

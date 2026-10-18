@@ -75,8 +75,8 @@ originals = []
 report = []
 
 def box_size(b):
-    """[width, height, depth]: the box stands on the floor at the model's origin, so its height reaches the
-    geometry's top (the whiteboard's box runs from the floor to the board's top)."""
+    """[width, height, depth]: the box starts at the model's origin (the floor; the whiteboard's bottom edge, as
+    recenter_glb.py --wall puts it), so its height reaches the geometry's top."""
     return [round(b[1][0] - b[0][0], 3), round(b[1][1], 3), round(b[1][2] - b[0][2], 3)]
 
 # ---------------- tables ----------------
@@ -187,14 +187,14 @@ for i, it in enumerate(chairs):
                   f'(median {meds * 1000:.1f} mm); Layout box center moved {np.hypot(x[1] - bx, x[2] - bz) * 100:.1f} cm')
 
 # ---------------- whiteboard ----------------
-WB_Z0, WB_Z1, WALL_X = -3.565, 2.522, 1.5759
+WB_Z0, WB_Z1, WB_Y0, WALL_X = -3.565, 2.522, 0.845, 1.5759
 _, wb_bounds = model_points('whiteboard', 1000)
 size = box_size(wb_bounds)
-pos = [round(WALL_X - size[2] / 2, 4), 0, round((WB_Z0 + WB_Z1) / 2, 4)]
+pos = [round(WALL_X - size[2] / 2, 4), WB_Y0, round((WB_Z0 + WB_Z1) / 2, 4)]   # hung: the box starts at its bottom edge
 originals.append(dict(id='og_whiteboard', label='Whiteboard', category='wall_art', model='models/whiteboard.glb',
                       box=dict(position=pos, size=size, rotationY=round(-np.pi / 2, 5)), kept=False,
                       floorColor=floor_color(pos[0] - 0.2, pos[2], size[0] / 2, 0.15, -np.pi / 2)))
-report.append(f'Whiteboard: back on the East wall at x = {WALL_X}, z {WB_Z0}..{WB_Z1}, y {wb_bounds[0][1]:.3f}..{wb_bounds[1][1]:.3f}')
+report.append(f'Whiteboard: back on the East wall at x = {WALL_X}, z {WB_Z0}..{WB_Z1}, y {WB_Y0:.3f}..{WB_Y0 + wb_bounds[1][1]:.3f}')
 
 log('\n'.join(report))
 print(json.dumps(originals, indent=2))

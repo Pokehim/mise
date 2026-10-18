@@ -7,6 +7,7 @@ import { scanFileUrl } from '../api';
 import { type Selection, useEditor } from '../state/store';
 import { withMeshopt } from './gltf';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
+import { OriginalNode } from './OriginalNode';
 import { Patches } from './Patch';
 import { setupRoomNodes } from './scanNodes';
 import { type SplitNodeData, disposeSplit, splitNodes, splitScan } from './splitScan';
@@ -46,7 +47,6 @@ function selectionAt(object: Object3D): Selection | null {
 export function ScanMesh() {
   const manifest = useEditor((s) => s.manifest!);
   const setup = useEditor((s) => s.setup!);
-  const originals = useEditor((s) => s.roomState!.originals);
   // Originals lifted or removed: their Patch, from a Fill Capture, shows (ADR-0007).
   const patched = useEditor((s) => s.roomState!.patches);
   const view = useEditor((s) => s.view);
@@ -88,9 +88,7 @@ export function ScanMesh() {
         <primitive object={nodes.ceiling} visible={view === 'walk'} />
         {/* Keyed by node, so a new split replaces the old nodes rather than reusing their elements. */}
         {Object.values(nodes.walls).map((node) => <primitive key={node.uuid} object={node} />)}
-        {Object.entries(nodes.originals).map(([id, node]) => (
-          <primitive key={node.uuid} object={node} visible={originals[id]?.visible !== false} />
-        ))}
+        {Object.entries(nodes.originals).map(([id, node]) => <OriginalNode key={node.uuid} id={id} node={node} />)}
         {Object.entries(nodes.patches).map(([id, node]) => (
           <primitive key={node.uuid} object={node} visible={patched.includes(id)} />
         ))}

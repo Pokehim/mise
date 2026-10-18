@@ -7,14 +7,14 @@ import { CatalogPanel } from '../ui/CatalogPanel';
 import { HistoryPanel } from '../ui/HistoryPanel';
 import { Inspector } from '../ui/Inspector';
 import { TopBar } from '../ui/TopBar';
-import { addPiece, removePiece, rotatePiece } from './pieceEdits';
+import { addPiece, removeOriginal, removePiece, rotateOriginal, rotatePiece } from './pieceEdits';
 import { SceneCanvas } from './SceneCanvas';
 import './editor.css';
 import '../ui/designs.css';
 
 /**
  * Editor shortcuts (spec §10.3): Esc deselects, ⌘Z / ⇧⌘Z undo and redo, R / Shift+R rotate the
- * selected Piece, Delete removes it.
+ * selected Piece or Original, Delete removes it. A Kept Original ignores both.
  */
 function useEditorKeys() {
   useEffect(() => {
@@ -28,12 +28,13 @@ function useEditorKeys() {
         if (event.shiftKey) redo();
         else undo();
       }
-      if (selection?.kind !== 'piece' || preview || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.key.toLowerCase() === 'r') rotatePiece(selection.id, event.shiftKey ? -1 : 1);
+      if (!selection || selection.kind === 'wall' || preview || event.metaKey || event.ctrlKey || event.altKey) return;
+      const [rotate, remove] = selection.kind === 'piece' ? [rotatePiece, removePiece] : [rotateOriginal, removeOriginal];
+      if (event.key.toLowerCase() === 'r') rotate(selection.id, event.shiftKey ? -1 : 1);
       // Backspace is the key labeled "delete" on a Mac.
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
-        removePiece(selection.id);
+        remove(selection.id);
       }
     };
     window.addEventListener('keydown', onKeyDown);

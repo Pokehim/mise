@@ -24,11 +24,14 @@ export function FitHighlights() {
   const preview = useEditor((s) => s.preview);
 
   const warned = useMemo(() => {
-    // The dragged Piece where it is shown, as PieceNode does.
-    const dragged = preview && roomState.pieces[preview.pieceId];
-    const shown: RoomState = dragged
-      ? { ...roomState, pieces: { ...roomState.pieces, [preview.pieceId]: { ...dragged, placement: preview.placement } } }
-      : roomState;
+    // The dragged Piece or Original where it is shown, as PieceNode and OriginalNode do.
+    const draggedPiece = preview && roomState.pieces[preview.pieceId];
+    const draggedOriginal = preview && roomState.originals[preview.pieceId];
+    const shown: RoomState = draggedPiece
+      ? { ...roomState, pieces: { ...roomState.pieces, [preview.pieceId]: { ...draggedPiece, placement: preview.placement } } }
+      : draggedOriginal
+        ? { ...roomState, originals: { ...roomState.originals, [preview.pieceId]: { ...draggedOriginal, placement: preview.placement, moved: true } } }
+        : roomState;
     const moved = Object.keys(shown.originals).filter((id) => shown.originals[id].moved);
     // Overlaps last: they name the other item by its Catalog title, which can be long.
     const violations = checkFit(setup, catalog, shown, [...Object.keys(shown.pieces), ...moved])

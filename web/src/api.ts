@@ -19,7 +19,13 @@ async function request<T>(method: string, url: string, body?: unknown, init?: Re
 /** A file in a Scan's folder, such as its mesh: scanFileUrl('dorm-v1', 'room.glb'). */
 export const scanFileUrl = (scanId: string, file: string) => `/data/scans/${scanId}/${file}`;
 
-export const listScans = () => request<ScanManifest[]>('GET', '/api/scans');
+/** The Scans. The demo is shared, so there the ones a visitor made theirs, from the library, are theirs in their browser only. */
+export async function listScans() {
+  const [scans, { demo }] = await Promise.all([request<ScanManifest[]>('GET', '/api/scans'), loadConfig()]);
+  if (!demo) return scans;
+  const { scans: mine } = readMine();
+  return scans.map((scan) => (mine.includes(scan.id) ? { ...scan, mine: true } : scan));
+}
 export const loadManifest = (scanId: string) => request<ScanManifest>('GET', scanFileUrl(scanId, 'manifest.json'));
 
 /* Floor Plans (ADR-0011): a plan image becomes a Scan, read by Claude, and corrected in Room Setup. */
@@ -164,8 +170,8 @@ export const loadConfig = () =>
   (config ??= request<ServerConfig>('GET', '/api/config').catch(() => ({ demo: false, seeds: [], generate: true, textTo3d: true })));
 
 /**
- * Start fresh: forgets everything Mise keeps in this browser, its Designs and copies of the seeds in the
- * demo and its settings, then opens the Scans anew, so the demo's rooms are as they were first scanned.
+ * Start fresh: forgets everything Mise keeps in this browser, its Designs, Scans and copies of the seeds in
+ * the demo and its settings, then opens the Scans anew, so the demo's rooms are as they were first scanned.
  * The Designs stay on the server, as do the takes saved for a Brief.
  */
 export function startFresh() {
@@ -178,15 +184,15 @@ export function startFresh() {
   window.location.assign('/scans');
 }
 
-/** The Designs this browser made, and its copy of each seed Design it opened. */
-interface Mine { ids: string[]; copies: Record<string, string> }
+/** The Designs this browser made, its copy of each seed Design it opened, and the Scans it made its own. */
+interface Mine { ids: string[]; copies: Record<string, string>; scans: string[] }
 const MINE = 'mise.demo.mine';
 
 function readMine(): Mine {
   try {
-    return { ids: [], copies: {}, ...JSON.parse(localStorage.getItem(MINE) ?? '{}') };
+    return { ids: [], copies: {}, scans: [], ...JSON.parse(localStorage.getItem(MINE) ?? '{}') };
   } catch {
-    return { ids: [], copies: {} };
+    return { ids: [], copies: {}, scans: [] };
   }
 }
 
@@ -202,6 +208,14 @@ function writeMine(mine: Mine) {
 export function rememberDesigns(ids: string[]) {
   const mine = readMine();
   writeMine({ ...mine, ids: [...new Set([...mine.ids, ...ids])] });
+}
+
+/** Makes a Scan the Mover's, so /scans lists it. In the demo, which can't change a Scan, it is theirs in this browser. */
+export async function makeScanMine(scan: ScanManifest) {
+  if (scan.mine) return;
+  if (!(await loadConfig()).demo) return void (await saveManifest({ ...scan, mine: true }));
+  const mine = readMine();
+  writeMine({ ...mine, scans: [...new Set([...mine.scans, scan.id])] });
 }
 
 /** The Design a visitor edits when they open designId: in the demo, their own copy of a seed, made on first open. */

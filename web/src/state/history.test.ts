@@ -125,6 +125,16 @@ describe('deleting an Edit', () => {
     expect(room()).toEqual(before);
   });
 
+  it('is what ⌘Z takes back right after it, not the Edit before it', () => {
+    applyEdit({ type: 'recolor', targetId: 'pc_chair', partId: 'legs', color: '#1c1c1c' });
+    const before = room();
+    deleteEdit('ed_pc_chair');
+
+    undo();
+
+    expect(room()).toEqual(before);
+  });
+
   it('can no longer be put back once the Edit list changes again', () => {
     deleteEdit('ed_pc_chair');
     applyEdit({ type: 'place', pieceId: 'pc_rug', catalogId: 'rug-gray', placement: onFloor(1, 1) });

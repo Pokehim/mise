@@ -50,9 +50,15 @@ export function BriefDialog() {
     void generate(scanId, brief, useEditor.getState().design!);
   }
 
+  function open() {
+    dialog.current!.showModal();
+    // showModal focuses the first control, the Close button, and React's autoFocus ran long before.
+    dialog.current!.querySelector('textarea')?.focus();
+  }
+
   return (
     <>
-      <button className="generate-button" onClick={() => dialog.current!.showModal()}>
+      <button className="generate-button" onClick={open}>
         <Sparkle />
         {step === 'designing' ? 'Designing…' : 'Generate'}
       </button>

@@ -2,7 +2,7 @@ import { type DragEvent, type FormEvent, type RefObject, useEffect, useRef, useS
 import { useLocation } from 'wouter';
 import type { ScanManifest } from '@shared/types';
 import type { ImportStep } from '../../../server/app';
-import { createDesign, importScanFiles, saveDesign, saveManifest } from '../api';
+import { createDesign, importScanFiles, makeScanMine, saveDesign } from '../api';
 import { type LibraryScan, moveInLayoutId, planImageBase, searchLibrary } from '../plan/library';
 import { ArrowRight, Close, Import } from '../ui/icons';
 import { addScanFiles, missingFile, nameFromFile, type ScanFiles } from './importFiles';
@@ -76,7 +76,7 @@ function LibrarySearch({ inputRef, scans, query, onQuery, onWorking }: {
     setError(undefined);
     onWorking(true);
     try {
-      if (!scan.mine) await saveManifest({ ...scan, mine: true });
+      await makeScanMine(scan);
       const design = furnished
         ? await createDesign({ duplicateOf: moveInLayoutId(scan.id) }).then((copy) => saveDesign({ ...copy, name: 'Move-in layout' }))
         : await createDesign({ scanId: scan.id });

@@ -26,7 +26,11 @@ export function addPiece(item: CatalogItem, camera: Camera, at?: Vector2) {
     placeAt = (point) => onWall(wall, wallCoordinates(point, wall).along, 1.5, item.size);
   } else {
     const rotationY = facing(center, eye);
-    placeAt = ([x, z]) => ({ position: [x, 0, z], rotationY, mount: 'floor' });
+    // Inside the room, whole: a sofa dropped near a wall stops at it, even where no spot fits.
+    placeAt = ([x, z]) => {
+      const placement: Placement = { position: [x, 0, z], rotationY, mount: 'floor' };
+      return keepInRoom(placement, item.size, setup!, { snap: false }) ?? placement;
+    };
   }
 
   // Replay once with the new Piece in, then try each spot by moving just that Piece.

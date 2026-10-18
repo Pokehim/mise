@@ -1,7 +1,8 @@
 # models/table.glb: the lounge table, rebuilt from measurements (see README.md for where each number comes from).
 # usage: Blender -b --python table.py -- <table_top.png> <out.glb> <tmpdir>
-# Frame: meters, +Y up, front +Z (a long side), +X toward the legs. Origin: center of the top's footprint, on the floor.
-# The real tables stand with their legs to the East and their other end against the West wall (no legs there).
+# Frame: meters, +Y up, front +Z (a long side). Origin: center of the top's footprint, on the floor.
+# The real tables stand with their legs to the East and their other end against the West wall (no legs there). The
+# Master Copy has legs at both ends, mirrored, so a table the Mover moves away from the wall still stands.
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy
@@ -12,7 +13,7 @@ top_png, out, tmp = sys.argv[sys.argv.index('--') + 1:][:3]
 
 L, D = 1.515, 0.750       # top size
 H, T = 0.705, 0.025       # top surface height, top thickness
-LEG_X = L / 2 - 0.019     # leg centers: 19 mm in from the +X end (outer face flush with it)
+LEG_X = L / 2 - 0.019     # leg centers: 19 mm in from each end (outer face flush with it)
 LEG_Z = 0.350             # leg centers at z = ±0.35 (0.700 apart)
 LEG_W, LEG_D = 0.038, 0.032
 CASTER = 0.075            # caster height (floor to leg bottom)
@@ -39,30 +40,31 @@ recalc_normals(top)
 bev = top.modifiers.new('bevel', 'BEVEL'); bev.width = 0.003; bev.segments = 2; bev.limit_method = 'ANGLE'
 
 parts = []
-for sz in (-1, 1):
-    x, z = LEG_X, sz * LEG_Z
-    v, f = box(x - LEG_W / 2, x + LEG_W / 2, CASTER, H - T, z - LEG_D / 2, z + LEG_D / 2)
-    parts.append(mesh_object(f'leg{sz}', v, f, mats=[m_leg]))
-    # caster: plate, fork, wheel
-    v, f = box(x - 0.019, x + 0.019, CASTER - 0.006, CASTER, z - 0.019, z + 0.019)
-    parts.append(mesh_object(f'plate{sz}', v, f, mats=[m_caster]))
-    for sx in (-1, 1):
-        v, f = box(x + sx * 0.013 - 0.002, x + sx * 0.013 + 0.002, 0.024, CASTER - 0.006, z - 0.014, z + 0.014)
-        parts.append(mesh_object(f'fork{sz}{sx}', v, f, mats=[m_caster]))
-    bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.025, depth=0.020, location=g2b(x, 0.025, z), rotation=(0, np.pi / 2, 0))
-    wheel = bpy.context.active_object; wheel.name = f'wheel{sz}'; wheel.data.materials.append(m_caster)
-    parts.append(wheel)
-# rail under the top between the two legs
-v, f = box(LEG_X - 0.0125, LEG_X + 0.0125, H - T - 0.040, H - T, -LEG_Z, LEG_Z)
-parts.append(mesh_object('rail', v, f, mats=[m_leg]))
+for ex in (-1, 1):            # each end: the real tables' East end, and its mirror
+    for sz in (-1, 1):
+        x, z = ex * LEG_X, sz * LEG_Z
+        v, f = box(x - LEG_W / 2, x + LEG_W / 2, CASTER, H - T, z - LEG_D / 2, z + LEG_D / 2)
+        parts.append(mesh_object(f'leg{ex}{sz}', v, f, mats=[m_leg]))
+        # caster: plate, fork, wheel
+        v, f = box(x - 0.019, x + 0.019, CASTER - 0.006, CASTER, z - 0.019, z + 0.019)
+        parts.append(mesh_object(f'plate{ex}{sz}', v, f, mats=[m_caster]))
+        for sx in (-1, 1):
+            v, f = box(x + sx * 0.013 - 0.002, x + sx * 0.013 + 0.002, 0.024, CASTER - 0.006, z - 0.014, z + 0.014)
+            parts.append(mesh_object(f'fork{ex}{sz}{sx}', v, f, mats=[m_caster]))
+        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.025, depth=0.020, location=g2b(x, 0.025, z), rotation=(0, np.pi / 2, 0))
+        wheel = bpy.context.active_object; wheel.name = f'wheel{ex}{sz}'; wheel.data.materials.append(m_caster)
+        parts.append(wheel)
+    # rail under the top between the end's two legs
+    v, f = box(ex * LEG_X - 0.0125, ex * LEG_X + 0.0125, H - T - 0.040, H - T, -LEG_Z, LEG_Z)
+    parts.append(mesh_object(f'rail{ex}', v, f, mats=[m_leg]))
 legs = join(parts, 'legs')
 recalc_normals(legs)
 
 # shadow: soft rectangle under the top (floor at 58-73% of open-floor brightness where no chair overlaps),
-# darker contact spots under the two casters
+# darker contact spots under the four casters
 res = 0.005
 a = soft_rect_alpha(int((L + 0.5) / res), int((D + 0.5) / res), res, L / 2 - 0.05, D / 2 - 0.05, 0.10, 0.32,
-                    spots=[(LEG_X, -LEG_Z, 0.018, 0.55), (LEG_X, LEG_Z, 0.018, 0.55)])
+                    spots=[(ex * LEG_X, sz * LEG_Z, 0.018, 0.55) for ex in (-1, 1) for sz in (-1, 1)])
 shadow_plane('shadow', a, res, (0.0, 0.0), 0.002, tmp)
 
 export(out, ['top', 'legs', 'shadow'])

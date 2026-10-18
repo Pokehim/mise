@@ -144,10 +144,15 @@ for name, ob in parts.items():
     ob.data.materials.clear(); ob.data.materials.append(m)
     img = bpy.data.images.new(name + '_tmp', TEX, TEX, alpha=False, float_buffer=True)   # linear
     layers = []
-    for src in (src1, src1m, src2, src2m):
-        c = bake(ob, src, img).copy()
-        k = bake(ob, src, img, mask=True)[..., 0] > 0.5
-        layers.append((c, k))
+    if os.environ.get('REUSE_LAYERS') and os.path.exists(f'{tmp}/{name}_mask3.npy'):
+        # geometry-only rebuilds (legs, frame, shadow) keep the layers an earlier run baked for these same Parts
+        # (already matched in exposure to CHAIR_1, so the matching below finds gains of ~1)
+        layers = [(np.load(f'{tmp}/{name}_layer{j}.npy').astype(np.float32), np.load(f'{tmp}/{name}_mask{j}.npy')) for j in range(4)]
+    else:
+        for src in (src1, src1m, src2, src2m):
+            c = bake(ob, src, img).copy()
+            k = bake(ob, src, img, mask=True)[..., 0] > 0.5
+            layers.append((c, k))
     # the mirrors and CHAIR_2 were lit and exposed differently: match each to CHAIR_1 where both reached
     c0, k0 = layers[0]
     for j in (1, 2, 3):
@@ -228,14 +233,14 @@ for leg, spec in (('back', LEG_BACK), ('front', LEG_FRONT)):
         # glide: thin grey disk under the foot
         bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=R0 + 0.001, depth=0.004, location=g2b(fx, 0.002, fz))
         gl = bpy.context.active_object; gl.data.materials.append(m_glide); pieces.append(gl)
-        y = 0.385
+        y = 0.387
         tops[(leg, sx)] = (fx + kx * y, fz + kz * y)
 # frame: four flat bars joining the leg tops just under the seat pan
 corners = [tops[('back', -1)], tops[('back', 1)], tops[('front', 1)], tops[('front', -1)]]
 for i in range(4):
     (ax, az), (bx, bz) = corners[i], corners[(i + 1) % 4]
     L = np.hypot(bx - ax, bz - az); ang = np.arctan2(bz - az, bx - ax)
-    v, f = box(-L / 2, L / 2, 0.375, 0.385, -0.0125, 0.0125)
+    v, f = box(-L / 2, L / 2, 0.382, 0.393, -0.0125, 0.0125)   # just under the seat pan's underside (>= 0.395)
     ob = mesh_object(f'bar{i}', v, f, mats=[m_frame])
     ob.matrix_world = mathutils.Matrix.Translation(g2b((ax + bx) / 2, 0, (az + bz) / 2)) @ mathutils.Matrix.Rotation(-ang, 4, 'Z')   # glTF z = Blender -y
     pieces.append(ob)

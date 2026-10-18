@@ -12,7 +12,7 @@ import { detectFloorHeight, detectYaw, levelTransform } from './geometry/level';
 import { mm } from './geometry/mesh';
 import { polygonBounds } from './geometry/walls';
 import { sceneTriangles } from './sceneTriangles';
-import { type FillDraft, loadScene, scanTriangles, useSetup } from './store';
+import { disposeScene, type FillDraft, loadScene, scanTriangles, useSetup } from './store';
 
 /** Corner pairs to click before lining up: three fix the turn, a fourth checks it. */
 export const CORNER_PAIRS = 4;
@@ -28,12 +28,14 @@ const rounded = ({ position, rotationY }: YawTransform): YawTransform =>
 
 /** Opens Fill Capture `index`: loads its mesh, and shows it where it was lined up, or levelled beside the room if it wasn't yet. */
 export async function openFill(index: number) {
-  const { manifest, setup } = useSetup.getState();
-  const fill = manifest!.captures!.fills[index];
+  const { manifest, setup, fill: open } = useSetup.getState();
+  const fill = manifest?.captures?.fills[index];
+  if (!fill) return;   // no Scan is open: step 6 of the Scan before can ask while the next one loads
   useSetup.setState({
     fill: { index, transform: IDENTITY, floorHeight: 0, roomCorners: [], fillCorners: [], copies: {}, look: 'solid' },
     notice: 'Loading the Fill Capture…',
   });
+  if (open?.scene) disposeScene(open.scene);
   const scene = await loadScene(scanFileUrl(manifest!.id, fill.mesh));
   // Once lined up it lies on the room's floor and walls: drawn over them, not fighting them.
   scene.traverse((object) => {
@@ -51,8 +53,13 @@ export async function openFill(index: number) {
     const room = polygonBounds(setup!.floor.polygon);
     transform = composeYaw({ position: [room.maxX - room.minX + 1, 0, 0], rotationY: 0 }, level);
   }
-  if (useSetup.getState().fill?.index !== index) return;   // another one was opened meanwhile
-  useSetup.setState({ fill: { ...useSetup.getState().fill!, scene, transform, floorHeight }, notice: undefined });
+  const current = useSetup.getState().fill;
+  if (current?.index !== index) {   // another one was opened meanwhile, or step 6 was left
+    disposeScene(scene);
+    return;
+  }
+  useSetup.setState({ fill: { ...current, scene, transform, floorHeight }, notice: undefined });
+  if (current.scene) disposeScene(current.scene);   // an earlier openFill of the same one finished first
 }
 
 /** A click on the room while lining up: the next corner, in the room frame. */

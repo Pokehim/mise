@@ -86,16 +86,31 @@ export function polygonBounds(polygon: Vec2[]): RoomBounds {
 /**
  * The setup with a new floor polygon and its Walls. A Wall the Mover renamed keeps its name while
  * its edge is unchanged; every other Wall is named afresh, since a new corner can turn the room.
- * Openings on Walls that no longer exist are dropped.
+ * Wall ids are positions in click order, so a Wall whose edge changed is another wall under the same
+ * id: Openings and Patch images on it are dropped, like those on Walls that no longer exist.
  */
 export function withPolygon(setup: RoomSetup, polygon: Vec2[]): RoomSetup {
   const walls = polygon.length >= 3 ? wallsFromPolygon(polygon, setup.ceilingHeight) : [];
   const autoNames = new Map(wallsFromPolygon(setup.floor.polygon, setup.ceilingHeight).map((w) => [w.id, w.name]));
   const same = (a: Vec2, b: Vec2) => a[0] === b[0] && a[1] === b[1];
+  const unchanged = new Set<string>();
   const named = walls.map((wall) => {
     const old = setup.walls.find((w) => w.id === wall.id && same(w.start, wall.start) && same(w.end, wall.end));
-    return old && old.name !== autoNames.get(old.id) ? { ...wall, name: old.name } : wall;
+    if (!old) return wall;
+    unchanged.add(old.id);
+    return old.name !== autoNames.get(old.id) ? { ...wall, name: old.name } : wall;
   });
-  const ids = new Set(named.map((w) => w.id));
-  return { ...setup, floor: { polygon }, walls: named, openings: setup.openings.filter((o) => ids.has(o.wallId)) };
+  const originals = setup.originals.map((o) => {
+    const images = o.patch?.walls;
+    if (!images || Object.keys(images).every((id) => unchanged.has(id))) return o;
+    return { ...o, patch: { ...o.patch, walls: Object.fromEntries(Object.entries(images).filter(([id]) => unchanged.has(id))) } };
+  });
+  return { ...setup, floor: { polygon }, walls: named, openings: setup.openings.filter((o) => unchanged.has(o.wallId)), originals };
 }
+
+/**
+ * False for a click on the last corner (a double click) or on the first (the outline closes by
+ * itself): either would make a Wall of length zero.
+ */
+export const isNewCorner = (polygon: Vec2[], [x, z]: Vec2) =>
+  ![polygon.at(-1), polygon[0]].some((p) => p !== undefined && p[0] === x && p[1] === z);

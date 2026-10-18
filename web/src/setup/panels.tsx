@@ -1,6 +1,6 @@
 // The sidebar panel of each Room Setup step.
 import { useEffect, useMemo, useState } from 'react';
-import { type Material, MathUtils, Mesh } from 'three';
+import { MathUtils } from 'three';
 import type { Category, Opening, Original } from '@shared/types';
 import { scanFileUrl } from '../api';
 import { bakeFloorColors } from './bake';
@@ -14,7 +14,7 @@ import {
   CORNER_PAIRS, clearCorners, forgetMoved, isAligned, lineUp, openFill, refineLineUp, saveAndMerge, setFillLook, startMarking,
 } from './fills';
 import { CATEGORIES, CATEGORY_NAMES, UNBAKED_FLOOR_COLOR, defaultPartParams } from './originals';
-import { isLeveled, loadScene, type StepId, scanTriangles, useSetup } from './store';
+import { disposeScene, isLeveled, loadScene, type StepId, scanTriangles, useSetup } from './store';
 
 export function StepPanel({ step }: { step: StepId }) {
   switch (step) {
@@ -43,8 +43,8 @@ function LevelPanel() {
   const apply = (floor: number, rotationY: number) => setMeshTransform(levelTransform(capture, floor, rotationY));
   const detect = () => apply(detectFloorHeight(capture) ?? 0, detectYaw(capture) ?? 0);
   useEffect(() => {
-    // Once, when a Scan that was never leveled opens.
-    if (!isLeveled(manifest)) detect();
+    // Once, when a Scan that was never leveled opens. One with Walls was: it may be imported already in the room frame.
+    if (!isLeveled(manifest) && useSetup.getState().setup!.walls.length === 0) detect();
   }, []);
 
   return (
@@ -399,15 +399,7 @@ function BakePanel() {
     } catch (error) {
       setResult(`Bake failed: ${(error as Error).message}`);
     } finally {
-      if (merged !== scene) {
-        merged.traverse((object) => {
-          if (!(object instanceof Mesh)) return;
-          object.geometry.dispose();
-          const material = object.material as Material & { map?: { dispose(): void } | null };
-          material.map?.dispose();
-          material.dispose();
-        });
-      }
+      if (merged !== scene) disposeScene(merged);
       setBusy(false);
     }
   };

@@ -50,7 +50,8 @@ image (`alphaMode: BLEND`) on the floor, or on the wall for the whiteboard.
 12. `table_top_image.py`, then `table.py` (Blender).
 13. `render.py` (Blender) with the East wall view of GLB_1 and of GLB_3, `whiteboard_image.py` (GLB_1's image, with
     the North end's top from GLB_3 and its smeared bottom corner refilled), then `whiteboard.py` (Blender).
-14. `recenter_glb.py` on each file, so its origin is the center of its footprint.
+14. `recenter_glb.py` on each file, so its origin is the center of its footprint (`--wall` for the whiteboard: its origin
+    on its bottom edge, so its Original's box runs 0.845-2.330 m, not from the floor).
 15. `fit_originals.py`: the 16 Originals; `check_chair.py`: the chair's Done-when numbers.
 
 ## Measurements

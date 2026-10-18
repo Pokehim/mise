@@ -1,9 +1,9 @@
 # Whiteboard image for models/whiteboard.glb: the board's face cut out of an orthographic, unlit render of
 # POLYCAM_ROOM_GLB_1 looking at the East wall from just in front of the board (so nothing in the room
 # hides it), 1 mm/px. The render: eye (1.47, 1.615, -0.4) looking +x, 6.6 x 1.63 m, 6600 x 1630 px.
-# The same render of POLYCAM_ROOM_GLB_3 (its align.json matrix) repairs the board's North end, where GLB_1's mesh of
-# the corner smeared over the board.
-# usage: python whiteboard_image.py <GLB_1 render.png> <GLB_3 render.png> <out.jpg>
+# The same renders of POLYCAM_ROOM_GLB_3 and _2 (their align.json matrices) repair the spots where GLB_1's mesh
+# smeared over the board: the North end (GLB_3), and the top trim 2.0-2.35 m from it (GLB_2).
+# usage: python whiteboard_image.py <GLB_1 render.png> <GLB_3 render.png> <GLB_2 render.png> <out.jpg>
 import sys
 import numpy as np
 from PIL import Image
@@ -16,6 +16,7 @@ v = lambda y: round((2.43 - y) * 1000)
 crop = (u(Z0), v(Y1), u(Z1), v(Y0))
 a = np.asarray(Image.open(sys.argv[1]).convert('RGB').crop(crop)).astype(float)
 b3 = np.asarray(Image.open(sys.argv[2]).convert('RGB').crop(crop)).astype(float)
+b2 = np.asarray(Image.open(sys.argv[3]).convert('RGB').crop(crop)).astype(float)
 H, W = a.shape[:2]
 xx, yy = np.meshgrid(np.arange(W), np.arange(H))
 lum = lambda c: c @ [0.2126, 0.7152, 0.0722]
@@ -58,6 +59,39 @@ w = np.clip(ndi.gaussian_filter(top.astype(float), 30), 0, 1) * top
 a = a * (1 - w[..., None]) + g3 * w[..., None]
 print('North end from GLB_3: shift (%d, %d) px, correlation %.2f' % (dx, dy, best[0]))
 
+# Top trim, 2.0-2.35 m from the North end: a teal sheet of the wall hangs over the trim and the board's top 6 cm in
+# GLB_1; GLB_2 sees it clean. Shifted onto GLB_1 by the panel seam and the trim's edge next to it, light matched
+# around it
+hb2 = hp(b2)
+ref2 = ha[45:250, 2400:2900]
+best2 = (-2, 0)
+for dx in range(-40, 41):
+    c = np.corrcoef(ref2.ravel(), hb2[45:250, 2400 + dx:2900 + dx].ravel())[0, 1]
+    if c > best2[0]:
+        best2 = (c, dx)
+dx2 = best2[1]
+# up and down by the trim's lower edge, on both sides of the sheet
+cols = np.r_[1600:1900, 2500:2900]
+prof = lambda c: np.gradient(ndi.gaussian_filter1d(lum(c)[:120, cols].mean(1), 2))
+dy2 = int(np.argmax(prof(np.roll(b2, -dx2, 1))) - np.argmax(prof(a)))
+g2 = np.roll(b2, (-dy2, -dx2), (0, 1))
+patch = (xx >= 1900) & (xx < 2470) & (yy < 140)
+ring2 = (((xx >= 1800) & (xx < 1900)) | ((xx >= 2470) & (xx < 2570))) & (yy < 140)
+gain2 = np.ones((H, 3))
+for y0 in range(0, 140, 10):
+    band = ring2 & (yy >= y0 - 15) & (yy < y0 + 25)
+    gain2[y0:y0 + 10] = np.median(a[band], 0) / np.median(g2[band], 0)
+gain2[140:] = gain2[139]
+g2 = g2 * ndi.gaussian_filter1d(gain2, 8, axis=0)[:, None, :]
+w2 = np.clip(ndi.gaussian_filter(patch.astype(float), 20) * 2, 0, 1) * ndi.binary_dilation(patch, iterations=40)
+w2 = np.maximum(w2, patch * 1.0) * (yy < 180)
+a = a * (1 - w2[..., None]) + g2 * w2[..., None]
+# the trim itself (the top 30 mm) runs on unchanged: GLB_1's own trim rows on either side, blended across, row by row
+left, right = a[:30, 1800:1850].mean(1), a[:30, 2550:2600].mean(1)
+t = np.linspace(0, 1, 700)[None, :, None]
+a[:30, 1850:2550] = left[:, None] * (1 - t) + right[:, None] * t
+print('top trim from GLB_2: shift (%d, %d) px, correlation %.2f' % (dx2, dy2, best2[0]))
+
 # North end, bottom: every capture has the corner's mesh smeared over the board and the tray here (a beige post,
 # grey and teal sheets, a white sliver, and teal streaks along the board's last 45 mm), outlined by hand (board pixels, x from the North end, y from the top). They
 # are filled with the board's light around them, and the tray with the tray's own rows next to them
@@ -77,5 +111,5 @@ a[fill_tray] = tray_row[(yy - (H - 45))[fill_tray]]
 print('North end bottom: %d smeared pixels refilled' % (blot | fill_tray).sum())
 
 im = Image.fromarray(np.clip(a, 0, 255).round().astype(np.uint8))
-im.save(sys.argv[3], quality=93)
+im.save(sys.argv[4], quality=93)
 print('board image', im.size)

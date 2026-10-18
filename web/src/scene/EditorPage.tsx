@@ -7,6 +7,7 @@ import { useEditor } from '../state/store';
 import { CatalogPanel } from '../ui/CatalogPanel';
 import { HistoryPanel } from '../ui/HistoryPanel';
 import { Inspector } from '../ui/Inspector';
+import { RefineBox } from '../ui/RefineBox';
 import { TopBar } from '../ui/TopBar';
 import { addPiece, removeOriginal, removePiece, rotateOriginal, rotatePiece } from './pieceEdits';
 import { SceneCanvas } from './SceneCanvas';
@@ -99,6 +100,7 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
           if (item && camera.current) addPiece(item, camera.current, at);
         }}
       />
+      <RefineBox />
       <Inspector />
       <HistoryPanel />
       <footer className="editor-footer">3D models: Amazon Berkeley Objects (CC BY 4.0), Amazon.com.</footer>

@@ -1,82 +1,252 @@
-/* Room Setup (/setup/:scanId). Every class starts with rs- so nothing leaks into the editor. */
+/* Room Setup (/setup/:scanId), in the sketch style (docs/design/sketch-style.md): the steps and the
+   current step's panel on a sheet at the left, and the room beside them, untouched. The controls,
+   type and focus come from styles/base.css; every class here starts with rs- so nothing leaks into
+   the editor. */
+
 .rs {
-  --rs-bg: #16181c;
-  --rs-panel: #202329;
-  --rs-line: #343842;
-  --rs-text: #e7e9ee;
-  --rs-muted: #9aa1ad;
-  --rs-accent: #e5b567;
+  color-scheme: light;
   display: grid;
-  grid-template-columns: 320px 1fr;
-  grid-template-rows: auto 1fr;
+  grid-template: 'top top' auto 'side view' minmax(0, 1fr) / 320px minmax(0, 1fr);
   height: 100%;
-  background: var(--rs-bg);
-  color: var(--rs-text);
+  background: var(--grain), var(--paper);
   font-size: 14px;
+  line-height: 1.45;
 }
-.rs a { color: var(--rs-accent); }
-.rs button, .rs select, .rs input { font: inherit; color: inherit; }
-.rs button {
-  background: #2b2f37; border: 1px solid var(--rs-line); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+.rs :is(input[type='checkbox'], input[type='radio'], input[type='range']) { accent-color: var(--ink); }
+.rs input[type='number'] { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.rs small { color: var(--graphite); font-size: 12.5px; }
+.rs kbd {
+  padding: 0 4px;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-1);
+  background: var(--paper-raised);
+  font: 500 12px/1.4 var(--font-mono);
 }
-.rs button:hover:not(:disabled) { border-color: var(--rs-muted); }
-.rs button:disabled { opacity: 0.45; cursor: default; }
-.rs .rs-primary { background: var(--rs-accent); border-color: var(--rs-accent); color: #1b1b1b; font-weight: 600; }
-.rs .rs-link { background: none; border: none; color: #f87171; padding: 0 4px; }
-.rs select, .rs input:not([type]), .rs input[type='number'] {
-  background: #15171b; border: 1px solid var(--rs-line); border-radius: 6px; padding: 4px 6px; min-width: 0;
-}
-.rs kbd { border: 1px solid var(--rs-line); border-radius: 4px; padding: 0 4px; font-size: 12px; }
-.rs small { color: var(--rs-muted); }
+.rs code { font: 12px/1.5 var(--font-mono); overflow-wrap: anywhere; }
+.rs .icon { flex: none; }
+/* Problems only: a failed save or Bake, a step's warning. */
+.rs .rs-warn { color: var(--red-pencil); }
+.rs-grow { flex: 1; min-width: 0; }
+
+/* ───────────── Header ───────────── */
 
 .rs-header {
-  grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 10px 16px;
-  border-bottom: 1px solid var(--rs-line); background: var(--rs-panel);
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  box-sizing: border-box;
+  min-width: 0;
+  height: 48px;
+  padding: 0 var(--s-3) 0 var(--s-4);
+  border-bottom: var(--line) solid var(--pencil);
 }
-.rs-header h1 { font-size: 16px; margin: 0; flex: 1; }
-.rs-header h1 span { color: var(--rs-muted); font-weight: 400; }
-.rs-status { color: var(--rs-muted); }
-.rs-toggle { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.rs .rs-back { display: inline-flex; flex: none; align-items: center; gap: 6px; color: var(--graphite); font-weight: 500; text-decoration: none; }
+@media (hover: hover) {
+  .rs .rs-back:hover { color: var(--ink); }
+}
+.rs-header h1 { display: flex; flex: 1; align-items: baseline; gap: var(--s-3); min-width: 0; margin: 0; font-size: inherit; font-weight: 400; }
+.rs-title { flex: none; font: 400 20px/1.2 var(--font-hand); }
+.rs-scan-name { overflow: hidden; color: var(--graphite); text-overflow: ellipsis; white-space: nowrap; }
+.rs-scan-name::before { content: '/'; margin-right: var(--s-3); color: var(--pencil-strong); }
+.rs-toggle { display: flex; flex: none; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+.rs-toggle input { margin: 0; }
+.rs-status { flex: none; color: var(--graphite); font-size: 13px; white-space: nowrap; }
 
-.rs-sidebar { overflow-y: auto; border-right: 1px solid var(--rs-line); background: var(--rs-panel); }
-.rs-steps { list-style: none; margin: 0; padding: 12px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-.rs .rs-step { width: 100%; display: flex; gap: 6px; align-items: center; padding: 6px 8px; text-align: left; }
-.rs .rs-step-on { border-color: var(--rs-accent); }
+/* ───────────── The sheet: steps, then the current step ───────────── */
+
+.rs-sidebar {
+  grid-area: side;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-right: var(--line) solid var(--pencil);
+}
+
+/* The seven steps, in order, as a numbered list. The current one is chosen: the wash, a wobbly ink line. */
+.rs-steps { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: var(--s-3); list-style: none; }
+.rs .rs-steps button {
+  justify-content: flex-start;
+  gap: var(--s-2);
+  width: 100%;
+  padding: 4px 8px 4px 6px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--graphite);
+  text-align: left;
+}
+@media (hover: hover) {
+  .rs .rs-steps button:hover:not([aria-current='step']) { border-color: transparent; background: var(--ink-wash); color: var(--ink); }
+}
+.rs .rs-steps button[aria-current='step'] { background: var(--wash-tint); color: var(--ink); font-weight: 500; }
+.rs .rs-steps button[aria-current='step']::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: var(--line-strong) solid var(--ink);
+  border-radius: var(--r-2);
+  filter: url(#pencil);
+  pointer-events: none;
+}
 .rs-step-number {
-  display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
-  background: #15171b; font-size: 11px; flex: none;
+  display: grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: 50%;
+  background: var(--paper-raised);
+  font: 500 10.5px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
-.rs-panel { padding: 4px 16px 24px; }
-.rs-panel h2 { font-size: 15px; margin: 8px 0; }
-.rs-panel p { color: #c9cdd5; line-height: 1.45; margin: 8px 0; }
-.rs-note { color: var(--rs-muted) !important; font-size: 13px; }
-.rs-warn { color: #fbbf24 !important; }
+.rs-step-done { border-color: transparent; background: none; color: var(--ink); }
+[aria-current='step'] .rs-step-number:not(.rs-step-done) { border-color: var(--ink); color: var(--ink); }
+.rs-step-title { white-space: nowrap; }
 
-.rs-field { display: grid; gap: 4px; margin: 12px 0; }
-.rs-field input[type='range'] { width: 100%; }
-.rs-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
-.rs-check { display: flex; gap: 6px; align-items: baseline; margin: 8px 0; cursor: pointer; }
-.rs-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
-.rs .rs-chip { padding: 3px 9px; border-radius: 999px; }
-.rs .rs-chip-on { border-color: var(--rs-accent); color: var(--rs-accent); }
-.rs-list { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; }
-.rs-list li { display: flex; gap: 8px; align-items: center; }
-.rs-list li input { flex: 1; }
-.rs-item { flex-direction: column; align-items: stretch !important; border: 1px solid var(--rs-line); border-radius: 8px; padding: 8px; }
-.rs-card { border: 1px solid var(--rs-line); border-radius: 8px; padding: 4px 10px 10px; margin: 12px 0; background: #1a1d22; }
-.rs-size { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rs-panel { padding: var(--s-4) var(--s-4) var(--s-6); border-top: var(--line) solid var(--pencil); }
+.rs-kicker { margin: 0; color: var(--graphite); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.rs-panel h2 { margin: 0 0 var(--s-2); font: 400 24px/1.2 var(--font-hand); }
+.rs-panel h3 { margin: var(--s-5) 0 var(--s-1); font: 400 18px/1.25 var(--font-hand); }
+.rs-panel p { margin: 0 0 var(--s-3); text-wrap: pretty; }
+.rs-note { color: var(--graphite); font-size: 13px; }
+
+.rs-field { display: grid; gap: var(--s-1); margin: 0 0 var(--s-4); }
+.rs-field > span:first-child { font-size: 13px; font-weight: 500; }
+.rs-field > span:first-child small { margin-left: 4px; font-weight: 400; }
+.rs-field input[type='range'] { width: 100%; margin: 4px 0; }
+.rs-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: 0 0 var(--s-3); }
+.rs-check { display: flex; align-items: baseline; gap: var(--s-2); cursor: pointer; }
+.rs-check input { flex: none; margin: 0; translate: 0 2px; }
+.rs-check small { display: block; }
+.rs-fieldset { min-width: 0; margin: 0 0 var(--s-2); padding: 0; border: 0; }
+.rs-fieldset legend, .rs-size legend { margin-bottom: var(--s-1); padding: 0; font-size: 13px; font-weight: 500; }
+.rs-fieldset .rs-row { gap: var(--s-4); margin-bottom: var(--s-2); }
+.rs-fieldset select { width: 100%; }
+
+/* The Walls of step 4: words with no box until chosen, like the editor's tabs. */
+.rs-chips { display: flex; flex-wrap: wrap; gap: 2px; margin: 0 -8px var(--s-3); }
+.rs .rs-chip { padding: 3px 8px; font-size: 13px; white-space: nowrap; }
+.rs .rs-chip:not([aria-pressed='true']) { border-color: transparent; background: transparent; color: var(--graphite); }
+@media (hover: hover) {
+  .rs .rs-chip:not([aria-pressed='true']):hover:not(:disabled) { border-color: transparent; background: var(--ink-wash); color: var(--ink); }
+}
+
+.rs-list { display: grid; gap: var(--s-1); margin: 0 0 var(--s-4); padding: 0; list-style: none; }
+.rs-list li { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.rs-walls input { flex: 1; }
+.rs-walls small { flex: none; min-width: 56px; text-align: right; }
+
+/* An Opening: a card laid on the sheet. */
+.rs .rs-item {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-3);
+  background: var(--paper-raised);
+}
+.rs-item .rs-row { margin: 0; }
+.rs-measure { font-variant-numeric: tabular-nums; }
+
+/* The Originals of step 5, as rows: the selected one in the wash. */
+.rs .rs-originals { gap: 0; margin: 0 -8px var(--s-4); }
+.rs .rs-originals button { justify-content: flex-start; gap: var(--s-2); width: 100%; padding: 4px 8px; text-align: left; }
+.rs .rs-originals button:not([aria-pressed='true']) { border-color: transparent; background: transparent; }
+@media (hover: hover) {
+  .rs .rs-originals button:not([aria-pressed='true']):hover:not(:disabled) { border-color: transparent; background: var(--ink-wash); }
+}
+.rs-kept { display: inline-grid; color: var(--graphite); }
+/* A fingertip's rows. */
+@media (pointer: coarse) {
+  .rs :is(.rs-originals button, .rs-chip) { min-height: 40px; }
+}
+
+/* The selected Original's settings. */
+.rs-card {
+  margin: 0 0 var(--s-4);
+  padding: var(--s-3);
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-3);
+  background: var(--paper-raised);
+}
+.rs-card .rs-field { margin-bottom: var(--s-3); }
+.rs-card > small { display: block; }
+.rs-size { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); min-width: 0; margin: var(--s-3) 0; padding: 0; border: 0; }
 .rs-size label { display: grid; gap: 2px; }
-.rs-swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--rs-line); flex: none; }
+.rs-size input { width: 100%; }
+.rs-card .rs-row button { gap: 4px; }
 
-.rs-histogram { margin: 4px 0 12px; }
-.rs-histogram svg { width: 100%; height: 60px; background: #15171b; border-radius: 6px; }
-.rs-histogram rect { fill: #b7bdc8; }
-.rs-histogram line { stroke: var(--rs-accent); stroke-width: 1.5; stroke-dasharray: 3 2; }
-.rs-histogram figcaption { color: var(--rs-muted); font-size: 12px; margin-top: 2px; }
-
-.rs-view { position: relative; min-width: 0; min-height: 0; }
-.rs-preview {
-  position: absolute; top: 12px; right: 12px; display: grid; gap: 2px; padding: 10px 12px; max-width: 240px;
-  background: rgb(32 35 41 / 0.92); border: 1px solid var(--rs-line); border-radius: 8px;
+/* What a Delete took, while it can be put back: as in the editor's History. */
+.rs-deleted {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-3) !important;
+  padding: 6px 6px 6px 10px;
+  border-radius: var(--r-2);
+  background: var(--wash-tint);
+  font-size: 13px;
 }
-.rs-message { padding: 24px; }
+.rs-deleted-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs .rs-deleted button { flex: none; padding: 2px 8px; font-size: 12px; }
+
+/* A baked floorColor: a sample of the room's own floor. */
+.rs-swatch { flex: none; box-sizing: border-box; width: 18px; height: 18px; border: var(--line) solid var(--pencil-strong); border-radius: var(--r-1); }
+
+/* A height histogram: pencil bars on a ruled base, and the chosen height in the wash. */
+.rs-histogram { margin: 0 0 var(--s-4); }
+.rs-histogram svg { display: block; width: 100%; height: 60px; border-bottom: var(--line) solid var(--pencil-strong); }
+.rs-histogram rect { fill: var(--pencil-strong); }
+.rs-histogram line { stroke: var(--wash); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.rs-histogram figcaption { margin-top: var(--s-1); color: var(--graphite); font-size: 12px; }
+
+/* ───────────── The room ───────────── */
+
+/* The desk under the sheets, as in the editor. Nothing in the view is filtered or tinted. */
+.rs-view { grid-area: view; position: relative; min-width: 0; min-height: 0; background: var(--desk); }
+.rs-preview {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  display: grid;
+  gap: var(--s-1);
+  box-sizing: border-box;
+  max-width: 240px;
+  max-height: calc(100% - 2 * var(--s-3));
+  overflow-y: auto;
+  padding: var(--s-3);
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--grain), var(--paper-raised);
+  box-shadow: var(--lift);
+}
+.rs-preview h2 { margin: 0; font: 400 18px/1.2 var(--font-hand); }
+.rs-preview-list { display: grid; gap: 2px; margin-top: var(--s-1); }
+
+/* ───────────── Phones: the room on top, then the steps and the panel, as one scrolling page ───────────── */
+
+@media (max-width: 760px) {
+  .rs { grid-template: 'top' auto 'view' 52dvh 'side' auto / minmax(0, 1fr); height: auto; min-height: 100%; }
+  /* Two rows: back, the title and Save; then the preview switch and the status. */
+  .rs-header { flex-wrap: wrap; gap: var(--s-1) var(--s-3); height: auto; padding: 6px var(--s-2) 6px var(--s-3); }
+  .rs-back-label, .rs-scan-name { display: none; }
+  .rs-header h1 { flex: 1 0 50%; }
+  .rs-header .primary { order: 1; }
+  .rs-toggle { order: 2; }
+  .rs-status { order: 3; margin-left: auto; }
+  .rs-sidebar { overflow: visible; border: 0; border-top: var(--line) solid var(--pencil); }
+  /* The steps as one row that scrolls sideways, so the panel stays near the room. */
+  .rs-steps {
+    flex-direction: row;
+    padding: var(--s-2) var(--s-6) var(--s-2) var(--s-3);
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* The row fades out at the right edge: there are more steps that way. */
+    mask-image: linear-gradient(to left, transparent, black var(--s-6));
+  }
+  .rs-steps li { flex: none; }
+  .rs .rs-steps button { min-height: 40px; padding: 4px 10px 4px 6px; }
+  .rs-preview { max-width: calc(100% - 2 * var(--s-3)); max-height: 60%; }
+}

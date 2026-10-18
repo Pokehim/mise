@@ -1,9 +1,10 @@
 import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { useCallback } from 'react';
-import { type Camera, type Intersection, type Object3D, type Ray, Raycaster, Vector2, Vector3 } from 'three';
-import type { CatalogItem, Placement, RoomSetup, Vec2 } from '@shared/types';
+import { type Intersection, MathUtils, type Object3D, type Ray, Raycaster, Vector2, Vector3 } from 'three';
+import { wallPoint } from '@shared/geometry';
+import type { CatalogItem, Placement, RoomSetup, Vec2, Wall } from '@shared/types';
 import { pieceItem, useEditor } from '../state/store';
-import { faces, wallCoordinates } from './floorPlan';
+import { faces, nearestWall, wallCoordinates, wallLength } from './floorPlan';
 import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
 import { floorHit, keepInRoom, liesFlat, onWall } from './placement';
 import type { SplitNodeData } from './splitScan';
@@ -50,21 +51,94 @@ function onFloorOrSurface(
   return keepInRoom({ position: [x, 0, z], rotationY: start.rotationY, mount: 'floor' }, item.size, setup, { snap });
 }
 
-/** Where the pointer puts a wall item: centered on it, on the nearest wall in view under the pointer. */
-function onWallUnder(ray: Ray, camera: Camera, item: Draggable, setup: RoomSetup): Placement | null {
-  const eye: Vec2 = [camera.position.x, camera.position.z];
-  let best: { placement: Placement; distance: number } | null = null;
-  for (const wall of setup.walls) {
-    const [nx, nz] = wall.normal;
-    const toward = ray.direction.x * nx + ray.direction.z * nz;
-    if (!faces(wall, eye) || toward >= 0) continue;
-    const distance = -((ray.origin.x - wall.start[0]) * nx + (ray.origin.z - wall.start[1]) * nz) / toward;
-    const hit = ray.at(distance, new Vector3());
-    const { along, length } = wallCoordinates([hit.x, hit.z], wall);
-    if (along < 0 || along > length || hit.y < 0 || hit.y > wall.height) continue;
-    if (!best || distance < best.distance) best = { placement: onWall(wall, along, hit.y, item.size), distance };
-  }
-  return best?.placement ?? null;
+/**
+ * Where a ray meets a wall's plane, in the wall's terms: how far along it, how high, and how far
+ * away; and its slant, the sine of the angle it meets the plane at (a ray's direction is a unit vector).
+ */
+function wallHit(ray: Ray, wall: Wall) {
+  const [nx, nz] = wall.normal;
+  const toward = ray.direction.x * nx + ray.direction.z * nz;
+  // Only from in front of the wall, as the Dollhouse view shows it.
+  if (toward >= 0) return null;
+  const distance = -((ray.origin.x - wall.start[0]) * nx + (ray.origin.z - wall.start[1]) * nz) / toward;
+  const hit = ray.at(distance, new Vector3());
+  return { along: wallCoordinates([hit.x, hit.z], wall).along, y: hit.y, distance, slant: -toward };
+}
+
+/** Below this slant, a ray barely meets a wall: where it meets is too unsteady to follow, so the item holds still. */
+const MIN_SLANT = Math.sin(MathUtils.degToRad(3));
+/**
+ * How much farther than the pointer a wall item may move: at most this many times as far as a point
+ * under the pointer, square on to the view, would. Keeping the grabbed point under the pointer needs
+ * more only where the view meets the wall over 70° from square on, so foreshortened that it would
+ * fling the item along the wall; there the item lags behind the pointer instead.
+ */
+const MAX_STRETCH = 3;
+/** How far in from a wall's ends, in meters, the pointer must be to take a wall item onto that wall. */
+const CLEARLY_OVER = 0.15;
+
+/**
+ * A wall item's drag (spec §10.3), from the pointer's ray at pointerdown: a function from each later
+ * ray to where the item goes. It keeps the grabbed point under the pointer, as a floor item does, by
+ * sliding the item over its own wall's plane, kept whole on the wall by `onWall`. It moves to another
+ * wall only when the pointer is clearly over that wall and the item fits there, and never faster than
+ * the pointer: where the view grazes the wall, it lags behind, or holds still.
+ */
+export function wallDrag(grab: Ray, start: Placement, item: Draggable, setup: RoomSetup): (ray: Ray) => Placement {
+  const [width, height] = item.size;
+  let wall = setup.walls.find(({ id }) => id === start.wallId)
+    ?? nearestWall([start.position[0], start.position[2]], setup.walls).wall;
+  const center = { along: wallCoordinates([start.position[0], start.position[2]], wall).along, y: start.position[1] + height / 2 };
+  const grabbed = wallHit(grab, wall);
+  // From the grabbed point to the item's center, in the wall's terms.
+  const offset = grabbed ? { along: center.along - grabbed.along, y: center.y - grabbed.y } : { along: 0, y: 0 };
+  // Where the item is shown, its center on `wall` (unknown just after it changes wall), and the pointer's last ray.
+  let shown = start;
+  let placed: { along: number; y: number } | null = center;
+  let direction = grab.direction.clone();
+  return (ray) => {
+    // The wall the pointer is over, if any: the nearest one in view that the ray meets within it.
+    const eye: Vec2 = [ray.origin.x, ray.origin.z];
+    const over = setup.walls
+      .filter((it) => faces(it, eye))
+      .map((it) => ({ wall: it, hit: wallHit(ray, it) }))
+      .filter(({ wall: it, hit }) => hit && hit.along >= 0 && hit.along <= wallLength(it) && hit.y >= 0 && hit.y <= it.height)
+      .sort((a, b) => a.hit!.distance - b.hit!.distance)[0];
+    const turn = direction.angleTo(ray.direction);
+    direction = ray.direction.clone();
+    // Onto another wall only when the pointer is clearly over it, not just past a corner; and never
+    // onto one the item doesn't fit on, so a big Original stays on its own.
+    const clearly = !!over && over.hit!.along >= CLEARLY_OVER && over.hit!.along <= wallLength(over.wall) - CLEARLY_OVER;
+    if (clearly && over.wall !== wall && wallLength(over.wall) >= width && over.wall.height >= height) {
+      wall = over.wall;
+      placed = null;
+    }
+    // Where the pointer is, in the wall's terms: on the wall's plane while it is over the wall, or over
+    // nothing; else the spot it is over, on another wall or the floor, straight out from the wall. The
+    // plane there would be past the wall, or under the floor, and pull the item the wrong way.
+    const floor = over ? null : floorHit(ray);
+    let pointer: { along: number; y: number };
+    if (over?.wall === wall || (!over && !floor)) {
+      const hit = wallHit(ray, wall);
+      if (!hit || hit.slant < MIN_SLANT) return shown;
+      pointer = hit;
+    } else {
+      const { x, z } = over ? ray.at(over.hit!.distance, new Vector3()) : { x: floor![0], z: floor![1] };
+      pointer = { along: wallCoordinates([x, z], wall).along, y: over ? over.hit!.y : 0 };
+    }
+    let [along, y] = [pointer.along + offset.along, pointer.y + offset.y];
+    if (placed) {
+      // No faster than the pointer: the grabbed point moves at most MAX_STRETCH times as far as the
+      // pointer's turn moves a point square on to the view, as far away as it is.
+      const [x, z] = wallPoint(wall, placed.along - offset.along);
+      const reach = MAX_STRETCH * turn * ray.origin.distanceTo(new Vector3(x, placed.y - offset.y, z));
+      const step = Math.hypot(along - placed.along, y - placed.y);
+      if (step > reach) [along, y] = [placed.along + ((along - placed.along) * reach) / step, placed.y + ((y - placed.y) * reach) / step];
+    }
+    shown = onWall(wall, along, y, item.size);
+    placed = { along: wallCoordinates([shown.position[0], shown.position[2]], wall).along, y: shown.position[1] + height / 2 };
+    return shown;
+  };
 }
 
 type DragTarget = { kind: 'piece' | 'original'; id: string };
@@ -89,8 +163,9 @@ function dragged(editor: ReturnType<typeof useEditor.getState>, { kind, id }: Dr
 /**
  * The pointerdown handler of a Piece or an Original: selects it, then drags it. While dragging, the
  * store's preview holds where it is shown; when the drag ends, that becomes one move Edit (spec §10.3,
- * §11.1). Holding Alt (Option on a Mac) drags it freely: no snapping, though walls stay solid. A Kept
- * Original is only selected, and the drag orbits the camera as it does on empty space.
+ * §11.1). Holding Alt (Option on a Mac) drags it freely: no snapping, though walls stay solid. A wall item
+ * slides over its own wall (`wallDrag`). A Kept Original is only selected: a drag on it moves the
+ * view, as a drag on empty space does.
  */
 function useDrag(target: DragTarget) {
   const get = useThree((s) => s.get);
@@ -121,6 +196,7 @@ function useDrag(target: DragTarget) {
       ...(scene.getObjectByName('pieces')?.children ?? []).filter(({ name }) => name !== id),
     ].filter((object) => !!object);
     const skip = kind === 'original' ? onOriginal(id) : () => false;
+    const onWallDragged = item.mount === 'wall' ? wallDrag(raycaster.ray.clone(), start, item, setup!) : null;
     const [downX, downY] = [event.nativeEvent.clientX, event.nativeEvent.clientY];
     let dragging = false;
 
@@ -134,8 +210,8 @@ function useDrag(target: DragTarget) {
       if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) <= CLICK_TOLERANCE_PX) return;
       dragging = true;
       aim(e);
-      const placement = item.mount === 'wall'
-        ? onWallUnder(raycaster.ray, camera, item, setup!)
+      const placement = onWallDragged
+        ? onWallDragged(raycaster.ray)
         : onFloorOrSurface(raycaster, supports, skip, item, start, offset, setup!, !e.altKey);
       // The store's preview field is named for Pieces, but an Original's id fits it: ids are unique across both.
       if (placement) useEditor.getState().setPreview({ pieceId: id, placement });

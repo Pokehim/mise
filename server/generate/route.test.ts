@@ -149,6 +149,68 @@ describe('POST /api/generate', () => {
   });
 });
 
+describe('Saved takes', () => {
+  const KEY = { 'X-Mise-Key': 'mise' };
+  const put = (id: string) => app.request(`/api/designs/${id}/saved-take`, { method: 'PUT', headers: KEY });
+  const savedTake = async (id: string) => (await (await app.request(`/api/designs/${id}/saved-take`)).json()).direction;
+  const designsOf = async (body: unknown): Promise<Design[]> => (await (await generate(body)).json()).designs;
+
+  it('gives a saved Design again as its take when the same Brief comes back, and asks Claude only for the others', async () => {
+    claude = fakeClaude({ literal: paintAndFinish('Sage Nook'), bolder: paintAndFinish('Bold Sage'), budget: paintAndFinish('Thrifty Sage') });
+    const [liked] = await designsOf({ scanId: 'fixture', brief });
+    expect(await (await put(liked.id)).json()).toEqual({ direction: 'literal' });
+    expect(await savedTake(liked.id)).toBe('literal');
+    claude = fakeClaude({ bolder: paintAndFinish('Bold Sage'), budget: paintAndFinish('Thrifty Sage') });
+
+    // The same Brief in other case and spacing.
+    const again = await designsOf({ scanId: 'fixture', brief: { ...brief, text: `  ${brief.text.toUpperCase()} `, styles: ['Cozy', 'Japandi'] } });
+
+    expect(again.map(({ name }) => name)).toEqual(['Sage Nook', 'Bold Sage', 'Thrifty Sage']);
+    expect(again[0].id).not.toBe(liked.id);
+    expect(again[0].edits.map(({ type }) => type)).toEqual(liked.edits.map(({ type }) => type));
+    expect(again[0]).toMatchObject({ origin: 'claude', direction: 'literal', rationale: liked.rationale });
+    expect(claude.requests.filter(({ direction }) => direction === 'literal')).toEqual([]);
+  });
+
+  it('asks Claude nothing when every take is saved, and nothing is saved for another Brief', async () => {
+    claude = fakeClaude({ literal: paintAndFinish('Sage Nook'), bolder: paintAndFinish('Bold Sage'), budget: paintAndFinish('Thrifty Sage') });
+    for (const { id } of await designsOf({ scanId: 'fixture', brief })) await put(id);
+    claude = fakeClaude({});
+
+    expect((await designsOf({ scanId: 'fixture', brief })).map(({ name }) => name)).toEqual(['Sage Nook', 'Bold Sage', 'Thrifty Sage']);
+    expect(claude.requests).toEqual([]);
+
+    await designsOf({ scanId: 'fixture', brief: { ...brief, text: 'bright and minimal' } });
+    expect(claude.requests.some(({ direction }) => direction === 'literal')).toBe(true);
+  });
+
+  it('saves and forgets only with the key', async () => {
+    claude = fakeClaude({ literal: paintAndFinish('Sage Nook') });
+    const [liked] = await designsOf({ scanId: 'fixture', brief });
+    const send = (method: string, key?: string) =>
+      app.request(`/api/designs/${liked.id}/saved-take`, { method, headers: key ? { 'X-Mise-Key': key } : {} });
+
+    expect((await send('PUT')).status).toBe(403);
+    expect((await send('PUT', 'wrong')).status).toBe(403);
+    expect(await savedTake(liked.id)).toBeNull();
+    expect((await send('PUT', 'mise')).status).toBe(200);
+    expect((await send('DELETE', 'wrong')).status).toBe(403);
+    expect(await savedTake(liked.id)).toBe('literal');
+  });
+
+  it('forgets a take on DELETE, and saves only Designs the AI made from a Brief', async () => {
+    claude = fakeClaude({ literal: paintAndFinish('Sage Nook') });
+    const [liked] = await designsOf({ scanId: 'fixture', brief });
+    await put(liked.id);
+
+    expect(await (await app.request(`/api/designs/${liked.id}/saved-take`, { method: 'DELETE', headers: KEY })).json()).toEqual({ direction: null });
+    expect(await savedTake(liked.id)).toBeNull();
+    const mover = (await (await post('/api/designs', { scanId: 'fixture' })).json()) as Design;
+    expect((await put(mover.id)).status).toBe(400);
+    expect((await put('ds_nope')).status).toBe(404);
+  });
+});
+
 describe('POST /api/generate/warm', () => {
   it("writes the Scan's shared prefix to the prompt cache without generating, and says how many tokens it holds", async () => {
     claude = fakeClaude({});

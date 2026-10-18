@@ -14,7 +14,7 @@ import { stream } from 'hono/streaming';
 import { importScan, scanManifest } from '../scripts/scan-import';
 import { MergeInputError, mergeScan } from '../scripts/scan-merge';
 import { generateObjectRoutes } from './generate-object/routes';
-import { budgetInText, type GenerateEvent } from '../shared/generate';
+import { budgetInText, type Direction, type GenerateEvent } from '../shared/generate';
 import { newId } from '../shared/ids';
 import type { Brief, Catalog, Design, LibraryMaterial, RoomSetup, ScanManifest } from '../shared/types';
 import { anthropic, generateDesigns, warmCache } from './generate/agent';
@@ -22,6 +22,7 @@ import { readFloorPlan } from './floor-plan/read';
 import { draftScale, FloorPlanDraftSchema } from '../shared/floor-plan';
 import sharp from 'sharp';
 import { refineDesign } from './generate/refine';
+import { briefKey, designKey, directionFor, type SavedTake } from './generate/saved';
 import { shelfLevels } from './generate/shelves';
 
 // Read per request, so tests can point DATA_DIR at a temporary folder.
@@ -295,11 +296,14 @@ app.post('/api/generate', async (c) => {
   // The takes start from this Design, the one open in the editor, instead of the Scan as it is.
   const current = fromDesignId === undefined ? undefined : await readDesign(String(fromDesignId));
   if (current && current.scanId !== scanId) fail(400, `Design ${current.id} is of another Scan`);
+  const fullBrief: Brief = { text: text.trim(), ...(styles?.length && { styles }), ...(budgetUsd !== undefined && { budgetUsd }) };
+  const saved = await savedTakesFor(briefKey(scanId, fullBrief, current?.edits));
   const request = {
     ...(await generateInputs(scanId, fast)),
     scanId,
     current,
-    brief: { text: text.trim(), ...(styles?.length && { styles }), ...(budgetUsd !== undefined && { budgetUsd }) },
+    brief: fullBrief,
+    saved,
     save: (design: Design) => writeJson(designPath(design.id), design),
   };
   if (c.req.header('Accept')?.includes('application/x-ndjson')) {
@@ -318,6 +322,64 @@ app.post('/api/generate', async (c) => {
     return c.json({ error: `The AI made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
   }
   return c.json(result);
+});
+
+// Saved takes (generate/saved.ts): the Mover saves a Design the AI made for a Brief, and Generate gives it
+// again as its take when the same Brief comes back. The list lives with the Designs, in _saved-takes.json.
+const savedTakesPath = () => join(designsDir(), '_saved-takes.json');
+const readSavedTakes = async () => (await readJson<SavedTake[]>(savedTakesPath())) ?? [];
+
+/** Changes the saved takes, one change at a time, so two saves can't each drop the other's. */
+const changeSavedTakes = (change: (takes: SavedTake[]) => SavedTake[]) => serialize(savedTakesPath(), async () => {
+  await mkdir(designsDir(), { recursive: true });
+  await writeFileAtomic(savedTakesPath(), `${JSON.stringify(change(await readSavedTakes()), null, 2)}\n`);
+});
+
+/**
+ * The Designs saved for a Brief, by direction. A saved Design no longer there, or no longer starting from
+ * the same room, is skipped, and Claude makes that take.
+ */
+async function savedTakesFor(key: string) {
+  const saved: Partial<Record<Direction, Design>> = {};
+  for (const take of (await readSavedTakes()).filter((take) => take.key === key)) {
+    const design = await readJson<Design>(designPath(take.designId));
+    if (design && designKey(design) === key) saved[take.direction] = design;
+  }
+  return saved;
+}
+
+/** Which take a Design is saved as, or null. */
+const savedAs = async (id: string) => (await readSavedTakes()).find(({ designId }) => designId === id)?.direction ?? null;
+
+/** Saving and forgetting a take change what every visitor's Brief gives, so they need the key, sent as X-Mise-Key. */
+const SAVE_KEY = 'mise';
+const requireSaveKey = (c: Context) => c.req.header('X-Mise-Key') === SAVE_KEY || fail(403, 'That key is not right');
+
+app.get('/api/designs/:id/saved-take', async (c) => {
+  await readDesign(c.req.param('id'));
+  return c.json({ direction: await savedAs(c.req.param('id')) });
+});
+
+// Saves the Design for its Brief, in place of whichever Design held its take before.
+app.put('/api/designs/:id/saved-take', async (c) => {
+  requireSaveKey(c);
+  const design = await readDesign(c.req.param('id'));
+  const key = designKey(design) ?? fail(400, 'Only a Design the AI made from a Brief can be saved for it');
+  let direction: Direction = 'literal';
+  await changeSavedTakes((takes) => {
+    direction = directionFor(design, takes);
+    const others = takes.filter((take) => take.designId !== design.id && !(take.key === key && take.direction === direction));
+    return [...others, { key, direction, designId: design.id, savedAt: new Date().toISOString() }];
+  });
+  return c.json({ direction });
+});
+
+app.delete('/api/designs/:id/saved-take', async (c) => {
+  requireSaveKey(c);
+  const id = c.req.param('id');
+  await readDesign(id);
+  await changeSavedTakes((takes) => takes.filter(({ designId }) => designId !== id));
+  return c.json({ direction: null });
 });
 
 // Phase 4: Refine (spec §13.1, step 7). One agent loop adjusts the Design to the Mover's words, appending

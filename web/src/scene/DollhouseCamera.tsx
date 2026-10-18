@@ -1,10 +1,12 @@
 import { CameraControls, CameraControlsImpl } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { MathUtils, Plane, Raycaster, Spherical, Vector2, Vector3 } from 'three';
+import { MathUtils, type PerspectiveCamera, Plane, Raycaster, Spherical, Vector2, Vector3 } from 'three';
+import type { Vec3 } from '@shared/types';
 import { useEditor } from '../state/store';
 import { roomBounds } from './floorPlan';
 import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
+import type { Shot } from './shots';
 
 /** How many times closer one mouse-wheel notch takes the camera: 5 go from the whole room to one chair. */
 const ZOOM_PER_NOTCH = 1.8;
@@ -46,7 +48,7 @@ function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
  * angle within ±180° while the camera's own adds up as it turns: smoothing from one to the other
  * spins the camera through every turn between them.
  */
-export function DollhouseCamera() {
+export function DollhouseCamera({ start }: { start?: Shot }) {
   const setup = useEditor((s) => s.setup!);
   const controls = useRef<CameraControls>(null!);
   const room = useMemo(() => roomBounds(setup), [setup]);
@@ -63,11 +65,31 @@ export function DollhouseCamera() {
     const cameraControls = controls.current;
     cameraControls.setBoundary(boundary);
     const { x, z } = room.getCenter(new Vector3());
+    if (start?.pose || start?.topDown) {
+      // A shot (?shot=): there at once, by turn, tilt and distance about its target. Without easing,
+      // there are no turns in between to spin through.
+      const target: Vec3 = start.pose?.target ?? [x, 0, z];
+      let position = start.pose?.position ?? target;
+      if (start.topDown) {
+        // High enough that the floor fits the view, with its long side across. The small offset sets which way is up.
+        const { x: width, z: depth } = room.getSize(new Vector3());
+        const [long, short] = [Math.max(width, depth), Math.min(width, depth)];
+        const { fov, aspect } = camera as PerspectiveCamera;
+        const tan = Math.tan(MathUtils.degToRad(fov / 2));
+        const height = 1.08 * Math.max(long / 2 / (tan * aspect), short / 2 / tan);
+        position = depth > width ? [x + 0.001, height, z] : [x, height, z + 0.001];
+      }
+      const { radius, theta, phi } = new Spherical().setFromVector3(new Vector3(...position).sub(new Vector3(...target)));
+      void cameraControls.rotateTo(theta, phi, false);
+      void cameraControls.moveTo(...target, false);
+      void cameraControls.dollyTo(radius, false);
+      return;
+    }
     // From the south, at the turn nearest the camera's.
     void cameraControls.rotateTo(Math.round(cameraControls.azimuthAngle / (2 * Math.PI)) * 2 * Math.PI, Math.PI / 4, true);
     void cameraControls.moveTo(x, 0.5, z, true);
     void cameraControls.dollyTo(distance, true);
-  }, [room, boundary, distance]);
+  }, [room, boundary, distance, start, camera]);
 
   useEffect(() => {
     const cameraControls = controls.current;

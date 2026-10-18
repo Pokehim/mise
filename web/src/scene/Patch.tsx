@@ -175,7 +175,8 @@ export function Patches({ captured }: { captured: Record<string, Object3D> }) {
   if (noCapture) return null;
   return (
     <group name="patches">
-      {originals.filter(({ id }) => ids.includes(id)).map((original) => (
+      {/* An Original drawn from a Master Copy leaves the Empty Room behind, not a Patch (ADR-0009). */}
+      {originals.filter(({ id, model }) => !model && ids.includes(id)).map((original) => (
         <OriginalPatch key={original.id} original={original} captured={!!captured[original.id]} />
       ))}
     </group>

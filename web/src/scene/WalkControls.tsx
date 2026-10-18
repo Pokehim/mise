@@ -5,6 +5,7 @@ import { useEditor } from '../state/store';
 import { floorGeometry, keepInside } from './floorPlan';
 import { CLICK_TOLERANCE_PX } from './objects';
 import { floorPointInView } from './placement';
+import type { Shot } from './shots';
 
 const EYE_HEIGHT = 1.6;
 const GLIDE_SECONDS = 0.4;
@@ -21,7 +22,7 @@ interface Glide { from: Vector3; to: Vector3; elapsed: number; pitch?: [from: nu
  * The Walk view (spec §10.2): the camera at eye height inside the room. Drag to look around;
  * click the floor to glide there in 400 ms, staying inside the floor polygon.
  */
-export function WalkControls() {
+export function WalkControls({ start }: { start?: Shot['pose'] }) {
   const setup = useEditor((s) => s.setup!);
   const camera = useThree((s) => s.camera);
   const canvas = useThree((s) => s.gl.domElement);
@@ -40,8 +41,15 @@ export function WalkControls() {
     };
   };
 
-  // Step down in front of where the view was centered, facing the same way.
+  // Step down in front of where the view was centered, facing the same way; or stand where a shot says.
   useLayoutEffect(() => {
+    if (start) {
+      const [[x, y, z], [tx, ty, tz]] = [start.position, start.target];
+      camera.position.set(x, y, z);
+      // The camera looks along (-sin yaw, -cos yaw).
+      look.current = { yaw: Math.atan2(x - tx, z - tz), pitch: Math.atan2(ty - y, Math.hypot(tx - x, tz - z)) };
+      return;
+    }
     const { x: pitch, y: yaw } = new Euler().setFromQuaternion(camera.quaternion, 'YXZ');
     look.current = { yaw, pitch };
     const [x, z] = floorPointInView(camera);

@@ -6,6 +6,9 @@ import { Lock } from '../ui/icons';
 import { useDragOriginal } from './DragControls';
 import { Z_KEPT } from './sketch/Label';
 
+/** ?empty=1 hides every Original, to show the Empty Room (lounge-v2 spec §3), for screenshots and the walk-through. */
+const EMPTY_ROOM = new URLSearchParams(location.search).get('empty') === '1';
+
 /**
  * An Original's node from the split Scan (spec §9.4), shown at its placement (spec §11.1). Dragging
  * it works exactly like a Piece's (DragControls): the store's preview moves it, and letting go makes
@@ -15,7 +18,7 @@ import { Z_KEPT } from './sketch/Label';
  */
 export function OriginalNode({ id, node }: { id: string; node: Object3D }) {
   const placement = useEditor((s) => (s.preview?.pieceId === id ? s.preview.placement : s.roomState!.originals[id]?.placement));
-  const visible = useEditor((s) => s.roomState!.originals[id]?.visible !== false);
+  const visible = useEditor((s) => s.roomState!.originals[id]?.visible !== false) && !EMPTY_ROOM;
   const original = useEditor((s) => s.setup!.originals.find((it) => it.id === id));
   const onPointerDown = useDragOriginal(id);
   const [hovered, setHovered] = useState(false);

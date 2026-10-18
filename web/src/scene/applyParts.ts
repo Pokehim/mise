@@ -52,7 +52,8 @@ export function applyParts(object: Object3D, category: Category, size: Vec3, par
 
 /**
  * Draws each Part of an object that applyParts split in its color, or as it was when it has none.
- * With `finishes` (an Original's), a Part's Finish is drawn instead of its color (spec §11.1).
+ * With `finishes` (an Original's), a Part's Finish is drawn instead of its color (spec §11.1). A Master
+ * Copy's Original may have a '*' color or Finish for the whole item (replay), which a Part's own replaces.
  */
 export function recolorParts(
   object: Object3D, partColors: Record<string, Hex>,
@@ -61,8 +62,10 @@ export function recolorParts(
   forEachMaterial(object, (material) => {
     const { partId, avgLuminance } = material.userData as Partial<PartMaterialData>;
     if (partId === undefined) return;
-    if (finishes) applyFinish(material, finishes.partFinishes[partId] ?? paintOf(partColors[partId]), avgLuminance!, finishes.library);
-    else recolor(material, partColors[partId] ?? null, avgLuminance!);
+    const { partFinishes = {}, library = null } = finishes ?? {};
+    const finish = partFinishes[partId] ?? paintOf(partColors[partId]) ?? partFinishes['*'] ?? paintOf(partColors['*']);
+    if (finishes) applyFinish(material, finish, avgLuminance!, library);
+    else recolor(material, partColors[partId] ?? partColors['*'] ?? null, avgLuminance!);
   });
 }
 

@@ -1,6 +1,6 @@
 import { Environment, Stats } from '@react-three/drei';
 import { Canvas, events } from '@react-three/fiber';
-import { Component, type DragEvent, type ReactNode, type RefObject, Suspense, useRef, useState } from 'react';
+import { Component, type DragEvent, type ReactNode, type RefObject, Suspense, useEffect, useRef, useState } from 'react';
 import { type Camera, NeutralToneMapping, Vector2 } from 'three';
 import { useShallow } from 'zustand/react/shallow';
 import { useRealism } from '../state/realism';
@@ -16,6 +16,7 @@ import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
 import { ResizeHandles } from './ResizeHandles';
 import { ScanMesh } from './ScanMesh';
+import { SHOT_NUMBER, shotOf } from './shots';
 import { SplatLook } from './SplatLook';
 import { ReadyFlag } from './sketch/ReadyFlag';
 import { SketchLinesToggle } from './sketch/SketchLines';
@@ -63,6 +64,11 @@ interface SceneCanvasProps {
 /** The 3D view: the Scan, the Pieces, and the camera for the current view, which it shares through cameraRef. */
 export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
   const view = useEditor((s) => s.view);
+  // ?shot= places the camera once; changing the View lets it go.
+  const [shot, setShot] = useState(() => (SHOT_NUMBER ? shotOf(SHOT_NUMBER, useEditor.getState().setup!) : null));
+  useEffect(() => {
+    if (shot && view !== shot.view) setShot(null);
+  }, [shot, view]);
   const realism = useRealism();
   const splat = useEditor((s) => Boolean(s.manifest?.splat)) && realism !== 'quick';
   const container = useRef<HTMLDivElement>(null!);
@@ -118,7 +124,7 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
         <SketchSelection />
         <FitHighlights />
         <ResizeHandles />
-        {view === 'dollhouse' ? <DollhouseCamera /> : <WalkControls />}
+        {view === 'dollhouse' ? <DollhouseCamera start={shot ?? undefined} /> : <WalkControls start={shot?.pose} />}
         {debug && <Stats parent={container} className="stats" />}
       </Canvas>
       {debug && splat && <AlignPanel />}

@@ -68,7 +68,7 @@ const PART_NAMES = new Map(CATEGORIES.flatMap(partsFor).map(({ id, name }) => [i
 
 // Interior colors for History text. A color gets the name nearest to it, so any color picked
 // or proposed by Claude still reads as a word ("#1a1a1a" → Black).
-const COLOR_NAMES: [string, Hex][] = [
+export const COLOR_NAMES: [string, Hex][] = [
   ['Black', '#1c1c1c'], ['Charcoal', '#3a3d42'], ['Gray', '#8a8d91'], ['Greige', '#b4ab9c'],
   ['Warm White', '#f2ece1'], ['White', '#ffffff'], ['Cream', '#efe4c8'], ['Beige', '#d6c3a3'],
   ['Tan', '#c19a6b'], ['Walnut', '#5c4033'], ['Terracotta', '#c8714e'], ['Rust', '#a3432b'],

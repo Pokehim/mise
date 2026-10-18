@@ -7,6 +7,7 @@ import { scanFileUrl } from '../api';
 import { type Selection, useEditor } from '../state/store';
 import { withMeshopt } from './gltf';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
+import { Patches } from './Patch';
 import { setupRoomNodes } from './scanNodes';
 import { type SplitNodeData, disposeSplit, splitNodes, splitScan } from './splitScan';
 import { WallFader } from './WallFader';
@@ -95,6 +96,7 @@ export function ScanMesh() {
         ))}
       </Bvh>
       <WallFader walls={setup.walls} nodes={nodes.walls} />
+      <Patches captured={nodes.patches} />
     </group>
   );
 }

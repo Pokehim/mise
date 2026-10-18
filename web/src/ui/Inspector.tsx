@@ -6,10 +6,12 @@ import { removePiece, rotatePiece } from '../scene/pieceEdits';
 import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget, targetBox } from '../scene/swapResize';
 import { closeResize, openResize, setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
+import { OriginalReplace } from './inspector/OriginalReplace';
+import { RecolorControl } from './inspector/RecolorControl';
+import { WallPaint } from './inspector/WallPaint';
 import './inspector.css';
 
-// The Inspector (spec §10.4): what is selected, and what can be done with it. The disabled
-// buttons are the slots where #9's Recolor, Paint and Replace controls go.
+// The Inspector (spec §10.4): what is selected, and what can be done with it.
 
 const inches = (meters: number) => (meters / 0.0254).toFixed(1);
 const cm = (meters: number) => Math.round(meters * 100);
@@ -28,10 +30,6 @@ function Size({ size }: { size: Vec3 }) {
     </p>
   );
 }
-
-const Slot = ({ name, issue }: { name: string; issue: string }) => (
-  <button disabled title={`Coming in ${issue}`}>{name}</button>
-);
 
 /** Puts a Catalog item in place of a Piece or an Original (spec §10.4, §10.5), and selects what now stands there. */
 function putInPlace(target: SwapTarget, item: CatalogItem, targetSize?: Vec3) {
@@ -138,7 +136,7 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
   );
 }
 
-type Tool = 'swap' | 'resize';
+type Tool = 'swap' | 'resize' | 'replace';
 
 /** A tool's button, pressed while the tool is open. */
 const ToolButton = ({ tool, name, open, setOpen }: { tool: Tool; name: string; open: Tool | null; setOpen: (tool: Tool | null) => void }) => (
@@ -158,7 +156,6 @@ function PieceInspector({ pieceId }: { pieceId: string }) {
       <div className="actions">
         <ToolButton tool="swap" name="Swap" open={open} setOpen={setOpen} />
         <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} />
-        <Slot name="Recolor" issue="#9" />
       </div>
       {open === 'swap' && <SwapList pieceId={pieceId} item={item} />}
       {open === 'resize' && (
@@ -175,6 +172,7 @@ function PieceInspector({ pieceId }: { pieceId: string }) {
         <button title="Shift+R" onClick={() => rotatePiece(pieceId, -1)}>↻ 15°</button>
         <button title="Delete" onClick={() => removePiece(pieceId)}>Remove</button>
       </div>
+      <RecolorControl targetId={pieceId} category={item.category} />
     </>
   );
 }
@@ -189,10 +187,10 @@ function OriginalInspector({ originalId }: { originalId: string }) {
       <Size size={original.box.size} />
       {original.kept && <p className="badge" title="It stays in the room: it can be recolored, but not moved, replaced or removed.">Kept</p>}
       <div className="actions">
-        {!original.kept && <Slot name="Replace" issue="#9" />}
+        {!original.kept && <ToolButton tool="replace" name="Replace" open={open} setOpen={setOpen} />}
         {!original.kept && <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} />}
-        <Slot name="Recolor" issue="#9" />
       </div>
+      {open === 'replace' && <OriginalReplace original={original} onPick={(item) => putInPlace({ kind: 'original', id: originalId }, item)} />}
       {open === 'resize' && (
         <ResizePanel
           target={{ kind: 'original', id: originalId }}
@@ -201,6 +199,7 @@ function OriginalInspector({ originalId }: { originalId: string }) {
           onDone={() => setOpen(null)}
         />
       )}
+      <RecolorControl targetId={originalId} category={original.category} />
     </>
   );
 }
@@ -212,9 +211,7 @@ function WallInspector({ wallId }: { wallId: string }) {
     <>
       <h2>{wall.name}</h2>
       <p className="muted">{wallLength(wall).toFixed(2)} m long, {wall.height.toFixed(2)} m high</p>
-      <div className="actions">
-        <Slot name="Paint" issue="#9" />
-      </div>
+      <WallPaint wallId={wallId} />
     </>
   );
 }

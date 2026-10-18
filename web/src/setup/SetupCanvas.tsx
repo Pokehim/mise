@@ -3,6 +3,7 @@ import { Canvas, type RootState, type RootStore, type ThreeEvent, events, useThr
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Box3, Color, type Intersection, type Mesh, type MeshBasicMaterial, type Object3D, Plane, Vector3 } from 'three';
 import type { Vec3 } from '@shared/types';
+import { forEachMaterial } from '../scene/objects';
 import { disposeSplit, splitNodes, splitScan } from '../scene/splitScan';
 import { SPLIT } from './geometry/classify';
 import { type RoomBounds, polygonBounds, wallAxis } from './geometry/walls';
@@ -183,8 +184,8 @@ function SplitPreview() {
     const started = performance.now();
     const result = splitScan(scene, setup, manifest);
     const ms = performance.now() - started;
-    splitNodes(result).forEach((node, i) => node.traverse((child) => {
-      if ((child as Mesh).isMesh) ((child as Mesh).material as MeshBasicMaterial).color.multiply(new Color(tint(i)));
+    splitNodes(result).forEach((node, i) => forEachMaterial(node, (material) => {
+      (material as MeshBasicMaterial).color.multiply(new Color(tint(i)));
     }));
     return { result, ms };
   }, [scene, setup, manifest]);

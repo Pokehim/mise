@@ -9,12 +9,12 @@ const PRECISION = 0.005;
 /** How far short of a desk or table edge, in meters, a dragged chair is pulled in from. */
 export const PULL_IN = 0.15;
 /** What a dragged chair tucks in at. */
-const TUCK_TARGETS: Category[] = ['desk', 'table'];
+export const TUCK_TARGETS: Category[] = ['desk', 'table'];
 /** How far, in meters, the wall snap may move a chair across an edge before the wall wins: floating point. */
 const EPSILON = 1e-3;
 
 /** A Placement moved `distance` meters along the unit vector [dx, dz]. */
-const moved = (placement: Placement, [dx, dz]: Vec2, distance: number): Placement => {
+export const moved = (placement: Placement, [dx, dz]: Vec2, distance: number): Placement => {
   const [x, y, z] = placement.position;
   return { ...placement, position: [x + dx * distance, y, z + dz * distance] };
 };
@@ -89,10 +89,10 @@ export function pushIn(
 }
 
 /** A side of a desk or table, as seen from above: its middle, the way out of it, its half length, and how deep the item is across it. */
-interface Edge { middle: Vec2; outward: Vec2; along: Vec2; halfLength: number; depth: number }
+export interface Edge { middle: Vec2; outward: Vec2; along: Vec2; halfLength: number; depth: number }
 
 /** The four sides of an item's footprint. */
-function edgesOf({ rect: { center: [cx, cz], size: [width, depth], rotationY } }: Item): Edge[] {
+export function edgesOf({ rect: { center: [cx, cz], size: [width, depth], rotationY } }: Item): Edge[] {
   // Its own +X and +Z, turned as rectCorners turns them.
   const right: Vec2 = [Math.cos(rotationY), -Math.sin(rotationY)];
   const front: Vec2 = [Math.sin(rotationY), Math.cos(rotationY)];
@@ -108,16 +108,74 @@ function edgesOf({ rect: { center: [cx, cz], size: [width, depth], rotationY } }
 
 /**
  * Where a footprint is from an edge: its gap to the edge's line, negative once it crosses it; how far
- * it reaches out past the line; and how far it runs alongside the edge.
+ * it reaches out past the line; where it runs along the edge, from its middle; and how far it runs
+ * alongside the edge.
  */
-function besideEdge({ middle: [mx, mz], outward: [ox, oz], along: [ax, az], halfLength }: Edge, corners: Vec2[]) {
+export function besideEdge({ middle: [mx, mz], outward: [ox, oz], along: [ax, az], halfLength }: Edge, corners: Vec2[]) {
   const out = corners.map(([x, z]) => (x - mx) * ox + (z - mz) * oz);
   const alongIt = corners.map(([x, z]) => (x - mx) * ax + (z - mz) * az);
+  const [alongFrom, alongTo] = [Math.min(...alongIt), Math.max(...alongIt)];
   return {
     gap: Math.min(...out),
     reach: Math.max(...out),
-    alongside: overlapLength([Math.min(...alongIt), Math.max(...alongIt)], [-halfLength, halfLength]),
+    alongFrom,
+    alongTo,
+    alongside: overlapLength([alongFrom, alongTo], [-halfLength, halfLength]),
   };
+}
+
+/**
+ * Snapping a dragged item at an edge, for one drag: a function from where the drag puts it, and how
+ * it snaps at an edge (null where it can't), to where it goes; null when no edge near it takes it.
+ * It tries the edges it runs alongside, within 15 cm of them or across them, into the item they are
+ * the edge of, not past its far side: those it crosses first,
+ * the shallowest first, so that it comes out of what it overlaps; then the nearest. Once at an edge,
+ * it holds that edge while it stays near it, so pushing an item through another doesn't take it out
+ * the far side.
+ */
+export function edgeHolder(edges: Edge[], size: Vec3): (placed: Placement, snapAt: (edge: Edge) => Placement | null) => Placement | null {
+  let held: Edge | undefined;
+  return (placed, snapAt) => {
+    const corners = rectCorners(footprint(placed, size));
+    const near = edges.flatMap((edge) => {
+      const { gap, reach, alongside } = besideEdge(edge, corners);
+      return alongside > TOLERANCE && gap <= PULL_IN && reach > -edge.depth ? [{ edge, gap }] : [];
+    });
+    if (!near.some(({ edge }) => edge === held)) held = undefined;
+    const tries = near.sort((a, b) => (a.gap < 0 === b.gap < 0 ? Math.abs(a.gap) - Math.abs(b.gap) : a.gap - b.gap)).map(({ edge }) => edge);
+    for (const edge of held ? [held, ...tries.filter((it) => it !== held)] : tries) {
+      const snapped = snapAt(edge);
+      if (snapped) {
+        held = edge;
+        return snapped;
+      }
+    }
+    held = undefined;
+    return null;
+  };
+}
+
+/** Whether the wall snap moved an item toward or away from an edge, so that the wall wins over a snap to it. */
+export const wallSnapped = ({ outward: [ox, oz] }: Edge, placed: Placement, unsnapped: Placement) =>
+  Math.abs((placed.position[0] - unsnapped.position[0]) * ox + (placed.position[2] - unsnapped.position[2]) * oz) > EPSILON;
+
+/**
+ * An item slid straight in at an edge until it touches what is in its way, never past: from where it
+ * is when that's outside the edge, else from just outside it. It slides to the edge's line first, and
+ * on from there, so that where it stops doesn't depend on where it started. Null when even backing it
+ * out to the edge is blocked, by a wall or another item.
+ */
+export function slideIn(push: ReturnType<typeof pusher>, edge: Edge, placement: Placement, size: Vec3): Placement | null {
+  const { outward: [ox, oz], depth } = edge;
+  const inward: Vec2 = [-ox, -oz];
+  const { gap } = besideEdge(edge, rectCorners(footprint(placement, size)));
+  if (gap > 0) {
+    const toEdge = push(placement, inward, gap);
+    if (toEdge === null || toEdge < gap) return toEdge === null ? null : moved(placement, inward, toEdge);
+  }
+  const start = moved(placement, [ox, oz], -gap);
+  const distance = push(start, inward, depth);
+  return distance === null ? null : moved(start, inward, distance);
 }
 
 /**
@@ -126,9 +184,9 @@ function besideEdge({ middle: [mx, mz], outward: [ox, oz], along: [ax, az], half
  * across it, the chair slides straight in along the edge's inward normal until it touches the desk,
  * another item or a wall, and never past: the desk is solid. Where there's no room under that edge,
  * it stops at the edge. Its angle and its position along the edge never change. Walls win: where the
- * wall snap moved the chair toward or away from the edge, it stays there. The edge it is at holds
- * while the chair stays near it, so pushing a chair through a desk doesn't take it out the far side.
- * Undefined for anything but a chair: seating, which includes ottomans and poufs.
+ * wall snap moved the chair toward or away from the edge, it stays there. Away from any desk or
+ * table edge, it is where the drag put it: the same Placement. Undefined for anything but a chair:
+ * seating, which includes ottomans and poufs.
  */
 export function tuckSnap(setup: RoomSetup, catalog: Catalog, state: RoomState, subjectId: string):
   ((placed: Placement, unsnapped: Placement) => Placement) | undefined {
@@ -136,33 +194,10 @@ export function tuckSnap(setup: RoomSetup, catalog: Catalog, state: RoomState, s
   const subject = items.find(({ id }) => id === subjectId);
   if (subject?.category !== 'chair') return undefined;
   const size: Vec3 = [subject.rect.size[0], subject.heights[1] - subject.heights[0], subject.rect.size[1]];
-  const edges = items
+  const snapAtEdge = edgeHolder(items
     .filter((item) => item !== subject && item.placement.mount === 'floor' && TUCK_TARGETS.includes(item.category))
-    .flatMap(edgesOf);
+    .flatMap(edgesOf), size);
   const push = pusher(setup, catalog, state, subjectId);
-  let held: Edge | undefined;
-  return (placed, unsnapped) => {
-    const corners = rectCorners(footprint(placed, size));
-    const near = (edge: Edge) => {
-      const at = besideEdge(edge, corners);
-      return at.alongside > TOLERANCE && at.gap <= PULL_IN ? at : undefined;
-    };
-    if (held && !near(held)) held = undefined;
-    // A new edge only from outside it, the nearest first.
-    held ??= edges
-      .map((edge) => ({ edge, at: near(edge) }))
-      .filter(({ at }) => at && at.reach > 0)
-      .sort((a, b) => Math.abs(a.at!.gap) - Math.abs(b.at!.gap))[0]?.edge;
-    if (!held) return placed;
-    const { outward: [ox, oz], depth } = held;
-    const wallSnap = (placed.position[0] - unsnapped.position[0]) * ox + (placed.position[2] - unsnapped.position[2]) * oz;
-    if (Math.abs(wallSnap) > EPSILON) return placed;
-    // From just outside the edge, or where it is when that's further out, in to where it touches.
-    const { gap } = besideEdge(held, corners);
-    const start = gap >= 0 ? placed : moved(placed, [ox, oz], -gap);
-    const inward: Vec2 = [-ox, -oz];
-    const distance = push(start, inward, Math.max(0, gap) + depth);
-    // Backing it out of the desk is blocked, by a wall or another item: it stays where the drag put it.
-    return distance === null ? placed : moved(start, inward, distance);
-  };
+  return (placed, unsnapped) =>
+    snapAtEdge(placed, (edge) => (wallSnapped(edge, placed, unsnapped) ? placed : slideIn(push, edge, placed, size))) ?? placed;
 }

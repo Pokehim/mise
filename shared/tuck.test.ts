@@ -124,6 +124,19 @@ describe('tuckSnap', () => {
     expect(z).toBeLessThanOrEqual(0.24);
   });
 
+  it("doesn't pull a chair through from far beyond a desk's back", () => {
+    // A desk in the middle of the room facing south, at z −0.75 to −0.25; the chair is 95 cm past its front,
+    // so it is only lined up with the desk's back edge from behind.
+    const desk = place('pc_desk', 'desk-walnut', onFloor(0, -0.5));
+
+    expect(snapped(onFloor(0, 1), desk)).toEqual(onFloor(0, 1));
+  });
+
+  it('stops in the same spot wherever it comes in from', () => {
+    expect(snapped(onFloor(0.96, -0.6))).toEqual(snapped(onFloor(1.04, -0.6)));
+    expect(snapped(onFloor(1.3, -0.6))).toEqual(snapped(onFloor(1.04, -0.6)));
+  });
+
   it('lets the wall win: where the wall snap moved it across the edge, it stays put', () => {
     const unsnapped = onFloor(0.98, -0.6);
     const wallSnapped = onFloor(0.95, -0.6);

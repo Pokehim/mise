@@ -1,6 +1,7 @@
-import { search, type SearchResult } from '@shared/catalog-search';
+import type { SearchResult } from '@shared/catalog-search';
 import { newId } from '@shared/ids';
 import type { Catalog, CatalogItem, Category, Placement, RoomSetup, RoomState, Vec3 } from '@shared/types';
+import { search } from '../state/core';
 import type { NewEdit } from '../state/store';
 import { snapToWall } from './placement';
 

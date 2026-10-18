@@ -1,5 +1,5 @@
-import { Bvh, Edges, Shadow, useCursor } from '@react-three/drei';
-import { createPortal, useLoader } from '@react-three/fiber';
+import { Bvh, Edges, Shadow } from '@react-three/drei';
+import { createPortal, useLoader, useThree } from '@react-three/fiber';
 import { Fragment, memo, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { Mesh } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -10,7 +10,7 @@ import { pieceItem, useEditor } from '../state/store';
 import { applyParts, recolorParts } from './applyParts';
 import { useDragPiece } from './DragControls';
 import { withMeshopt } from './gltf';
-import { forEachMaterial, ignoreRaycast } from './objects';
+import { CLICK_TOLERANCE_PX, forEachMaterial, ignoreRaycast } from './objects';
 import { liesFlat } from './placement';
 import { useSketchLines } from './sketch/SketchLines';
 import { token } from './sketch/tokens';
@@ -75,8 +75,16 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
   // Max draws the shadows Pieces really cast instead.
   const showBlobShadow = useRealism() !== 'max';
   const onPointerDown = useDragPiece(pieceId);
+  const selected = useEditor((s) => s.selection?.kind === 'piece' && s.selection.id === pieceId);
   const [hovered, setHovered] = useState(false);
-  useCursor(hovered, 'grab');
+  // The item cursor (editor.css): a click selects it; once selected, a drag moves it.
+  const element = useThree((s) => (s.events.connected as HTMLElement | undefined) ?? s.gl.domElement);
+  const cursor = hovered ? (selected ? 'move' : 'select') : undefined;
+  useEffect(() => {
+    if (!cursor) return;
+    element.dataset.item = cursor;
+    return () => void delete element.dataset.item;
+  }, [element, cursor]);
   if (!placement || !item || !partColors) return null;
 
   return (
@@ -85,8 +93,11 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
       position={placement.position}
       rotation-y={placement.rotationY}
       onPointerDown={onPointerDown}
-      // Selecting happened on pointerdown; keep the click from reaching the Scan behind.
-      onClick={(event) => event.stopPropagation()}
+      // A click selects it, not the end of a drag; either way, not the Scan behind it.
+      onClick={(event) => {
+        event.stopPropagation();
+        if (event.delta <= CLICK_TOLERANCE_PX) useEditor.getState().select({ kind: 'piece', id: pieceId });
+      }}
       onPointerOver={(event) => {
         event.stopPropagation();
         setHovered(true);

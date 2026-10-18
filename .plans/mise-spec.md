@@ -670,9 +670,9 @@ Each group becomes its own mesh, sharing the original textures; Polycam may expo
 
 | Action | How |
 |---|---|
-| Select | Click a Piece, Original, or Wall. An outline appears (drei `Outlines`); `Esc` deselects. |
+| Select | Click a Piece, Original, or Wall: a press released within `CLICK_TOLERANCE_PX`. An outline appears (drei `Outlines`); `Esc` deselects. Selecting takes the click, not the press, so a drag that starts on an item moves the view and selects nothing. A Piece just added from the Catalog is already selected. |
 | Add Piece | Click a Catalog card's **Add**. The Piece is dropped at the floor point under the view center; if that violates a Fit rule, step outward in a 10 cm spiral to the nearest free spot. You can also drag the card into the view. |
-| Move | Drag the selected Piece. The raycast hits the floor, or **any upward-facing surface** (normal.y > 0.8, like a desk top), giving `mount: 'surface'`. Wall items drag along wall planes. |
+| Move | Drag the selected Piece or movable Original; one finger on a touch screen. A drag that starts on any other item, on a Kept Original, or with Shift held moves the view instead, so furniture never moves by accident. The grabbed point stays under the pointer. The raycast hits the floor, or **any upward-facing surface** (normal.y > 0.8, like a desk top), giving `mount: 'surface'`. Wall items drag along wall planes. The cursor is `pointer` over an unselected item, `move` over the selected one, and `grabbing` while it moves. |
 | Wall snap | If the Piece's back is within 10 cm of a wall and the angle is within 20° of the wall's normal, it snaps flush and aligns. |
 | Rotate | `R` / `Shift+R` rotates ±15°, or use the rotation ring handle |
 | Remove | `Delete`, or the Inspector button |

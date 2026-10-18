@@ -43,3 +43,16 @@ export function ControlsHint() {
     </p>
   );
 }
+
+/**
+ * How to move the Walk view, small and faint at the bottom of the view, for as long as it is open:
+ * its keys and wheel don't show themselves the way a drag does. A touch screen has neither.
+ */
+export function WalkHint() {
+  return (
+    <p className="walk-hint">
+      <span className="fine">Drag to look · WASD to move · Scroll out for a bird’s-eye view</span>
+      <span className="coarse">Drag to look · Tap the floor to go there</span>
+    </p>
+  );
+}

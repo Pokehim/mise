@@ -15,6 +15,7 @@ import { hasNoCapture } from './room/buildRoom';
 import { Patches } from './Patch';
 import { setupRoomNodes } from './scanNodes';
 import { type SplitNodeData, disposeSplit, splitNodes, splitScan } from './splitScan';
+import { useCeilingCut } from './WalkControls';
 import { WallFader } from './WallFader';
 
 const scanLoads = new Map<string, Promise<GLTF | null>>();
@@ -74,7 +75,7 @@ export function ScanMesh() {
   );
   // Originals lifted or removed: their Patch, from a Fill Capture, shows (ADR-0007).
   const patched = useEditor((s) => s.roomState!.patches);
-  const view = useEditor((s) => s.view);
+  const ceilingCut = useCeilingCut();
   const anisotropy = useThree((s) => s.gl.capabilities.getMaxAnisotropy());
   // A room with no Capture has no mesh file to fetch (ADR-0010, ADR-0011).
   const gltf = use(hasNoCapture(manifest, setup) ? NO_MESH : loadScanMesh(scanFileUrl(manifest.id, manifest.mesh)));
@@ -83,7 +84,8 @@ export function ScanMesh() {
   const nodes = useMemo(() => (gltf ? splitScan(gltf.scene, setup, manifest) : setupRoomNodes(setup)), [gltf, setup, manifest]);
   useEffect(() => () => disposeSplit(nodes), [nodes]);
 
-  // The Dollhouse looks in from above, so it clips everything near the ceiling (spec §10.2).
+  // The Dollhouse looks in from above, so it clips everything near the ceiling (spec §10.2), as
+  // does the Walk view once it rises through the ceiling.
   const ceilingClip = useMemo(() => new Plane(new Vector3(0, -1, 0)), []);
   useLayoutEffect(() => {
     for (const node of splitNodes(nodes)) {
@@ -93,8 +95,8 @@ export function ScanMesh() {
     }
   }, [nodes, ceilingClip]);
   useLayoutEffect(() => {
-    ceilingClip.constant = view === 'dollhouse' ? setup.ceilingHeight - 0.05 : 1e6;
-  }, [ceilingClip, view, setup]);
+    ceilingClip.constant = ceilingCut ?? 1e6;
+  }, [ceilingClip, ceilingCut]);
   useLayoutEffect(() => {
     if (!masterCopies) return;
     for (const node of splitNodes(nodes)) {
@@ -125,7 +127,7 @@ export function ScanMesh() {
       <Bvh strategy={CENTER}>
         <primitive object={nodes.shell} />
         <primitive object={nodes.floor} />
-        <primitive object={nodes.ceiling} visible={view === 'walk'} />
+        <primitive object={nodes.ceiling} visible={ceilingCut === null} />
         {/* Keyed by node, so a new split replaces the old nodes rather than reusing their elements. */}
         {Object.values(nodes.walls).map((node) => <primitive key={node.uuid} object={node} />)}
         {Object.entries(nodes.originals).map(([id, node]) => <OriginalNode key={node.uuid} id={id} node={node} />)}

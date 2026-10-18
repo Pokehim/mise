@@ -11,6 +11,7 @@ import { AlignPicker, useAlign, useSplatTransform } from './AlignPanel';
 import { type SdfBox, type SplatEditPlan, SLAB, splatEditPlan, wallSlab } from './splatEdits';
 import { hasMasterCopies } from './ScanMesh';
 import type { SplitNodeData } from './splitScan';
+import { useCeilingCut } from './WalkControls';
 
 extend({ SparkRenderer, SplatMesh, SplatEdit, SplatEditSdf });
 
@@ -38,7 +39,7 @@ export function SplatLook() {
   const manifest = useEditor((s) => s.manifest!);
   const setup = useEditor((s) => s.setup!);
   const roomState = useEditor((s) => s.roomState!);
-  const view = useEditor((s) => s.view);
+  const ceilingCut = useCeilingCut();
   const meshOnly = useAlign((s) => s.picking === 'mesh');
   const { position, rotationY, scale } = useSplatTransform();
 
@@ -62,7 +63,7 @@ export function SplatLook() {
       <splatEdit name="touched">
         {plan.sdfs.map((box) => <Sdf key={box.id} box={box} />)}
       </splatEdit>
-      <DollhouseCuts walls={setup.walls} ceiling={view === 'dollhouse' ? setup.ceilingHeight - 0.05 : null} />
+      <DollhouseCuts walls={setup.walls} ceiling={ceilingCut} />
       {/* The Empty Room mesh is always drawn, under the splat (lounge-v2 spec §3). */}
       <MeshHider plan={plan} showAll={meshOnly || masterCopies} />
       {debug && <AlignPicker />}
@@ -88,9 +89,10 @@ function Sdf({ box: { center, size, rotationY, opacity }, sdfRef }: { box: SdfBo
 }
 
 /**
- * A second SplatEdit, multiplied over the first, for the Dollhouse view: each Wall's splats fade with
- * its mesh node (WallFader), and everything above the ceiling cut hides. A separate edit, so a Wall
- * that isn't faded (opacity 1) can't win back splats the first edit hides.
+ * A second SplatEdit, multiplied over the first, for the Dollhouse view and the Walk view risen through
+ * the ceiling: each Wall's splats fade with its mesh node (WallFader), and everything above the
+ * ceiling cut hides. A separate edit, so a Wall that isn't faded (opacity 1) can't win back splats
+ * the first edit hides.
  */
 function DollhouseCuts({ walls, ceiling }: { walls: Wall[]; ceiling: number | null }) {
   const scene = useThree((s) => s.scene);

@@ -9,7 +9,6 @@ import { type SplitGroup, triangleClassifier } from '../setup/geometry/classify'
 import { type Pixels, luminance, luminanceAt } from '../setup/geometry/color';
 import { type TriangleMesh, newTriangleInfo, triangleInfo } from '../setup/geometry/mesh';
 import { meshTriangles, toFrame } from '../setup/sceneTriangles';
-import type { ScanNodes } from './scanNodes';
 
 export interface SplitScan {
   shell: Object3D;
@@ -125,13 +124,13 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
 }
 
 /** Every node of a split: Shell, Floor, Ceiling, the Walls, the Originals, then the Patches. */
-export const splitNodes = (split: ScanNodes): Object3D[] => [
+export const splitNodes = (split: SplitScan): Object3D[] => [
   split.shell, split.floor, split.ceiling, ...Object.values(split.walls), ...Object.values(split.originals),
-  ...Object.values(split.patches ?? {}),
+  ...Object.values(split.patches),
 ];
 
 /** Frees the split's geometries and materials. The textures belong to the glTF and are kept. */
-export function disposeSplit(split: ScanNodes) {
+export function disposeSplit(split: SplitScan) {
   for (const node of splitNodes(split)) {
     node.traverse((child) => {
       if (child instanceof Mesh) {

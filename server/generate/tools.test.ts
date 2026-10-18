@@ -33,9 +33,9 @@ async function call(session: DesignSession, name: string, input: unknown) {
 }
 
 describe('the Design tools', () => {
-  it('are the 5 decorating moves and the 7 tools of spec §13.2, each strict but place_piece, whose grammar is too large', () => {
+  it('are the 6 decorating moves and the 7 tools of spec §13.2, each strict but stock_shelves and place_piece, for the grammar\'s size', () => {
     expect(start().tools.map(({ name, strict }) => [name, strict])).toEqual([
-      ['hang_gallery', true], ['lay_rug', true], ['make_corner', true], ['dress_bed', true], ['style_tops', true],
+      ['hang_gallery', true], ['lay_rug', true], ['make_corner', true], ['dress_bed', true], ['style_tops', true], ['stock_shelves', undefined],
       ['search_catalog', true], ['place_piece', undefined], ['replace_original', true], ['recolor', true],
       ['apply_finish', true], ['remove', true], ['finish_design', true],
     ]);
@@ -132,6 +132,46 @@ describe('the Design tools', () => {
         { level: 3, height_m: 1.3, room_above_m: 0.27 }, { level: 4, height_m: 1.59, room_above_m: 0.28 },
       ]);
       expect(session.state.pieces[piece_id].placement).toMatchObject({ mount: 'surface', position: [expect.any(Number), expect.closeTo(0.56), expect.any(Number)] });
+    });
+
+    describe('stock_shelves', () => {
+      const levels = [0.17, 0.56, 0.95, 1.3, 1.59].map((height, i, all) => ({ height, center: [0, 0] as [number, number], size: [0.66, 0.36] as [number, number], clearance: (all[i + 1] ?? 1.89) - height - 0.02 }));
+      const books = item('books-row', 'decor', 'Hardcover Books, Row of 10', [0.4, 0.22, 0.17], { priceEstimateUsd: 60 });
+      const shelving = (editRange?: [number, number]) => createSession({
+        setup, catalog: { ...decorCatalog, items: [...decorCatalog.items, books] }, brief: { text: 'a library' }, materials,
+        shelfLevels: { 'bookcase-tall': levels }, editRange,
+      });
+
+      it('fills a bookcase from the top down, the items in turn, each level taking the next that fits', async () => {
+        const session = shelving();
+        await call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
+
+        // Named by its Catalog id, as a Piece placed in the same reply is. The fig, 0.3 m tall, is too tall for levels 3 and 4.
+        const { placed } = await call(session, 'stock_shelves', { shelves: [{ shelf_id: 'bookcase-tall', catalog_ids: ['books-row', 'plant-fig'] }] });
+
+        expect(placed.map(({ catalog_id, as }: { catalog_id: string; as: string }) => [catalog_id, as])).toEqual([
+          ['books-row', 'on level 4 of Tall Bookcase'], ['books-row', 'on level 3 of Tall Bookcase'], ['plant-fig', 'on level 2 of Tall Bookcase'],
+          ['books-row', 'on level 1 of Tall Bookcase'], ['plant-fig', 'on level 0 of Tall Bookcase'],
+        ]);
+        const heights = placed.map(({ piece_id }: { piece_id: string }) => session.state.pieces[piece_id].placement.position[1]);
+        expect(heights).toEqual([1.59, 1.3, 0.95, 0.56, 0.17].map((height) => expect.closeTo(height)));
+      });
+
+      it('counts what it puts inside a shelf toward neither the Edit limit nor the Piece limit', async () => {
+        const session = shelving([1, 2]);
+        await call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
+        await call(session, 'stock_shelves', { shelves: [{ shelf_id: 'bookcase-tall', catalog_ids: ['books-row'] }] });
+
+        await call(session, 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall', wall_id: 'wl_east', along: 'right' } });
+        await expect(call(session, 'place_piece', { catalog_id: 'poster-city', anchor: { kind: 'on_wall', wall_id: 'wl_north', along: 'left' } }))
+          .rejects.toThrow('This Design has 2 Edits, the most it may have: call finish_design');
+        expect(session.edits).toHaveLength(7);
+      });
+
+      it('says why it puts nothing on furniture without levels', async () => {
+        await expect(call(shelving(), 'stock_shelves', { shelves: [{ shelf_id: 'og_desk', catalog_ids: ['books-row'] }] }))
+          .rejects.toThrow(/has no shelf levels: style_tops puts things on its top/);
+      });
     });
 
     it('hangs a gallery wall: one frame centered over furniture, the next beside it, the gap apart', async () => {

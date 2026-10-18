@@ -520,6 +520,486 @@
       "priceEstimateUsd": 160,
       "url": "",
       "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-books-leather-row",
+      "source": "generated",
+      "title": "Leather-Bound Hardcover Books with Gilt Spines, Row of 10",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.436,
+        0.235,
+        0.174
+      ],
+      "model": "/data/catalog/objects/obj-books-leather-row.glb",
+      "thumbnail": "/data/catalog/objects/obj-books-leather-row.jpg",
+      "colors": [
+        "Burgundy",
+        "Green",
+        "Brown"
+      ],
+      "materials": [
+        "Leather",
+        "Paper"
+      ],
+      "styleTags": [
+        "Books",
+        "Traditional",
+        "Dark Academia"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-books-paperback-row",
+      "source": "generated",
+      "title": "Paperback Books in Bright Jackets, Row of 11 and a Stack",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.477,
+        0.198,
+        0.135
+      ],
+      "model": "/data/catalog/objects/obj-books-paperback-row.glb",
+      "thumbnail": "/data/catalog/objects/obj-books-paperback-row.jpg",
+      "colors": [
+        "Multicolor",
+        "Orange",
+        "Yellow"
+      ],
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "Books",
+        "Eclectic",
+        "Colorful"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-books-modern-row",
+      "source": "generated",
+      "title": "Modern Hardcover Books in Quiet Colors, Row of 9",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.362,
+        0.231,
+        0.164
+      ],
+      "model": "/data/catalog/objects/obj-books-modern-row.glb",
+      "thumbnail": "/data/catalog/objects/obj-books-modern-row.jpg",
+      "colors": [
+        "Beige",
+        "Black",
+        "Green"
+      ],
+      "materials": [
+        "Paper",
+        "Linen"
+      ],
+      "styleTags": [
+        "Books",
+        "Modern",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 55,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-books-mixed-row",
+      "source": "generated",
+      "title": "Mixed Hardcover and Paperback Books, Row of 8 and a Stack",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.494,
+        0.24,
+        0.171
+      ],
+      "model": "/data/catalog/objects/obj-books-mixed-row.glb",
+      "thumbnail": "/data/catalog/objects/obj-books-mixed-row.jpg",
+      "colors": [
+        "Multicolor",
+        "Brown",
+        "Blue"
+      ],
+      "materials": [
+        "Paper",
+        "Leather"
+      ],
+      "styleTags": [
+        "Books",
+        "Eclectic",
+        "Cozy"
+      ],
+      "priceEstimateUsd": 50,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-books-coffee-table-stack",
+      "source": "generated",
+      "title": "Stack of 4 Coffee Table Books",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.326,
+        0.115,
+        0.26
+      ],
+      "model": "/data/catalog/objects/obj-books-coffee-table-stack.glb",
+      "thumbnail": "/data/catalog/objects/obj-books-coffee-table-stack.jpg",
+      "colors": [
+        "Beige",
+        "Black",
+        "Orange"
+      ],
+      "materials": [
+        "Paper",
+        "Linen"
+      ],
+      "styleTags": [
+        "Books",
+        "Modern",
+        "Coffee Table"
+      ],
+      "priceEstimateUsd": 75,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-bookcase-walnut-library",
+      "source": "generated",
+      "title": "Walnut Library Bookcase with Crown Molding, 5 Shelves, 79\"H",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.95,
+        2,
+        0.376
+      ],
+      "model": "/data/catalog/objects/obj-bookcase-walnut-library.glb",
+      "thumbnail": "/data/catalog/objects/obj-bookcase-walnut-library.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Dark Academia",
+        "Library"
+      ],
+      "priceEstimateUsd": 420,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-bookcase-sage-cabinet",
+      "source": "generated",
+      "title": "Painted Bookcase with Cabinet Base, Sage Green, 75\"H",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.84,
+        1.9,
+        0.391
+      ],
+      "model": "/data/catalog/objects/obj-bookcase-sage-cabinet.glb",
+      "thumbnail": "/data/catalog/objects/obj-bookcase-sage-cabinet.jpg",
+      "colors": [
+        "Green"
+      ],
+      "materials": [
+        "Wood",
+        "Brass"
+      ],
+      "styleTags": [
+        "Farmhouse",
+        "Cottage",
+        "Traditional"
+      ],
+      "priceEstimateUsd": 380,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-bookcase-oak-low",
+      "source": "generated",
+      "title": "Low Oak Bookcase, 2 Shelves, 47\"W",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.8,
+        0.34
+      ],
+      "model": "/data/catalog/objects/obj-bookcase-oak-low.glb",
+      "thumbnail": "/data/catalog/objects/obj-bookcase-oak-low.jpg",
+      "colors": [
+        "Natural",
+        "Brown"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Scandinavian",
+        "Modern"
+      ],
+      "priceEstimateUsd": 260,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-bookcase-industrial-pipe",
+      "source": "generated",
+      "title": "Industrial Bookcase, Reclaimed Wood and Black Metal, 5 Shelves",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.9,
+        1.8,
+        0.35
+      ],
+      "model": "/data/catalog/objects/obj-bookcase-industrial-pipe.glb",
+      "thumbnail": "/data/catalog/objects/obj-bookcase-industrial-pipe.jpg",
+      "colors": [
+        "Brown",
+        "Black"
+      ],
+      "materials": [
+        "Wood",
+        "Metal"
+      ],
+      "styleTags": [
+        "Industrial",
+        "Rustic"
+      ],
+      "priceEstimateUsd": 240,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-bookcase-black-brass",
+      "source": "generated",
+      "title": "Black Lacquer Bookcase with Brass Trim, 4 Shelves",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.802,
+        1.85,
+        0.321
+      ],
+      "model": "/data/catalog/objects/obj-bookcase-black-brass.glb",
+      "thumbnail": "/data/catalog/objects/obj-bookcase-black-brass.jpg",
+      "colors": [
+        "Black",
+        "Gold"
+      ],
+      "materials": [
+        "Wood",
+        "Brass"
+      ],
+      "styleTags": [
+        "Glam",
+        "Art Deco",
+        "Modern"
+      ],
+      "priceEstimateUsd": 340,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lamp-paper-lantern-floor",
+      "source": "generated",
+      "title": "Paper Lantern Floor Lamp, Rice Paper, 54\"H",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.36,
+        1.37,
+        0.36
+      ],
+      "model": "/data/catalog/objects/obj-lamp-paper-lantern-floor.glb",
+      "thumbnail": "/data/catalog/objects/obj-lamp-paper-lantern-floor.jpg",
+      "colors": [
+        "White",
+        "Black"
+      ],
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "Japandi",
+        "Minimalist",
+        "Modern"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lamp-mushroom-amber",
+      "source": "generated",
+      "title": "Mushroom Table Lamp, Amber Glass, 14\"H",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.336,
+        0.376,
+        0.336
+      ],
+      "model": "/data/catalog/objects/obj-lamp-mushroom-amber.glb",
+      "thumbnail": "/data/catalog/objects/obj-lamp-mushroom-amber.jpg",
+      "colors": [
+        "Orange",
+        "Brown"
+      ],
+      "materials": [
+        "Glass"
+      ],
+      "styleTags": [
+        "Retro",
+        "Mid-Century Modern",
+        "70s"
+      ],
+      "priceEstimateUsd": 85,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lamp-pleated-sage",
+      "source": "generated",
+      "title": "Pleated Shade Table Lamp with Ginger Jar Base, Sage, 22\"H",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.4,
+        0.56,
+        0.398
+      ],
+      "model": "/data/catalog/objects/obj-lamp-pleated-sage.glb",
+      "thumbnail": "/data/catalog/objects/obj-lamp-pleated-sage.jpg",
+      "colors": [
+        "Green",
+        "Cream"
+      ],
+      "materials": [
+        "Ceramic",
+        "Linen"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Cottage",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lamp-pleated-rose",
+      "source": "generated",
+      "title": "Pleated Shade Table Lamp with Ginger Jar Base, Rose, 22\"H",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.4,
+        0.56,
+        0.398
+      ],
+      "model": "/data/catalog/objects/obj-lamp-pleated-rose.glb",
+      "thumbnail": "/data/catalog/objects/obj-lamp-pleated-rose.jpg",
+      "colors": [
+        "Pink",
+        "Orange"
+      ],
+      "materials": [
+        "Ceramic",
+        "Linen"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Cottage",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lamp-stained-glass",
+      "source": "generated",
+      "title": "Stained Glass Table Lamp, Tiffany Style, Bronze Base, 23\"H",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.42,
+        0.603,
+        0.42
+      ],
+      "model": "/data/catalog/objects/obj-lamp-stained-glass.glb",
+      "thumbnail": "/data/catalog/objects/obj-lamp-stained-glass.jpg",
+      "colors": [
+        "Orange",
+        "Green",
+        "Brown"
+      ],
+      "materials": [
+        "Glass",
+        "Metal"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Victorian",
+        "Dark Academia"
+      ],
+      "priceEstimateUsd": 160,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lamp-opal-globes-floor",
+      "source": "generated",
+      "title": "Opal Globe Floor Lamp, Three Lights, Brass, 62\"H",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.52,
+        1.592,
+        0.3
+      ],
+      "model": "/data/catalog/objects/obj-lamp-opal-globes-floor.glb",
+      "thumbnail": "/data/catalog/objects/obj-lamp-opal-globes-floor.jpg",
+      "colors": [
+        "Gold",
+        "White"
+      ],
+      "materials": [
+        "Brass",
+        "Glass",
+        "Marble"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Glam",
+        "Modern"
+      ],
+      "priceEstimateUsd": 190,
+      "url": "",
+      "attribution": "Modeled for Mise"
     }
   ]
 }

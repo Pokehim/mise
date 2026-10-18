@@ -36,13 +36,16 @@ const OTHER_ART = 8;
 const NOT_ART = 4;
 
 const of = (category: Category) => (item: CatalogItem) => item.category === category;
+/** Books: rows for a shelf's levels, and stacks for a coffee table or a desk. */
+const isBooks = ({ category, title }: CatalogItem) => category === 'decor' && /\bbooks\b/i.test(title);
 /** The shortlist's sections after its wall art: how many items each shows, and which items belong in it. */
 const SECTIONS: { name: string; count: number; includes: (item: CatalogItem) => boolean }[] = [
   { name: 'mirror', count: 6, includes: of('mirror') },
   { name: 'rug', count: 14, includes: of('rug') },
   { name: 'lamp', count: 14, includes: of('lamp') },
   { name: 'plant', count: 12, includes: of('plant') },
-  { name: 'decor', count: 18, includes: of('decor') },
+  { name: 'decor', count: 18, includes: (item) => item.category === 'decor' && !isBooks(item) },
+  { name: 'books (stock_shelves puts rows on a bookcase\'s levels; a stack goes on a coffee table or desk)', count: 6, includes: isBooks },
   { name: 'chair', count: 10, includes: (item) => item.category === 'chair' && !WORK_CHAIR.test(item.title) },
   { name: 'desk_chair', count: 3, includes: (item) => item.category === 'chair' && DESK_CHAIR.test(item.title) },
   { name: 'table', count: 6, includes: (item) => item.category === 'table' && item.size[0] <= SIDE_TABLE_WIDTH },

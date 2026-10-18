@@ -220,6 +220,8 @@ export function unlit(source: Material, vertexColors = source.vertexColors): Mes
     transparent: source.transparent,
     opacity: source.opacity,
     alphaTest: source.alphaTest,
+    // Tone mapping would change the real lighting the texture already holds.
+    toneMapped: false,
   });
   if (s.color) material.color.copy(s.color);
   return material;

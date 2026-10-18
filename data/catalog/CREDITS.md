@@ -8,11 +8,12 @@ Written by `scripts/catalog-build.ts` from `catalog.json`: edit the script, not 
 |---|---|---|---|
 | [Amazon Berkeley Objects](https://amazon-berkeley-objects.s3.amazonaws.com/index.html) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 489 | Credit "Amazon Berkeley Objects (CC BY 4.0), Amazon.com" wherever the models are shown, as the app footer does. Covers both the 3D models and the product photos the flat rugs and thumbnails are made from. |
 | [Poly Haven](https://polyhaven.com/license) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 91 | Public domain: no conditions. Credited here anyway. |
+| [Sketchfab, via Objaverse](https://huggingface.co/datasets/allenai/objaverse) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) or [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), per model | 18 | Only models whose own Sketchfab license is CC BY 4.0 or CC0. Each is credited to its author in its item's credit line, wherever it is shown. Objaverse: Deitke, M., et al. (2023), "Objaverse: A Universe of Annotated 3D Objects", CVPR 2023. |
 | [Google Scanned Objects](https://app.gazebosim.org/GoogleResearch/fuel/collections/Scanned%20Objects%20by%20Google%20Research) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 31 | Credit "Google Scanned Objects (CC BY 4.0), Google LLC" wherever the models are shown. Downs, L., et al. (2022), "Google Scanned Objects: A High-Quality Dataset of 3D Scanned Household Items", ICRA 2022. |
 | Mise | — | 3 | Made for this project: placeholder boxes, and text-to-3D items (generated.json). |
 
-Excluded on purpose: datasets whose license forbids commercial use (3D-FUTURE, ShapeNet), and Objaverse, whose license
-differs from object to object.
+Excluded on purpose: datasets whose license forbids commercial use (3D-FUTURE, ShapeNet), and Objaverse models under
+any license but CC BY 4.0 or CC0: Objaverse's license differs from object to object, so each pick names its own.
 
 ## Items
 
@@ -607,6 +608,24 @@ differs from object to object.
 | ph-calathea-ebony | [Small Calathea in Ebony Square Pot](https://polyhaven.com/a/calathea_orbifolia_01) | Poly Haven (CC0): calathea_orbifolia_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Planter_Pot_QP6Ebony |
 | ph-anthurium-goo | [Anthurium in Glossy Ceramic Pot](https://polyhaven.com/a/anthurium_botany_01) | Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Central_Garden_Flower_Pot_Goo_425 |
 | ph-anthurium-mini | [Mini Anthurium in Harvest Cup](https://polyhaven.com/a/anthurium_botany_01) | Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_B4_Har |
+| sf-skateboard | [Skateboard Deck with Wheels, 31"](https://sketchfab.com/3d-models/45216c79e4a64f73a1df7739cb040300) | "Skateboard" by vikask (CC BY 4.0), Sketchfab, via Objaverse: 45216c79e4a64f73a1df7739cb040300 |
+| sf-acoustic-guitar | [Acoustic Guitar](https://sketchfab.com/3d-models/cc738f7712ff4a1cb39704f634521444) | "Acoustic Guitar (FREE)" by Brandon Westlake (CC BY 4.0), Sketchfab, via Objaverse: cc738f7712ff4a1cb39704f634521444 |
+| sf-ukulele | [Ukulele](https://sketchfab.com/3d-models/4281970c9fe94a778df26fa6f0c58a96) | "Ukulele" by Lassi Kaukonen (CC BY 4.0), Sketchfab, via Objaverse: 4281970c9fe94a778df26fa6f0c58a96 |
+| sf-moon-globe | [Moon Globe](https://sketchfab.com/3d-models/24f040d86b254a5cb683fcc85576dbf4) | "Moon Globe" by Henry VIII (CC BY 4.0), Sketchfab, via Objaverse: 24f040d86b254a5cb683fcc85576dbf4 |
+| sf-teddy-bear | [Teddy Bear, Honey](https://sketchfab.com/3d-models/1b99b250bced4666b709b6d911f1f152) | "teddy bear" by andree (CC BY 4.0), Sketchfab, via Objaverse: 1b99b250bced4666b709b6d911f1f152 |
+| sf-teddy-gray | [Plush Teddy Bear, Gray](https://sketchfab.com/3d-models/1bc786bf78a34e7cad0b559fb7391a47) | "Teddy" by doepp (CC BY 4.0), Sketchfab, via Objaverse: 1bc786bf78a34e7cad0b559fb7391a47 |
+| sf-surfboard-white | [Surfboard, White and Blue](https://sketchfab.com/3d-models/c61f4371e164490d8faf5bb6b7d07f8f) | "Ciclom_Surfboard" by CICLOM (CC BY 4.0), Sketchfab, via Objaverse: c61f4371e164490d8faf5bb6b7d07f8f |
+| sf-basketball | [Basketball](https://sketchfab.com/3d-models/19f76a0df81747369acf46406b36afa6) | "Basketball" by Mateus Schwaab (CC BY 4.0), Sketchfab, via Objaverse: 19f76a0df81747369acf46406b36afa6 |
+| sf-violin | [Violin with Bow](https://sketchfab.com/3d-models/0162dea1b1044cd281c57af5e5fc2046) | "Violin" by Voldepreuss (CC BY 4.0), Sketchfab, via Objaverse: 0162dea1b1044cd281c57af5e5fc2046 |
+| sf-old-books | [Stack of Old Books](https://sketchfab.com/3d-models/f0f04ab6f7274cfd82d95fb345e19c51) | "Books Low Poly" by AzTiZ (CC BY 4.0), Sketchfab, via Objaverse: f0f04ab6f7274cfd82d95fb345e19c51 |
+| sf-book-stack | [Stack of Hardcover Books](https://sketchfab.com/3d-models/06bb7196230c453d8bea4c1169a54cda) | "Book Texturing Assignment" by BirdWithRibbon (CC BY 4.0), Sketchfab, via Objaverse: 06bb7196230c453d8bea4c1169a54cda |
+| sf-gramophone | [Antique Gramophone with Brass Horn](https://sketchfab.com/3d-models/ed8577a03a0148e68e9c1c9dcd59dacc) | "Deutch gramophone." by Artieee (CC BY 4.0), Sketchfab, via Objaverse: ed8577a03a0148e68e9c1c9dcd59dacc |
+| sf-trophy | [Gold Trophy Cup](https://sketchfab.com/3d-models/afd10a0435184da58cb5f391c0499b14) | "A cool little cup just for fun :)" by Synty Studios (CC BY 4.0), Sketchfab, via Objaverse: afd10a0435184da58cb5f391c0499b14 |
+| sf-headphones | [Over-Ear Headphones, Black and Orange](https://sketchfab.com/3d-models/60d3cb0210bf4c2e9c802cf35122116f) | "Headphones" by LikeTea (CC BY 4.0), Sketchfab, via Objaverse: 60d3cb0210bf4c2e9c802cf35122116f |
+| sf-headphones-stand | [Leather Headphones on Stand](https://sketchfab.com/3d-models/19612447cf644f559e5bb2341ec86153) | "Headphone (Headset)" by Hrofti (CC BY 4.0), Sketchfab, via Objaverse: 19612447cf644f559e5bb2341ec86153 |
+| sf-fishbowl | [Goldfish Bowl](https://sketchfab.com/3d-models/cb31e638a6dd42c48a29911706f96c78) | "Fish Bowl - Household Props Challenge - Day 1" by Pixel-bit (CC BY 4.0), Sketchfab, via Objaverse: cb31e638a6dd42c48a29911706f96c78 |
+| sf-aquarium | [Desk Aquarium with Plants](https://sketchfab.com/3d-models/4a8030e3d71d4b699b5aa262ead736fd) | "Aquarium" by cyber_kerber (CC BY 4.0), Sketchfab, via Objaverse: 4a8030e3d71d4b699b5aa262ead736fd |
+| sf-hourglass | [Wooden Hourglass Sand Timer](https://sketchfab.com/3d-models/62aeeb7d51ae470c909c3b7fbdcdefb7) | "Hourglass Sand Timer" by Henry VIII (CC BY 4.0), Sketchfab, via Objaverse: 62aeeb7d51ae470c909c3b7fbdcdefb7 |
 | placeholder-chair | [Placeholder Desk Chair](https://www.amazon.com/s?k=desk+chair) | Mise placeholder box model |
 | placeholder-desk | [Placeholder Writing Desk](https://www.amazon.com/s?k=writing+desk) | Mise placeholder box model |
 | placeholder-rug | [Placeholder 5×7 Rug](https://www.amazon.com/s?k=5x7+rug) | Mise placeholder box model |

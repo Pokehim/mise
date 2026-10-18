@@ -155,6 +155,371 @@
       "priceEstimateUsd": 55,
       "url": "",
       "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-tv-43",
+      "source": "generated",
+      "title": "43\" 4K Flat-Screen TV on Feet, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.968,
+        0.627,
+        0.22
+      ],
+      "model": "/data/catalog/objects/obj-tv-43.glb",
+      "thumbnail": "/data/catalog/objects/obj-tv-43.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Electronics",
+        "Gaming"
+      ],
+      "priceEstimateUsd": 280,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-tv-55",
+      "source": "generated",
+      "title": "55\" 4K Flat-Screen TV on a Pedestal Stand, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        1.234,
+        0.791,
+        0.24
+      ],
+      "model": "/data/catalog/objects/obj-tv-55.glb",
+      "thumbnail": "/data/catalog/objects/obj-tv-55.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Electronics",
+        "Gaming"
+      ],
+      "priceEstimateUsd": 450,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-tv-55-wall",
+      "source": "generated",
+      "title": "55\" 4K Flat-Screen TV, Wall-Mounted, Black",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.23,
+        0.697,
+        0.043
+      ],
+      "model": "/data/catalog/objects/obj-tv-55-wall.glb",
+      "thumbnail": "/data/catalog/objects/obj-tv-55-wall.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Electronics",
+        "Gaming"
+      ],
+      "priceEstimateUsd": 430,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-monitor-24",
+      "source": "generated",
+      "title": "24\" Computer Monitor with Stand, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.543,
+        0.421,
+        0.18
+      ],
+      "model": "/data/catalog/objects/obj-monitor-24.glb",
+      "thumbnail": "/data/catalog/objects/obj-monitor-24.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Electronics",
+        "Study",
+        "Gaming"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-monitor-27",
+      "source": "generated",
+      "title": "27\" Computer Monitor with Stand, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.61,
+        0.458,
+        0.18
+      ],
+      "model": "/data/catalog/objects/obj-monitor-27.glb",
+      "thumbnail": "/data/catalog/objects/obj-monitor-27.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Electronics",
+        "Study",
+        "Gaming"
+      ],
+      "priceEstimateUsd": 230,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-monitor-ultrawide",
+      "source": "generated",
+      "title": "34\" Curved Ultrawide Gaming Monitor, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.785,
+        0.467,
+        0.2
+      ],
+      "model": "/data/catalog/objects/obj-monitor-ultrawide.glb",
+      "thumbnail": "/data/catalog/objects/obj-monitor-ultrawide.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Electronics",
+        "Gaming",
+        "Study"
+      ],
+      "priceEstimateUsd": 400,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-laptop",
+      "source": "generated",
+      "title": "14\" Laptop, Open, Space Gray",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.32,
+        0.21,
+        0.277
+      ],
+      "model": "/data/catalog/objects/obj-laptop.glb",
+      "thumbnail": "/data/catalog/objects/obj-laptop.jpg",
+      "colors": [
+        "Gray",
+        "Black"
+      ],
+      "materials": [
+        "Aluminum",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Electronics",
+        "Study"
+      ],
+      "priceEstimateUsd": 650,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-soundbar",
+      "source": "generated",
+      "title": "TV Soundbar, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.86,
+        0.065,
+        0.102
+      ],
+      "model": "/data/catalog/objects/obj-soundbar.glb",
+      "thumbnail": "/data/catalog/objects/obj-soundbar.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Fabric"
+      ],
+      "styleTags": [
+        "Modern",
+        "Electronics",
+        "Music"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-speaker",
+      "source": "generated",
+      "title": "Bookshelf Speaker, Walnut",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.16,
+        0.26,
+        0.206
+      ],
+      "model": "/data/catalog/objects/obj-speaker.glb",
+      "thumbnail": "/data/catalog/objects/obj-speaker.jpg",
+      "colors": [
+        "Brown",
+        "Black"
+      ],
+      "materials": [
+        "Wood",
+        "Fabric"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Music",
+        "Electronics"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-game-console",
+      "source": "generated",
+      "title": "Game Console with Controller, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.49,
+        0.07,
+        0.251
+      ],
+      "model": "/data/catalog/objects/obj-game-console.glb",
+      "thumbnail": "/data/catalog/objects/obj-game-console.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Plastic"
+      ],
+      "styleTags": [
+        "Modern",
+        "Electronics",
+        "Gaming",
+        "Playful"
+      ],
+      "priceEstimateUsd": 450,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-gaming-pc",
+      "source": "generated",
+      "title": "Gaming PC Tower with Glass Side Panel",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.22,
+        0.47,
+        0.451
+      ],
+      "model": "/data/catalog/objects/obj-gaming-pc.glb",
+      "thumbnail": "/data/catalog/objects/obj-gaming-pc.jpg",
+      "colors": [
+        "Black",
+        "Purple"
+      ],
+      "materials": [
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Electronics",
+        "Gaming"
+      ],
+      "priceEstimateUsd": 1200,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-mini-fridge",
+      "source": "generated",
+      "title": "Compact Mini Fridge, 3.1 cu ft, Black",
+      "category": "storage",
+      "mount": "floor",
+      "size": [
+        0.48,
+        0.84,
+        0.512
+      ],
+      "model": "/data/catalog/objects/obj-mini-fridge.glb",
+      "thumbnail": "/data/catalog/objects/obj-mini-fridge.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Modern",
+        "Dorm",
+        "Casual"
+      ],
+      "priceEstimateUsd": 160,
+      "url": "",
+      "attribution": "Modeled for Mise"
     }
   ]
 }

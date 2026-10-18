@@ -10,7 +10,8 @@
 // A pick is one of:
 //   - an ABO listing with a 3D model (the default);
 //   - an ABO rug listing without one (`flat`), built as a thin slab with the listing's photo on top (catalog/flat-rug);
-//   - a Poly Haven asset or a Google Scanned Objects scan (`source`), optionally set in a pot (catalog/models);
+//   - a Poly Haven asset, a Google Scanned Objects scan or a CC BY / CC0 Sketchfab model from Objaverse (`source`),
+//     optionally set in a pot (catalog/models);
 //   - an ABO bed frame built made up (`madeUp`): a mattress of the listed size and bedding on it (catalog/models).
 //
 // Downloads are kept in scripts/.cache/: ABO's files at their paths in the bucket.
@@ -26,7 +27,8 @@ import sharp from 'sharp';
 import type { Catalog, CatalogItem, Category, Hex, PartParams, Vec2, Vec3 } from '../shared/types';
 import { ASPECT_TOLERANCE, rugDocument, rugTexture } from './catalog/flat-rug';
 import { gsoDocument, gsoUrl, writeGlb } from './catalog/gso';
-import { clearGlass, io, keepNodes, type MadeUp, madeUp, potted, turn } from './catalog/models';
+import { clearGlass, io, keepNodes, type MadeUp, madeUp, potted, scaleTo, tilt, turn } from './catalog/models';
+import { objaverseGlb, sketchfabUrl } from './catalog/objaverse';
 import { polyHavenGltf, polyHavenUrl } from './catalog/polyhaven';
 import { renderThumbnails } from './catalog/thumbnail';
 
@@ -56,7 +58,7 @@ export interface AboModel { path: string; extent: Vec3 }
 export type Listing = AboListing & { model?: AboModel };
 
 /** A model from another source than ABO: a Poly Haven asset id, or a Google Scanned Objects model name. */
-export interface ModelRef { source: 'polyhaven' | 'gso'; asset: string }
+export interface ModelRef { source: 'polyhaven' | 'gso' | 'sketchfab'; asset: string }
 
 /**
  * One entry of scripts/catalog-picks.json. `price`, `colors`, `materials`, `styleTags` and `title` override the
@@ -84,6 +86,12 @@ export interface CatalogPick {
   nodes?: string[];
   /** Degrees to turn the model about +Y, counterclockwise from above, so that its front faces +Z. */
   turn?: number;
+  /** A Sketchfab model's own name and author, for its CC BY credit, and its license as Sketchfab states it. */
+  credit?: { name: string; author: string; license: 'CC BY 4.0' | 'CC0' };
+  /** The size the model really is, which a Sketchfab model's own scale isn't: its height, or its longest side, in meters. */
+  realSize?: { height?: number; longest?: number };
+  /** Degrees to turn the model about +X first, to stand up one its author laid with +Z up. */
+  tilt?: number;
   /** A pot to stand the model, a plant, in. */
   pot?: ModelRef & { name: string };
   /** An ABO bed frame, built made up: with a mattress of this size and bedding on it, its thumbnail rendered from the result. */
@@ -210,6 +218,7 @@ export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3
 const CREDIT: Record<ModelRef['source'], string> = {
   polyhaven: 'Poly Haven (CC0)',
   gso: 'Google Scanned Objects (CC BY 4.0), Google LLC',
+  sketchfab: 'Sketchfab, via Objaverse',
 };
 
 /** The Catalog entry for a Poly Haven or Google Scanned Objects pick, which gives every field itself. */
@@ -219,7 +228,11 @@ export function toSourcedItem(pick: CatalogPick, size: Vec3): CatalogItem {
   if (!source || !asset || !title || !colors || !materials || !styleTags || price === undefined) {
     throw new Error('a pick from another source than ABO needs source, asset, title, colors, materials, styleTags and price');
   }
-  const credit = (ref: ModelRef) => `${CREDIT[ref.source]}: ${ref.asset}`;
+  if (source === 'sketchfab' && !pick.credit) throw new Error('a Sketchfab pick needs its credit: the model\'s name, author and license');
+  // A Sketchfab model is credited to its author, as CC BY asks: "Name" by Author (license), Sketchfab, via Objaverse.
+  const credit = (ref: ModelRef) => (ref.source === 'sketchfab' && pick.credit
+    ? `"${pick.credit.name}" by ${pick.credit.author} (${pick.credit.license}), ${CREDIT.sketchfab}: ${ref.asset}`
+    : `${CREDIT[ref.source]}: ${ref.asset}`);
   return {
     id: pick.id,
     source,
@@ -234,7 +247,7 @@ export function toSourcedItem(pick: CatalogPick, size: Vec3): CatalogItem {
     materials,
     styleTags,
     priceEstimateUsd: price,
-    url: source === 'polyhaven' ? polyHavenUrl(asset) : gsoUrl(asset),
+    url: source === 'polyhaven' ? polyHavenUrl(asset) : source === 'gso' ? gsoUrl(asset) : sketchfabUrl(asset),
     attribution: [credit({ source, asset }), ...(pick.pot ? [`pot: ${credit(pick.pot)}`] : [])].join('; '),
   };
 }
@@ -256,6 +269,13 @@ const SOURCES: Record<Exclude<CatalogItem['source'], 'generated' | 'publicdomain
     url: 'https://polyhaven.com/license',
     license: '[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)',
     terms: 'Public domain: no conditions. Credited here anyway.',
+  },
+  sketchfab: {
+    name: 'Sketchfab, via Objaverse',
+    url: 'https://huggingface.co/datasets/allenai/objaverse',
+    license: '[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) or [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), per model',
+    terms: 'Only models whose own Sketchfab license is CC BY 4.0 or CC0. Each is credited to its author in its item\'s credit '
+      + 'line, wherever it is shown. Objaverse: Deitke, M., et al. (2023), "Objaverse: A Universe of Annotated 3D Objects", CVPR 2023.',
   },
   gso: {
     name: 'Google Scanned Objects',
@@ -287,8 +307,8 @@ export function creditsMarkdown(catalog: Catalog): string {
   lines.push(
     `| Mise | — | ${generated} | Made for this project: placeholder boxes, and text-to-3D items (generated.json). |`,
     '',
-    'Excluded on purpose: datasets whose license forbids commercial use (3D-FUTURE, ShapeNet), and Objaverse, whose license',
-    'differs from object to object.',
+    'Excluded on purpose: datasets whose license forbids commercial use (3D-FUTURE, ShapeNet), and Objaverse models under',
+    'any license but CC BY 4.0 or CC0: Objaverse\'s license differs from object to object, so each pick names its own.',
     '',
     '## Items',
     '',
@@ -501,9 +521,11 @@ async function buildFlatRug(pick: CatalogPick, listing: Listing | undefined, ima
   return { item: toCatalogItem(pick, listing, model.size), model, thumbnail };
 }
 
-/** A Poly Haven or Google Scanned Objects model as a glTF Document. */
+/** A Poly Haven, Google Scanned Objects or Sketchfab model as a glTF Document. */
 async function sourcedDocument({ source, asset }: ModelRef) {
-  return source === 'polyhaven' ? clearGlass(await io().read(await polyHavenGltf(asset))) : gsoDocument(asset);
+  if (source === 'polyhaven') return clearGlass(await io().read(await polyHavenGltf(asset)));
+  if (source === 'sketchfab') return clearGlass(await io().read(await objaverseGlb(asset)));
+  return gsoDocument(asset);
 }
 
 /** Builds a Poly Haven or Google Scanned Objects pick, its thumbnail rendered from the finished GLB. */
@@ -511,7 +533,9 @@ async function buildSourced(pick: CatalogPick) {
   if (!pick.source || !pick.asset) throw new Error('a pick from another source than ABO needs source and asset');
   let doc = await sourcedDocument({ source: pick.source, asset: pick.asset });
   if (pick.nodes) await keepNodes(doc, pick.nodes);
+  if (pick.tilt) tilt(doc, pick.tilt);
   if (pick.turn) turn(doc, pick.turn);
+  if (pick.realSize) scaleTo(doc, pick.realSize);
   if (pick.pot) doc = await potted(await sourcedDocument(pick.pot), doc);
   const raw = join(CACHE, 'build', `${pick.id}.raw.glb`);
   await io().write(raw, doc);
@@ -532,7 +556,7 @@ async function buildPick(pick: CatalogPick, listing: Listing | undefined, imageP
 }
 
 /** The sources this script builds; the Catalog's other items, such as the placeholder boxes, are built elsewhere. */
-const BUILT_SOURCES = new Set<CatalogItem['source']>(['abo', 'polyhaven', 'gso']);
+const BUILT_SOURCES = new Set<CatalogItem['source']>(['abo', 'polyhaven', 'gso', 'sketchfab']);
 
 /**
  * Builds every pick, skipping (and logging) the ones that fail, then writes catalog.json. With `only`, builds just

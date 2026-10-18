@@ -19,16 +19,19 @@ const TITLE_LENGTH = 50;
  * say that Red Fuji is Hokusai, or that After School is anime background art.
  */
 const COLLECTIONS: Record<string, string> = {
-  museum: 'famous paintings and Japanese woodblock prints: Hokusai, Hiroshige, Van Gogh, Monet, Seurat, Klimt',
+  museum: 'famous paintings and Japanese woodblock prints: Hokusai, Hiroshige, Van Gogh, Monet, Seurat, Klimt, Kandinsky, Klee',
+  'japanese prints': 'woodblock prints by Hiroshige, Hokusai, Kuniyoshi, Yoshida, Sekka and Koson',
+  'art nouveau': '1890s posters by Mucha, Chéret, Steinlen, Rhead and Bradley',
+  'nature & science': 'Haeckel, Redouté and Audubon plates, old star and moon charts, WPA zoo posters',
   'parks & travel': 'vintage national-park and travel posters, and Hokusai and Hiroshige views of Mount Fuji and Japan',
   'gig posters': 'Belle Époque cabaret and concert posters: Toulouse-Lautrec, and 1930s music posters',
-  space: 'retro space-travel and NASA posters: Mars, Saturn, Enceladus, Artemis',
+  space: 'retro space-travel and NASA posters: Mars, Saturn, Enceladus, Artemis, space colonies',
   'anime sunsets': '2000s anime background art: towns, rivers and railroads at golden hour, nostalgic and warm',
   'retro gaming': 'pixel-art arcade game posters, neon and bright',
   y2k: 'Y2K nostalgia: dial-up, flip phones and butterflies, pink and blue',
 };
 /** The most posters of one collection the shortlist shows, and the most other pieces of art and of what isn't art. */
-const PER_COLLECTION = 8;
+const PER_COLLECTION = 5;   // 10 collections × 5, about the 7 × 8 it showed before art nouveau, Japanese prints and nature & science
 const OTHER_ART = 8;
 const NOT_ART = 4;
 

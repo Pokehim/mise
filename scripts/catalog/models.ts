@@ -45,11 +45,12 @@ export function clearGlass(doc: Document) {
 }
 
 /** Moves the scene's top-level nodes under one new node with this translation, rotation and scale. */
-function wrap(doc: Document, name: string, transform: { translation?: vec3; rotation?: [number, number, number, number] }) {
+function wrap(doc: Document, name: string, transform: { translation?: vec3; rotation?: [number, number, number, number]; scale?: number }) {
   const scene = sceneOf(doc);
   const group = doc.createNode(name);
   if (transform.translation) group.setTranslation(transform.translation);
   if (transform.rotation) group.setRotation(transform.rotation);
+  if (transform.scale) group.setScale([transform.scale, transform.scale, transform.scale]);
   for (const node of scene.listChildren()) {
     scene.removeChild(node);
     group.addChild(node);
@@ -62,6 +63,21 @@ function wrap(doc: Document, name: string, transform: { translation?: vec3; rota
 export function turn(doc: Document, degrees: number) {
   const half = (degrees * Math.PI) / 360;
   wrap(doc, 'turn', { rotation: [0, Math.sin(half), 0, Math.cos(half)] });
+}
+
+/** Turns the model about +X by whole degrees, as a pick stands up a model its author laid on its back (+Z up). */
+export function tilt(doc: Document, degrees: number) {
+  const half = (degrees * Math.PI) / 360;
+  wrap(doc, 'tilt', { rotation: [Math.sin(half), 0, 0, Math.cos(half)] });
+}
+
+/** Scales the model evenly to a real size: its height, or its longest side, in meters. */
+export function scaleTo(doc: Document, { height, longest }: { height?: number; longest?: number }) {
+  const { min, max } = boundsOf(doc);
+  const size = [0, 1, 2].map((axis) => max[axis] - min[axis]);
+  const scale = height ? height / size[1] : longest ? longest / Math.max(...size) : 1;
+  if (!Number.isFinite(scale) || scale <= 0) throw new Error('the model has no size to scale');
+  wrap(doc, 'scale', { scale });
 }
 
 /** How far below a pot's rim its soil lies. */

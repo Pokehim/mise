@@ -1,0 +1,162 @@
+"""empty-room.glb (#77 part 2, spec §3): the Empty Room's hole-free mesh, in the room frame.
+
+Flat walls, floor, and ceiling at the room's measured size, plus simple boxes where something sticks out: the
+baseboard, the North window's sill, the South door's frame, and the frames and mullions of the glass wall and the
+main door. Every face takes its image by projection onto its surface's texture (textures.py), so a box's front
+shows what the Captures saw there. Materials are unlit (KHR_materials_unlit): the images carry the real light.
+
+Nodes: floor, ceiling, wall-north, wall-east, wall-south, wall-west (a wall's boxes are in its node).
+"""
+import io
+import json
+import os
+
+import numpy as np
+import pygltflib as gl
+from PIL import Image
+
+from common import H, V2, WX0, WX1, WZ0, WZ1, X0, X1, Z0, Z1
+
+TEX = os.path.join(os.path.dirname(__file__), '..', '..', '.cache', 'lounge-v2', 'tex')
+JPEG_QUALITY = 90
+
+# Walls on lounge-v1's lines, where their images are laid out: start, end, and inward normal (x, z). Each is drawn
+# on its fitted plane instead (SHIFT, along the inward normal), and its images are looked up where they are in the room.
+WALLS = {
+    'north': ((X0, Z0), (X1, Z0), (0, 1)),
+    'east': ((X1, Z0), (X1, Z1), (-1, 0)),
+    'south': ((X1, Z1), (X0, Z1), (0, -1)),
+    'west': ((X0, Z1), (X0, Z0), (1, 0)),
+}
+SHIFT = {'north': WZ0 - Z0, 'east': X1 - WX1, 'south': Z1 - WZ1, 'west': WX0 - X0}
+# Each fitted wall's ends, along its old line: it meets the fitted walls on either side.
+ENDS = {'north': (WX0 - X0, WX1 - X0), 'east': (WZ0 - Z0, WZ1 - Z0), 'south': (X1 - WX1, X1 - WX0), 'west': (Z1 - WZ1, Z1 - WZ0)}
+BASE_H, BASE_D = 0.072, 0.008   # baseboard height and how far it sticks out
+# Boxes on each wall: (u0, u1, y0, y1, depth out of the wall), u along the wall from its start.
+BOXES = {
+    'north': [(None, None, 0, BASE_H, BASE_D),
+              (0.50, 2.22, 0.85, 0.89, 0.05),                               # the window sill
+              (1.335, 1.39, 0.93, 2.30, 0.02)],                             # and its center mullion
+    'east': [(None, None, 0, BASE_H, BASE_D)],
+    'south': [(0.0, 0.03, 0, 2.33, 0.015), (0.95, 1.01, 0, 2.33, 0.015),  # the door frame's jambs
+              (0.0, 1.01, 2.27, 2.33, 0.015),                               # and head
+              (1.60, 1.69, 0, 2.21, 0.015), (2.30, 2.39, 0, 2.21, 0.015),   # the glass wall's mullions
+              (1.01, 3.118, 2.20, 2.27, 0.015), (1.01, 3.118, 0, 0.05, 0.015)],  # its head and bottom rail
+    'west': [(1.82, None, 0, BASE_H, BASE_D),
+             (0.0, 0.09, 0, 2.25, 0.015), (0.58, 0.69, 0, 2.17, 0.015), (1.20, 1.30, 0, 2.17, 0.015),
+             (1.76, 1.82, 0, 2.25, 0.015), (0.0, 1.82, 2.15, 2.25, 0.015), (0.03, 1.82, 0, 0.05, 0.015)],
+}
+
+
+def wall_frame(name):
+    (sx, sz), (ex, ez), (nx, nz) = WALLS[name]
+    start, d = np.array([sx, 0, sz]), np.array([ex - sx, 0, ez - sz])
+    length = np.linalg.norm(d)
+    return start, d / length, np.array([nx, 0, nz], float), length
+
+
+def wall_geometry(name):
+    start, along, inward, length = wall_frame(name)
+    up = np.array([0, 1, 0])
+    pts, tris = [], []
+    origin = start + inward * SHIFT[name]
+    ua, ub = ENDS[name]
+    P = lambda u, y, d=0: origin + along * u + up * y + inward * d
+
+    def quad(a, b, c, d):
+        """Counter-clockwise seen from its front. From inside the room, along is to the right of a wall."""
+        base = len(pts)
+        pts.extend([a, b, c, d])
+        tris.extend([(base, base + 1, base + 2), (base, base + 2, base + 3)])
+
+    quad(P(ua, 0), P(ub, 0), P(ub, H), P(ua, H))                                    # the wall, facing in
+    for u0, u1, y0, y1, dd in BOXES[name]:
+        u0, u1 = ua if u0 is None else u0, ub if u1 is None else u1
+        quad(P(u0, y0, dd), P(u1, y0, dd), P(u1, y1, dd), P(u0, y1, dd))            # front
+        quad(P(u0, y1), P(u0, y1, dd), P(u1, y1, dd), P(u1, y1))                    # top
+        quad(P(u0, y0), P(u1, y0), P(u1, y0, dd), P(u0, y0, dd))                    # bottom
+        quad(P(u0, y0), P(u0, y0, dd), P(u0, y1, dd), P(u0, y1))                    # left end
+        quad(P(u1, y0), P(u1, y1), P(u1, y1, dd), P(u1, y0, dd))                    # right end
+    pts = np.array(pts, np.float32)
+    u = (pts - start) @ along
+    uv = np.stack([u / length, (H - pts[:, 1]) / H], axis=1)
+    return pts, uv.astype(np.float32), np.array(tris, np.uint32)
+
+
+
+def flat(name):
+    W, D = X1 - X0, Z1 - Z0
+    if name == 'floor':
+        pts = np.array([[WX0, 0, WZ0], [WX0, 0, WZ1], [WX1, 0, WZ1], [WX1, 0, WZ0]], np.float32)   # seen from above
+        uv = np.array([[(p[0] - X0) / W, (p[2] - Z0) / D] for p in pts], np.float32)
+    else:
+        pts = np.array([[WX0, H, WZ0], [WX1, H, WZ0], [WX1, H, WZ1], [WX0, H, WZ1]], np.float32)   # seen from below
+        uv = np.array([[(p[0] - X0) / W, (Z1 - p[2]) / D] for p in pts], np.float32)
+    return pts, uv, np.array([(0, 1, 2), (0, 2, 3)], np.uint32)
+
+
+class Builder:
+    def __init__(self):
+        self.g = gl.GLTF2(asset=gl.Asset(generator='scripts/lounge-v2/room/glb.py (#77)'), scene=0,
+                          scenes=[gl.Scene(nodes=[])], extensionsUsed=['KHR_materials_unlit'])
+        self.blob = bytearray()
+
+    def view(self, data, target=None):
+        while len(self.blob) % 4:
+            self.blob.append(0)
+        off = len(self.blob)
+        self.blob.extend(data)
+        self.g.bufferViews.append(gl.BufferView(buffer=0, byteOffset=off, byteLength=len(data), target=target))
+        return len(self.g.bufferViews) - 1
+
+    def accessor(self, arr, kind, target):
+        v = self.view(arr.tobytes(), target)
+        ctype = gl.UNSIGNED_INT if arr.dtype == np.uint32 else gl.FLOAT
+        acc = gl.Accessor(bufferView=v, componentType=ctype, count=len(arr) if kind != 'SCALAR' else arr.size, type=kind)
+        if kind == 'VEC3':
+            acc.min, acc.max = arr.min(0).tolist(), arr.max(0).tolist()
+        self.g.accessors.append(acc)
+        return len(self.g.accessors) - 1
+
+    def material(self, name):
+        im = Image.open(os.path.join(TEX, f'{name}.png')).convert('RGB')
+        buf = io.BytesIO()
+        im.save(buf, 'JPEG', quality=JPEG_QUALITY, subsampling=0)
+        self.g.images.append(gl.Image(bufferView=self.view(buf.getvalue()), mimeType='image/jpeg', name=name))
+        self.g.samplers.append(gl.Sampler(magFilter=gl.LINEAR, minFilter=gl.LINEAR_MIPMAP_LINEAR, wrapS=gl.CLAMP_TO_EDGE, wrapT=gl.CLAMP_TO_EDGE))
+        self.g.textures.append(gl.Texture(source=len(self.g.images) - 1, sampler=len(self.g.samplers) - 1))
+        self.g.materials.append(gl.Material(
+            name=name, doubleSided=False,
+            pbrMetallicRoughness=gl.PbrMetallicRoughness(baseColorTexture=gl.TextureInfo(index=len(self.g.textures) - 1),
+                                                         metallicFactor=0, roughnessFactor=1),
+            extensions={'KHR_materials_unlit': {}}))
+        return len(self.g.materials) - 1
+
+    def node(self, name, pts, uv, tris):
+        prim = gl.Primitive(attributes=gl.Attributes(POSITION=self.accessor(pts, 'VEC3', gl.ARRAY_BUFFER),
+                                                     TEXCOORD_0=self.accessor(uv, 'VEC2', gl.ARRAY_BUFFER)),
+                            indices=self.accessor(tris.reshape(-1), 'SCALAR', gl.ELEMENT_ARRAY_BUFFER),
+                            material=self.material(name.split('-')[-1]))
+        self.g.meshes.append(gl.Mesh(name=name, primitives=[prim]))
+        self.g.nodes.append(gl.Node(name=name, mesh=len(self.g.meshes) - 1))
+        self.g.scenes[0].nodes.append(len(self.g.nodes) - 1)
+
+    def save(self, path):
+        self.g.buffers = [gl.Buffer(byteLength=len(self.blob))]
+        self.g.set_binary_blob(bytes(self.blob))
+        self.g.save_binary(path)
+
+
+def main():
+    b = Builder()
+    for name in ['floor', 'ceiling']:
+        b.node(name, *flat(name))
+    for name in WALLS:
+        b.node(f'wall-{name}', *wall_geometry(name))
+    path = os.path.join(V2, 'empty-room.glb')
+    b.save(path)
+    print('wrote', path, f'{os.path.getsize(path) / 1e6:.1f} MB')
+
+
+if __name__ == '__main__':
+    main()

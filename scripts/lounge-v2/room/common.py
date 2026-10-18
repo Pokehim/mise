@@ -15,8 +15,12 @@ V2 = os.path.join(ROOT, 'data', 'scans', 'lounge-v2')
 COMPARE = os.path.join(ROOT, 'docs', 'research', 'lounge-compare')
 CACHE = os.path.join(ROOT, 'scripts', '.cache', 'lounge-v2')  # gitignored
 
-# lounge-v1's room frame: inner faces of the walls, floor at y = 0.
+# lounge-v1's room frame: inner faces of the walls, floor at y = 0. Images (ortho.py, textures.py) are laid out on
+# these lines.
 X0, X1, Z0, Z1, H = -1.568, 1.55, -3.545, 3.673, 2.431
+# The Empty Room's walls: each the median plane of the Main Capture's wall (#77), about 2 cm outside lounge-v1's
+# lines. The South one is the plane of the door and the glass wall.
+WX0, WX1, WZ0, WZ1 = -1.5907, 1.5759, -3.5652, 3.6244
 
 F = np.diag([1.0, -1.0, -1.0])  # 180° about X: both Polycam splats are stored Y down
 
@@ -120,7 +124,7 @@ def transform_splats(data, R, t=(0, 0, 0), s=1.0, keep_sh=False):
     return out
 
 
-def to_spz(ply, scan, max_splats=1500000):
+def to_spz(ply, scan, max_splats=1500000, out_name='splat.spz'):
     """Runs scripts/splat.sh on an already-cropped PLY (no --box)."""
     env = dict(os.environ, SPLAT_MAX=str(max_splats))
-    subprocess.run([os.path.join(ROOT, 'scripts', 'splat.sh'), ply, '--scan', scan], check=True, env=env)
+    subprocess.run([os.path.join(ROOT, 'scripts', 'splat.sh'), ply, '--scan', scan, '--out', out_name], check=True, env=env)

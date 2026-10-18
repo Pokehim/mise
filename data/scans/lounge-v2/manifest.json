@@ -10,15 +10,5 @@
       0
     ],
     "rotationY": 0
-  },
-  "splat": "empty-room.spz",
-  "splatTransform": {
-    "position": [
-      0,
-      0,
-      0
-    ],
-    "rotationY": 0,
-    "scale": 1
   }
 }

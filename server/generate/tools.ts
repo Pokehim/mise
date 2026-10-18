@@ -10,13 +10,14 @@ import {
 } from '../../shared/anchors';
 import { search } from '../../shared/catalog-search';
 import { roomItems } from '../../shared/fit';
+import { pointInPolygon } from '../../shared/geometry';
 import { newId } from '../../shared/ids';
 import { partsFor } from '../../shared/parts';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, CatalogItem, Category, Edit, FitViolation, Hex, LibraryMaterial, Palette, Placement, RoomSetup, RoomState } from '../../shared/types';
 import { catalogEntry, m, offeredToClaude, shuffled } from './forClaude';
 import { reviewFlags } from './review';
-import { type Draft, dressBed, hangGallery, layRug, makeCorner, styleTops } from './moves';
+import { type Draft, dressBed, hangGallery, layRug, makeCorner, stockShelves, styleTops } from './moves';
 
 export interface DesignContext extends AnchorOptions {
   setup: RoomSetup;
@@ -65,8 +66,10 @@ export const EDIT_RANGE: [min: number, max: number] = [8, 24];
  * Brief that turns a lounge into a bedroom needs (from #97). Removing an Original doesn't count.
  */
 export const MAX_LARGE_CHANGES = 8;
-/** The most Pieces a Design may have (spec §2.3). */
+/** The most Pieces a Design may have (spec §2.3), besides the books and decor inside its shelves. */
 const MAX_PIECES = 25;
+/** The most books and decor a Design may have inside its shelves: a few rows on each of three bookcases. */
+const MAX_SHELVED = 18;
 /** Categories that are always large furniture. Shelves, tables, storage and chairs are when they are big. */
 const LARGE: Category[] = ['bed', 'sofa', 'desk', 'dresser', 'wardrobe'];
 const SIZEABLE: Category[] = ['shelf', 'table', 'storage', 'chair'];
@@ -79,7 +82,7 @@ export const LARGE_CHANGES = `placing a ${LARGE.join(', ')}, or a ${SIZEABLE.joi
  * The keys of a tool's input that name something in the room, which may be the Catalog id of a Piece placed earlier.
  * Not make_corner's chair_id: a Catalog id there is a chair to place.
  */
-const ROOM_ID_KEYS = ['target_id', 'near_id', 'over_id', 'under_id', 'bed_id', 'on_id'];
+const ROOM_ID_KEYS = ['target_id', 'near_id', 'over_id', 'under_id', 'bed_id', 'on_id', 'shelf_id'];
 /** How far a replacing Piece slides along its width to clear a Fit rule, each way, nearest first. */
 const REPLACE_SLIDES = [0, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3];
 
@@ -174,16 +177,31 @@ export function createSession({
   const what = refining ? 'Refine' : 'Design';
   /** What the review flagged in the room before this session, which finish_design doesn't send the Design back for. */
   const flaggedBefore = new Set(before.length ? reviewFlags(setup, catalog, state) : []);
-  /** The Edits that count toward editRange: all this session made but removals. */
-  const counted = () => edits.slice(before.length).filter(({ type }) => type !== 'remove').length;
+  /**
+   * The Pieces resting inside a shelf, on a level below its top. A bookcase's books go with the bookcase, so they count
+   * toward neither editRange nor MAX_PIECES, only MAX_SHELVED.
+   */
+  function shelved(): Set<string> {
+    const items = roomItems(setup, catalog, state);
+    const shelves = items.filter(({ category }) => category === 'shelf');
+    return new Set(items.filter(({ id, placement: { mount, position: [x, , z] }, heights: [bottom] }) => state.pieces[id] && mount === 'surface'
+      && shelves.some((shelf) => shelf.id !== id && bottom < shelf.heights[1] - 0.01 && pointInPolygon([x, z], shelf.corners))).map(({ id }) => id));
+  }
+  /** The Edits that count toward editRange: all this session made but removals, and the Pieces it put inside shelves. */
+  const counted = () => {
+    const inShelves = shelved();
+    return edits.slice(before.length).filter((edit) => edit.type !== 'remove' && !(edit.type === 'place' && inShelves.has(edit.pieceId))).length;
+  };
+  /** The levels of a Catalog shelf in the room, by its id. */
+  const levelsOf = (id: string) => shelfLevels[state.pieces[id]?.catalogId ?? ''];
   const original = (id: string) => setup.originals.find((candidate) => candidate.id === id);
   const inRoom = (id: string) => roomItems(setup, catalog, state).find((candidate) => candidate.id === id)
     ?? fail(`The room has no Original or Piece "${id}"`);
   const requireItem = (id: string) => catalogItem(id) ?? fail(`The Catalog has no item "${id}": use an id from search_catalog`);
 
-  /** Appends an Edit by Claude and replays the Design, or fails with why replay would skip it. */
-  function apply(fields: DistributiveOmit<Edit, 'id' | 'at' | 'by'>) {
-    if (fields.type !== 'remove' && counted() >= editRange[1]) fail(`This ${what} has ${editRange[1]} Edits, the most it may have: call finish_design`);
+  /** Appends an Edit by Claude and replays the Design, or fails with why replay would skip it. `inShelf` Edits aren't counted. */
+  function apply(fields: DistributiveOmit<Edit, 'id' | 'at' | 'by'>, inShelf = false) {
+    if (fields.type !== 'remove' && !inShelf && counted() >= editRange[1]) fail(`This ${what} has ${editRange[1]} Edits, the most it may have: call finish_design`);
     const edit = { ...fields, id: newId('ed'), at: new Date().toISOString(), by: 'claude' } as Edit;
     const next = replay(setup, catalog, [...edits, edit]);
     const skipped = next.skipped.find(({ editId }) => editId === edit.id);
@@ -195,13 +213,15 @@ export function createSession({
 
   /** Places a Piece of `item` where the Anchor says, with every check: its id, or a ToolError saying why not. */
   function place(item: CatalogItem, anchor: Anchor): string {
-    checkRoomFor(item, isLarge(item));
+    // On a level with room above it, the Piece is inside the shelf, not on its top.
+    const inShelf = anchor.kind === 'on_top_of' && anchor.level !== undefined && Number.isFinite(levelsOf(anchor.target_id)?.[anchor.level]?.clearance);
+    checkRoomFor(item, isLarge(item), inShelf);
     const placement = resolved(resolveAnchor(setup, catalog, state, item, anchor, { shelfLevels }));
     const pieceId = newId('pc');
-    apply({ type: 'place', pieceId, catalogId: item.id, placement });
+    apply({ type: 'place', pieceId, catalogId: item.id, placement }, inShelf);
     return pieceId;
   }
-  const draft: Draft = { setup, item: catalogItem, inRoom, items: () => roomItems(setup, catalog, state), place };
+  const draft: Draft = { setup, item: catalogItem, inRoom, items: () => roomItems(setup, catalog, state), place, levels: levelsOf };
 
   /** Fails unless the Design can take one more large furniture change. */
   function checkLargeChange() {
@@ -209,9 +229,14 @@ export function createSession({
       fail(`This Design already has ${maxLargeChanges} large furniture changes, the most it may have: decorate instead`);
     }
   }
-  /** Fails unless the Design can still add `item`: within the budget and the Piece count, and a large change if it is one. */
-  function checkRoomFor(item: CatalogItem, large: boolean) {
-    if (Object.keys(state.pieces).length >= MAX_PIECES) fail(`This Design has ${MAX_PIECES} Pieces, the most it may have`);
+  /**
+   * Fails unless the Design can still add `item`: within the budget and the Piece count (or, `inShelf`, the count of
+   * Pieces inside shelves), and a large change if it is one.
+   */
+  function checkRoomFor(item: CatalogItem, large: boolean, inShelf = false) {
+    const inShelves = shelved().size;
+    if (inShelf && inShelves >= MAX_SHELVED) fail(`This Design has ${MAX_SHELVED} things inside its shelves, the most it may have`);
+    if (!inShelf && Object.keys(state.pieces).length - inShelves >= MAX_PIECES) fail(`This Design has ${MAX_PIECES} Pieces, the most it may have`);
     if (large) checkLargeChange();
     const total = totalUsd() + item.priceEstimateUsd;
     if (brief.budgetUsd !== undefined && total >= brief.budgetUsd) {
@@ -317,6 +342,17 @@ export function createSession({
       'Decor, plants and table lamps resting on furniture tops from decor.tops: desks, dressers, nightstands and shelves.',
       z.object({ items: z.array(z.object({ catalog_id: z.string(), on_id: z.string() })) }),
       (input) => styleTops(draft, input),
+    ),
+    tool(
+      'stock_shelves',
+      'Books (the shortlist\'s books), plants and decor on the levels of bookcases and shelves: on each shelf, from the top down, each level takes '
+        + 'the next of its items that fits, in turn. A tall shelf\'s top stays bare. What goes inside a shelf counts toward neither '
+        + 'the Edit nor the Piece limits.',
+      z.object({ shelves: z.array(z.object({ shelf_id: z.string(), catalog_ids: z.array(z.string()) })) }),
+      (input) => stockShelves(draft, input),
+      // Not strict: one more strict tool takes the compiled grammar over what the API allows ("The compiled grammar is
+      // too large", 400 on every request). betaZodTool still checks its input against the schema.
+      false,
     ),
     tool(
       'search_catalog',
@@ -482,6 +518,14 @@ export function createSession({
     ),
   ];
 
+  /** The names of the Catalog shelves in the room with levels inside them and nothing on any. */
+  function bareShelves(): string[] {
+    const items = roomItems(setup, catalog, state);
+    const inShelves = [...shelved()].map((id) => items.find((each) => each.id === id)!);
+    return items.filter(({ id, category, corners }) => category === 'shelf' && levelsOf(id)?.some(({ clearance }) => Number.isFinite(clearance))
+      && !inShelves.some(({ placement: { position: [x, , z] } }) => pointInPolygon([x, z], corners))).map(({ name }) => name);
+  }
+
   /** What a decorated Design still lacks (spec §13.3, tuned for decorating). */
   function missing(): string[] {
     const placed = pieces();
@@ -492,6 +536,7 @@ export function createSession({
       !has('rug').length && 'a rug',
       !has('lamp').length && 'a lamp',
       !has('decor', 'plant').some(({ placement }) => placement.mount === 'surface') && 'decor on the bed or a furniture top',
+      ...bareShelves().map((name) => `books on the levels of ${name} (stock_shelves)`),
     ].filter((need): need is string => !!need);
     return [
       ...(counted() < editRange[0]

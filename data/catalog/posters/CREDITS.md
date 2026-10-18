@@ -188,6 +188,223 @@ generated for Mise where no free real poster exists. Type that the build adds wa
 - **Why we may use it:** Made by Dorothy Waugh as a National Park Service employee (NPS: "Not only was Waugh an NPS employee…"), so a work of the US government. It shows no logo.
 - **Credit:** National Park Service. Public domain
 
+### Chocolate and Tea (`poster-chocolate-and-tea`)
+
+- **Work:** Théophile-Alexandre Steinlen, Chocolate and Tea (girl, mother and black cat), 1895
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1946.194
+- **Image:** https://openaccess-cdn.clevelandart.org/1946.194/1946.194_print.jpg
+- **Why we may use it:** Published 1895. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Poppies on Black (`poster-poppies-on-black`)
+
+- **Work:** Alphonse Mucha, Poppies on Black (Documents Décoratifs pl. 38), 1901–02
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1969.237
+- **Image:** https://openaccess-cdn.clevelandart.org/1969.237/1969.237_print.jpg
+- **Why we may use it:** Published 1901–02. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Princess Ilsée (`poster-princess-ilsee`)
+
+- **Work:** Alphonse Mucha, Ilsée, Princess of Tripoli, 1897
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1977.1018
+- **Image:** https://openaccess-cdn.clevelandart.org/1977.1018/1977.1018_print.jpg
+- **Why we may use it:** Published 1897. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Palais de Glace (`poster-palais-de-glace`)
+
+- **Work:** Jules Chéret, Palais de Glace (ice skater), 1893
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1978.1054
+- **Image:** https://openaccess-cdn.clevelandart.org/1978.1054/1978.1054_print.jpg
+- **Why we may use it:** Published 1893. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Jane (`poster-jane`)
+
+- **Work:** Louis Rhead, Jane (woman before lilies), 1898
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/2014.126
+- **Image:** https://openaccess-cdn.clevelandart.org/2014.126/2014.126_print.jpg
+- **Why we may use it:** Published 1898. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### The Twins (`poster-the-twins`)
+
+- **Work:** Will H. Bradley, The Twins (The Chap-Book), 1894
+- **Source:** Library of Congress, https://www.loc.gov/item/2014647783/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:42200:42208u/full/full/0/default.jpg
+- **Why we may use it:** Published 1894, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Improvisation No. 30 (Cannons) (`poster-improvisation-30`)
+
+- **Work:** Vasily Kandinsky, Improvisation No. 30 (Cannons), painted 1913; reproduced in print 1913 and 1914
+- **Source:** The Art Institute of Chicago, https://www.artic.edu/artworks/8991
+- **Image:** https://www.artic.edu/iiif/2/b5bc6b66-9e6e-fe57-dcec-fc49e820e904/full/3000,/0/default.jpg
+- **Why we may use it:** Published painted 1913; reproduced in print 1913 and 1914. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0.
+
+### Tightrope Walker (`poster-tightrope-walker`)
+
+- **Work:** Paul Klee, Tightrope Walker, 1923 (editioned lithograph)
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1961.154
+- **Image:** https://openaccess-cdn.clevelandart.org/1961.154/1961.154_print.jpg
+- **Why we may use it:** Published 1923 (editioned lithograph). The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Rome Express (`poster-rome-express`)
+
+- **Work:** Roger Broders, Rome Express, 1921
+- **Source:** Library of Congress, https://www.loc.gov/item/2006675134/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:cph:3g10000:3g12000:3g12900:3g12901u/full/full/0/default.jpg
+- **Why we may use it:** Published 1921, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Norway in September (`poster-norway-in-september`)
+
+- **Work:** Freda Lingstrom, Norway in September, [192-]
+- **Source:** Library of Congress, https://www.loc.gov/item/2008679876/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:18900:18920u/full/full/0/default.jpg
+- **Why we may use it:** Published 192-, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Far West National Parks (`poster-far-west-parks`)
+
+- **Work:** unsigned (Newman-Monroe Co., printer), Visit Your Far West National Parks, [1920s]
+- **Source:** Library of Congress, https://www.loc.gov/item/2018646001/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ds:11600:11688u/full/full/0/default.jpg
+- **Why we may use it:** Published 1920s, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Old Wooden Church, Poland (`poster-old-wooden-church`)
+
+- **Work:** Stefan Norblin, Polish State Railways: Old Wooden Church, [ca. 1924]
+- **Source:** Library of Congress, https://www.loc.gov/item/00650659/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:cph:3g00000:3g07000:3g07100:3g07131u/full/full/0/default.jpg
+- **Why we may use it:** Published ca. 1924, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Evening on the Chikugo River (`poster-chikugo-river`)
+
+- **Work:** Yoshida Hiroshi, Evening on the Chikugo River, 1927
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1930.95
+- **Image:** https://openaccess-cdn.clevelandart.org/1930.95/1930.95_print.jpg
+- **Why we may use it:** Published 1927. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Plum Garden at Kameido (`poster-plum-garden`)
+
+- **Work:** Utagawa Hiroshige, Plum Garden at Kameido, 1857
+- **Source:** The Art Institute of Chicago, https://www.artic.edu/artworks/26577
+- **Image:** https://www.artic.edu/iiif/2/89a2332f-be15-8e05-bc79-778738fdc1ef/full/,4000/0/default.jpg
+- **Why we may use it:** Published 1857. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0.
+
+### Kirifuri Waterfall (`poster-kirifuri-waterfall`)
+
+- **Work:** Katsushika Hokusai, Kirifuri Waterfall, ca. 1832
+- **Source:** The Metropolitan Museum of Art, https://www.metmuseum.org/art/collection/search/56139
+- **Image:** https://images.metmuseum.org/CRDImages/as/original/DP141256.jpg
+- **Why we may use it:** Published ca. 1832. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).
+
+### Ghosts of the Taira (`poster-ghosts-of-the-taira`)
+
+- **Work:** Utagawa Kuniyoshi, Ghosts of the Taira at Daimotsu Bay, 1843–47
+- **Source:** The Metropolitan Museum of Art, https://www.metmuseum.org/art/collection/search/55743
+- **Image:** https://images.metmuseum.org/CRDImages/as/original/DP146823.jpg
+- **Why we may use it:** Published 1843–47. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).
+
+### Hydrangeas (`poster-hydrangeas`)
+
+- **Work:** Kamisaka Sekka, Hydrangeas (Momoyogusa), 1909/10
+- **Source:** The Art Institute of Chicago, https://www.artic.edu/artworks/127737
+- **Image:** https://www.artic.edu/iiif/2/3900f05d-0468-6132-ccab-451f98429b21/full/3000,/0/default.jpg
+- **Why we may use it:** Published 1909/10. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0.
+
+### Puppies (`poster-puppies`)
+
+- **Work:** Kamisaka Sekka, Puppies (Momoyogusa sketch), 1909 (preparatory drawing)
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1989.85.5
+- **Image:** https://openaccess-cdn.clevelandart.org/1989.85.5/1989.85.5_print.jpg
+- **Why we may use it:** Published 1909 (preparatory drawing). The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Dancing Fox (`poster-dancing-fox`)
+
+- **Work:** Ohara Koson, Dancing Fox, 1900–1910s
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/2016.546
+- **Image:** https://openaccess-cdn.clevelandart.org/2016.546/2016.546_print.jpg
+- **Why we may use it:** Published 1900–1910s. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Jellyfish (`poster-haeckel-jellyfish`)
+
+- **Work:** Ernst Haeckel (lithograph by Adolf Giltsch), Jellyfish (Discomedusae, Plate 8), 1904
+- **Source:** Library of Congress, https://www.loc.gov/item/2014645034/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ds:05300:05316u/full/full/0/default.jpg
+- **Why we may use it:** Published 1904, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Mushrooms (`poster-haeckel-mushrooms`)
+
+- **Work:** Ernst Haeckel / Adolf Giltsch, Mushrooms (Basimycetes, Plate 63), 1904
+- **Source:** Library of Congress, https://www.loc.gov/item/2015648945/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ds:07500:07595u/full/full/0/default.jpg
+- **Why we may use it:** Published 1904, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Pompon Rose (`poster-pompon-rose`)
+
+- **Work:** Pierre-Joseph Redouté (engraved by Langlois), Pompon Rose, *Les Roses*, 1817–24
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/1943.142
+- **Image:** https://openaccess-cdn.clevelandart.org/1943.142/1943.142_print.jpg
+- **Why we may use it:** Published *Les Roses*, 1817–24. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Turban Lily (`poster-turban-lily`)
+
+- **Work:** Redouté (engraved by de Gouy), Turban Lily, *Les Liliacées*, 1802–16
+- **Source:** The Cleveland Museum of Art, https://clevelandart.org/art/2020.164
+- **Image:** https://openaccess-cdn.clevelandart.org/2020.164/2020.164_print.jpg
+- **Why we may use it:** Published *Les Liliacées*, 1802–16. The Cleveland Museum of Art releases it as Open Access under CC0 (share_license_status: CC0).
+
+### Florida Jays (`poster-florida-jays`)
+
+- **Work:** Robert Havell after John James Audubon, Florida Jays (Plate 87), 1830
+- **Source:** The Art Institute of Chicago, https://www.artic.edu/artworks/18878
+- **Image:** https://www.artic.edu/iiif/2/bf44e53f-9df4-3246-8acd-3af23625396a/full/,3000/0/default.jpg
+- **Why we may use it:** Published 1830. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0.
+
+### Copernican Planisphere (`poster-copernican-planisphere`)
+
+- **Work:** Andreas Cellarius (published by Valk & Schenk), Copernican Planisphere, 1708 (Harmonia Macrocosmica)
+- **Source:** Library of Congress, https://www.loc.gov/item/2011589506/
+- **Image:** https://tile.loc.gov/image-services/iiif/service:gmd:gmd3m:g3190m:g3190m:gct00305:ca000006/full/4000,/0/default.jpg
+- **Why we may use it:** Published 1708 (Harmonia Macrocosmica), so public domain in the US. The Library of Congress places no restriction on it.
+
+### Map of the Moon (`poster-moon-map`)
+
+- **Work:** J. G. Doppelmayr (published by J. B. Homann, Nuremberg), Moon Map (Tabula Selenographica), early 1700s; bound in LoC's 1708 atlas
+- **Source:** Library of Congress, https://www.loc.gov/resource/g3190m.gct00305/?sp=23
+- **Image:** https://tile.loc.gov/image-services/iiif/service:gmd:gmd3m:g3190m:g3190m:gct00305:ca000023/full/4000,/0/default.jpg
+- **Why we may use it:** Published early 1700s; bound in LoC's 1708 atlas, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Visit the Zoo (`poster-visit-the-zoo`)
+
+- **Work:** WPA Federal Art Project, Pennsylvania (artist not named), Visit the Zoo (herons), [1936–41]
+- **Source:** Library of Congress, https://www.loc.gov/item/92500639/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ds:08200:08248u/full/full/0/default.jpg
+- **Why we may use it:** Published 1936–41, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Visit the Aquarium (`poster-visit-the-aquarium`)
+
+- **Work:** Hugh Stevenson, WPA Federal Art Project, Pennsylvania, Visit the Aquarium (jellyfish), [1936 or 1937]
+- **Source:** Library of Congress, https://www.loc.gov/item/98518437/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:cph:3f00000:3f05000:3f05600:3f05602u/full/full/0/default.jpg
+- **Why we may use it:** Published 1936 or 1937, so public domain in the US. The Library of Congress places no restriction on it.
+
+### Torus Colony Interior (`poster-torus-colony`)
+
+- **Work:** Don Davis, Torus Colony Interior, painted for NASA Ames Research Center, 1975
+- **Source:** NASA Ames Research Center, https://images.nasa.gov/details/ARC-1975-AC75-2621
+- **Image:** https://images-assets.nasa.gov/image/ARC-1975-AC75-2621/ARC-1975-AC75-2621~orig.jpg
+- **Why we may use it:** Painted for NASA Ames in 1975, a US government work: NASA Ames says its images are not copyrighted, and Don Davis states his NASA space-colony paintings are in the public domain.
+
+### Cylinder Colony at Eclipse (`poster-cylinder-colony`)
+
+- **Work:** Don Davis, Cylinder Colony at Eclipse, painted for NASA Ames Research Center, 1975
+- **Source:** NASA Ames Research Center, https://images.nasa.gov/details/ARC-1975-AC75-1920
+- **Image:** https://images-assets.nasa.gov/image/ARC-1975-AC75-1920/ARC-1975-AC75-1920~orig.jpg
+- **Why we may use it:** Painted for NASA Ames in 1975, a US government work: NASA Ames says its images are not copyrighted, and Don Davis states his NASA space-colony paintings are in the public domain.
+
+### Building the Torus (`poster-building-the-torus`)
+
+- **Work:** Don Davis, Building the Torus, painted for NASA Ames Research Center, 1975
+- **Source:** NASA Ames Research Center, https://images.nasa.gov/details/ARC-1975-AC75-1886
+- **Image:** https://images-assets.nasa.gov/image/ARC-1975-AC75-1886/ARC-1975-AC75-1886~orig.jpg
+- **Why we may use it:** Painted for NASA Ames in 1975, a US government work: NASA Ames says its images are not copyrighted, and Don Davis states his NASA space-colony paintings are in the public domain.
+
 ## Generated
 
 Generated with FLUX 3 Image on fal from the prompts in `scripts/posters.json`. They show no real characters, logos,

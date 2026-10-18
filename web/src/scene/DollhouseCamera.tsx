@@ -48,9 +48,10 @@ function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
  * that box, a 45° view is too close to frame the room, so its distance is capped instead.
  *
  * The wheel, a trackpad swipe and a pinch all zoom toward what is under the pointer, which stays
- * under it. Dragging moves the view across the room like a map, keeping the grabbed point under
- * the pointer. Shift+drag or a right-drag turns it around the room's center, wherever the zoom and
- * the drags have taken it.
+ * under it. Dragging turns the view around the room's center, wherever the zoom and the drags
+ * have taken it. Shift+drag or a right-drag moves it across the room like a map, keeping the
+ * grabbed point under the pointer. The press decides which: Shift pressed or let go mid-drag
+ * changes nothing.
  *
  * Nothing here sets the camera's azimuth from a position (setLookAt does), since that gives an
  * angle within ±180° while the camera's own adds up as it turns: smoothing from one to the other
@@ -182,20 +183,21 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       element.dataset.dollhouse = 'idle';
     };
 
-    // A drag moves the camera and its target together across the room, so the grabbed point, on
-    // the Scan, a Piece or the floor, stays under the pointer: the target goes as far as the point
-    // under the pointer would have, the other way. It holds that point's height, and from above
-    // the horizon there is nothing to grab.
+    // A move drag moves the camera and its target together across the room, so the grabbed point,
+    // on the Scan, a Piece or the floor, stays under the pointer: the target goes as far as the
+    // point under the pointer would have, the other way. It holds that point's height, and from
+    // above the horizon there is nothing to grab.
     //
     // A turn drag turns the camera and its target together about the vertical line through the
     // room's center, so the camera circles the room even when zoomed in on a corner of it. Tilting
     // stays about the target.
     //
-    // One pointer only: two fingers pinch and turn in camera-controls.
+    // One pointer only: two fingers pinch and move in camera-controls.
     const onPointerDown = (event: PointerEvent) => {
       // A second finger isn't primary, and hands the gesture over.
-      const turn = event.button === 2 || (event.button === 0 && event.shiftKey);
-      if (!event.isPrimary || !(turn || event.button === 0) || !cameraControls.enabled) return endDrag();
+      const move = event.button === 2 || (event.button === 0 && event.shiftKey);
+      const turn = event.button === 0 && !event.shiftKey;
+      if (!event.isPrimary || !(turn || move) || !cameraControls.enabled) return endDrag();
       const { clientX: x, clientY: y } = event;
       let grabbed = null;
       if (!turn) {
@@ -248,7 +250,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
     const onPointerCancel = (event: PointerEvent) => {
       if (event.pointerId === drag?.pointerId) endDrag();
     };
-    // The right button turns the view, so it opens no menu.
+    // The right button moves the view, so it opens no menu.
     const onContextMenu = (event: MouseEvent) => event.preventDefault();
 
     element.dataset.dollhouse = 'idle';
@@ -279,12 +281,13 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       maxPolarAngle={Math.PI * 0.45}
       smoothTime={SMOOTH_TIME}
       // The wheel and one-pointer drags are handled above; on a touch screen, two fingers still
-      // pinch toward the fingers here, and turn the view, since one finger now moves it.
+      // pinch toward the fingers here, and move the view across the room, since one finger now
+      // turns it. Screen pan keeps that move level: up the screen goes forward, not up.
       mouseButtons-wheel={CameraControlsImpl.ACTION.NONE}
       mouseButtons-left={CameraControlsImpl.ACTION.NONE}
       mouseButtons-right={CameraControlsImpl.ACTION.NONE}
       touches-one={CameraControlsImpl.ACTION.NONE}
-      touches-two={CameraControlsImpl.ACTION.TOUCH_DOLLY_ROTATE}
+      touches-two={CameraControlsImpl.ACTION.TOUCH_DOLLY_SCREEN_PAN}
       dollyToCursor
     />
   );

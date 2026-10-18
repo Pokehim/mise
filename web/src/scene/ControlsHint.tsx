@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { create } from 'zustand';
 import './controlsHint.css';
 
-const KEY = 'mise.controlsHint';
+/** v2 since drag turns and Shift+drag moves (#121): who saw the old hint sees the new one once. */
+const KEY = 'mise.controlsHint.v2';
 
 function stored() {
   try {
@@ -37,8 +38,8 @@ export function ControlsHint() {
   if (seenAtStart) return null;
   return (
     <p className="controls-hint" data-seen={seen || undefined} aria-hidden={seen || undefined}>
-      <span className="fine">Drag to move · Shift+drag to turn · Scroll to zoom</span>
-      <span className="coarse">Drag to move · Two fingers to turn · Pinch to zoom</span>
+      <span className="fine">Drag to turn · Shift+drag to move · Scroll to zoom</span>
+      <span className="coarse">Drag to turn · Two fingers to move · Pinch to zoom</span>
     </p>
   );
 }

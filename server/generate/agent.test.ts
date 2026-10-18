@@ -116,7 +116,7 @@ describe('generateDesigns', () => {
 
     const [{ body, headers }] = requests;
     expect(body).toMatchObject({ model: 'claude-opus-5-5', output_config: { effort: 'low' }, tool_choice: { type: 'auto' }, fallbacks: 'default' });
-    expect(body.tools!.filter((tool) => !('strict' in tool && tool.strict)).map((tool) => 'name' in tool && tool.name)).toEqual(['place_piece']);
+    expect(body.tools!.filter((tool) => !('strict' in tool && tool.strict)).map((tool) => 'name' in tool && tool.name)).toEqual(['stock_shelves', 'place_piece']);
     expect(headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
   });
 

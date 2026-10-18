@@ -167,6 +167,15 @@
 .view [data-dollhouse] { cursor: grab; }
 .view [data-dollhouse='moving'] { cursor: grabbing; }
 
+/*
+ * Over a Piece or an Original (spec §10.3, PieceNode, OriginalNode): pointer where a click selects
+ * it, move over the selected one, which a drag moves, and grabbing while it moves. A drag of the
+ * view keeps its own cursor, even over an item.
+ */
+.view [data-item='select']:not([data-dollhouse='moving']) { cursor: pointer; }
+.view [data-item='move']:not([data-dollhouse='moving']) { cursor: move; }
+.view [data-item='moving'] { cursor: grabbing; }
+
 /* The lock over a Kept Original (spec §11.1). It only marks the Original, so it never catches the pointer. */
 .kept-lock {
   display: grid;

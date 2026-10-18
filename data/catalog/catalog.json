@@ -15853,6 +15853,527 @@
       "attribution": "Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_B4_Har"
     },
     {
+      "id": "sf-skateboard",
+      "source": "sketchfab",
+      "title": "Skateboard Deck with Wheels, 31\"",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.225,
+        0.178,
+        0.8
+      ],
+      "model": "/data/catalog/models/sf-skateboard.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-skateboard.jpg",
+      "colors": [
+        "Black",
+        "Brown"
+      ],
+      "materials": [
+        "Wood",
+        "Metal"
+      ],
+      "styleTags": [
+        "Playful",
+        "Eclectic",
+        "Sporty"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://sketchfab.com/3d-models/45216c79e4a64f73a1df7739cb040300",
+      "attribution": "\"Skateboard\" by vikask (CC BY 4.0), Sketchfab, via Objaverse: 45216c79e4a64f73a1df7739cb040300"
+    },
+    {
+      "id": "sf-acoustic-guitar",
+      "source": "sketchfab",
+      "title": "Acoustic Guitar",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.403,
+        1,
+        0.096
+      ],
+      "model": "/data/catalog/models/sf-acoustic-guitar.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-acoustic-guitar.jpg",
+      "colors": [
+        "Brown",
+        "Natural"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Music",
+        "Bohemian",
+        "Rustic"
+      ],
+      "priceEstimateUsd": 180,
+      "url": "https://sketchfab.com/3d-models/cc738f7712ff4a1cb39704f634521444",
+      "attribution": "\"Acoustic Guitar (FREE)\" by Brandon Westlake (CC BY 4.0), Sketchfab, via Objaverse: cc738f7712ff4a1cb39704f634521444"
+    },
+    {
+      "id": "sf-ukulele",
+      "source": "sketchfab",
+      "title": "Ukulele",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.182,
+        0.55,
+        0.077
+      ],
+      "model": "/data/catalog/models/sf-ukulele.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-ukulele.jpg",
+      "colors": [
+        "Natural",
+        "Brown"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Music",
+        "Bohemian",
+        "Playful"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://sketchfab.com/3d-models/4281970c9fe94a778df26fa6f0c58a96",
+      "attribution": "\"Ukulele\" by Lassi Kaukonen (CC BY 4.0), Sketchfab, via Objaverse: 4281970c9fe94a778df26fa6f0c58a96"
+    },
+    {
+      "id": "sf-moon-globe",
+      "source": "sketchfab",
+      "title": "Moon Globe",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.195,
+        0.3,
+        0.18
+      ],
+      "model": "/data/catalog/models/sf-moon-globe.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-moon-globe.jpg",
+      "colors": [
+        "Gray",
+        "Black"
+      ],
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "Modern",
+        "Space",
+        "Study"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://sketchfab.com/3d-models/24f040d86b254a5cb683fcc85576dbf4",
+      "attribution": "\"Moon Globe\" by Henry VIII (CC BY 4.0), Sketchfab, via Objaverse: 24f040d86b254a5cb683fcc85576dbf4"
+    },
+    {
+      "id": "sf-teddy-bear",
+      "source": "sketchfab",
+      "title": "Teddy Bear, Honey",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.283,
+        0.35,
+        0.222
+      ],
+      "model": "/data/catalog/models/sf-teddy-bear.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-teddy-bear.jpg",
+      "colors": [
+        "Brown",
+        "Yellow"
+      ],
+      "materials": [
+        "Plush"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Playful"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://sketchfab.com/3d-models/1b99b250bced4666b709b6d911f1f152",
+      "attribution": "\"teddy bear\" by andree (CC BY 4.0), Sketchfab, via Objaverse: 1b99b250bced4666b709b6d911f1f152"
+    },
+    {
+      "id": "sf-teddy-gray",
+      "source": "sketchfab",
+      "title": "Plush Teddy Bear, Gray",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.34,
+        0.4,
+        0.401
+      ],
+      "model": "/data/catalog/models/sf-teddy-gray.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-teddy-gray.jpg",
+      "colors": [
+        "Gray"
+      ],
+      "materials": [
+        "Plush"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Playful"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://sketchfab.com/3d-models/1bc786bf78a34e7cad0b559fb7391a47",
+      "attribution": "\"Teddy\" by doepp (CC BY 4.0), Sketchfab, via Objaverse: 1bc786bf78a34e7cad0b559fb7391a47"
+    },
+    {
+      "id": "sf-surfboard-white",
+      "source": "sketchfab",
+      "title": "Surfboard, White and Blue",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.532,
+        1.8,
+        0.2
+      ],
+      "model": "/data/catalog/models/sf-surfboard-white.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-surfboard-white.jpg",
+      "colors": [
+        "White",
+        "Blue"
+      ],
+      "materials": [
+        "Fiberglass"
+      ],
+      "styleTags": [
+        "Coastal",
+        "Sporty"
+      ],
+      "priceEstimateUsd": 350,
+      "url": "https://sketchfab.com/3d-models/c61f4371e164490d8faf5bb6b7d07f8f",
+      "attribution": "\"Ciclom_Surfboard\" by CICLOM (CC BY 4.0), Sketchfab, via Objaverse: c61f4371e164490d8faf5bb6b7d07f8f"
+    },
+    {
+      "id": "sf-basketball",
+      "source": "sketchfab",
+      "title": "Basketball",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.24,
+        0.24,
+        0.24
+      ],
+      "model": "/data/catalog/models/sf-basketball.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-basketball.jpg",
+      "colors": [
+        "Orange",
+        "Black"
+      ],
+      "materials": [
+        "Rubber"
+      ],
+      "styleTags": [
+        "Sporty",
+        "Playful"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://sketchfab.com/3d-models/19f76a0df81747369acf46406b36afa6",
+      "attribution": "\"Basketball\" by Mateus Schwaab (CC BY 4.0), Sketchfab, via Objaverse: 19f76a0df81747369acf46406b36afa6"
+    },
+    {
+      "id": "sf-violin",
+      "source": "sketchfab",
+      "title": "Violin with Bow",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.211,
+        0.101,
+        0.6
+      ],
+      "model": "/data/catalog/models/sf-violin.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-violin.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Music",
+        "Classic",
+        "Traditional"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "https://sketchfab.com/3d-models/0162dea1b1044cd281c57af5e5fc2046",
+      "attribution": "\"Violin\" by Voldepreuss (CC BY 4.0), Sketchfab, via Objaverse: 0162dea1b1044cd281c57af5e5fc2046"
+    },
+    {
+      "id": "sf-old-books",
+      "source": "sketchfab",
+      "title": "Stack of Old Books",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.305,
+        0.176,
+        0.32
+      ],
+      "model": "/data/catalog/models/sf-old-books.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-old-books.jpg",
+      "colors": [
+        "Brown",
+        "Red"
+      ],
+      "materials": [
+        "Paper",
+        "Leather"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Library",
+        "Study"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://sketchfab.com/3d-models/f0f04ab6f7274cfd82d95fb345e19c51",
+      "attribution": "\"Books Low Poly\" by AzTiZ (CC BY 4.0), Sketchfab, via Objaverse: f0f04ab6f7274cfd82d95fb345e19c51"
+    },
+    {
+      "id": "sf-book-stack",
+      "source": "sketchfab",
+      "title": "Stack of Hardcover Books",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.242,
+        0.083,
+        0.3
+      ],
+      "model": "/data/catalog/models/sf-book-stack.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-book-stack.jpg",
+      "colors": [
+        "Red",
+        "Black",
+        "White"
+      ],
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "Library",
+        "Study",
+        "Modern"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://sketchfab.com/3d-models/06bb7196230c453d8bea4c1169a54cda",
+      "attribution": "\"Book Texturing Assignment\" by BirdWithRibbon (CC BY 4.0), Sketchfab, via Objaverse: 06bb7196230c453d8bea4c1169a54cda"
+    },
+    {
+      "id": "sf-gramophone",
+      "source": "sketchfab",
+      "title": "Antique Gramophone with Brass Horn",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.391,
+        0.6,
+        0.478
+      ],
+      "model": "/data/catalog/models/sf-gramophone.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-gramophone.jpg",
+      "colors": [
+        "Brown",
+        "Gold"
+      ],
+      "materials": [
+        "Wood",
+        "Brass"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Music",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "https://sketchfab.com/3d-models/ed8577a03a0148e68e9c1c9dcd59dacc",
+      "attribution": "\"Deutch gramophone.\" by Artieee (CC BY 4.0), Sketchfab, via Objaverse: ed8577a03a0148e68e9c1c9dcd59dacc"
+    },
+    {
+      "id": "sf-trophy",
+      "source": "sketchfab",
+      "title": "Gold Trophy Cup",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.154,
+        0.3,
+        0.204
+      ],
+      "model": "/data/catalog/models/sf-trophy.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-trophy.jpg",
+      "colors": [
+        "Gold"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Playful",
+        "Sporty"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://sketchfab.com/3d-models/afd10a0435184da58cb5f391c0499b14",
+      "attribution": "\"A cool little cup just for fun :)\" by Synty Studios (CC BY 4.0), Sketchfab, via Objaverse: afd10a0435184da58cb5f391c0499b14"
+    },
+    {
+      "id": "sf-headphones",
+      "source": "sketchfab",
+      "title": "Over-Ear Headphones, Black and Orange",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.099,
+        0.2,
+        0.139
+      ],
+      "model": "/data/catalog/models/sf-headphones.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-headphones.jpg",
+      "colors": [
+        "Black",
+        "Orange"
+      ],
+      "materials": [
+        "Plastic",
+        "Leather"
+      ],
+      "styleTags": [
+        "Music",
+        "Gaming",
+        "Electronics"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://sketchfab.com/3d-models/60d3cb0210bf4c2e9c802cf35122116f",
+      "attribution": "\"Headphones\" by LikeTea (CC BY 4.0), Sketchfab, via Objaverse: 60d3cb0210bf4c2e9c802cf35122116f"
+    },
+    {
+      "id": "sf-headphones-stand",
+      "source": "sketchfab",
+      "title": "Leather Headphones on Stand",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.3,
+        0.27,
+        0.309
+      ],
+      "model": "/data/catalog/models/sf-headphones-stand.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-headphones-stand.jpg",
+      "colors": [
+        "Black",
+        "Silver"
+      ],
+      "materials": [
+        "Leather",
+        "Metal"
+      ],
+      "styleTags": [
+        "Music",
+        "Electronics",
+        "Modern"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "https://sketchfab.com/3d-models/19612447cf644f559e5bb2341ec86153",
+      "attribution": "\"Headphone (Headset)\" by Hrofti (CC BY 4.0), Sketchfab, via Objaverse: 19612447cf644f559e5bb2341ec86153"
+    },
+    {
+      "id": "sf-fishbowl",
+      "source": "sketchfab",
+      "title": "Goldfish Bowl",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.315,
+        0.24,
+        0.299
+      ],
+      "model": "/data/catalog/models/sf-fishbowl.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-fishbowl.jpg",
+      "colors": [
+        "Blue",
+        "Orange"
+      ],
+      "materials": [
+        "Glass"
+      ],
+      "styleTags": [
+        "Playful",
+        "Coastal"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://sketchfab.com/3d-models/cb31e638a6dd42c48a29911706f96c78",
+      "attribution": "\"Fish Bowl - Household Props Challenge - Day 1\" by Pixel-bit (CC BY 4.0), Sketchfab, via Objaverse: cb31e638a6dd42c48a29911706f96c78"
+    },
+    {
+      "id": "sf-aquarium",
+      "source": "sketchfab",
+      "title": "Desk Aquarium with Plants",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.5,
+        0.446,
+        0.5
+      ],
+      "model": "/data/catalog/models/sf-aquarium.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-aquarium.jpg",
+      "colors": [
+        "Blue",
+        "Green"
+      ],
+      "materials": [
+        "Glass"
+      ],
+      "styleTags": [
+        "Coastal",
+        "Playful",
+        "Modern"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://sketchfab.com/3d-models/4a8030e3d71d4b699b5aa262ead736fd",
+      "attribution": "\"Aquarium\" by cyber_kerber (CC BY 4.0), Sketchfab, via Objaverse: 4a8030e3d71d4b699b5aa262ead736fd"
+    },
+    {
+      "id": "sf-hourglass",
+      "source": "sketchfab",
+      "title": "Wooden Hourglass Sand Timer",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.119,
+        0.2,
+        0.12
+      ],
+      "model": "/data/catalog/models/sf-hourglass.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-hourglass.jpg",
+      "colors": [
+        "Brown",
+        "Beige"
+      ],
+      "materials": [
+        "Wood",
+        "Glass"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Study",
+        "Library"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://sketchfab.com/3d-models/62aeeb7d51ae470c909c3b7fbdcdefb7",
+      "attribution": "\"Hourglass Sand Timer\" by Henry VIII (CC BY 4.0), Sketchfab, via Objaverse: 62aeeb7d51ae470c909c3b7fbdcdefb7"
+    },
+    {
       "id": "placeholder-chair",
       "source": "generated",
       "title": "Placeholder Desk Chair",

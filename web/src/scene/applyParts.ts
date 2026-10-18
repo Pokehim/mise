@@ -2,11 +2,12 @@
 // and one material per Part, so a Part can be recolored without the others.
 import { BufferAttribute, type Material, Mesh, type Object3D } from 'three';
 import { assignPart, partsFor } from '@shared/parts';
-import type { Category, Hex, PartParams, Vec3 } from '@shared/types';
+import type { Category, Finish, Hex, LibraryMaterial, PartParams, Vec3 } from '@shared/types';
 import { newTriangleInfo, triangleInfo } from '../setup/geometry/mesh';
 import { meshTriangles, toFrame } from '../setup/sceneTriangles';
 import { averageLuminance } from './materials/luminance';
 import { recolor } from './materials/recolor';
+import { applyFinish } from './materials/triplanar';
 import { forEachMaterial } from './objects';
 
 /** The userData of each Part's material. */
@@ -49,13 +50,23 @@ export function applyParts(object: Object3D, category: Category, size: Vec3, par
   }
 }
 
-/** Draws each Part of an object that applyParts split in its color, or as it was when it has none. */
-export function recolorParts(object: Object3D, partColors: Record<string, Hex>) {
+/**
+ * Draws each Part of an object that applyParts split in its color, or as it was when it has none.
+ * With `finishes` (an Original's), a Part's Finish is drawn instead of its color (spec §11.1).
+ */
+export function recolorParts(
+  object: Object3D, partColors: Record<string, Hex>,
+  finishes?: { partFinishes: Record<string, Finish>; library: ReadonlyMap<string, LibraryMaterial> | null },
+) {
   forEachMaterial(object, (material) => {
     const { partId, avgLuminance } = material.userData as Partial<PartMaterialData>;
-    if (partId !== undefined) recolor(material, partColors[partId] ?? null, avgLuminance!);
+    if (partId === undefined) return;
+    if (finishes) applyFinish(material, finishes.partFinishes[partId] ?? paintOf(partColors[partId]), avgLuminance!, finishes.library);
+    else recolor(material, partColors[partId] ?? null, avgLuminance!);
   });
 }
+
+const paintOf = (color?: Hex): Finish | undefined => (color ? { kind: 'paint', color } : undefined);
 
 /**
  * Gives each mesh under the object a new index, its triangles sorted by Part in their original

@@ -14,6 +14,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs, promisify } from 'node:util';
 import { gunzipSync } from 'node:zlib';
+import sharp from 'sharp';
 import type { Catalog, CatalogItem, Category, Hex, Vec3 } from '../shared/types';
 
 type AboText = { language_tag: string; value: string };
@@ -31,6 +32,7 @@ export interface AboListing {
   style?: AboText[];
   item_dimensions?: Partial<Record<'length' | 'width' | 'height', { normalized_value?: { value: number } }>>; // inches
   main_image_id?: string;
+  spin_id?: string;                  // a 360° image sequence
   '3dmodel_id'?: string;
 }
 
@@ -40,8 +42,8 @@ export interface AboModel { path: string; extent: Vec3 }
 /** A listing joined to its 3D model, when it has one. */
 export type Listing = AboListing & { model?: AboModel };
 
-/** One entry of scripts/catalog-picks.json. */
-export interface CatalogPick { id: string; category: Category; price?: number }
+/** One entry of scripts/catalog-picks.json. `price`, `colors` and `styleTags` override the defaults and ABO's data. */
+export interface CatalogPick { id: string; category: Category; price?: number; colors?: string[]; styleTags?: string[] }
 
 /** §8.3: ABO has no prices, so each Category has a default estimate. */
 const DEFAULT_PRICE_USD: Record<Category, number> = {
@@ -51,7 +53,7 @@ const DEFAULT_PRICE_USD: Record<Category, number> = {
 
 /** The ABO product types each Category is filed under. ABO has no nightstand or wardrobe type: narrow those with --q. */
 const PRODUCT_TYPES: Record<Category, string[]> = {
-  chair: ['CHAIR', 'STOOL_SEATING', 'BEAN_BAG_CHAIR'],
+  chair: ['CHAIR', 'STOOL_SEATING', 'BEAN_BAG_CHAIR', 'OTTOMAN', 'BENCH'],
   desk: ['DESK'],
   table: ['TABLE'],
   nightstand: ['TABLE', 'CABINET', 'DRESSER'],
@@ -60,12 +62,12 @@ const PRODUCT_TYPES: Record<Category, string[]> = {
   dresser: ['DRESSER'],
   wardrobe: ['CABINET'],
   shelf: ['SHELF'],
-  storage: ['CABINET', 'STORAGE_BOX', 'STORAGE_DRAWER', 'STORAGE_RACK'],
+  storage: ['CABINET', 'STORAGE_BOX', 'STORAGE_DRAWER', 'STORAGE_RACK', 'OTTOMAN', 'BENCH'],
   rug: ['RUG'],
   lamp: ['LAMP'],
-  wall_art: ['WALL_ART', 'PICTURE_FRAME'],
+  wall_art: ['WALL_ART', 'PICTURE_FRAME', 'WRITING_BOARD', 'CLOCK'],
   mirror: ['HOME_MIRROR'],
-  plant: ['PLANTER'],
+  plant: ['PLANTER', 'ARTIFICIAL_PLANT'],
   decor: ['VASE', 'CANDLE_HOLDER', 'CLOCK', 'PILLOW', 'HOME_FURNITURE_AND_DECOR', 'HOME'],
 };
 
@@ -112,6 +114,19 @@ function tidy(values: string[]): string[] {
   return [...byKey.values()];
 }
 
+/** The style words ABO titles use, a longer one before any it contains. About half of ABO's listings have no `style`. */
+const TITLE_STYLES = [
+  'Mid-Century Modern', 'Mid-Century', 'Modern', 'Contemporary', 'Classic', 'Casual', 'Farmhouse', 'Rustic', 'Vintage',
+  'Traditional', 'Transitional', 'Industrial', 'Scandinavian', 'Bohemian', 'Boho', 'Glam', 'Coastal', 'Moroccan', 'Retro',
+  'Minimalist', 'Art Deco', 'French Country',
+];
+const TITLE_STYLE = new RegExp(`\\b(${TITLE_STYLES.join('|')})\\b`, 'gi');
+
+/** "Rivet Mid Century Modern Desk" → ["Mid-Century Modern"]. */
+const titleStyles = (title: string) =>
+  (title.replace(/\bmid century\b/gi, 'Mid-Century').match(TITLE_STYLE) ?? [])
+    .map((word) => TITLE_STYLES.find((style) => style.toLowerCase() === word.toLowerCase())!);
+
 /** The Catalog entry for a pick: §8.1 step 5, with its size measured from the optimized GLB. */
 export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3): CatalogItem {
   if (!isCategory(pick.category)) throw new Error(`"${pick.category}" is not a Category`);
@@ -120,20 +135,22 @@ export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3
   // ABO copies a word of the brand name into `material`: "stone" in 929 Stone & Beam listings.
   const brandWords = new Set(brand?.toLowerCase().split(/\W+/));
   const materials = englishValues(listing.material).filter((material) => !brandWords.has(material.toLowerCase()));
+  const title = titleOf(listing);
+  const styles = tidy(englishValues(listing.style));
   return {
     id,
     source: 'abo',
-    title: titleOf(listing),
+    title,
     brand,
     category: pick.category,
     mount: pick.category === 'wall_art' || pick.category === 'mirror' ? 'wall' : 'floor',
     size,
     model: `/data/catalog/models/${id}.glb`,
     thumbnail: `/data/catalog/thumbs/${id}.jpg`,
-    colors: tidy(englishValues(listing.color)),
+    colors: pick.colors ?? tidy(englishValues(listing.color)),
     colorHex: listing.color_code?.[0]?.toLowerCase() as Hex | undefined,
     materials: tidy(materials),
-    styleTags: tidy(englishValues(listing.style)),
+    styleTags: pick.styleTags ?? (styles.length > 0 ? styles : tidy(titleStyles(title))),
     priceEstimateUsd: pick.price ?? DEFAULT_PRICE_USD[pick.category],
     url: `https://www.amazon.com/dp/${id}`,
     attribution: 'Amazon Berkeley Objects (CC BY 4.0), Amazon.com',
@@ -168,7 +185,7 @@ const MAX_GLB_BYTES = 2_000_000;     // §2.3: each Piece ≤ 2 MB
 
 const LISTING_KEYS: (keyof AboListing)[] = [
   'item_id', 'domain_name', 'item_name', 'brand', 'product_type', 'color', 'color_code', 'material', 'style',
-  'item_dimensions', 'main_image_id', '3dmodel_id',
+  'item_dimensions', 'main_image_id', 'spin_id', '3dmodel_id',
 ];
 
 /** The local copy of an ABO file, downloaded into scripts/.cache/ the first time. */
@@ -227,12 +244,27 @@ async function gltfTransform(...args: string[]): Promise<string> {
 
 const megabytes = (bytes: number) => (bytes / 1e6).toFixed(2);
 
+/**
+ * Writes a listing's thumbnail: ABO's 256 px copy of the main image or, for listings without one (such as every
+ * AmazonBasics bean bag), the first frame of its 360° spin, scaled to the same size.
+ */
+async function writeThumbnail(listing: Listing, imagePaths: Map<string, string>, file: string) {
+  const imagePath = imagePaths.get(listing.main_image_id ?? '');
+  if (imagePath?.endsWith('.jpg')) return copyFile(await cached(`images/small/${imagePath}`), file);
+  const spin = listing.spin_id;
+  if (!spin) throw new Error('ABO has neither a JPEG main image nor a 360° spin for it');
+  const frame = await cached(`spins/original/${spin.slice(0, 2)}/${spin}/${spin}_00.jpg`);   // path template: spins/README.md
+  await sharp(frame).resize(256, 256, { fit: 'inside' }).jpeg().toFile(file);
+}
+
 /** Builds a pick's GLB and thumbnail into data/catalog/ and returns its Catalog entry. */
 async function buildPick(pick: CatalogPick, listing: Listing | undefined, imagePaths: Map<string, string>) {
   if (!listing?.model) throw new Error('no ABO listing with a 3D model has this item_id');
   // A few ABO models are in the wrong units, such as B07HZ7TKSV: a loveseat 221 m wide.
   const { extent } = listing.model;
   if (Math.max(...extent) > 4) throw new Error(`${extent.join(' × ')} m is not a real furniture size`);
+  const thumbnail = join(CACHE, 'build', `${pick.id}.jpg`);
+  await writeThumbnail(listing, imagePaths, thumbnail);
   const original = await cached(`3dmodels/original/${listing.model.path}`);
   // Center first: `center` decodes meshopt and writes the file uncompressed, so it must not run after `optimize`.
   const centered = join(CACHE, 'build', `${pick.id}.centered.glb`);
@@ -244,10 +276,6 @@ async function buildPick(pick: CatalogPick, listing: Listing | undefined, imageP
   const bytes = (await stat(glb)).size;
   if (bytes > MAX_GLB_BYTES) throw new Error(`${megabytes(bytes)} MB is over the 2 MB budget`);
   const item = toCatalogItem(pick, listing, sizeFromInspect(await gltfTransform('inspect', glb, '--format', 'csv')));
-
-  const imagePath = imagePaths.get(listing.main_image_id ?? '');
-  if (!imagePath?.endsWith('.jpg')) throw new Error(`the main image ${listing.main_image_id} is not a JPEG in ABO`);
-  const thumbnail = await cached(`images/small/${imagePath}`);   // the 256 px copy
   await copyFile(glb, join(ROOT, item.model));
   await copyFile(thumbnail, join(ROOT, item.thumbnail));
   return { item, bytes };

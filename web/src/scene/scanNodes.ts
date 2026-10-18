@@ -5,6 +5,7 @@ import {
 import type { RoomSetup, Wall } from '@shared/types';
 import type { SplitGroup } from '../setup/geometry/classify';
 import { luminance } from '../setup/geometry/color';
+import { applyParts } from './applyParts';
 import { floorGeometry } from './floorPlan';
 import type { SplitNodeData, SplitScan } from './splitScan';
 
@@ -23,7 +24,8 @@ function withNodeData<T extends Object3D>(node: T, group: SplitGroup): T {
 /**
  * A plain room drawn from the Room Setup, for a Scan with no mesh file yet, such as the fixture.
  * Unlike a real Scan it has no baked lighting, so each node is one lit mesh. It returns what
- * splitScan returns, with the same userData, so the editor treats both the same way.
+ * splitScan returns, with the same userData, so the editor treats both the same way: each
+ * Original's mesh has its origin at the box's bottom-center and is split into its Parts by applyParts.
  */
 export function setupRoomNodes(setup: RoomSetup): SplitScan {
   const plan = floorGeometry(setup);
@@ -32,13 +34,16 @@ export function setupRoomNodes(setup: RoomSetup): SplitScan {
   ceiling.position.y = setup.ceilingHeight;
 
   const walls = Object.fromEntries(setup.walls.map((wall) => [wall.id, wallMesh(wall, setup)]));
-  const originals = Object.fromEntries(setup.originals.map(({ id, label, box }) => {
+  const originals = Object.fromEntries(setup.originals.map(({ id, label, category, box, partParams }) => {
     const [width, height, depth] = box.size;
     const mesh = new Mesh(new BoxGeometry(width, height, depth).translate(0, height / 2, 0), matte('#a8957c', DoubleSide));
     mesh.name = label;
     mesh.position.set(...box.position);
     mesh.rotation.y = box.rotationY;
-    return [id, withNodeData(mesh, { kind: 'original', id })];
+    // Before applyParts, which gives the mesh one material per Part in place of its own.
+    withNodeData(mesh, { kind: 'original', id });
+    applyParts(mesh, category, box.size, partParams);
+    return [id, mesh];
   }));
   // No mesh, so no Fill Capture to take Patches from.
   return { shell: withNodeData(new Group(), { kind: 'shell' }), floor, ceiling, walls, originals, patches: {} };

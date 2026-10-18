@@ -11,7 +11,8 @@ import { applyFinish, useMaterialLibrary } from './triplanar';
  * as the Design says (spec §10.4, §10.6, §11.1), keeping the room's real lighting. It finds splitScan's nodes under the "scan"
  * group by their SplitNodeData, so mount it right after ScanMesh, in the same Suspense boundary:
  * its layout effect then runs once the nodes are added, and after WallFader gives each wall its
- * own materials. A Scan without a mesh file draws a stand-in room, which has no such nodes.
+ * own materials. A Scan without a mesh file draws a stand-in room (setupRoomNodes), whose nodes
+ * carry the same SplitNodeData and whose Originals have Parts too, so they're drawn the same way.
  */
 export function ScanColors() {
   const scene = useThree((s) => s.scene);

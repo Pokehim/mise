@@ -6,6 +6,9 @@ main door. Every face takes its image by projection onto its surface's texture (
 shows what the Captures saw there. Materials are unlit (KHR_materials_unlit): the images carry the real light.
 
 Nodes: floor, ceiling, wall-north, wall-east, wall-south, wall-west (a wall's boxes and frames are in its node).
+Each wall is a grid of cells split at its Openings' edges, so the editor can sort it into its Wall and the Openings'
+contents (spec §9.4). Panes, the South door, and the frames also have far sides, so the Dollhouse view, which fades
+the wall nearest the camera, still shows them.
 The window, glass-wall, and door frames (common.GLAZING) have their own material: dark bronze anodized aluminum,
 its face beveled and grooved, with black gaskets at the glass, and darker sides.
 """
@@ -102,6 +105,8 @@ def frame_geometry(name):
             quad([P(u0, y0), P(u1, y0), P(u1, y0, dd), P(u0, y0, dd)], [(S0, 0), (S0, L), (S1, L), (S1, 0)])
             quad([P(u0, y0), P(u0, y0, dd), P(u0, y1, dd), P(u0, y1)], [(E0, 0), (E1, 0), (E1, 0.1), (E0, 0.1)])
             quad([P(u1, y0), P(u1, y1), P(u1, y1, dd), P(u1, y0, dd)], [(E0, 0), (E0, 0.1), (E1, 0.1), (E1, 0)])
+        # The back, facing out of the room, so the frame is solid from outside too (the Dollhouse view).
+        quad([P(u0, y0), P(u0, y1), P(u1, y1), P(u1, y0)], [(S0, 0), (S0, L), (S1, L), (S1, 0)])
     if not pts:
         return None
     return np.array(pts, np.float32), np.array(uvs, np.float32), np.array(tris, np.uint32)
@@ -112,6 +117,36 @@ def wall_frame(name):
     start, d = np.array([sx, 0, sz]), np.array([ex - sx, 0, ez - sz])
     length = np.linalg.norm(d)
     return start, d / length, np.array([nx, 0, nz], float), length
+
+
+CELL = 0.3   # m: the largest wall cell
+
+
+def cuts(edges):
+    """The edges, with more between them so no gap is over CELL."""
+    out = [edges[0]]
+    for a, b in zip(edges, edges[1:]):
+        if b - a < 1e-4:
+            continue
+        n = int(np.ceil((b - a) / CELL))
+        out += [a + (b - a) * k / n for k in range(1, n + 1)]
+    return out
+
+
+def openings():
+    """setup.json's Openings per wall, as (u0, u1, y0, y1) along lounge-v1's line (as the images are laid out)."""
+    with open(os.path.join(V2, 'setup.json')) as f:
+        setup = json.load(f)
+    names = {'wl_1': 'north', 'wl_2': 'east', 'wl_3': 'south', 'wl_4': 'west'}
+    out = {n: [] for n in names.values()}
+    for o in setup['openings']:
+        name = names[o['wallId']]
+        u0 = ENDS[name][0] + o['offset']
+        out[name].append((u0, u0 + o['width'], o['bottom'], o['bottom'] + o['height']))
+    return out
+
+
+OPENINGS = openings()
 
 
 def wall_geometry(name):
@@ -128,7 +163,17 @@ def wall_geometry(name):
         pts.extend([a, b, c, d])
         tris.extend([(base, base + 1, base + 2), (base, base + 2, base + 3)])
 
-    quad(P(ua, 0), P(ub, 0), P(ub, H), P(ua, H))                                    # the wall, facing in
+    # The wall, facing in, as a grid of cells no bigger than CELL and split at every Opening's edges: the editor
+    # sorts each triangle by its center (inside an Opening or not), so each cell must be wholly one or the other.
+    us, ys = {ua, ub}, {0.0, H}
+    for o in OPENINGS[name]:
+        us |= {o[0], o[1]}
+        ys |= {o[2], o[3]}
+    us = cuts(sorted(u for u in us if ua <= u <= ub))
+    ys = cuts(sorted(y for y in ys if 0 <= y <= H))
+    for u0, u1 in zip(us, us[1:]):
+        for y0, y1 in zip(ys, ys[1:]):
+            quad(P(u0, y0), P(u1, y0), P(u1, y1), P(u0, y1))
     for u0, u1, y0, y1, dd in BOXES[name]:
         u0, u1 = ua if u0 is None else u0, ub if u1 is None else u1
         quad(P(u0, y0, dd), P(u1, y0, dd), P(u1, y1, dd), P(u0, y1, dd))            # front
@@ -141,6 +186,34 @@ def wall_geometry(name):
     uv = np.stack([u / length, (H - pts[:, 1]) / H], axis=1)
     return pts, uv.astype(np.float32), np.array(tris, np.uint32)
 
+
+
+BACK = 0.002   # m outside the wall: the glass's and the door's far sides
+DOOR = (0.03, 0.95, 0.0, 2.28)   # the South door's leaf (textures.DOOR)
+
+
+def back_geometry(name):
+    """The far sides of what's in the wall's Openings, facing out of the room, for a view from outside (the
+    Dollhouse): each pane (translucent frosted glass) and the South door (its image, mirrored as seen from the
+    hallway). From inside the room they face away and aren't drawn."""
+    start, along, inward, length = wall_frame(name)
+    origin = start + inward * (SHIFT[name] - BACK)
+    up = np.array([0, 1, 0])
+    P = lambda u, y: origin + along * u + up * y
+
+    def quads(rects):
+        pts, tris = [], []
+        for u0, u1, y0, y1 in rects:
+            b = len(pts)
+            pts += [P(u0, y0), P(u0, y1), P(u1, y1), P(u1, y0)]   # counter-clockwise seen from outside
+            tris += [(b, b + 1, b + 2), (b, b + 2, b + 3)]
+        pts = np.array(pts, np.float32).reshape(-1, 3)
+        uv = np.stack([((pts - start) @ along) / length, (H - pts[:, 1]) / H], axis=1).astype(np.float32)
+        return pts, uv, np.array(tris, np.uint32).reshape(-1, 3)
+
+    glass = quads(GLAZING[name]['panes']) if GLAZING[name]['panes'] else None
+    door = quads([DOOR]) if name == 'south' else None
+    return glass, door
 
 
 def flat(name):
@@ -180,6 +253,20 @@ class Builder:
 
     def material(self, name):
         if name in self.mats:
+            return self.mats[name]
+        if name.endswith('-door-back'):   # the wall's image, under a name of its own
+            wall = self.g.materials[self.material(name.split('-')[0])]
+            self.g.materials.append(gl.Material(name=name, doubleSided=False, pbrMetallicRoughness=wall.pbrMetallicRoughness,
+                                                extensions={'KHR_materials_unlit': {}}))
+            self.mats[name] = len(self.g.materials) - 1
+            return self.mats[name]
+        if name == 'glass-back':   # frosted glass seen from outside: light grey, partly see-through
+            self.g.materials.append(gl.Material(
+                name=name, doubleSided=False, alphaMode='BLEND',
+                pbrMetallicRoughness=gl.PbrMetallicRoughness(baseColorFactor=[0.70, 0.72, 0.73, 0.45],
+                                                             metallicFactor=0, roughnessFactor=1),
+                extensions={'KHR_materials_unlit': {}}))
+            self.mats[name] = len(self.g.materials) - 1
             return self.mats[name]
         im = Image.open(os.path.join(TEX, f'{name}.png')).convert('RGB')
         buf = io.BytesIO()
@@ -221,7 +308,12 @@ def main():
         b.node(name, (*flat(name), name))
     for name in WALLS:
         frames = frame_geometry(name)
-        b.node(f'wall-{name}', (*wall_geometry(name), name), *([(*frames, 'frame')] if frames else []))
+        glass, door = back_geometry(name)
+        prims = [(*wall_geometry(name), name)]
+        prims += [(*frames, 'frame')] if frames else []
+        prims += [(*door, f'{name}-door-back')] if door else []
+        prims += [(*glass, 'glass-back')] if glass else []
+        b.node(f'wall-{name}', *prims)
     path = os.path.join(V2, 'empty-room.glb')
     b.save(path)
     print('wrote', path, f'{os.path.getsize(path) / 1e6:.1f} MB')

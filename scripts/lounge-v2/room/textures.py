@@ -1,16 +1,15 @@
 """The Empty Room's images (#77 part 2, spec §3): one per wall, the floor, and the ceiling, at 2.5 mm per texel.
 
 Input: ortho.py's views of each source (scripts/.cache/lounge-v2/ortho/<source>/<view>.png). For each surface:
-1. The base is the sharpest source there (KIRI's scene for the walls and the floor; GLB_1 for the ceiling, where
-   KIRI has a hole). Its holes are filled from the other sources, color-matched to it.
+1. The base: the Main Capture (GLB_1) for the East and West walls and the ceiling, as lounge-v1 shows them;
+   KIRI's scene for the North and South walls (sharpest there) and the floor, color-matched to the Main Capture.
+   Its holes are filled from the other sources, color-matched to it.
 2. Originals, clutter, and furniture shadows are masked out and filled by extending the pattern: fine detail
    (the image over its local mean) is copied along the row from clean pixels nearby, which carries horizontal
    bands like the baseboard; plain paint tiles one clean patch's detail. The light (the local mean) is a smooth
-   fill from around the hole; behind the whiteboard it's the West wall's light at the same z (the ceiling lights
-   are symmetric), corrected smoothly to the light around the hole. The floor under the tables is the clean half
-   mirrored about x = 0 (mirror_floor).
-3. The East wall is repainted whole as one clean coat (repaint_east), and the South door's leaf is rebuilt smooth
-   from its clean middle (clean_door).
+   fill from around the hole. The floor under the tables is the clean half mirrored about x = 0 (mirror_floor).
+3. Behind the whiteboard, the East wall is the West wall at the same z (fill_east), and the South door's leaf is
+   rebuilt smooth from its clean middle (clean_door).
 4. Glass is painted as an opaque frosted pane with a black gasket around it (common.GLAZING; glb.py builds the
    frames).
 
@@ -31,8 +30,11 @@ OUT = os.path.join(CACHE, 'tex')
 SIZE = {'north': (X1 - X0, H), 'south': (X1 - X0, H), 'east': (Z1 - Z0, H), 'west': (Z1 - Z0, H),
         'floor': (X1 - X0, Z1 - Z0), 'ceiling': (X1 - X0, Z1 - Z0)}
 # The East wall's base is the Main Capture: along it, the Captures drift up to 10-15 cm apart (its outlets), and
-# Originals are fitted to the Main Capture. Every base is color-matched to KIRI, so the surfaces agree.
-BASE = {'north': 'KIRI', 'east': 'GLB_1', 'south': 'KIRI', 'west': 'KIRI', 'floor': 'KIRI', 'ceiling': 'GLB_1'}
+# Originals are fitted to the Main Capture.
+BASE = {'north': 'KIRI', 'east': 'GLB_1', 'south': 'KIRI', 'west': 'GLB_1', 'floor': 'KIRI', 'ceiling': 'GLB_1'}
+# The walls keep the Main Capture's look: its paint, and the cones of light each ceiling light throws down the wall.
+# The North and South walls (from KIRI) are color-matched to it.
+REF = 'GLB_1'
 FILL = ['GLB_1', 'GLB_2', 'KIRI', 'GLB_3']
 
 # Wall views: u runs along the wall from setup.json's wall start (so an Opening's offset is u), v down from the
@@ -40,10 +42,13 @@ FILL = ['GLB_1', 'GLB_2', 'KIRI', 'GLB_3']
 TABLE_Z = [(-2.0, -1.14), (-0.55, 0.26), (1.37, 2.35)]   # layout.json's tables along the West wall
 MASKS = {
     # The whiteboard, its tray, and the tray's shadow (to 0.61 m, 0.53 m at the North end); the corner strip.
-    'east': [(0.0, 6.15, 0.59, 2.40), (0.0, 1.3, 0.53, 0.62), (0.0, 0.10, 0.072, 2.431)],
-    # Table ends and chair backs, and their shadows; the main door frame's old edge and the wall above it.
-    'west': [(Z1 - z1 - 0.40, Z1 - z0 + 0.40, 0.0, 0.97) for z0, z1 in TABLE_Z]
-            + [(1.82, 1.97, 0.072, 2.431), (0.0, 1.97, 2.25, 2.431)],
+    # (to 6.24 m along: the board's edge left marks; the sign and sensor there are put back, FIXTURES)
+    'east': [(0.0, 6.24, 0.59, 2.40), (0.0, 1.3, 0.53, 0.62), (0.0, 0.10, 0.072, 2.431), (6.15, 6.45, 0.70, 0.95)],
+    # Table ends, chair backs, and their shadows (one band from the South table to past the North one's chair);
+    # the main door frame's old edge and the wall above it; and the North end's last 27 cm, which the Main
+    # Capture made a different surface.
+    'west': [(Z1 - TABLE_Z[2][1] - 0.40, 6.27, 0.0, 1.0),
+             (1.82, 1.97, 0.072, 2.431), (0.0, 1.97, 2.25, 2.431), (6.93, Z1 - Z0, 0.072, 2.431)],
     'north': [], 'south': [], 'ceiling': [],
 }
 # The floor under and around the tables and chairs, shadows included: (x0, x1, z0, z1).
@@ -218,9 +223,17 @@ def row_fill(D, hole, source):
 
 def build(view, guide_fn=None):
     img, known = load(BASE[view], view)
-    if BASE[view] != 'KIRI':
-        k, kk = load('KIRI', view)
-        img = match_color(img, known, k, kk)
+    if BASE[view] != REF and view != 'floor':
+        r, rk = load(REF, view)
+        img = match_color(img, known, r, rk)
+    if view in ('east', 'west'):
+        # The Main Capture's walls have black drips near the ceiling (bad geometry): holes, filled from the others.
+        lum = img.mean(axis=2, keepdims=True)
+        loc, _ = nc(lum, known, 40)
+        rows = H - (np.arange(img.shape[0]) + 0.5) * P
+        drip = known & (lum[..., 0] < 0.62 * loc[..., 0]) & (rows > BASEBOARD + 0.15)[:, None]
+        drip &= ~rect_mask(img.shape, FIXTURES.get(view, []), view)
+        known &= ~(cv2.dilate(drip.astype(np.uint8), np.ones((15, 15))) > 0)
     hole0 = ~known
     # 1. Holes from the other sources, color-matched to the base.
     for src in FILL:
@@ -297,7 +310,9 @@ def build(view, guide_fn=None):
     if view == 'south':
         out = clean_door(out)
     if view == 'east':
-        out = repaint_east(out, out)   # after clean_bottom, so its light has a clean bottom
+        out = fill_east(out, mask & (H - (np.arange(out.shape[0]) + 0.5) * P > BASEBOARD)[:, None])
+    if view == 'west':
+        out = restore_fixtures(out, img, 'west')
     # 3. Glass and frame bars.
     g = GLASS.get(view, {})
     if g.get('glass'):
@@ -307,49 +322,85 @@ def build(view, guide_fn=None):
     return save(view, out, glass, hole)
 
 
-# The East wall's fixtures, kept as the Main Capture shows them: three outlet plates, the sign, and a sensor.
-EAST_FIXTURES = [(1.73, 1.825, 0.39, 0.53), (1.995, 2.135, 0.385, 0.52), (5.72, 5.825, 0.40, 0.535),
-                 (6.14, 6.325, 1.44, 1.57), (6.265, 6.35, 2.04, 2.18)]
+# Dark fixtures that aren't blemishes: the East wall's sign and sensor.
+FIXTURES = {'east': [(6.215, 6.325, 1.44, 1.57), (6.265, 6.35, 2.04, 2.18)],
+            # The West wall's two outlets behind the tables: put back after the fill (restore_fixtures).
+            'west': [(2.655, 2.745, 0.375, 0.51), (5.995, 6.085, 0.375, 0.51)]}
+# The whiteboard tray's end cap, past the board: removed, and kept out of the copy of the wall beside it.
+TRAY_END = (6.15, 6.45, 0.70, 0.95)
 
 
-def repaint_east(img, out):
-    """The whole East wall as one clean coat of paint (behind the whiteboard it was a fill, elsewhere scuffed):
-    its light is the wall's own falloff from floor to ceiling (its clean strip by the South end) times its falloff
-    along the wall (below the whiteboard), and on top, the fine texture of the paint (EXEMPLAR), tiled. The
-    fixtures stay as they were."""
-    nr, nc = img.shape[:2]
-    rows = H - (np.arange(nr) + 0.5) * P
-    cols = (np.arange(nc) + 0.5) * P
-    fix = rect_mask(img.shape, EAST_FIXTURES, 'east')
-    lum = img.mean(axis=2)
-    # Floor to ceiling: the strip at u 6.40-7.05, without the sign and the sensor.
-    strip = np.zeros(img.shape[:2], bool)
-    strip[:, int(6.40 / P):int(7.05 / P)] = True
-    strip &= ~cv2.dilate(fix.astype(np.uint8), np.ones((15, 15))).astype(bool)
-    k = strip.astype(np.float32)[..., None]
-    b = (img * k).sum(axis=1) / np.maximum(k.sum(axis=1), 1)
-    b = cv2.GaussianBlur(b[:, None, :], (0, 0), sigmaX=1e-3, sigmaY=32)[:, 0, :]
-    # Along the wall: the band 0.25-0.55 m up, without the outlets, relative to the strip.
-    band = np.zeros(img.shape[:2], bool)
-    band[int((H - 0.55) / P):int((H - 0.25) / P)] = True
-    band &= ~cv2.dilate(fix.astype(np.uint8), np.ones((15, 15))).astype(bool)
-    kb = band.astype(np.float32)
-    a = (lum * kb).sum(axis=0) / np.maximum(kb.sum(axis=0), 1)
-    a = cv2.GaussianBlur(a[None, :], (0, 0), sigmaX=160, sigmaY=1e-3)[0]
-    a = a / a[int(6.40 / P):int(7.05 / P)].mean()
-    light = b[:, None, :] * a[None, :, None]
-    # The paint's fine texture: the exemplar's detail finer than 1.5 cm, tiled (mirrored, so seamless).
-    u0, u1, y0, y1 = EXEMPLAR['east']
-    ex = img[int((H - y1) / P):int((H - y0) / P), int(u0 / P):int(u1 / P)]
-    detail = ex / np.maximum(cv2.GaussianBlur(ex, (0, 0), 6), 1e-3)
-    detail = 1 + 0.7 * (detail - 1)
-    paint = np.clip(light * detail[pingpong(np.arange(nr), len(detail))][:, pingpong(np.arange(nc), detail.shape[1])], 0, 1)
-    # Within each fixture's box, only what differs from the paint (the fixture itself), so no old wall shows.
-    differs = np.abs(out.mean(axis=2) - paint.mean(axis=2)) > 0.12 * paint.mean(axis=2)
-    own = cv2.dilate((fix & differs).astype(np.uint8), np.ones((5, 5))).astype(bool) & fix
+def restore_fixtures(out, img, view):
+    """A wall's fixtures (FIXTURES) back from the base image, only where they differ from the filled wall."""
+    box = rect_mask(out.shape, FIXTURES[view], view)
+    differs = np.abs(img.mean(axis=2) - out.mean(axis=2)) > 0.12 * out.mean(axis=2)
+    own = cv2.dilate((box & differs).astype(np.uint8), np.ones((5, 5))).astype(bool) & box
     keep = cv2.GaussianBlur(own.astype(np.float32), (0, 0), 1.2)[..., None]
-    above = (rows > BASEBOARD)[:, None, None]
-    return np.where(above, keep * out + (1 - keep) * paint, out)
+    return keep * img + (1 - keep) * out
+
+
+def fill_east(out, hole):
+    """Behind the whiteboard, the East wall as the West wall shows it at the same z: the ceiling lights are in two
+    rows at the same z, so the cones of light fall in the same places on both walls. The West wall's main door is
+    across from the East wall's last metre, so there it is the East wall's own cone of light by the South end
+    (its sign and sensor smoothed away), mirrored about the cone's middle and stretched to meet the West copy; the
+    two blend in the dim gap between cones. The West copy is matched to the East wall around the whiteboard by a
+    smooth gain, and the sign and sensor are put back."""
+    west = np.asarray(Image.open(os.path.join(OUT, 'west.png')).convert('RGB')).astype(np.float32) / 255
+    n_rows, n_cols = out.shape[:2]
+    u = (np.arange(n_cols) + 0.5) * P
+    col = lambda v: np.clip(np.round(v / P - 0.5).astype(int), 0, n_cols - 1)
+    src_west = west[:, np.clip(np.round((Z1 - Z0 - u) / P - 0.5).astype(int), 0, west.shape[1] - 1)]
+    # The paint's fine texture, tiled, for anything smoothed.
+    e0, e1, f0, f1 = EXEMPLAR['east']
+    ex = out[int((H - f1) / P):int((H - f0) / P), int(e0 / P):int(e1 / P)]
+    detail = ex / np.maximum(cv2.GaussianBlur(ex, (0, 0), 6), 1e-3)
+    tiled = detail[pingpong(np.arange(n_rows), len(detail))][:, pingpong(np.arange(n_cols), detail.shape[1])]
+    # The East wall itself past the whiteboard, with its sign, sensor, and the tray's end cap smoothed away.
+    original = out.copy()
+    own = out.copy()
+    smoothed = cv2.dilate(rect_mask(out.shape, FIXTURES['east'] + [TRAY_END], 'east').astype(np.uint8), np.ones((9, 9))) > 0
+    mean, _ = nc(own, ~smoothed & ~hole, 16)
+    own[smoothed] = (mean * tiled)[smoothed]
+    # Mirrored about the cone's middle (6.25 m) and stretched, so its clean part (6.26-7.03 m) reaches back to
+    # where the West copy ends; right of the board (the tray's end cap), the wall itself.
+    edge = 6.24
+    src_own = own[:, col(np.where(u <= edge, 6.26 + (edge - u) * (0.77 / 1.19), u))]
+    # The West copy's gain, from the East wall where the copy is the real West wall: up to 5 m along (before the
+    # West door), outside the West wall's own fills.
+    west_fill = cv2.dilate(rect_mask(out.shape, MASKS['west'], 'west')[:, ::-1].astype(np.uint8), np.ones((49, 49))) > 0
+    good = ~hole & ~west_fill & (u < 5.0)[None, :]
+    a, _ = nc(out, good, 32)
+    b, _ = nc(src_west, good, 32)
+    small = lambda x: cv2.resize(x, (n_cols // 8, n_rows // 8), interpolation=cv2.INTER_AREA)
+    g = membrane(small(a / np.maximum(b, 1e-3)), small(good.astype(np.float32)) > 0.5)
+    west_copy = src_west * cv2.GaussianBlur(cv2.resize(g, (n_cols, n_rows)), (0, 0), 8)
+    w = np.clip((u - 4.85) / 0.40, 0, 1)
+    w = (w * w * (3 - 2 * w))[None, :, None]
+    fill = np.clip((1 - w) * west_copy + w * src_own, 0, 1)
+    # Where the West wall was itself a fill (behind the tables, below 0.97 m), its copy isn't the wall: there,
+    # a smooth light from the copy above and the East wall's own band below, times the paint's fine texture.
+    bad = hole & west_fill & (w[0, :, 0] < 0.99)[None, :]
+    values = np.where(hole[..., None], fill, out)
+    mean, _ = nc(values, ~bad, 16)
+    light = membrane(mean, ~bad)
+    soft_bad = cv2.GaussianBlur(bad.astype(np.float32), (0, 0), 24)[..., None]
+    fill = np.clip(soft_bad * light * tiled + (1 - soft_bad) * fill, 0, 1)
+    # Into the wall below over 4 cm: the fill's light matched to it at the edge first (a smooth gain along the row).
+    r_edge = int((H - 0.59) / P)
+    ratio = out[r_edge + 2:r_edge + 10].mean(axis=0) / np.maximum(fill[r_edge - 10:r_edge - 2].mean(axis=0), 1e-3)
+    ratio = cv2.GaussianBlur(ratio[None], (0, 0), sigmaX=40, sigmaY=1e-3)[0]
+    rows = H - (np.arange(n_rows) + 0.5) * P
+    fade = np.clip((0.75 - rows) / 0.16, 0, 1)[:, None, None]    # 1 at 0.59 m, 0 at 0.75 m
+    fill = np.clip(fill * (1 + fade * (ratio[None] - 1)), 0, 1)
+    soft = cv2.GaussianBlur(hole.astype(np.float32), (0, 0), 6)[..., None]
+    result = soft * fill + (1 - soft) * out
+    # The sign and sensor: only what differs from the wall, so none of the old wall around them comes back.
+    box = rect_mask(out.shape, FIXTURES['east'], 'east')
+    differs = np.abs(original.mean(axis=2) - result.mean(axis=2)) > 0.12 * result.mean(axis=2)
+    own_px = cv2.dilate((box & differs).astype(np.uint8), np.ones((5, 5))).astype(bool) & box
+    keep = cv2.GaussianBlur(own_px.astype(np.float32), (0, 0), 1.2)[..., None]
+    return keep * original + (1 - keep) * result
 
 
 # The South door's leaf (u0, u1, y0, y1); its clean, sharp middle (no door closer, hinge-side smear, glare, or
@@ -570,24 +621,10 @@ def wall_light(view):
     return np.where(band[..., None], membrane(M, good, band), membrane(M, good, ~band))
 
 
-def east_guide(M, good):
-    """The East wall's light behind the whiteboard: its own light from floor to ceiling, as its clean strip by the
-    South end shows it (it darkens a lot toward the ceiling), the same all along. The fill's smooth correction then
-    brings in how the light changes along the wall from below the whiteboard."""
-    c0, c1 = int(6.25 / P), int(7.10 / P)
-    k = good[:, c0:c1].astype(np.float32)[..., None]
-    profile = (M[:, c0:c1] * k).sum(axis=1) / np.maximum(k.sum(axis=1), 1)
-    profile = cv2.GaussianBlur(profile[:, None, :], (0, 0), sigmaX=1e-3, sigmaY=20)[:, 0, :]
-    return np.broadcast_to(profile[:, None, :], M.shape).copy()
-
-
 def main():
     views = sys.argv[1:] or ['north', 'south', 'west', 'east', 'floor', 'ceiling']
     for view in views:
-        if view == 'east':
-            build(view, east_guide)
-        else:
-            build(view)
+        build(view)
 
 
 if __name__ == '__main__':

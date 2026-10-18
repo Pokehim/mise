@@ -74,9 +74,8 @@ async function loadMesh(def, manifest) {
   const planes = shot.cut ? [new THREE.Plane(new THREE.Vector3(0, -1, 0), CUT)] : [];
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
-    let wall = null;
-    for (let p = o; p; p = p.parent) if (p.userData?.wall || /^wall-/.test(p.name)) wall = p.userData?.wall ?? p.name.slice(5);
-    if (wall && hidden.includes(wall.split('-')[0])) { o.visible = false; return; }
+    // The editor fades the near wall's own surface in the Dollhouse view; its windows, door, and frames stay.
+    if (hidden.includes(o.material?.name)) { o.visible = false; return; }
     const s = o.material;
     const m = s.isMeshBasicMaterial ? s : new THREE.MeshBasicMaterial({ map: s.map ?? null, side: s.side });
     if (!s.isMeshBasicMaterial && s.color) m.color.copy(s.color);

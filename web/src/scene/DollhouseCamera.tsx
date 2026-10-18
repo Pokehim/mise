@@ -13,7 +13,7 @@ import type { Shot } from './shots';
 /** How many times closer one mouse-wheel notch takes the camera: 5 go from the whole room to one chair. */
 const ZOOM_PER_NOTCH = 1.8;
 /** How far a notch scrolls in Chrome, Edge and Firefox on Windows and Linux, which report pixels. */
-const NOTCH_PX = 100;
+export const NOTCH_PX = 100;
 /** Safari and Chrome on a Mac report a notch as a multiple of this, where a trackpad's are rarely one. */
 const MAC_NOTCH_PX = 4.000244140625;
 /** Firefox reports a notch as 3 lines. */
@@ -34,7 +34,7 @@ const GLIDE_WINDOW_MS = 80;
 const UP = new Vector3(0, 1, 0);
 
 /** How far the wheel event scrolled, in pixels, where a mouse-wheel notch is NOTCH_PX on every platform. */
-function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
+export function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
   if (deltaMode === WheelEvent.DOM_DELTA_LINE) return deltaY * LINE_PX;
   if (deltaMode === WheelEvent.DOM_DELTA_PAGE) return deltaY * NOTCH_PX * 3;
   if (deltaY !== 0 && deltaY % MAC_NOTCH_PX === 0) return (deltaY / MAC_NOTCH_PX) * NOTCH_PX;

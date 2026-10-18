@@ -139,7 +139,7 @@
 /* ───────────── The 3D view ───────────── */
 
 /* The desk under the sheets. Nothing in the view is filtered or textured: the room is the real one. */
-.view { grid-area: view; position: relative; min-height: 0; background: var(--desk); }
+.view { grid-area: view; position: relative; min-height: 0; background: var(--desk); container-type: inline-size; }
 .view .stats { position: absolute !important; }   /* stats.js pins itself to the window */
 .view-loading {
   position: absolute;

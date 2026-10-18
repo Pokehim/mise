@@ -16,8 +16,29 @@
   transition: opacity var(--press) ease-out;
 }
 .controls-hint[data-seen] { opacity: 0; }
-.controls-hint .coarse { display: none; }
+.controls-hint .coarse, .walk-hint .coarse { display: none; }
 @media (pointer: coarse) {
-  .controls-hint .fine { display: none; }
-  .controls-hint .coarse { display: inline; }
+  .controls-hint .fine, .walk-hint .fine { display: none; }
+  .controls-hint .coarse, .walk-hint .coarse { display: inline; }
+}
+
+/* The Walk view's controls (WalkHint): quieter, centered at the bottom, level with the Sketch lines switch. */
+.walk-hint {
+  position: absolute;
+  bottom: calc(var(--s-3) + 5px);
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--paper-raised) 72%, transparent);
+  color: var(--graphite);
+  font: 400 11px/1.4 var(--font-sans);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+/* Too narrow to sit beside the Sketch lines switch. */
+@container (max-width: 640px) {
+  .walk-hint { display: none; }
 }

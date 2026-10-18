@@ -8,6 +8,7 @@ import { AlignPanel } from './AlignPanel';
 import { useEditor } from '../state/store';
 import { CATALOG_ITEM_TYPE } from '../ui/CatalogPanel';
 import { CastShadows } from './CastShadows';
+import { WalkHint } from './ControlsHint';
 import { DollhouseCamera } from './DollhouseCamera';
 import { FitHighlights } from './FitHighlights';
 import { FILL_LIGHT, RoomLighting } from './Lighting';
@@ -132,6 +133,8 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
       {debug && splat && <AlignPanel />}
       {!scanDrawn && <p className="view-loading" role="status">Loading the Scan…</p>}
       <SketchLinesToggle />
+      {/* Not in a ?shot= view, which is a picture of the room. */}
+      {view === 'walk' && !shot && scanDrawn && <WalkHint />}
     </div>
   );
 }

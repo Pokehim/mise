@@ -82,6 +82,43 @@ export function overlapLength([a0, a1]: [number, number], [b0, b1]: [number, num
   return Math.min(a1, b1) - Math.max(a0, b0);
 }
 
+/* ───────────── Walls, measured as Anchors measure them: from the left end, seen from inside the room ───────────── */
+
+/** How long a wall is, in meters. */
+export const wallLength = ({ start: [sx, sz], end: [ex, ez] }: Pick<Wall, 'start' | 'end'>) => Math.hypot(ex - sx, ez - sz);
+
+/** Whether a wall's left end, seen from inside the room facing it, is its start. Right is then [nz, −nx]. */
+export const startIsLeft = ({ start: [sx, sz], end: [ex, ez], normal: [nx, nz] }: Wall) => (ex - sx) * nz - (ez - sz) * nx > 0;
+
+/** How far along a wall from its start a floor point is. */
+export function alongFromStart(wall: Wall, [x, z]: Vec2): number {
+  const { start: [sx, sz], end: [ex, ez] } = wall;
+  return ((x - sx) * (ex - sx) + (z - sz) * (ez - sz)) / wallLength(wall);
+}
+
+/** How far along a wall, from its start, some floor points reach: [from, to]. */
+export function spanFromStart(wall: Wall, points: Vec2[]): [number, number] {
+  const along = points.map((point) => alongFromStart(wall, point));
+  return [Math.min(...along), Math.max(...along)];
+}
+
+/** A span along a wall measured from its start, measured from its left end instead: [from, to]. */
+export function fromLeft(wall: Wall, [from, to]: [number, number]): [number, number] {
+  const length = wallLength(wall);
+  return startIsLeft(wall) ? [from, to] : [length - to, length - from];
+}
+
+/** How far along a wall, from its left end, some floor points reach. */
+export const spanFromLeft = (wall: Wall, points: Vec2[]) => fromLeft(wall, spanFromStart(wall, points));
+
+/** How far a shape is from a wall's plane, at its nearest corner. */
+export const gapTo = (wall: Wall, { corners }: { corners: Vec2[] }) => Math.min(...corners.map((corner) => distanceToWall(corner, wall)));
+
+/** Whether a shape stands along a wall: no more than `distance` from it, and not past its ends. */
+export function isBy(wall: Wall, shape: { corners: Vec2[] }, distance: number) {
+  return gapTo(wall, shape) <= distance && overlapLength(spanFromStart(wall, shape.corners), [0, wallLength(wall)]) > 0;
+}
+
 /** The interval a polygon covers along the unit axis [ax, az]. */
 function shadow(polygon: Vec2[], ax: number, az: number): [number, number] {
   let [min, max] = [Infinity, -Infinity];

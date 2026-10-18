@@ -368,13 +368,6 @@ describe('saves', () => {
   });
 });
 
-describe('POST /api/generate', () => {
-  it('is not built until Phase 4 (501)', async () => {
-    const res = await send('POST', '/api/generate', { scanId: 'fixture', brief: { text: 'cozy Japandi, under $400' } });
-    expect(res.status).toBe(501);
-  });
-});
-
 describe('ids', () => {
   it('400s for a Design id in the path that could reach outside the data folder', async () => {
     const res = await send('PUT', '/api/designs/..%2F..%2Fescaped', { ...fixtureDesign, id: '../../escaped' });

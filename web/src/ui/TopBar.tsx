@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import { useEditor, type View } from '../state/store';
+import { BriefDialog } from './BriefDialog';
 import { DesignsMenu } from './DesignsMenu';
 import { ArrowLeft } from './icons';
 import { RealismToggle } from './RealismToggle';
@@ -15,6 +16,7 @@ export function TopBar() {
       <Link href="/" className="back" aria-label="Scans"><ArrowLeft /><span className="label">Scans</span></Link>
       <span className="muted scan-name">{scanName}</span>
       <DesignsMenu />
+      <BriefDialog />
       <span className="spacer" />
       <RealismToggle />
       <div className="views" role="group" aria-label="View">

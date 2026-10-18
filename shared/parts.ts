@@ -25,6 +25,10 @@ const frontSlab: Rule = {
   assign: ([, , d], params, [, , z], [, , nz]) => (nz > 0.7 && z > d / 2 - (params?.frontDepth ?? 0.03) ? fronts : body),
 };
 
+/** The bed rule's defaults: the heights its bedding spans, and how deep the frame at its head is. */
+export const BEDDING_RANGE: [number, number] = [0.22, 0.7];
+export const HEADBOARD_DEPTH = 0.12;
+
 const RULES: Partial<Record<Category, Rule>> = {
   table: topBand,
   desk: topBand,
@@ -35,8 +39,8 @@ const RULES: Partial<Record<Category, Rule>> = {
   bed: {
     parts: [frame, bedding],
     assign: ([w, , d], params, [x, y, z]) => {
-      const [low, high] = params?.beddingRange ?? [0.22, 0.7];
-      return low <= y && y <= high && Math.abs(x) < 0.47 * w && z > -d / 2 + 0.12 ? bedding : frame;
+      const [low, high] = params?.beddingRange ?? BEDDING_RANGE;
+      return low <= y && y <= high && Math.abs(x) < 0.47 * w && z > -d / 2 + HEADBOARD_DEPTH ? bedding : frame;
     },
   },
   dresser: frontSlab,

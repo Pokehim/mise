@@ -1,0 +1,150 @@
+/* The Brief dialog and Claude's Design cards (#19), in the sketch style (docs/design/sketch-style.md).
+   They sit inside .editor and use the sketch tokens (styles/tokens.css) and base controls (styles/base.css). */
+
+.editor .generate-button .icon { color: var(--graphite); transition: color var(--press) var(--ease-out); }
+@media (hover: hover) {
+  .editor .generate-button:hover .icon { color: var(--ink); }
+}
+
+/* ───────────── The dialog: a sheet laid over the editor ───────────── */
+
+.brief-dialog {
+  box-sizing: border-box;
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: var(--s-4) var(--s-5) var(--s-5);
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--grain), var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--lift);
+  font-size: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* No scrim: nothing tints the 3D view (sketch-style rule 1). The sheet's lift sets it apart. */
+.brief-dialog::backdrop { background: transparent; }
+@media (prefers-reduced-motion: no-preference) {
+  .brief-dialog[open] { animation: brief-in var(--draw) var(--ease-out); }
+}
+@keyframes brief-in { from { opacity: 0; transform: translateY(6px); } }
+
+.brief-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-1); }
+.brief-dialog h2 { margin: 0; font: 400 24px/1.2 var(--font-hand); }
+.brief-dialog form > p { max-width: 62ch; margin: 0 0 var(--s-4); color: var(--graphite); line-height: 1.5; }
+
+.brief-dialog .field { display: grid; gap: var(--s-2); margin: 0 0 var(--s-4); padding: 0; border: 0; }
+.brief-dialog .field > span:first-child,
+.brief-dialog legend { padding: 0; font-weight: 600; }
+.brief-dialog legend { margin-bottom: var(--s-2); }
+.brief-dialog textarea,
+.brief-dialog .money {
+  box-sizing: border-box;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  transition: border-color var(--press) var(--ease-out);
+}
+.brief-dialog textarea {
+  width: 100%;
+  padding: var(--s-2) 10px;
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+.brief-dialog :is(textarea, .money):focus-within { outline: none; border-color: var(--wash); }
+
+/* Style chips: words with no box until chosen, as the editor's other chips. */
+.brief-dialog .chips { display: flex; flex-wrap: wrap; gap: 2px var(--s-1); }
+.editor .brief-dialog .chips button { padding: 3px 8px; font-size: 13px; }
+.editor .brief-dialog .chips button:not([aria-pressed='true']) { border-color: transparent; background: transparent; color: var(--graphite); }
+@media (hover: hover) {
+  .editor .brief-dialog .chips button:not([aria-pressed='true']):hover { border-color: transparent; background: var(--ink-wash); color: var(--ink); }
+}
+
+.brief-dialog .budget { justify-items: start; }
+.brief-dialog .money { display: inline-flex; align-items: center; gap: 2px; padding-left: var(--s-2); color: var(--graphite); font-family: var(--font-mono); }
+.editor .brief-dialog .money input { width: 12ch; padding-left: 2px; border: 0; background: transparent; font-family: var(--font-mono); }
+.brief-dialog .hint { color: var(--graphite); font-size: 12px; }
+
+.brief-dialog footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2); }
+/* Off until there is a Brief: hatched like any control that's off, which base.css's ink primary would hide. */
+.editor .brief-dialog button.primary:disabled { border-color: var(--pencil-strong); background: var(--hatching), var(--paper); color: var(--graphite); }
+.brief-dialog .cards-step footer { justify-content: space-between; margin-top: var(--s-4); font-size: 13px; }
+.brief-dialog .error { margin: 0 0 var(--s-3); color: var(--red-pencil); font-size: 13px; line-height: 1.45; }
+
+/* ───────────── Design cards: sheets side by side on the page ───────────── */
+
+.design-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-3);
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.design-cards > li { display: flex; }
+@media (prefers-reduced-motion: no-preference) {
+  .design-cards > li { animation: card-in 240ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); }
+}
+@keyframes card-in { from { opacity: 0; transform: translateY(6px); } }
+
+.editor .design-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-3);
+  background: var(--paper-raised);
+  text-align: left;
+}
+@media (hover: hover) {
+  .editor .design-card:hover:not(:disabled) { border-color: var(--ink); }
+}
+.design-card h3 { margin: 0; font: 400 21px/1.2 var(--font-hand); }
+.design-card .rationale {
+  display: -webkit-box;
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+.design-cards .direction { color: var(--graphite); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.design-card .swatches { display: flex; gap: var(--s-1); }
+.design-card .swatches span { width: 16px; height: 16px; border: var(--line) solid var(--pencil-strong); border-radius: var(--r-1); }
+.design-card .card-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px var(--s-3); width: 100%; font-size: 12px; }
+.design-card .total { font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
+.design-card .counts { color: var(--graphite); font-family: var(--font-mono); }
+.design-card .open { display: inline-flex; align-items: center; gap: var(--s-1); color: var(--wash); font-size: 13px; font-weight: 500; }
+@media (prefers-reduced-motion: no-preference) {
+  .design-card .open .icon { transition: translate var(--draw) var(--ease-out); }
+  .design-card:hover .open .icon { translate: 3px 0; }
+}
+
+/* While Claude designs: an empty sheet per direction, hatched, with its first lines drawn on. */
+.working p { margin: var(--s-3) 0 0; }
+.working .muted { font-family: var(--font-mono); }
+.design-cards.placeholders li {
+  flex-direction: column;
+  gap: var(--s-2);
+  min-height: 120px;
+  padding: var(--s-3);
+  border: var(--line) dashed var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--hatching), var(--paper-raised);
+}
+.design-cards .stroke { width: 100%; height: 1px; background: var(--ink); transform-origin: left; }
+.design-cards .stroke.short { width: 60%; }
+@media (prefers-reduced-motion: no-preference) {
+  .design-cards .stroke { animation: draw var(--draw) var(--ease-out) both; }
+  .design-cards .stroke.short { animation-delay: 80ms; }
+}
+@keyframes draw { from { transform: scaleX(0); } }

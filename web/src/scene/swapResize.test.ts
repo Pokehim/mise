@@ -119,6 +119,14 @@ describe('swapEdit', () => {
     expect(edit).not.toHaveProperty('targetSize');
   });
 
+  it('moves a wider item swapped in by a wall just enough to stay inside the room', () => {
+    // The walnut desk, back to the East wall and its side on the North wall, takes z −1.5 to −0.74; the
+    // oak desk, 1.2 m wide, would reach z −1.72, so it moves 0.22 m south, its back still on the East wall.
+    const inCorner = room([place('pc_1', 'desk-walnut', onFloor(1.75, -1.12, -Math.PI / 2))]);
+    const oak = catalog.items.find(({ id }) => id === 'desk-oak')!;
+    expect(positionOf(swapEdit(inCorner, { kind: 'piece', id: 'pc_1' }, oak))).toEqual([1.65, 0, -0.9]);
+  });
+
   it('leaves a Piece turned off a wall where it was, instead of squaring it up', () => {
     // Turned 15° from facing straight out of the North wall, its back 2 cm off it: a drag would snap it.
     const turned = place('pc_1', 'desk-walnut', onFloor(0, -1.23, Math.PI / 12));

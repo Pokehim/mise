@@ -69,6 +69,26 @@ describe('resolveAnchor', () => {
       });
     });
 
+    it('keeps the whole item inside the room, moving it just as far as it must, where a slanted wall cuts the corner', () => {
+      // The East wall runs from [2, −1.5] to [1, 1.5]: at the desk's front, z = −1, it is at x = 1.833. So the
+      // desk, 0.76 wide, stops with its front-right corner on it, at x = 1.453, not at the next 10 cm step.
+      const slanted: RoomSetup = {
+        ...empty,
+        floor: { polygon: [[-2, -1.5], [2, -1.5], [1, 1.5], [-2, 1.5]] },
+        walls: [
+          { id: 'wl_north', name: 'North wall', start: [-2, -1.5], end: [2, -1.5], normal: [0, 1], height: 2.6 },
+          { id: 'wl_east', name: 'East wall', start: [2, -1.5], end: [1, 1.5], normal: [-3 / Math.hypot(3, 1), -1 / Math.hypot(3, 1)], height: 2.6 },
+          { id: 'wl_south', name: 'South wall', start: [1, 1.5], end: [-2, 1.5], normal: [0, -1], height: 2.6 },
+          { id: 'wl_west', name: 'West wall', start: [-2, 1.5], end: [-2, -1.5], normal: [1, 0], height: 2.6 },
+        ],
+        openings: [],
+      };
+
+      expect(resolve(desk, { kind: 'against_wall', wall_id: 'wl_north', along: 'right' }, [], slanted)).toEqual({
+        placement: { position: [closeTo(1.453), 0, closeTo(-1.25)], rotationY: closeTo(0), mount: 'floor' },
+      });
+    });
+
     it('returns an error, with the violations where it asked for, when nothing within 1 m fits', () => {
       // The bed takes 2.03 m of the 3 m West wall, so a 2 m sofa against it always overlaps the bed.
       expect(resolve(sofa, { kind: 'against_wall', wall_id: 'wl_west', along: 'center' })).toEqual({
@@ -409,20 +429,22 @@ describe('resolveAnchor', () => {
     });
 
     it('slides the rug further under the target when the floor in front of it runs out', () => {
-      // With the sofa's front at z = 0.65, a third under would reach z 1.663, past the South wall at 1.5: 0.2 m further under, it fits.
+      // With the sofa's front at z = 0.65, a third under would reach z 1.663, past the South wall at 1.5: it
+      // goes just that much further under, to z −0.02 to 1.5, flush with the wall.
       const sofaMidRoom = place('pc_sofa', 'sofa-gray', onFloor(0, 0.2));
 
       expect(resolve(rug, { kind: 'centered_under', target_id: 'pc_sofa' }, [sofaMidRoom], empty)).toMatchObject({
-        placement: { position: [closeTo(0), 0, closeTo(0.7033)] },
+        placement: { position: [closeTo(0), 0, closeTo(0.74)] },
       });
     });
 
     it('slides the rug sideways, out from the wall, when the target is too near one to center it, as a bed in a corner is', () => {
       // Turned across the bed, the rug is 2.13 m wide, but the bed's center is 0.495 m from the West wall:
-      // 0.6 m toward the room it fits, x −1.97 to 0.16, under all but 3 cm of the bed's width. A third under
-      // the bed, it would reach past the South wall, so it also goes 0.1 m further under: z −0.077 to 1.443.
+      // 0.57 m toward the room it fits, x −2 to 0.13, flush with that wall and under all of the bed's width.
+      // A third under the bed, it would reach past the South wall, so it also goes further under, flush
+      // with that wall too: z −0.02 to 1.5.
       expect(resolve(rug, { kind: 'centered_under', target_id: 'og_bed' })).toEqual({
-        placement: { position: [closeTo(-0.905), 0, closeTo(0.6833)], rotationY: closeTo(Math.PI / 2), mount: 'floor' },
+        placement: { position: [closeTo(-0.935), 0, closeTo(0.74)], rotationY: closeTo(Math.PI / 2), mount: 'floor' },
       });
     });
 

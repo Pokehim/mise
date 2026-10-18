@@ -55,6 +55,52 @@ export function rectInPolygon({ center, size: [width, depth], rotationY }: Orien
   return corners.every((corner) => pointInPolygon(corner, polygon)) && !polygon.some((corner) => pointInPolygon(corner, corners));
 }
 
+/** How far a rectangle reaches from its center along the unit vector [ax, az]. */
+export function reach({ size: [width, depth], rotationY }: OrientedRect, [ax, az]: Vec2): number {
+  const [cos, sin] = [Math.cos(rotationY), Math.sin(rotationY)];
+  return (width / 2) * Math.abs(ax * cos - az * sin) + (depth / 2) * Math.abs(ax * sin + az * cos);
+}
+
+/** How far inside a polygon's edges, in meters, `pushInside` stops a rectangle, so that floating point can't leave it a hair outside. */
+const PUSH_SLACK = 1e-6;
+
+/**
+ * The rectangle moved the shortest distance that puts it wholly inside a polygon, such as a room's
+ * floor, without turning it: the rectangle itself when it already is inside, or null when it can't
+ * fit anywhere. The polygon need not be convex.
+ */
+export function pushInside(rect: OrientedRect, polygon: Vec2[]): OrientedRect | null {
+  const fits = (center: Vec2) => rectInPolygon({ ...rect, center }, polygon);
+  if (fits(rect.center)) return rect;
+  // The centers that fit make a polygon whose edges lie on these lines; the nearest of them is on
+  // one edge, where the center projects onto its line, or at a corner, where two lines cross.
+  const lines = flushLines(rect, polygon);
+  const candidates: Vec2[] = lines.map((line) => projectOnto(rect.center, line));
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = i + 1; j < lines.length; j++) {
+      const crossing = intersection(lines[i], lines[j]);
+      if (crossing) candidates.push(crossing);
+    }
+  }
+  const [cx, cz] = rect.center;
+  const nearest = candidates
+    .map((center) => ({ center, distance: Math.hypot(center[0] - cx, center[1] - cz) }))
+    .sort((a, b) => a.distance - b.distance)
+    .find(({ center }) => fits(center));
+  return nearest ? { ...rect, center: nearest.center } : null;
+}
+
+/**
+ * A Placement or a Box moved the shortest distance that puts its whole footprint inside a polygon,
+ * such as a room's floor, as `pushInside` moves a rectangle: itself when it already is, or null when it can't fit.
+ */
+export function pushFootprintInside<T extends Pick<Box, 'position' | 'rotationY'>>(placed: T, size: Vec3, polygon: Vec2[]): T | null {
+  const rect = footprint(placed, size);
+  const pushed = pushInside(rect, polygon);
+  if (pushed === rect || !pushed) return pushed && placed;
+  return { ...placed, position: [pushed.center[0], placed.position[1], pushed.center[1]] };
+}
+
 /** True when a point is inside a polygon, such as a room's floor; the polygon need not be convex. */
 export function pointInPolygon([x, z]: Vec2, polygon: Vec2[]): boolean {
   // Cast a ray toward +x and count the edges it crosses: an odd count means inside.
@@ -128,4 +174,51 @@ function shadow(polygon: Vec2[], ax: number, az: number): [number, number] {
     max = Math.max(max, distance);
   }
   return [min, max];
+}
+
+/** A line on the floor: the points p where normal · p = offset, with `normal` a unit vector. */
+interface Line { normal: Vec2; offset: number }
+
+/**
+ * The lines a rectangle's center is on when it stands flush against one of a polygon's edges, inside
+ * it, or when one of its own sides touches one of the polygon's corners, as an inner corner of an
+ * L-shaped room can cut into it; each moved `PUSH_SLACK` further in.
+ */
+function flushLines(rect: OrientedRect, polygon: Vec2[]): Line[] {
+  const area = polygon.reduce((sum, [x, z], i) => {
+    const [nx, nz] = polygon[(i + 1) % polygon.length];
+    return sum + x * nz - nx * z;
+  }, 0);
+  const lines: Line[] = [];
+  for (let i = 0; i < polygon.length; i++) {
+    const [[px, pz], [qx, qz]] = [polygon[i], polygon[(i + 1) % polygon.length]];
+    const length = Math.hypot(qx - px, qz - pz);
+    if (length === 0) continue;
+    // The edge's normal into the polygon, whichever way round its corners go.
+    const sign = area > 0 ? 1 : -1;
+    const normal: Vec2 = [(sign * -(qz - pz)) / length, (sign * (qx - px)) / length];
+    lines.push({ normal, offset: normal[0] * px + normal[1] * pz + reach(rect, normal) + PUSH_SLACK });
+  }
+  const { size: [width, depth], rotationY } = rect;
+  const [right, front]: Vec2[] = [[Math.cos(rotationY), -Math.sin(rotationY)], [Math.sin(rotationY), Math.cos(rotationY)]];
+  for (const [x, z] of polygon) {
+    for (const [[ax, az], half] of [[right, width / 2], [front, depth / 2]] as const) {
+      const along = ax * x + az * z;
+      lines.push({ normal: [ax, az], offset: along - half - PUSH_SLACK }, { normal: [ax, az], offset: along + half + PUSH_SLACK });
+    }
+  }
+  return lines;
+}
+
+/** The point on a line nearest to a floor point. */
+function projectOnto([x, z]: Vec2, { normal: [nx, nz], offset }: Line): Vec2 {
+  const off = offset - (x * nx + z * nz);
+  return [x + nx * off, z + nz * off];
+}
+
+/** Where two lines cross, or null when they are parallel. */
+function intersection({ normal: [ax, az], offset: a }: Line, { normal: [bx, bz], offset: b }: Line): Vec2 | null {
+  const determinant = ax * bz - az * bx;
+  if (Math.abs(determinant) < 1e-9) return null;
+  return [(a * bz - az * b) / determinant, (ax * b - a * bx) / determinant];
 }

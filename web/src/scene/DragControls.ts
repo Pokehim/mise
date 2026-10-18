@@ -3,9 +3,9 @@ import { useCallback } from 'react';
 import { type Camera, type Intersection, type Object3D, type Ray, Raycaster, Vector2, Vector3 } from 'three';
 import type { CatalogItem, Placement, RoomSetup, Vec2 } from '@shared/types';
 import { pieceItem, useEditor } from '../state/store';
-import { faces, keepInside, wallCoordinates } from './floorPlan';
+import { faces, wallCoordinates } from './floorPlan';
 import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
-import { floorHit, liesFlat, onWall, snapToWall } from './placement';
+import { floorHit, keepInRoom, liesFlat, onWall } from './placement';
 import type { SplitNodeData } from './splitScan';
 
 /** How high a hit must be to count as a furniture top rather than the floor (spec §9.4 uses 3 cm too). */
@@ -29,27 +29,25 @@ const onOriginal = (id: string) => ({ object }: Intersection) => {
 /**
  * Where the pointer puts a floor item (spec §10.3): on the upward-facing surface under the pointer,
  * such as a desk top, with its base right at the pointer, so it can't hang off the edge; else on
- * the floor, keeping the grabbed point under the pointer and the item inside the room. Either
- * way it snaps to a wall it is backed up against.
+ * the floor, keeping the grabbed point under the pointer. Either way walls are solid: its whole
+ * footprint stays inside the room, so it stops flush at a wall while the pointer goes on, and slides
+ * along it; and it snaps to a wall or into a corner near it, unless `snap` is off (Alt). Null where
+ * the item can't go, or fit at all, so the drag keeps its last good placement.
  */
 function onFloorOrSurface(
   raycaster: Raycaster, supports: Object3D[], skip: (hit: Intersection) => boolean,
-  item: Draggable, start: Placement, offset: Vec2, setup: RoomSetup,
+  item: Draggable, start: Placement, offset: Vec2, setup: RoomSetup, snap: boolean,
 ): Placement | null {
   const hit = raycaster.intersectObjects(supports, true).find((it) => isDrawn(it) && !skip(it));
-  let placement: Placement;
   if (hit && facesUp(hit) && hit.point.y > FLOOR_TOLERANCE && !liesFlat(item)) {
-    placement = { position: hit.point.toArray(), rotationY: start.rotationY, mount: 'surface' };
-  } else {
-    const pointer = floorHit(raycaster.ray);
-    if (!pointer) return null;
-    // Past a wall, the floor plane is somewhere the Mover can't see or mean: they are pointing at
-    // the wall. So the Piece's origin stays in the room; its footprint can still poke out, which
-    // the outside-floor Fit rule reports.
-    const [x, z] = keepInside([pointer[0] + offset[0], pointer[1] + offset[1]], setup, 0.001);
-    placement = { position: [x, 0, z], rotationY: start.rotationY, mount: 'floor' };
+    return keepInRoom({ position: hit.point.toArray(), rotationY: start.rotationY, mount: 'surface' }, item.size, setup, { snap });
   }
-  return snapToWall(placement, item.size[2], setup.walls) ?? placement;
+  const pointer = floorHit(raycaster.ray);
+  if (!pointer) return null;
+  // Past a wall, the floor plane is somewhere the Mover can't see or mean: they are pointing at the
+  // wall, so the item goes the nearest spot inside the room to it, against that wall.
+  const [x, z] = [pointer[0] + offset[0], pointer[1] + offset[1]];
+  return keepInRoom({ position: [x, 0, z], rotationY: start.rotationY, mount: 'floor' }, item.size, setup, { snap });
 }
 
 /** Where the pointer puts a wall item: centered on it, on the nearest wall in view under the pointer. */
@@ -91,7 +89,8 @@ function dragged(editor: ReturnType<typeof useEditor.getState>, { kind, id }: Dr
 /**
  * The pointerdown handler of a Piece or an Original: selects it, then drags it. While dragging, the
  * store's preview holds where it is shown; when the drag ends, that becomes one move Edit (spec §10.3,
- * §11.1). A Kept Original is only selected, and the drag orbits the camera as it does on empty space.
+ * §11.1). Holding Alt (Option on a Mac) drags it freely: no snapping, though walls stay solid. A Kept
+ * Original is only selected, and the drag orbits the camera as it does on empty space.
  */
 function useDrag(target: DragTarget) {
   const get = useThree((s) => s.get);
@@ -137,7 +136,7 @@ function useDrag(target: DragTarget) {
       aim(e);
       const placement = item.mount === 'wall'
         ? onWallUnder(raycaster.ray, camera, item, setup!)
-        : onFloorOrSurface(raycaster, supports, skip, item, start, offset, setup!);
+        : onFloorOrSurface(raycaster, supports, skip, item, start, offset, setup!, !e.altKey);
       // The store's preview field is named for Pieces, but an Original's id fits it: ids are unique across both.
       if (placement) useEditor.getState().setPreview({ pieceId: id, placement });
     };

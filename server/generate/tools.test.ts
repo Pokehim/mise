@@ -17,6 +17,9 @@ const wardrobe = item('wardrobe-white', 'wardrobe', 'White Wardrobe', [1, 1.8, 0
 const bookcase = item('bookcase-tall', 'shelf', 'Tall Bookcase', [0.66, 1.89, 0.38], { priceEstimateUsd: 90 });
 const armchair = item('chair-reading', 'chair', 'Reading Chair', [0.8, 0.8, 0.7], { priceEstimateUsd: 120 });
 const rugs = catalog.items.filter(({ category }) => category === 'rug');
+const ledStrip = item('led-strip', 'wall_art', 'Warm White LED Strip Lights, 6.6 ft', [2, 0.36, 0.006], { mount: 'wall', priceEstimateUsd: 15 });
+const fairyLights = item('lights-fairy', 'wall_art', 'Fairy String Lights, Warm White', [1.55, 0.27, 0.012], { mount: 'wall', priceEstimateUsd: 12 });
+const lavaLamp = item('lamp-lava', 'lamp', 'Lava Lamp, Purple', [0.13, 0.37, 0.13], { priceEstimateUsd: 30 });
 const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, pillow, plant, nightstand, sofa, wardrobe, bookcase, armchair] };
 const materials: LibraryMaterial[] = [
   { id: 'oak', name: 'Oak', kind: 'wood', maps: { color: 'oak.jpg' }, tileSize: 1, source: 'CC0' },
@@ -33,9 +36,9 @@ async function call(session: DesignSession, name: string, input: unknown) {
 }
 
 describe('the Design tools', () => {
-  it('are the 6 decorating moves and the 7 tools of spec §13.2, each strict but stock_shelves and place_piece, for the grammar\'s size', () => {
+  it('are the 7 decorating moves and the 7 tools of spec §13.2, each strict but hang_lights, stock_shelves and place_piece, for the grammar\'s size', () => {
     expect(start().tools.map(({ name, strict }) => [name, strict])).toEqual([
-      ['hang_gallery', true], ['lay_rug', true], ['make_corner', true], ['dress_bed', true], ['style_tops', true], ['stock_shelves', undefined],
+      ['hang_gallery', true], ['hang_lights', undefined], ['lay_rug', true], ['make_corner', true], ['dress_bed', true], ['style_tops', true], ['stock_shelves', undefined],
       ['search_catalog', true], ['place_piece', undefined], ['replace_original', true], ['recolor', true],
       ['apply_finish', true], ['remove', true], ['finish_design', true],
     ]);
@@ -359,6 +362,17 @@ describe('the Design tools', () => {
       await expect(call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette }))
         .rejects.toThrow('Not finished: this Design has 1 Edit besides removals, and needs 8 to 24. It still needs wall art (2 to 4 frames), a rug, a lamp, decor on the bed or a furniture top');
       expect(await call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette })).toEqual({ ok: true });
+    });
+
+    it("counts no lights as the Design's wall art, and no lava or moon lamp as its lamp: they're accents", async () => {
+      const glowCatalog = { ...decorCatalog, items: [...decorCatalog.items, ledStrip, fairyLights, lavaLamp] };
+      const session = createSession({ setup, catalog: glowCatalog, brief: { text: 'a dorm that glows at night' }, materials });
+      await call(session, 'hang_lights', { catalog_id: 'led-strip', over_id: 'og_bed', wall_id: 'wl_west' });
+      await call(session, 'hang_lights', { catalog_id: 'lights-fairy', over_id: 'og_desk', wall_id: 'wl_east' });
+      await call(session, 'style_tops', { items: [{ catalog_id: 'lamp-lava', on_id: 'og_desk' }, { catalog_id: 'plant-fig', on_id: 'og_desk' }] });
+
+      await expect(call(session, 'finish_design', { name: 'Glow', rationale: 'It glows.', palette }))
+        .rejects.toThrow('It still needs wall art (2 to 4 frames), a rug, a lamp to read or work by (a lava or moon lamp is an accent)');
     });
 
     it("sends Claude back once for a name another take on the Brief already has", async () => {

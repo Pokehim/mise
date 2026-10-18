@@ -10,6 +10,7 @@ import { type Item, roomItems } from '../../shared/fit';
 import { overlapLength, pointInPolygon, polygonsOverlap, spanFromLeft } from '../../shared/geometry';
 import type { Catalog, CatalogItem, Category, RoomSetup, RoomState, Vec2, Wall } from '../../shared/types';
 import { m } from './forClaude';
+import { isLightOnWall } from './moves';
 
 /** How far off the middle of the furniture under it, in meters, a piece of art may hang and still read as centered; a group, half as far again. */
 const CENTERED = 0.08;
@@ -47,9 +48,11 @@ export function reviewFlags(setup: RoomSetup, catalog: Catalog, state: RoomState
     return item ? [{ id, item }] : [];
   });
   const isPiece = new Set(pieces.map(({ id }) => id));
+  // Lights and greenery on a wall hang on their own, along its top or over a gallery: they're no art to judge as one.
+  const isArt = new Set(pieces.filter(({ item }) => !isLightOnWall(item)).map(({ id }) => id));
   const furniture = items.filter(isFurniture);
   return [
-    ...setup.walls.flatMap((wall) => artFlags(wall, items.filter(({ id, placement }) => isPiece.has(id) && placement.wallId === wall.id), furniture)),
+    ...setup.walls.flatMap((wall) => artFlags(wall, items.filter(({ id, placement }) => isArt.has(id) && placement.wallId === wall.id), furniture)),
     ...topFlags(items, furniture, isPiece),
     ...rugFlags(items.filter(({ id, category }) => isPiece.has(id) && category === 'rug'), furniture),
     ...colorFlags(pieces),

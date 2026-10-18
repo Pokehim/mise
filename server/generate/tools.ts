@@ -17,7 +17,7 @@ import { replay } from '../../shared/replay';
 import type { Brief, Catalog, CatalogItem, Category, Edit, FitViolation, Hex, LibraryMaterial, Palette, Placement, RoomSetup, RoomState } from '../../shared/types';
 import { catalogEntry, m, offeredToClaude, shuffled } from './forClaude';
 import { reviewFlags } from './review';
-import { type Draft, dressBed, hangGallery, layRug, makeCorner, stockShelves, styleTops } from './moves';
+import { type Draft, dressBed, hangGallery, hangLights, isAccentLamp, isLightOnWall, layRug, makeCorner, stockShelves, styleTops } from './moves';
 
 export interface DesignContext extends AnchorOptions {
   setup: RoomSetup;
@@ -123,7 +123,7 @@ const anchorSchema = z.union([
     wall_id: z.string().optional().describe("The wall to hang it on; by default the one the target's back is to"),
     offset_m: z.number().optional().describe("How far right of the target's middle to center it, seen facing the wall; negative is left"),
     center_height_m: z.number().optional().describe(`By default ${CENTER_HEIGHT} m, or higher to clear the target`),
-  }).describe('Hung on the wall centered over furniture standing against it, such as the first frame of a gallery wall over a bed'),
+  }).describe('Hung on the wall centered over furniture standing against it, such as the first frame of a gallery wall over a bed, or over a window (its Opening id)'),
   z.object({
     kind: z.literal('on_wall_beside'),
     target_id: z.string().describe('A wall item already hung, such as the first frame of a gallery wall'),
@@ -258,10 +258,10 @@ export function createSession({
   /**
    * The id of something in the room that `id` names: itself, or for the Catalog id of a Piece placed
    * earlier, that Piece: the latest of them, or with "#2", the second placed. Claude places furniture and
-   * decorates around it in one reply, before the Piece ids come back with the reply's results.
+   * decorates around it in one reply, before the Piece ids come back with the reply's results. "" names nothing.
    */
   function roomId(id: string): string {
-    if (state.originals[id] || state.pieces[id] || setup.openings.some((opening) => opening.id === id)) return id;
+    if (!id || state.originals[id] || state.pieces[id] || setup.openings.some((opening) => opening.id === id)) return id;
     const [, catalogId, nth] = /^(.+?)(?:#(\d+))?$/.exec(id)!;
     const placed = Object.entries(state.pieces).filter(([, piece]) => piece.catalogId === catalogId);
     return (nth ? placed[Number(nth) - 1] : placed.at(-1))?.[0] ?? id;
@@ -316,6 +316,20 @@ export function createSession({
         catalog_ids: z.array(z.string()).describe('The frames, each a different Catalog item'),
       }),
       (input) => hangGallery(draft, input),
+    ),
+    tool(
+      'hang_lights',
+      'One light or piece of greenery on a wall, on its own, never in a gallery: an LED strip runs along the top of the wall, '
+        + 'its glow just under the ceiling; string lights, curtain lights, a neon sign, an ivy garland or a plant hanger hang '
+        + 'centered over the target, clear of it and above the frames already there.',
+      z.object({
+        catalog_id: z.string(),
+        over_id: z.string().describe('The bed, sofa or desk to hang it over, or a window\'s Opening id; "" to center it on wall_id'),
+        wall_id: z.string().describe('The wall, from decor.wall_spans; "" for the wall behind over_id, or the window\'s'),
+      }),
+      (input) => hangLights(draft, input),
+      // Not strict, as stock_shelves: one more strict tool takes the compiled grammar over what the API allows.
+      false,
     ),
     tool(
       'lay_rug',
@@ -537,10 +551,12 @@ export function createSession({
     const placed = pieces();
     const has = (...categories: Category[]) => placed.filter(({ item }) => categories.includes(item.category));
     // A Refine answers only for what it changes: what the Design already lacked stays the Mover's call.
+    // Lights on a wall aren't art, and a lava or moon lamp lights nothing to read by: both are accents.
+    const lamps = has('lamp');
     const needs = refining ? [] : [
-      has('wall_art', 'mirror').length < 2 && 'wall art (2 to 4 frames)',
+      has('wall_art', 'mirror').filter(({ item }) => !isLightOnWall(item)).length < 2 && 'wall art (2 to 4 frames)',
       !has('rug').length && 'a rug',
-      !has('lamp').length && 'a lamp',
+      lamps.every(({ item }) => isAccentLamp(item)) && (lamps.length ? 'a lamp to read or work by (a lava or moon lamp is an accent)' : 'a lamp'),
       !has('decor', 'plant').some(({ placement }) => placement.mount === 'surface') && 'decor on the bed or a furniture top',
       ...bareShelves().map((name) => `books on the levels of ${name} (stock_shelves)`),
     ].filter((need): need is string => !!need);

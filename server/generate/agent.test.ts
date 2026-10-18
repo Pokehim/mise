@@ -113,13 +113,13 @@ describe('generateDesigns', () => {
     });
   });
 
-  it('asks Claude Sonnet 5.5 at low effort, with strict tools (but stock_shelves and place_piece), auto tool choice and the default refusal fallback', async () => {
+  it('asks Claude Sonnet 5.5 at low effort, with strict tools (but hang_lights, stock_shelves and place_piece), auto tool choice and the default refusal fallback', async () => {
     const { client, requests } = fakeClaude({ literal: decorate });
     await generate(client).result;
 
     const [{ body, headers }] = takes(requests);
     expect(body).toMatchObject({ model: 'claude-sonnet-5-5', output_config: { effort: 'low' }, tool_choice: { type: 'auto' }, fallbacks: 'default' });
-    expect(body.tools!.filter((tool) => !('strict' in tool && tool.strict)).map((tool) => 'name' in tool && tool.name)).toEqual(['stock_shelves', 'place_piece']);
+    expect(body.tools!.filter((tool) => !('strict' in tool && tool.strict)).map((tool) => 'name' in tool && tool.name)).toEqual(['hang_lights', 'stock_shelves', 'place_piece']);
     expect(headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
   });
 

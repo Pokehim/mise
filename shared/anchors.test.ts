@@ -310,6 +310,15 @@ describe('resolveAnchor', () => {
       });
     });
 
+    it('hangs the item centered over a window, just clear of its top', () => {
+      // The window is x −0.6 to 0.6 on the North wall, its top 2.1 m up: string lights hang 5 cm above it.
+      const lights = item('lights-fairy', 'wall_art', 'Fairy String Lights', [1.55, 0.27, 0.012], { mount: 'wall' });
+
+      expect(resolve(lights, { kind: 'on_wall_over', target_id: 'op_window' })).toEqual({
+        placement: { position: [closeTo(0), closeTo(2.15), closeTo(-1.494)], rotationY: closeTo(0), mount: 'wall', wallId: 'wl_north' },
+      });
+    });
+
     it('slides along the wall, but keeps the item over the target', () => {
       // A mirror already hangs at z −0.25 to 0.25 on the West wall: 0.1 m north, the print clears it, still over the bed.
       expect(resolve(print, { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west' }, [], withLampAndMirror)).toMatchObject({

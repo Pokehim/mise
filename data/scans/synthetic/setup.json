@@ -118,7 +118,7 @@
       "id": "og_bed",
       "label": "Bed",
       "category": "bed",
-      "kept": true,
+      "kept": false,
       "box": {
         "position": [
           -1.27,
@@ -132,7 +132,7 @@
         ],
         "rotationY": 0
       },
-      "floorColor": "#96795b"
+      "floorColor": "#b08d6a"
     },
     {
       "id": "og_desk",
@@ -152,13 +152,7 @@
         ],
         "rotationY": 0
       },
-      "floorColor": "#9a7c5d",
-      "patch": {
-        "floor": "patches/og_desk.floor.png",
-        "walls": {
-          "wl_1": "patches/og_desk.wl_1.png"
-        }
-      }
+      "floorColor": "#b08d6a"
     },
     {
       "id": "og_chair",
@@ -178,16 +172,13 @@
         ],
         "rotationY": 3.141592653589793
       },
-      "floorColor": "#9b7d5e",
-      "patch": {
-        "floor": "patches/og_chair.floor.png"
-      }
+      "floorColor": "#b08d6a"
     },
     {
       "id": "og_dresser",
       "label": "Dresser",
       "category": "dresser",
-      "kept": true,
+      "kept": false,
       "box": {
         "position": [
           1.52,
@@ -201,7 +192,8 @@
         ],
         "rotationY": -1.5707963267948966
       },
-      "floorColor": "#a48463"
+      "floorColor": "#b08d6a"
     }
-  ]
+  ],
+  "wholeEmptyRoom": true
 }

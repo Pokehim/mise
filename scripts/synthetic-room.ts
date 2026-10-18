@@ -64,6 +64,13 @@ interface Room {
    * ceiling and under the floor. Doors look the same on both sides. Without it, the outside isn't drawn.
    */
   exterior?: Rgb;
+  /**
+   * The room is empty with the furniture laid over it: its one Capture sees the floor and walls whole
+   * behind every Original, so setup.json says wholeEmptyRoom, the editor draws no Patch, and every
+   * Original's floorColor is the floor's color. Without it, floorColor is measured around each
+   * Original, as Room Setup's Bake step does.
+   */
+  wholeEmptyRoom?: boolean;
 }
 
 /** How one Capture of a room differs from another: its random seeds, its exposure, and where moved furniture stood. */
@@ -324,7 +331,13 @@ function roomSetup(room: Room, walls: Wall[], corners: Vec2[], floorTexture: PNG
     floor: { polygon: corners },
     walls,
     openings: room.openings,
-    originals: room.furniture.map(({ original }) => ({ ...original, floorColor: floorColor(original.box, floorTexture, room.size) })),
+    originals: room.furniture.map(({ original }) => ({
+      ...original,
+      floorColor: room.wholeEmptyRoom
+        ? `#${room.colors.floor.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+        : floorColor(original.box, floorTexture, room.size),
+    })),
+    ...(room.wholeEmptyRoom && { wholeEmptyRoom: true }),
   };
 }
 
@@ -359,10 +372,11 @@ const DORM: Room = {
     { id: 'op_2', kind: 'door', wallId: 'wl_3', offset: 0.3, width: 0.9, bottom: 0, height: 2.05, swing: 'in-right' },
   ],
   colors: { floor: [176, 141, 106], ceiling: [236, 234, 228], walls: [[224, 218, 206], [218, 214, 204], [226, 220, 210], [220, 216, 206]] },
+  wholeEmptyRoom: true,
   furniture: [
     {
       original: {
-        id: 'og_bed', label: 'Bed', category: 'bed', kept: true,
+        id: 'og_bed', label: 'Bed', category: 'bed', kept: false,
         box: { position: [-1.27, 0, -1.045], size: [1, 0.6, 2.05], rotationY: 0 },
       },
       parts: [
@@ -395,7 +409,7 @@ const DORM: Room = {
     {
       // Against the East wall, so its front is -X in the room.
       original: {
-        id: 'og_dresser', label: 'Dresser', category: 'dresser', kept: true,
+        id: 'og_dresser', label: 'Dresser', category: 'dresser', kept: false,
         box: { position: [1.52, 0, 0], size: [0.8, 0.75, 0.5], rotationY: -Math.PI / 2 },
       },
       parts: [{ name: 'Dresser', color: [120, 88, 62], boxes: [[[-0.4, 0, -0.25], [0.4, 0.75, 0.25]]] }],

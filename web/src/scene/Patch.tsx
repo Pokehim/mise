@@ -164,11 +164,13 @@ function OriginalPatch({ original, captured }: { original: Original; captured: b
 /**
  * The Patch of every Original that was moved, replaced or removed (spec §10.6, §11.2): the baked
  * images, and a simple Patch as the fallback when it has no Patch from a Fill Capture in `captured`
- * and no baked image.
+ * and no baked image. None when the Scan's mesh holds the whole Empty Room, which shows instead.
  */
 export function Patches({ captured }: { captured: Record<string, Object3D> }) {
   const ids = useEditor(useShallow((s) => s.roomState!.patches));
   const originals = useEditor((s) => s.setup!.originals);
+  const wholeEmptyRoom = useEditor((s) => s.setup!.wholeEmptyRoom);
+  if (wholeEmptyRoom) return null;
   return (
     <group name="patches">
       {originals.filter(({ id }) => ids.includes(id)).map((original) => (

@@ -66,7 +66,7 @@ CHAIR_2 is scaled by **1.170** (CHAIR_1 by 1.452, from the CHAIR_1→CHAIR_2 fit
 | North window sill length in the splat / in CHAIR_2's wall scrap | 1.183 |
 | Sill top height | 1.160 |
 
-With 1.170 the Master Copy's seat and back heights land within 3.5 mm of the room's chairs in both splats
+With 1.170 the Master Copy's seat and back heights land within 4 mm of the room's chairs in both splats
 (`check_chair.py`), so it was kept.
 
 ### Table (`measure/tpose.py`, `tpeaks.py`, `tthick.py`)

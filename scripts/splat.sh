@@ -17,7 +17,7 @@ Usage: scripts/splat.sh <input.ply> [--scan <id>] [--box x,y,z,X,Y,Z]
 
 Crops, strips spherical-harmonic bands, decimates, and writes data/scans/<scan>/splat.spz.
   <input.ply>  the splat after leveling, scaling, and floater removal in SuperSplat
-  --scan       scan id (default: dorm-v1)
+  --scan       scan id (default: lounge-v1)
   --box        crop to min,max corners, in the frame SuperSplat shows (+Y up). The splat has its own
                origin until the Align step (#16), so this is NOT the room box from setup.json.
                Without it there is no crop.
@@ -29,7 +29,7 @@ EOF
 die() { echo "splat.sh: $*" >&2; exit 1; }
 usage_error() { echo "splat.sh: $*" >&2; echo >&2; usage >&2; exit 2; }
 
-input="" scan="dorm-v1" box=""
+input="" scan="lounge-v1" box=""
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help) usage; exit 0 ;;
@@ -117,4 +117,4 @@ echo "         $(mb "$bytes") MB, $(count "$out") splats (SPZ v$SPZ_VERSION, SH 
 if [ "$bytes" -gt $((MAX_MB * 1000000)) ]; then
   echo "WARNING: over $MAX_MB MB. Try a lower count, e.g. SPLAT_MAX=1200000 scripts/splat.sh $input" >&2
 fi
-echo "next:    open it in SuperSplat or Spark to check it's level, roughly to scale, and recognizably the dorm."
+echo "next:    open it in SuperSplat or Spark to check it's level, roughly to scale, and recognizably the lounge."

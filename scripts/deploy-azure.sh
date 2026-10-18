@@ -14,6 +14,6 @@ out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT
 git archive --format=zip -o "$out/mise.zip" "$REF" -- . \
   ':(exclude)data/scans/real-scans' ':(exclude)data/scans/*/raw' ':(exclude)docs' ':(exclude).plans'
-echo "Deploying $(git rev-parse --short "$REF") ($(du -h "$out/mise.zip" | cut -f1)) to $APP…"
+echo "Deploying $(git rev-parse --short "$REF") ($(du -h "$out/mise.zip" | cut -f1)) to ${APP}…"
 az webapp deploy -g "$GROUP" -n "$APP" --src-path "$out/mise.zip" --type zip
 echo "Live at https://$APP.azurewebsites.net"

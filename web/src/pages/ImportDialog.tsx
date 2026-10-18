@@ -35,7 +35,12 @@ export function ImportDialog({ scans }: { scans: ScanManifest[] }) {
         className="import-dialog"
         aria-labelledby="import-dialog-title"
         onCancel={(event) => working && event.preventDefault()}
-        onClick={(event) => event.target === dialog.current && close()}
+        // A click on the backdrop closes it; one on the sheet's own padding doesn't.
+        onClick={(event) => {
+          const { left, right, top, bottom } = dialog.current!.getBoundingClientRect();
+          const outside = event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom;
+          if (event.target === dialog.current && outside) close();
+        }}
         // A file dropped beside the drop zone would otherwise open in the tab, leaving Mise.
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => event.preventDefault()}
@@ -289,17 +294,21 @@ function Steps({ progress: { uploaded, started, since }, splat }: { progress: Pr
   const running = started.length ? started.at(-1)! : 'upload';
   const at = steps.indexOf(running);
   return (
-    <ol className="import-steps" role="status" aria-label="Importing the scan">
-      {steps.map((step, i) => (
-        <li key={step} className={i < at ? 'done' : i === at ? 'running' : 'todo'}>
-          <span className="step-label">
-            {STEP_LABELS[step]}
-            {i === at && step === 'upload' && <span className="muted"> · {Math.round(uploaded * 100)}%</span>}
-            {i === at && step !== 'upload' && <span className="muted"> · {Math.max(0, Math.round((now - since) / 1000))} s</span>}
-          </span>
-        </li>
-      ))}
-      {splat && <li className="note muted">A large PLY can take a few minutes.</li>}
-    </ol>
+    <>
+      {/* What a screen reader hears: each step as it starts, not the seconds ticking. */}
+      <span className="sr-only" role="status">{STEP_LABELS[running]}</span>
+      <ol className="import-steps" aria-label="Importing the scan">
+        {steps.map((step, i) => (
+          <li key={step} className={i < at ? 'done' : i === at ? 'running' : 'todo'}>
+            <span className="step-label">
+              {STEP_LABELS[step]}
+              {i === at && step === 'upload' && <span className="muted"> · {Math.round(uploaded * 100)}%</span>}
+              {i === at && step !== 'upload' && <span className="muted" aria-hidden="true"> · {Math.max(0, Math.round((now - since) / 1000))} s</span>}
+            </span>
+          </li>
+        ))}
+        {splat && <li className="note muted">A large PLY can take a few minutes.</li>}
+      </ol>
+    </>
   );
 }

@@ -19,6 +19,8 @@ interface FitMarkProps {
   placement: Placement;
   size: Vec3;
   messages: string[];
+  /** While an item is dragged: the mark shows at once, without drawing on, as it comes and goes. */
+  live?: boolean;
 }
 
 /**
@@ -26,7 +28,7 @@ interface FitMarkProps {
  * screen, and a note beside it, such as "Blocks the door". Each frame it measures the item's box on
  * screen, and redraws the loop only when that changed.
  */
-export const FitMark = memo(function FitMark({ id, placement: { position, rotationY }, size: [width, height, depth], messages }: FitMarkProps) {
+export const FitMark = memo(function FitMark({ id, placement: { position, rotationY }, size: [width, height, depth], messages, live }: FitMarkProps) {
   const group = useRef<Group>(null!);
   const loop = useRef<SVGSVGElement>(null);
   const note = useRef<HTMLDivElement>(null);
@@ -56,7 +58,7 @@ export const FitMark = memo(function FitMark({ id, placement: { position, rotati
   return (
     <group ref={group} position={position} rotation-y={rotationY}>
       <Label position={[0, height / 2, 0]} zIndexRange={Z_FIT} pointerEvents="none">
-        <div className="fit-mark">
+        <div className={live ? 'fit-mark live' : 'fit-mark'}>
           <svg className="pencil-loop" ref={loop} aria-hidden="true">
             <path pathLength={1} />
           </svg>
@@ -67,4 +69,4 @@ export const FitMark = memo(function FitMark({ id, placement: { position, rotati
       </Label>
     </group>
   );
-}, (a, b) => a.id === b.id && a.placement === b.placement && a.size === b.size && a.messages.join() === b.messages.join());
+}, (a, b) => a.id === b.id && a.placement === b.placement && a.size === b.size && a.messages.join() === b.messages.join() && a.live === b.live);

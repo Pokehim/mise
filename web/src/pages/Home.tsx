@@ -24,7 +24,7 @@ function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] 
       <ScanPlan scanId={scan.id} />
       <header>
         <div>
-          <h3 id={`scan-${scan.id}`}>{scan.name}</h3>
+          <h2 id={`scan-${scan.id}`}>{scan.name}</h2>
           <p className="muted">
             {count(designs.length, 'Design')}
             {!demo && <> · <Link href={`/setup/${scan.id}`}>Room Setup</Link></>}
@@ -60,7 +60,7 @@ function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] 
 
 /** A Scan section in construction lines, its plan's square and rows, while the Scans load. */
 const Loading = () => (
-  <div className="scan loading" aria-busy="true" aria-label="Loading the Scans">
+  <div className="scan loading" role="status" aria-busy="true" aria-label="Loading the Scans">
     <span className="bone plan" />
     <span className="bone title" />
     <span className="bone row" />
@@ -97,7 +97,7 @@ export function Home() {
       </header>
       <main className="home-scans">
         <div className="home-heading-row">
-          <h2 className="home-heading">{all ? 'Every Scan' : 'Your Scans'}</h2>
+          <h1 className="home-heading">{all ? 'Every Scan' : 'Your Scans'}</h1>
           <ImportDialog scans={scans} />
         </div>
         {error && (

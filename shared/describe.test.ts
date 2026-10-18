@@ -68,6 +68,14 @@ describe('describe', () => {
     expect(history({ type: 'remove', targetId: 'pc_1' })).toBe('Removed a Piece');
   });
 
+  it('names a moved or removed Piece by its item when the Pieces so far are given, with the given namer', () => {
+    const pieces = new Map([['pc_1', 'rug-gray']]);
+    const short = { name: () => 'Rug', pieces };
+    expect(describeEdit(edit('ed_1', { type: 'move', targetId: 'pc_1', placement: onFloor(0, 1) }), setup, catalog, { pieces })).toBe('Moved the Mainstays 5×7 Rug');
+    expect(describeEdit(edit('ed_1', { type: 'remove', targetId: 'pc_1' }), setup, catalog, short)).toBe('Removed the Rug');
+    expect(describeEdit(edit('ed_1', { type: 'place', pieceId: 'pc_2', catalogId: 'rug-gray', placement: onFloor(0, 0) }), setup, catalog, short)).toBe('Placed Rug');
+  });
+
   it("says a finish of { kind: 'none' } reset the Surface to the scanned look", () => {
     expect(history({ type: 'finish', target: { kind: 'wall', wallId: 'wl_north' }, finish: { kind: 'none' } }))
       .toBe('Reset North wall to scanned');

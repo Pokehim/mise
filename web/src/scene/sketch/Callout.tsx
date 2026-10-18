@@ -2,12 +2,17 @@ import { useFrame } from '@react-three/fiber';
 import { memo, useRef } from 'react';
 import { type Group, Vector3 } from 'three';
 import type { Vec3 } from '@shared/types';
+import { useEditor } from '../../state/store';
 import { Label, Z_CALLOUT } from './Label';
 import { screenBox, toScreen } from './screen';
 
 const at = new Vector3();
-/** Past this far right of the view's center (in normalized device coordinates), the callout goes left. */
-const FLIP_X = 0.25;
+/**
+ * Past this far right of the view's center (in normalized device coordinates), the callout goes left;
+ * it comes back right only short of FLIP_BACK_X, so an item near the line doesn't make it flap.
+ */
+const FLIP_X = 0.3;
+const FLIP_BACK_X = 0.2;
 /** The leader's rise, in pixels: at least this, and far enough that the label clears the item. */
 const MIN_RISE = 44;
 /** Half the label's height, plus the gap left between it and the item. */
@@ -41,11 +46,16 @@ export const Callout = memo(function Callout({ size, title, detail, mono }: Call
     const item = anchor.current.parent!;
     item.updateWorldMatrix(true, true);
     const top = toScreen(at.set(0, 0, 0), anchor.current, camera, view);
-    const side = (top.x / view.width) * 2 - 1 > FLIP_X ? 'left' : 'right';
+    const x = (top.x / view.width) * 2 - 1;
+    const was = element.dataset.side;
+    // A dragged item keeps its callout's side until it's let go, so the label doesn't jump across the view mid-drag.
+    const side = useEditor.getState().preview ? was : was === 'left' ? (x < FLIP_BACK_X ? 'right' : 'left') : (x > FLIP_X ? 'left' : 'right');
     const box = screenBox(item, size, top, camera, view);
     const rise = box.behind ? MIN_RISE : Math.max(MIN_RISE, Math.round(CLEAR - box.top));
     if (shape.current === `${side}${rise}`) return;
     shape.current = `${side}${rise}`;
+    // A flip redraws the label on its new side rather than teleporting it there.
+    if (side !== was) element.querySelector('.callout-label')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: 'ease-out' });
     element.dataset.side = side;
     element.style.setProperty('--rise', `${rise}px`);
     const path = `M4 ${rise} 38 10h24`;

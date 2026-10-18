@@ -38,7 +38,7 @@
   pointer-events: none;
   user-select: none;
 }
-/* Too narrow to sit beside the Sketch lines switch. */
+/* Too narrow to sit beside the Sketch lines switch: it moves to the top, where the Dollhouse hint sits. */
 @container (max-width: 640px) {
-  .walk-hint { display: none; }
+  .walk-hint { top: var(--s-3); bottom: auto; max-width: calc(100% - 2 * var(--s-3)); white-space: normal; text-align: center; }
 }

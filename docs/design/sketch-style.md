@@ -55,14 +55,20 @@ The 3D overlays read the same tokens at runtime (`scene/sketch/tokens.ts`), so t
 
 ## Motion
 
-150–250 ms with `--ease-out`. Lines draw on (dash offset); controls change color, never bounce. Everything is interruptible: a new selection restarts the drawing at once. Under `prefers-reduced-motion`, lines appear fully drawn and only opacity changes.
+150–250 ms with `--ease-out`, a strong ease-out that starts at speed (the 3D lines draw on the same curve, a quintic). Lines draw on (dash offset); controls change color, never bounce. Everything is interruptible: a new selection restarts the drawing at once, and a Walk glide sent somewhere new keeps its speed. Dialogs settle out the way they rise in. Under `prefers-reduced-motion`, lines appear fully drawn, the camera cuts instead of gliding, and only opacity changes; progress indicators still pulse, so nothing looks frozen.
+
+## Names, prices and touch
+
+- **Names:** a Catalog item goes by its short name (`productName`: no brand in front, no listing keywords after) wherever it's shown, with the full title as a tooltip. The brand gets its own line where there is room.
+- **Prices:** `≈ $90` in lists (cards, shopping-list rows, callouts); `≈ $90 (est.)` where it's the price of record (the Inspector, the TopBar total).
+- **Touch:** on a coarse pointer every control catches a fingertip (about 44 px) through an invisible margin, so nothing grows on the page. 3D handles stay the same size on screen at any zoom (`useScreenScale`), with a touch target's width to grab.
 
 ## Do and don't
 
 | Do | Don't |
 |---|---|
 | Ring the chosen category with a wobbly ink line over the wash: **(Chairs)** | Wobble every border. Unchosen chips have no border at all |
-| Price in mono: `≈ $90 (est.)` | Hand-letter a price or a size |
+| Price in mono: `≈ $90`, and `≈ $90 (est.)` where it's the price of record | Hand-letter a price or a size |
 | Draw a dimension line on the floor next to the selected table | Lay paper grain, sepia or a sketch shader over the room |
 | Red pencil for "Blocks the door" | Red for anything that isn't a problem, such as a selected tab |
 | Hatch an empty History: *Nothing drawn yet.* | Leave a blank panel, or fill it with a spinner |

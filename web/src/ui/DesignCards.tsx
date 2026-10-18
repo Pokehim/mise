@@ -7,7 +7,7 @@ import { describe, replay } from '../state/core';
 import { type Take, useGenerate } from '../state/generate';
 import { saveNow, shoppingList } from '../state/history';
 import { useEditor } from '../state/store';
-import { count, dollars, priceEstimate } from './format';
+import { count, dollars, priceEstimate, productName } from './format';
 import { ArrowRight } from './icons';
 import { PlanSketch } from './PlanSketch';
 
@@ -85,7 +85,7 @@ function TakeCard({ direction, take: { plan, edits, design, report, error }, onO
         : (
           <>
             {plan && <span className="plan">{planLines(plan).map((line, i) => <span key={i}>{line}</span>)}</span>}
-            <span className="step" aria-live="polite">{last ? describe(last, setup, catalog) : plan ? 'Planning…' : 'Reading the room…'}</span>
+            <span className="step" aria-live="polite">{last ? describe(last, setup, catalog, { name: productName }) : plan ? 'Planning…' : 'Reading the room…'}</span>
           </>
         )}
       {!design && <span className="counts">{count(edits.length, 'Edit')}</span>}
@@ -130,8 +130,9 @@ function Elapsed() {
     return () => clearInterval(timer);
   }, []);
   return (
+    // The seconds tick ten times a second: a screen reader hears the status once, not each tick.
     <span className="muted" role="status">
-      AI is designing three takes · <span className="seconds">{((now - since) / 1000).toFixed(1)} s</span>
+      AI is designing three takes<span aria-hidden="true"> · <span className="seconds">{((now - since) / 1000).toFixed(1)} s</span></span>
     </span>
   );
 }

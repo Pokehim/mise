@@ -5,6 +5,10 @@
 @media (hover: hover) {
   .editor .generate-button:hover .icon { color: var(--ink); }
 }
+/* Designs coming in the background, with the dialog closed: the spark breathes. Opacity only, so it
+   stays under reduced motion too. */
+.editor .generate-button.designing .icon { color: var(--wash); animation: spark-breathe 1.2s ease-in-out infinite alternate; }
+@keyframes spark-breathe { to { opacity: 0.35; } }
 
 /* ───────────── The dialog: a sheet laid over the editor ───────────── */
 
@@ -22,12 +26,9 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-/* No scrim: nothing tints the 3D view (sketch-style rule 1). The sheet's lift sets it apart. */
+/* No scrim: nothing tints the 3D view (sketch-style rule 1). The sheet's lift sets it apart. It rises in
+   and settles out the same way (base.css). */
 .brief-dialog::backdrop { background: transparent; }
-@media (prefers-reduced-motion: no-preference) {
-  .brief-dialog[open] { animation: brief-in var(--draw) var(--ease-out); }
-}
-@keyframes brief-in { from { opacity: 0; transform: translateY(6px); } }
 
 .brief-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-1); }
 .brief-dialog h2 { margin: 0; font: 400 24px/1.2 var(--font-hand); }
@@ -53,7 +54,8 @@
   line-height: 1.45;
   resize: vertical;
 }
-.brief-dialog :is(textarea, .money):focus-within { outline: none; border-color: var(--wash); }
+/* The focus ring every other control has (base.css), on the field's own box. */
+.brief-dialog :is(textarea, .money):focus-within { outline: 2px solid var(--wash); outline-offset: 0; border-color: var(--wash); }
 
 /* Style chips: words with no box until chosen, as the editor's other chips. */
 .brief-dialog .chips { display: flex; flex-wrap: wrap; gap: 2px var(--s-1); }
@@ -70,6 +72,8 @@
 .brief-dialog .budget { justify-items: start; }
 .brief-dialog .money { display: inline-flex; align-items: center; gap: 2px; padding-left: var(--s-2); color: var(--graphite); font-family: var(--font-mono); }
 .editor .brief-dialog .money input { width: 12ch; padding-left: 2px; border: 0; background: transparent; font-family: var(--font-mono); }
+/* Its box (.money) carries the ring. */
+.editor .brief-dialog .money input:focus-visible { outline: none; }
 .brief-dialog .hint { color: var(--graphite); font-size: 12px; }
 
 .brief-dialog footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2); }
@@ -192,5 +196,5 @@
 @media (prefers-reduced-motion: reduce) {
   .plan-sketch :is(.piece, .paint) { animation: plan-fade var(--draw) linear both; }
 }
-@keyframes plan-in { from { opacity: 0; transform: scale(0.8); } }
+@keyframes plan-in { from { opacity: 0; transform: scale(0.92); } }
 @keyframes plan-fade { from { opacity: 0; } }

@@ -7,7 +7,8 @@ import type { Vec3 } from '@shared/types';
 import { useEditor } from '../state/store';
 import { ControlsHint, hideControlsHint } from './ControlsHint';
 import { roomBounds } from './floorPlan';
-import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
+import { clickTolerancePx, isDrawn } from './objects';
+import { prefersReducedMotion } from './screenScale';
 import type { Shot } from './shots';
 
 /** How many times closer one mouse-wheel notch takes the camera: 5 go from the whole room to one chair. */
@@ -32,6 +33,9 @@ const GLIDE_MS = 200;
 /** How far back a let-go drag looks for its speed, in ms; a pointer held still this long doesn't glide. */
 const GLIDE_WINDOW_MS = 80;
 const UP = new Vector3(0, 1, 0);
+
+/** Where the Dollhouse view was when the Mover left it (for Walk), by Design, to come back to. */
+const lastPose = new Map<string, { azimuth: number; polar: number; target: Vector3; distance: number }>();
 
 /** How far the wheel event scrolled, in pixels, where a mouse-wheel notch is NOTCH_PX on every platform. */
 export function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
@@ -59,6 +63,7 @@ export function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
  */
 export function DollhouseCamera({ start }: { start?: Shot }) {
   const setup = useEditor((s) => s.setup!);
+  const designId = useEditor((s) => s.design?.id);
   const controls = useRef<CameraControls>(null!);
   const room = useMemo(() => roomBounds(setup), [setup]);
   const distance = room.getSize(new Vector3()).setY(0).length() * 1.4;
@@ -94,11 +99,24 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       void cameraControls.dollyTo(radius, false);
       return;
     }
-    // From the south, at the turn nearest the camera's.
-    void cameraControls.rotateTo(Math.round(cameraControls.azimuthAngle / (2 * Math.PI)) * 2 * Math.PI, Math.PI / 4, true);
-    void cameraControls.moveTo(x, 0.5, z, true);
-    void cameraControls.dollyTo(distance, true);
-  }, [room, boundary, distance, start, camera]);
+    // Back where the Mover left the Dollhouse view, else from the south; either way at the turn nearest
+    // the camera's. With reduced motion, there at once rather than flying in.
+    const ease = !prefersReducedMotion();
+    const { azimuthAngle } = cameraControls;
+    const saved = designId === undefined ? undefined : lastPose.get(designId);
+    const azimuth = saved ? azimuthAngle + MathUtils.euclideanModulo(saved.azimuth - azimuthAngle + Math.PI, 2 * Math.PI) - Math.PI
+      : Math.round(azimuthAngle / (2 * Math.PI)) * 2 * Math.PI;
+    void cameraControls.rotateTo(azimuth, saved?.polar ?? Math.PI / 4, ease);
+    const to = saved?.target ?? new Vector3(x, 0.5, z);
+    void cameraControls.moveTo(to.x, to.y, to.z, ease);
+    void cameraControls.dollyTo(saved?.distance ?? distance, ease);
+    return () => {
+      if (designId === undefined) return;
+      lastPose.set(designId, {
+        azimuth: cameraControls.azimuthAngle, polar: cameraControls.polarAngle, target: cameraControls.getTarget(new Vector3()), distance: cameraControls.distance,
+      });
+    };
+  }, [room, boundary, distance, start, camera, designId]);
 
   // The controls hint, over the view. Not in a ?shot= view, which is a picture of the room.
   useEffect(() => {
@@ -168,7 +186,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       if (!cameraControls.enabled) return;
       event.preventDefault();
       const { timeStamp: time, clientX: x, clientY: y } = event;
-      if (time - last.time > GESTURE_GAP_MS || Math.hypot(x - last.x, y - last.y) > CLICK_TOLERANCE_PX) aimAt(x, y);
+      if (time - last.time > GESTURE_GAP_MS || Math.hypot(x - last.x, y - last.y) > clickTolerancePx()) aimAt(x, y);
       last = { time, x, y };
 
       const radius = cameraControls.getSpherical(new Spherical(), true).radius;
@@ -213,7 +231,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       if (event.pointerId !== drag?.pointerId) return;
       // A Piece drag can start on this same press, and turns the controls off.
       if (!cameraControls.enabled) return endDrag();
-      if (Math.hypot(event.clientX - drag.downX, event.clientY - drag.downY) > CLICK_TOLERANCE_PX) hideControlsHint();
+      if (Math.hypot(event.clientX - drag.downX, event.clientY - drag.downY) > clickTolerancePx()) hideControlsHint();
       if (!drag.turn) {
         const { grabbed } = drag;
         if (!grabbed) return;
@@ -240,7 +258,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
     const onPointerUp = (event: PointerEvent) => {
       if (event.pointerId !== drag?.pointerId) return;
       const [first, last] = [drag.trail[0], drag.trail.at(-1)];
-      if (first && last && last.time > first.time && event.timeStamp - last.time <= GLIDE_WINDOW_MS) {
+      if (first && last && last.time > first.time && event.timeStamp - last.time <= GLIDE_WINDOW_MS && !prefersReducedMotion()) {
         const glide = GLIDE_MS / (last.time - first.time);
         cameraControls.getTarget(target, true);
         void cameraControls.moveTo(target.x + (last.x - first.x) * glide, target.y, target.z + (last.z - first.z) * glide, true);

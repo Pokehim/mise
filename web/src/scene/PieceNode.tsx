@@ -10,7 +10,7 @@ import { pieceItem, useEditor } from '../state/store';
 import { applyParts, recolorParts } from './applyParts';
 import { useDragPiece } from './DragControls';
 import { withMeshopt } from './gltf';
-import { CLICK_TOLERANCE_PX, forEachMaterial, ignoreRaycast } from './objects';
+import { clickTolerancePx, forEachMaterial, ignoreRaycast } from './objects';
 import { liesFlat } from './placement';
 import { useSketchLines } from './sketch/SketchLines';
 import { token } from './sketch/tokens';
@@ -96,7 +96,7 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
       // A click selects it, not the end of a drag; either way, not the Scan behind it.
       onClick={(event) => {
         event.stopPropagation();
-        if (event.delta <= CLICK_TOLERANCE_PX) useEditor.getState().select({ kind: 'piece', id: pieceId });
+        if (event.delta <= clickTolerancePx()) useEditor.getState().select({ kind: 'piece', id: pieceId });
       }}
       onPointerOver={(event) => {
         event.stopPropagation();

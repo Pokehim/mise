@@ -1,5 +1,5 @@
 /** The tokens of styles/tokens.css that the 3D overlays read. */
-export type Token = '--ink' | '--graphite' | '--wash' | '--red-pencil' | '--paper-raised' | '--desk' | '--draw';
+export type Token = '--ink' | '--graphite' | '--wash' | '--wash-tint' | '--red-pencil' | '--paper-raised' | '--desk' | '--draw';
 
 const cache = new Map<Token, string>();
 

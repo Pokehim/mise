@@ -34,7 +34,7 @@
   border-bottom: var(--line) solid var(--pencil);
 }
 .topbar .spacer { flex: 1; }
-.editor .topbar .back { display: inline-flex; align-items: center; gap: 6px; color: var(--graphite); font-weight: 500; text-decoration: none; }
+.editor .topbar .back { position: relative; display: inline-flex; align-items: center; gap: 6px; color: var(--graphite); font-weight: 500; text-decoration: none; }
 @media (hover: hover) {
   .editor .topbar .back:hover { color: var(--ink); }
 }
@@ -85,8 +85,15 @@
   background: var(--paper-raised);
   object-fit: contain;
 }
-.card .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 13px; line-height: 1.35; }
-.card .price { margin-top: 2px; color: var(--graphite); font-size: 12px; }
+/* The Catalog holds hundreds of cards: the browser skips laying out the ones out of view. */
+.card { content-visibility: auto; contain-intrinsic-size: auto 72px; }
+.card-text { min-width: 0; }
+.card .title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 13px; font-weight: 500; line-height: 1.35; }
+/* Under the name: the price in mono, then the brand. */
+.card .meta { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; color: var(--graphite); font-size: 12px; }
+.card .brand { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .brand::before { content: '· '; color: var(--pencil-strong); }
+.card .price { flex: none; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .editor .card button { gap: 2px; padding: 3px 8px 3px 5px; font-size: 13px; }
 .catalog .empty { margin-bottom: var(--s-4); }
 
@@ -115,6 +122,10 @@
 }
 .inspector h2 .icon { display: inline-block; margin-left: 6px; color: var(--graphite); vertical-align: -1px; }
 .inspector p { margin: 0 0 var(--s-2); }
+.inspector .brand { margin-top: calc(-1 * var(--s-1)); font-size: 12.5px; }
+.inspector .hint { font-size: 12.5px; line-height: 1.45; text-wrap: pretty; }
+/* A section folded away on a phone (the Floor's Finishes), opened by its title. */
+.inspector .fold summary { padding: var(--s-2) 0; color: var(--wash); font-weight: 500; cursor: pointer; }
 .inspector .dims { font-size: 12.5px; line-height: 1.5; }
 .inspector .dims span { color: var(--graphite); }
 .inspector .price { font-size: 13px; }
@@ -158,7 +169,8 @@
   border-top: var(--line) solid var(--pencil);
   color: var(--graphite);
   box-sizing: border-box;
-  height: 24px;
+  /* One line on a wide screen; on a phone the credits wrap, and the footer grows with them. */
+  min-height: 24px;
   font-size: 11px;
   line-height: 15px;
 }
@@ -192,8 +204,9 @@
 /* ───────────── Phones: the room on top, then the panels, as one scrolling page ───────────── */
 
 @media (max-width: 760px) {
+  /* The Inspector under the room, for what's selected in it; then the Catalog, to add to it; History last. */
   .editor {
-    grid-template: 'top' auto 'view' 52dvh 'inspector' auto 'history' auto 'catalog' auto 'foot' auto / minmax(0, 1fr);
+    grid-template: 'top' auto 'view' 52dvh 'inspector' auto 'catalog' auto 'history' auto 'foot' auto / minmax(0, 1fr);
     height: auto;
     min-height: 100%;
   }
@@ -203,8 +216,13 @@
   .topbar .back .label { display: none; }   /* the link keeps its name, "Scans" (TopBar) */
   .topbar .scan-name { display: none; }
   .topbar .designs-menu { flex: 1; }
-  .topbar .designs-menu .popover-anchor { min-width: 0; }
+  .topbar .designs-menu .popover-anchor { flex: 0 1 auto; min-width: 0; }
   .editor .topbar .designs-menu .popover-button { max-width: 100%; }
+  /* The Design's name always shows: the row's other controls give up their words first. */
+  .topbar .designs-menu .popover-button strong { min-width: 6ch; }
+  .topbar .save-status.saved .text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .topbar .generate-button .label, .topbar .cart .est { display: none; }
+  .editor .topbar .generate-button { padding-inline: 8px; }
   .topbar .spacer { order: 1; flex-basis: 100%; }
   .topbar .views { order: 2; }
   .topbar .views[aria-label='View'] { margin-left: auto; }

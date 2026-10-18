@@ -14,23 +14,25 @@ const DEMO = '/scans';
 export function Landing() {
   return (
     <div className="home landing">
-      <header className="home-intro">
-        <hgroup>
-          <h1>Mise</h1>
-          <p className="tagline">A sketchbook for your real room.</p>
-        </hgroup>
-        <p>Redesign your real room before you buy a thing. Try Catalog furniture at true size in your Scan, then shop the Design.</p>
-        <Link href={DEMO} className="cta">Try the demo<ArrowRight /></Link>
-      </header>
-      <figure className="landing-demo">
-        <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms AI made of the Oliver Hall 6th Floor Study Lounge">
-          <RoomGrid />
-        </Link>
-        {/* Labeled like a drawing, lettered under it. */}
-        <figcaption>
-          <span className="landing-title">One study lounge, sixteen rooms</span>
-        </figcaption>
-      </figure>
+      <main className="landing-main">
+        <header className="home-intro">
+          <hgroup>
+            <h1>Mise</h1>
+            <p className="tagline">A sketchbook for your real room.</p>
+          </hgroup>
+          <p>Redesign your real room before you buy a thing. Try Catalog furniture at true size in your Scan, then shop the Design.</p>
+          <Link href={DEMO} className="cta">Try the demo<ArrowRight /></Link>
+        </header>
+        <figure className="landing-demo">
+          <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms AI made of the Oliver Hall 6th Floor Study Lounge">
+            <RoomGrid />
+          </Link>
+          {/* Labeled like a drawing, lettered under it. */}
+          <figcaption>
+            <span className="landing-title">One study lounge, sixteen rooms</span>
+          </figcaption>
+        </figure>
+      </main>
       <Credits />
     </div>
   );

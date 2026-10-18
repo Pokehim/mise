@@ -31,7 +31,8 @@
   background: var(--grain), var(--paper-raised);
 }
 .editor .refine-box > .icon { flex: none; color: var(--graphite); }
-.editor .refine-box:focus-within { border-color: var(--wash); }
+/* The focus ring every other control has (base.css), on the box rather than the bare input in it. */
+.editor .refine-box:focus-within { border-color: var(--wash); outline: 2px solid var(--wash); outline-offset: 1px; }
 .editor .refine-box:focus-within > .icon { color: var(--wash); }
 .editor .refine-box input {
   flex: 1;
@@ -74,6 +75,9 @@
   text-align: center;
 }
 
+/* On a phone the box takes the view's width, and Replay sits under it on the right, clear of the
+   Sketch lines toggle in the bottom-left corner. */
 @media (max-width: 760px) {
-  .editor .refine-bar { padding-left: 0; }
+  .editor .refine-bar { justify-content: flex-end; padding-left: 0; }
+  .editor .refine-box { width: 100%; }
 }

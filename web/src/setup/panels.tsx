@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MathUtils } from 'three';
 import type { Category, Opening, Original } from '@shared/types';
 import { scanFileUrl } from '../api';
+import { Lock, RotateLeft, RotateRight } from '../ui/icons';
 import { bakeFloorColors } from './bake';
 import { bakePatches } from './bakePatches';
 import {
@@ -51,18 +52,18 @@ function LevelPanel() {
     <>
       <p>Check that the floor sits on the grid and the walls run along its lines. Adjust if they don't.</p>
       <label className="rs-field">
-        <span>Floor height in the capture <small>(m)</small></span>
+        <span>Floor height in the capture <small>m</small></span>
         <input type="number" step={0.005} value={mm(floorHeight)} onChange={(e) => apply(Number(e.target.value), yaw)} />
       </label>
       {histogram && <HistogramChart histogram={histogram} marker={floorHeight} label="Up-facing surfaces by height" />}
       <label className="rs-field">
-        <span>Yaw <small>({MathUtils.radToDeg(yaw).toFixed(1)}°)</small></span>
+        <span>Yaw <small className="mono">{MathUtils.radToDeg(yaw).toFixed(1)}°</small></span>
         <input type="range" min={-45} max={45} step={0.1} value={MathUtils.radToDeg(yaw)}
           onChange={(e) => apply(floorHeight, MathUtils.degToRad(Number(e.target.value)))} />
       </label>
       <div className="rs-row">
         <button type="button" onClick={detect}>Auto-detect</button>
-        <button type="button" className="rs-primary" onClick={saveLevel}>Confirm level</button>
+        <button type="button" className="primary" onClick={saveLevel}>Confirm level</button>
       </div>
       {levelSaved && isLeveled(manifest) && <p className="rs-note">Level saved to the manifest.</p>}
     </>
@@ -86,9 +87,9 @@ function CeilingPanel() {
   };
   return (
     <>
-      <p>The yellow plane should sit on the ceiling.</p>
+      <p>The blue sheet should sit on the ceiling.</p>
       <label className="rs-field">
-        <span>Ceiling height <small>({ceilingHeight.toFixed(3)} m)</small></span>
+        <span>Ceiling height <small className="mono">{ceilingHeight.toFixed(3)} m</small></span>
         <input type="range" min={1.8} max={4.5} step={0.005} value={ceilingHeight} onChange={(e) => setHeight(Number(e.target.value))} />
       </label>
       {histogram && <HistogramChart histogram={histogram} marker={ceilingHeight} label="Down-facing surfaces by height" />}
@@ -110,14 +111,17 @@ function CornersPanel() {
         <button type="button" disabled={polygon.length === 0} onClick={() => updateSetup((s) => withPolygon(s, []))}>Clear</button>
       </div>
       {walls.length > 0 && (
-        <ul className="rs-list">
-          {walls.map((wall) => (
-            <li key={wall.id}>
-              <input value={wall.name} aria-label={`Name of ${wall.id}`}
-                onChange={(e) => updateSetup((s) => ({ ...s, walls: s.walls.map((w) => (w.id === wall.id ? { ...w, name: e.target.value } : w)) }))} />
-              <small>{wallAxis(wall).length.toFixed(2)} m</small>
-            </li>
-          ))}
+        <ul className="rs-list rs-walls" aria-label="Walls">
+          {walls.map((wall, i) => {
+            const length = `${wallAxis(wall).length.toFixed(2)} m`;
+            return (
+              <li key={wall.id}>
+                <input value={wall.name} aria-label={`Wall ${i + 1} name (${length})`}
+                  onChange={(e) => updateSetup((s) => ({ ...s, walls: s.walls.map((w) => (w.id === wall.id ? { ...w, name: e.target.value } : w)) }))} />
+                <small className="mono" aria-hidden="true">{length}</small>
+              </li>
+            );
+          })}
         </ul>
       )}
     </>
@@ -132,12 +136,31 @@ const SWINGS: { value: Swing; label: string }[] = [
   { value: 'none', label: 'No swing (sliding, or opens out)' },
 ];
 
-function SwingSelect({ value, onChange }: { value: Swing; onChange: (swing: Swing) => void }) {
+function SwingSelect({ value, onChange, label }: { value: Swing; onChange: (swing: Swing) => void; label: string }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value as Swing)}>
+    <select value={value} aria-label={label} onChange={(e) => onChange(e.target.value as Swing)}>
       {SWINGS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
     </select>
   );
+}
+
+/** What a step deleted last, while it can still be put back: the step's Delete takes effect at once. */
+interface Deleted { id: string; name: string; putBack: () => void }
+
+/** "Deleted “Chair 3” · Put back", as in the editor's History. */
+function DeletedNote({ deleted, onDone }: { deleted: Deleted; onDone: () => void }) {
+  return (
+    <p className="rs-deleted" role="status">
+      <span className="rs-deleted-text">Deleted “{deleted.name}”</span>
+      <button type="button" onClick={() => { deleted.putBack(); onDone(); }}>Put back</button>
+    </p>
+  );
+}
+
+/** A copy of `list` with `item` back at `index`, or as it was if its id is taken again. */
+function putBackAt<T extends { id: string }>(list: T[], index: number, item: T): T[] {
+  if (list.some((it) => it.id === item.id)) return list;
+  return [...list.slice(0, index), item, ...list.slice(index)];
 }
 
 /** Step 4: doors and windows. */
@@ -146,50 +169,67 @@ function OpeningsPanel() {
   const selectedWallId = useSetup((s) => s.selectedWallId);
   const draft = useSetup((s) => s.openingDraft);
   const { selectWall, updateOpening, updateSetup } = useSetup.getState();
+  const [deleted, setDeleted] = useState<Deleted>();
   const setDraft = (change: Partial<typeof draft>) => useSetup.setState({ openingDraft: { ...draft, ...change } });
-  if (walls.length === 0) return <p>Mark the corners first (step 3).</p>;
+  if (walls.length === 0) return <p className="rs-note">Mark the corners first (step 3).</p>;
+  const wallName = (opening: Opening) => walls.find((w) => w.id === opening.wallId)?.name;
+  const remove = (opening: Opening) => {
+    const index = openings.indexOf(opening);
+    updateSetup((s) => ({ ...s, openings: s.openings.filter((o) => o.id !== opening.id) }));
+    setDeleted({
+      id: opening.id,
+      name: `${opening.kind === 'door' ? 'Door' : 'Window'} on ${wallName(opening)}`,
+      putBack: () => updateSetup((s) => ({ ...s, openings: putBackAt(s.openings, index, opening) })),
+    });
+  };
   return (
     <>
       <p>Pick a wall, then click two opposite corners of a door or window on it. Hinge sides are as seen from inside the room.</p>
-      <div className="rs-chips">
+      <div className="rs-chips" role="group" aria-label="Wall">
         {walls.map((wall) => (
-          <button type="button" key={wall.id} className={wall.id === selectedWallId ? 'rs-chip rs-chip-on' : 'rs-chip'}
-            onClick={() => selectWall(wall.id)}>
+          <button type="button" key={wall.id} className="rs-chip" aria-pressed={wall.id === selectedWallId} onClick={() => selectWall(wall.id)}>
             {wall.name}
           </button>
         ))}
       </div>
-      <div className="rs-row">
-        <label><input type="radio" checked={draft.kind === 'door'} onChange={() => setDraft({ kind: 'door' })} /> Door</label>
-        <label><input type="radio" checked={draft.kind === 'window'} onChange={() => setDraft({ kind: 'window' })} /> Window</label>
-      </div>
-      {draft.kind === 'door' && <SwingSelect value={draft.swing} onChange={(swing) => setDraft({ swing })} />}
-      <p className="rs-note">
+      <fieldset className="rs-fieldset">
+        <legend>The next opening is a</legend>
+        <div className="rs-row">
+          <label className="rs-check"><input type="radio" name="rs-opening-kind" checked={draft.kind === 'door'} onChange={() => setDraft({ kind: 'door' })} /> Door</label>
+          <label className="rs-check"><input type="radio" name="rs-opening-kind" checked={draft.kind === 'window'} onChange={() => setDraft({ kind: 'window' })} /> Window</label>
+        </div>
+        {draft.kind === 'door' && <SwingSelect label="Its swing" value={draft.swing} onChange={(swing) => setDraft({ swing })} />}
+      </fieldset>
+      <p className="rs-note rs-next" aria-live="polite">
         {!selectedWallId ? 'Pick a wall.' : draft.first ? 'Now click the opposite corner.' : `Click a corner of the ${draft.kind}.`}
       </p>
-      <ul className="rs-list">
-        {openings.map((opening) => (
-          <li key={opening.id} className="rs-item">
-            <div className="rs-row">
-              <select value={opening.kind} onChange={(e) => {
-                const kind = e.target.value as Opening['kind'];
-                // A door starts at the floor.
-                updateOpening(opening.id, kind === 'door'
-                  ? { kind, bottom: 0, height: mm(opening.bottom + opening.height), swing: opening.swing ?? 'in-left' }
-                  : { kind, swing: undefined });
-              }}>
-                <option value="door">Door</option>
-                <option value="window">Window</option>
-              </select>
-              <span>on {walls.find((w) => w.id === opening.wallId)?.name}</span>
-              <button type="button" className="rs-link" onClick={() => updateSetup((s) => ({ ...s, openings: s.openings.filter((o) => o.id !== opening.id) }))}>Delete</button>
-            </div>
-            {opening.kind === 'door' && (
-              <SwingSelect value={opening.swing ?? 'none'} onChange={(swing) => updateOpening(opening.id, { swing })} />
-            )}
-            <small>{opening.width.toFixed(2)} × {opening.height.toFixed(2)} m, {opening.offset.toFixed(2)} m along, {opening.bottom.toFixed(2)} m up</small>
-          </li>
-        ))}
+      {deleted && !openings.some((o) => o.id === deleted.id) && <DeletedNote deleted={deleted} onDone={() => setDeleted(undefined)} />}
+      <ul className="rs-list" aria-label="Openings">
+        {openings.map((opening, i) => {
+          const name = `Opening ${i + 1}`;
+          return (
+            <li key={opening.id} className="rs-item">
+              <div className="rs-row">
+                <select value={opening.kind} aria-label={`${name} is a`} onChange={(e) => {
+                  const kind = e.target.value as Opening['kind'];
+                  // A door starts at the floor.
+                  updateOpening(opening.id, kind === 'door'
+                    ? { kind, bottom: 0, height: mm(opening.bottom + opening.height), swing: opening.swing ?? 'in-left' }
+                    : { kind, swing: undefined });
+                }}>
+                  <option value="door">Door</option>
+                  <option value="window">Window</option>
+                </select>
+                <span className="rs-grow">on {wallName(opening)}</span>
+                <button type="button" aria-label={`Delete ${name}`} onClick={() => remove(opening)}>Delete</button>
+              </div>
+              {opening.kind === 'door' && (
+                <SwingSelect label={`${name}'s swing`} value={opening.swing ?? 'none'} onChange={(swing) => updateOpening(opening.id, { swing })} />
+              )}
+              <small className="rs-measure">{opening.width.toFixed(2)} × {opening.height.toFixed(2)} m, {opening.offset.toFixed(2)} m along, {opening.bottom.toFixed(2)} m up</small>
+            </li>
+          );
+        })}
       </ul>
     </>
   );
@@ -202,8 +242,22 @@ function OriginalsPanel() {
   const tagCategory = useSetup((s) => s.tagCategory);
   const notice = useSetup((s) => s.notice);
   const { updateOriginal, updateSetup } = useSetup.getState();
+  const [deleted, setDeleted] = useState<Deleted>();
   const selected = originals.find((o) => o.id === selectedId);
   const update = (change: Partial<Original>) => updateOriginal(selectedId!, change);
+  const remove = (original: Original) => {
+    const index = originals.indexOf(original);
+    updateSetup((s) => ({ ...s, originals: s.originals.filter((o) => o.id !== original.id) }));
+    useSetup.setState({ selectedOriginalId: undefined });
+    setDeleted({
+      id: original.id,
+      name: original.label,
+      putBack: () => {
+        updateSetup((s) => ({ ...s, originals: putBackAt(s.originals, index, original) }));
+        useSetup.setState({ selectedOriginalId: original.id });
+      },
+    });
+  };
   return (
     <>
       <p>Choose what you're tagging, then click it in the room. Click a box to select it.</p>
@@ -211,9 +265,10 @@ function OriginalsPanel() {
         <span>Next click tags a</span>
         <CategorySelect value={tagCategory} onChange={(category) => useSetup.setState({ tagCategory: category })} />
       </label>
-      {notice && <p className="rs-note rs-warn">{notice}</p>}
+      {notice && <p className="rs-note rs-warn" role="status">{notice}</p>}
+      {deleted && !originals.some((o) => o.id === deleted.id) && <DeletedNote deleted={deleted} onDone={() => setDeleted(undefined)} />}
       {selected && (
-        <div className="rs-card">
+        <section className="rs-card" aria-label={`Selected: ${selected.label}`}>
           <label className="rs-field"><span>Label</span><input value={selected.label} onChange={(e) => update({ label: e.target.value })} /></label>
           <label className="rs-field">
             <span>Category</span>
@@ -221,9 +276,10 @@ function OriginalsPanel() {
           </label>
           <label className="rs-check">
             <input type="checkbox" checked={selected.kept} onChange={(e) => update({ kept: e.target.checked })} />
-            Kept <small>(stays in the room: can be recolored, never moved or replaced)</small>
+            <span>Kept <small>Stays in the room: it can be recolored, never moved or replaced.</small></span>
           </label>
-          <div className="rs-size">
+          <fieldset className="rs-size">
+            <legend>Size <small>m</small></legend>
             {(['Width', 'Height', 'Depth'] as const).map((name, axis) => (
               <label key={name}>
                 <small>{name}</small>
@@ -234,25 +290,28 @@ function OriginalsPanel() {
                 }} />
               </label>
             ))}
-          </div>
+          </fieldset>
           <div className="rs-row">
-            <button type="button" title="Turn the front 90° left" onClick={() => update({ box: turned(selected.box, 1) })}>⟲ 90°</button>
-            <button type="button" title="Turn the front 90° right" onClick={() => update({ box: turned(selected.box, -1) })}>⟳ 90°</button>
-            <button type="button" className="rs-link" onClick={() => {
-              updateSetup((s) => ({ ...s, originals: s.originals.filter((o) => o.id !== selected.id) }));
-              useSetup.setState({ selectedOriginalId: undefined });
-            }}>Delete</button>
+            <button type="button" title="Turn the front 90° left" aria-label="Turn the front 90° left" onClick={() => update({ box: turned(selected.box, 1) })}>
+              <RotateLeft /><span className="mono">90°</span>
+            </button>
+            <button type="button" title="Turn the front 90° right" aria-label="Turn the front 90° right" onClick={() => update({ box: turned(selected.box, -1) })}>
+              <RotateRight /><span className="mono">90°</span>
+            </button>
+            <span className="rs-grow" />
+            <button type="button" onClick={() => remove(selected)}>Delete</button>
           </div>
           <small>The thick edge on the floor is the front.</small>
-        </div>
+        </section>
       )}
-      <ul className="rs-list">
+      <ul className="rs-list rs-originals" aria-label="Originals">
         {originals.map((o) => (
           <li key={o.id}>
-            <button type="button" className={o.id === selectedId ? 'rs-chip rs-chip-on' : 'rs-chip'} onClick={() => useSetup.setState({ selectedOriginalId: o.id })}>
-              {o.label}
+            <button type="button" aria-pressed={o.id === selectedId} onClick={() => useSetup.setState({ selectedOriginalId: o.id })}>
+              <span className="rs-grow">{o.label}</span>
+              <small>{CATEGORY_NAMES[o.category]}</small>
+              {o.kept && <span className="rs-kept" title="Kept"><Lock /><span className="sr-only">Kept</span></span>}
             </button>
-            <small>{CATEGORY_NAMES[o.category]}{o.kept ? ' · Kept' : ''}</small>
           </li>
         ))}
       </ul>
@@ -315,7 +374,7 @@ function FillsPanel() {
           <p className="rs-note">Click floor-level corners in pairs, first on the room, then the same one on the Fill Capture. {next} ({pairs} of {CORNER_PAIRS} pairs)</p>
           <div className="rs-row">
             <button type="button" onClick={clearCorners} disabled={draft.roomCorners.length === 0}>Clear corners</button>
-            <button type="button" className="rs-primary" onClick={lineUp} disabled={pairs < 3}>Line up</button>
+            <button type="button" className="primary" onClick={lineUp} disabled={pairs < 3}>Line up</button>
             <button type="button" onClick={refineLineUp} disabled={!isAligned(fill)}>Refine</button>
           </div>
           {draft.residual !== undefined && (
@@ -342,18 +401,17 @@ function FillsPanel() {
                 : moved ? `marked${copy ? `, within ${(copy.residual * 100).toFixed(1)} cm` : ''}` : 'not moved';
               return (
                 <li key={o.id}>
-                  {o.label}
-                  <small>{status}</small>
-                  <button type="button" disabled={!isAligned(fill)} onClick={() => startMarking(marking ? undefined : o.id)}>
+                  <span className="rs-grow">{o.label} <small>{status}</small></span>
+                  <button type="button" disabled={!isAligned(fill)} aria-pressed={marking} onClick={() => startMarking(marking ? undefined : o.id)}>
                     {marking ? 'Cancel' : moved ? 'Mark again' : 'Mark'}
                   </button>
-                  {moved && <button type="button" onClick={() => forgetMoved(o.id)}>Clear</button>}
+                  {moved && <button type="button" aria-label={`Clear ${o.label}'s mark`} onClick={() => forgetMoved(o.id)}>Clear</button>}
                 </li>
               );
             })}
           </ul>
           <div className="rs-row">
-            <button type="button" className="rs-primary" disabled={!isAligned(fill)} onClick={saveAndMerge}>Save and rebuild room.glb</button>
+            <button type="button" className="primary" disabled={!isAligned(fill)} onClick={saveAndMerge}>Save and rebuild room.glb</button>
           </div>
           {draft.merged && <p className="rs-note">{draft.merged} To see a Patch, remove or move an Original in a Design.</p>}
         </>
@@ -417,17 +475,19 @@ function BakePanel() {
         Bake measures the floor's color around each Original, so a replaced Original's spot is patched with it. It also fills,
         for each Original that is not Kept, the floor and wall that no Capture saw (Patch v2), and saves them as images.
       </p>
-      <div className="rs-row"><button type="button" className="rs-primary" disabled={busy} onClick={bake}>{busy ? 'Baking…' : 'Bake'}</button></div>
-      {result && <p className="rs-note">{result}</p>}
+      <div className="rs-row"><button type="button" className="primary" disabled={busy} onClick={bake}>{busy ? 'Baking…' : 'Bake'}</button></div>
+      {result && <p className={result.startsWith('Bake failed') ? 'rs-note rs-warn' : 'rs-note'} role="status">{result}</p>}
       <ul className="rs-list">
         {originals.map((o) => (
           <li key={o.id}>
             <span className="rs-swatch" style={{ background: o.floorColor }} />
-            {o.label}
-            <small>
-              {o.floorColor === UNBAKED_FLOOR_COLOR ? 'not baked' : o.floorColor}
-              {o.kept ? ', Kept' : o.patch ? `, Patch: ${patchSummary(o.patch)}` : ''}
-            </small>
+            <span className="rs-grow">
+              {o.label}{' '}
+              <small>
+                {o.floorColor === UNBAKED_FLOOR_COLOR ? 'not baked' : <span className="mono">{o.floorColor}</span>}
+                {o.kept ? ', Kept' : o.patch ? `, Patch: ${patchSummary(o.patch)}` : ''}
+              </small>
+            </span>
           </li>
         ))}
       </ul>
@@ -444,13 +504,13 @@ function HistogramChart({ histogram, marker, label }: { histogram: Histogram; ma
   const x = (y: number) => ((y - start) / (binSize * weights.length)) * width;
   return (
     <figure className="rs-histogram">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={label}>
         {Array.from(weights, (w, i) => (
           <rect key={i} x={(i / weights.length) * width} width={Math.max(1, width / weights.length)} y={height - (w / max) * height} height={(w / max) * height} />
         ))}
         <line x1={x(marker)} x2={x(marker)} y1={0} y2={height} />
       </svg>
-      <figcaption>{label}: {start.toFixed(2)} to {(start + binSize * weights.length).toFixed(2)} m</figcaption>
+      <figcaption>{label}: <span className="mono">{start.toFixed(2)}–{(start + binSize * weights.length).toFixed(2)} m</span></figcaption>
     </figure>
   );
 }

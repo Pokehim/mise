@@ -6,8 +6,8 @@ import { type Token, token } from './tokens';
 
 /** A construction line's dash and gap, in meters (docs/design/sketch-style.md). */
 export const DASH: [number, number] = [0.05, 0.035];
-/** A strong ease-out, close to the --ease-out token: most of the stroke lands early. */
-const easeOut = (t: number) => 1 - (1 - t) ** 4;
+/** The --ease-out token's curve, to within 1%: most of the stroke lands early. */
+const easeOut = (t: number) => 1 - (1 - t) ** 5;
 /** How far the paper halo under a line reaches past each side of it, in pixels. */
 const HALO = 1.25;
 /** drei builds a Line's geometry from its points; InkLine fills that geometry itself (below). */

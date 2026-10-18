@@ -12,14 +12,17 @@ import { tagOriginalAt } from './originals';
 import { CeilingPlane, CornersOverlay, FillsOverlay, OpeningsOverlay, OriginalsOverlay } from './overlays';
 import { sceneTriangles } from './sceneTriangles';
 import { scanTriangles, type StepId, useSetup } from './store';
-import { ACCENT, clickOnly } from './ui';
+import { LabelLayout } from './Label';
+import { clickOnly, tone } from './ui';
 
 // Memoized: the page re-renders on every store change, and the scene subscribes to what it needs.
 export const SetupCanvas = memo(function SetupCanvas() {
   return (
     <Canvas onCreated={({ gl }) => useSetup.setState({ renderer: gl })} events={visibleHitsOnly} gl={{ antialias: true }}>
-      <color attach="background" args={['#1d1f23']} />
+      {/* The desk under the sheets, as in the editor: it shows through holes in a Scan. */}
+      <color attach="background" args={[tone('--desk')]} />
       <StepView />
+      <LabelLayout />
     </Canvas>
   );
 });
@@ -57,7 +60,7 @@ function StepView() {
       </group>
       {step === 'fills' && <FillView onClick={clickOnly((e) => clickFill(e.point.toArray()))} />}
       {step === 'level' && (
-        <Grid infiniteGrid cellSize={0.25} sectionSize={1} cellColor="#6b7280" sectionColor={ACCENT} fadeDistance={40} position={[0, 0.001, 0]} />
+        <Grid infiniteGrid cellSize={0.25} sectionSize={1} cellColor={tone('--pencil')} sectionColor={tone('--pencil-strong')} fadeDistance={40} position={[0, 0.001, 0]} />
       )}
       {step === 'ceiling' && <CeilingPlane bounds={bounds} />}
       {step === 'corners' && <CornersOverlay bounds={bounds} />}
@@ -171,9 +174,11 @@ function RawScan() {
   );
 }
 
-// Tints for the split preview: Shell, Floor and Ceiling, then one hue per Wall and Original.
-const FIXED_TINTS = ['#9ca3af', '#4ade80', '#93c5fd'];
-const tint = (i: number) => (i < 3 ? FIXED_TINTS[i] : `hsl(${((i - 3) * 137.5 + 20) % 360}, 85%, 62%)`);
+// Tints for the split preview, a check of splitScan's work that the Mover turns on: Shell, Floor and
+// Ceiling in the paper tones, then one hue per Wall and Original. Telling each node from its
+// neighbors is the preview's whole job, so it alone takes more hues than the one accent.
+const FIXED_TINTS = ['--pencil', '--wash-tint-strong', '--paper-raised'] as const;
+const tint = (i: number) => (i < 3 ? tone(FIXED_TINTS[i]) : `hsl(${((i - 3) * 137.5 + 20) % 360}, 70%, 72%)`);
 
 function SplitPreview() {
   const scene = useSetup((s) => s.scene!);

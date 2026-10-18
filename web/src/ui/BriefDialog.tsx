@@ -14,7 +14,7 @@ const STYLES = ['Japandi', 'Minimal', 'Mid-century', 'Cozy', 'Industrial', 'Boho
 /** The speeds the AI can design at: standard, for the least credit, or fast mode, quicker for several times the credit. */
 const SPEEDS = [{ fast: false, name: 'Standard' }, { fast: true, name: 'Fast' }];
 /** What a Brief can look like, shown in the empty field. */
-const EXAMPLE = 'cozy Japandi, under $400, I need a reading corner';
+const EXAMPLE = 'e.g. cozy Japandi, under $400, I need a reading corner';
 
 /**
  * "Generate" in the TopBar, and the dialog it opens: the Brief, then Claude's 3 Designs as cards that
@@ -58,15 +58,26 @@ export function BriefDialog() {
 
   return (
     <>
-      <button className="generate-button" onClick={open}>
+      <button
+        className={`generate-button${step === 'designing' ? ' designing' : ''}`}
+        // The label hides on a phone, where the button is its icon.
+        aria-label={step === 'designing' ? 'Designing…' : 'Generate'}
+        onClick={open}
+      >
         <Sparkle />
-        {step === 'designing' ? 'Designing…' : 'Generate'}
+        <span className="label">{step === 'designing' ? 'Designing…' : 'Generate'}</span>
       </button>
       <dialog
         ref={dialog}
         className="brief-dialog"
         aria-labelledby="brief-title"
-        onClick={(event) => event.target === dialog.current && dialog.current.close()}
+        // A click on the backdrop closes it; one on the sheet's own padding doesn't.
+        onClick={(event) => {
+          const sheet = dialog.current!;
+          const { left, right, top, bottom } = sheet.getBoundingClientRect();
+          const outside = event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom;
+          if (event.target === sheet && outside) sheet.close();
+        }}
       >
         <header>
           <h2 id="brief-title">{step === 'brief' ? 'Generate 3 Designs with AI' : 'Three Designs for your Brief'}</h2>
@@ -89,7 +100,6 @@ export function BriefDialog() {
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 onKeyDown={(event) => event.key === 'Enter' && (event.metaKey || event.ctrlKey) && event.currentTarget.form!.requestSubmit()}
-                autoFocus
               />
             </label>
             <fieldset className="field">

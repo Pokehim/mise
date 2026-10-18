@@ -55,7 +55,7 @@ export function GenerateItem({ query, category, targetSize }: { query: string; c
       <div className="generate" role="status">
         <progress value={run.progress} />
         <span className="muted">
-          Generating “{text}”: {STEP_LABELS[run.step]}… {Math.round((Date.now() - run.startedAt) / 1000)} s
+          Generating “{text}”: {STEP_LABELS[run.step]}…<span aria-hidden="true"> {Math.round((Date.now() - run.startedAt) / 1000)} s</span>
         </span>
       </div>
     );

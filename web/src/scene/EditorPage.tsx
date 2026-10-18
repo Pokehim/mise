@@ -23,8 +23,10 @@ function useEditorKeys() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) return;
-      // Nor while a dialog (Generate, Refine) is open over the room.
+      // Nor while a dialog (Generate, Refine) is open over the room, or from inside a TopBar panel
+      // (the Designs menu, the shopping list): Backspace there must not delete what's selected.
       if (document.querySelector('dialog[open]')) return;
+      if (event.target instanceof Element && event.target.closest('[role="dialog"]')) return;
       const { selection, preview, select } = useEditor.getState();
       if (event.key === 'Escape') select(null);
       // A drag finishes before undo.
@@ -50,6 +52,7 @@ function useEditorKeys() {
 /** The editor at /d/:designId (spec §10.1). */
 export function EditorPage({ params: { designId } }: { params: { designId: string } }) {
   const ready = useEditor((s) => s.status === 'ready' && s.design?.id === designId);
+  const designName = useEditor((s) => s.design?.name);
   const error = useEditor((s) => s.error);
   const camera = useRef<Camera>(null);
   useEditorKeys();
@@ -93,6 +96,9 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
   }
   return (
     <div className="editor">
+      {/* Past the Catalog's hundreds of Add buttons, for the keyboard. */}
+      <a className="skip-link" href="#inspector">Skip to the Inspector</a>
+      <h1 className="sr-only">{designName}</h1>
       <TopBar />
       <CatalogPanel onAdd={(item) => camera.current && addPiece(item, camera.current)} />
       <SceneCanvas

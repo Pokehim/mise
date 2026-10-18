@@ -5,12 +5,18 @@ import { create } from 'zustand';
 import { useEditor } from '../state/store';
 import { NOTCH_PX, scrolledPx } from './DollhouseCamera';
 import { floorGeometry, keepInside, roomBounds } from './floorPlan';
-import { CLICK_TOLERANCE_PX } from './objects';
+import { clickTolerancePx } from './objects';
+import { prefersReducedMotion } from './screenScale';
 import { floorPointInView } from './placement';
 import type { Shot } from './shots';
 
 const EYE_HEIGHT = 1.6;
-const GLIDE_SECONDS = 0.4;
+/**
+ * A glide's smoothing time, in seconds: a critically damped spring that has most of the way done in
+ * 0.4 s. Unlike a fixed-length tween it keeps its speed when a new click retargets it, so it never
+ * brakes to a stop and starts again, and it never overshoots.
+ */
+const GLIDE_SMOOTH_TIME = 0.13;
 const LOOK_RADIANS_PER_PX = 0.004;
 const PITCH_LIMIT = 1.2;
 const WALL_MARGIN = 0.25;   // keeps the eye out of the walls
@@ -37,9 +43,22 @@ const STEPS: Record<string, [number, number]> = {
   KeyD: [0, 1], ArrowRight: [0, 1],
 };
 
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+/** Where a glide is going, and how fast it is going there (m/s, and rad/s for the pitch). */
+interface Glide { to: Vector3; pitch?: number; velocity: Vector3; pitchVelocity: number }
 
-interface Glide { from: Vector3; to: Vector3; elapsed: number; pitch?: [from: number, to: number] }
+/**
+ * One step of a critically damped spring toward target (Game Programming Gems 4, 1.10), stable at any
+ * frame time. Returns the new value; velocity[key] is updated in place.
+ */
+function smoothDamp<K extends string>(current: number, target: number, velocity: Record<K, number>, key: K, delta: number) {
+  const omega = 2 / GLIDE_SMOOTH_TIME;
+  const x = omega * delta;
+  const decay = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const change = current - target;
+  const step = (velocity[key] + omega * change) * delta;
+  velocity[key] = (velocity[key] - omega * step) * decay;
+  return target + (change + step) * decay;
+}
 
 /** Whether the Walk view's camera has risen through the ceiling, which is then cut away as in the Dollhouse view. */
 export const useWalkOverhead = create<{ overhead: boolean }>(() => ({ overhead: false }));
@@ -54,7 +73,7 @@ export function useCeilingCut(): number | null {
 
 /**
  * The Walk view (spec §10.2): the camera at eye height inside the room. Drag to look around;
- * click the floor to glide there in 400 ms, staying inside the floor polygon. WASD or the arrow
+ * click the floor to glide there in about 400 ms, staying inside the floor polygon. WASD or the arrow
  * keys walk, and slide along the walls.
  *
  * Scrolling out raises the camera behind and above where the Mover stands, tilting it down as it
@@ -79,12 +98,17 @@ export function WalkControls({ start }: { start?: Shot['pose'] }) {
 
   const glideTo = (x: number, z: number, pitch?: number) => {
     const [ix, iz] = keepInside([x, z], setup, WALL_MARGIN);
-    glide.current = {
-      from: stand.current.clone(),
-      to: new Vector3(ix, EYE_HEIGHT, iz),
-      elapsed: 0,
-      pitch: pitch === undefined ? undefined : [look.current.pitch, pitch],
-    };
+    const to = new Vector3(ix, EYE_HEIGHT, iz);
+    // Reduced motion: there at once, rather than gliding.
+    if (prefersReducedMotion()) {
+      stand.current.copy(to);
+      if (pitch !== undefined) look.current.pitch = pitch;
+      glide.current = null;
+      return;
+    }
+    // A glide already under way keeps its speed toward the new spot.
+    const { velocity = new Vector3(), pitchVelocity = 0 } = glide.current ?? {};
+    glide.current = { to, pitch, velocity, pitchVelocity };
   };
 
   // Step down in front of where the view was centered, facing the same way; or stand where a shot says.
@@ -173,11 +197,19 @@ export function WalkControls({ start }: { start?: Shot['pose'] }) {
   useFrame((_, delta) => {
     const current = glide.current;
     if (current) {
-      current.elapsed = Math.min(current.elapsed + delta, GLIDE_SECONDS);
-      const t = easeInOut(current.elapsed / GLIDE_SECONDS);
-      stand.current.lerpVectors(current.from, current.to, t);
-      if (current.pitch) look.current.pitch = MathUtils.lerp(current.pitch[0], current.pitch[1], t);
-      if (current.elapsed === GLIDE_SECONDS) glide.current = null;
+      const { to, velocity } = current;
+      stand.current.set(
+        smoothDamp(stand.current.x, to.x, velocity, 'x', delta),
+        smoothDamp(stand.current.y, to.y, velocity, 'y', delta),
+        smoothDamp(stand.current.z, to.z, velocity, 'z', delta),
+      );
+      if (current.pitch !== undefined) look.current.pitch = smoothDamp(look.current.pitch, current.pitch, current, 'pitchVelocity', delta);
+      // Arrived: within a millimeter, and all but stopped.
+      if (stand.current.distanceTo(to) < 1e-3 && velocity.length() < 1e-2) {
+        stand.current.copy(to);
+        if (current.pitch !== undefined) look.current.pitch = current.pitch;
+        glide.current = null;
+      }
     }
 
     const { yaw } = look.current;
@@ -226,7 +258,7 @@ export function WalkControls({ start }: { start?: Shot['pose'] }) {
 
   // Clicks on the floor that nothing else took, such as a Piece or an Original.
   const onFloorClick = (event: ThreeEvent<MouseEvent>) => {
-    if (event.delta <= CLICK_TOLERANCE_PX) glideTo(event.point.x, event.point.z);
+    if (event.delta <= clickTolerancePx()) glideTo(event.point.x, event.point.z);
   };
   return (
     <mesh geometry={floor} position-y={0.001} onClick={onFloorClick}>

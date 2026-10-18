@@ -13,7 +13,7 @@ The captured copy of one real room: it looks like the room, and it knows the roo
 _Avoid_: Model, capture, room (when you mean the digital copy)
 
 **Capture**:
-One walk-through of the real room with Polycam. A Scan is built from one Main Capture and any number of Fill Captures.
+One walk-through of the real room with a scanning app, such as Polycam or KIRI Engine. A Scan is built from one Main Capture plus any number of Fill Captures and Detail Captures.
 _Avoid_: Scan (a Scan is what the Captures and Room Setup produce), take, pass
 
 **Main Capture**:
@@ -21,11 +21,19 @@ The Capture taken with the furniture in its usual places. Room Setup, the Origin
 _Avoid_: Primary scan, base scan
 
 **Fill Capture**:
-A Capture taken after moving furniture, used only for what the furniture hid in the Main Capture: the floor and walls under and behind it, and the furniture's own backs and sides.
+An extra Capture of the whole room, used only for what the Main Capture missed: holes anywhere in the room, and, if furniture was moved for it, the floor and walls that furniture hid and the furniture's own backs and sides.
 _Avoid_: Clean plate, reveal scan, empty scan
 
+**Detail Capture**:
+A close-up Capture of a few Originals, such as one table and its chairs, used to replace their geometry with a sharper copy.
+_Avoid_: Object scan, close-up, hero scan
+
+**Layout**:
+A clean plan of the room from KIRI Engine's Room mode: walls, Openings, and furniture as labeled boxes at real size, with no scanned surfaces. Room Setup starts from it.
+_Avoid_: Floor plan, RoomPlan model, blueprint
+
 **Room Setup**:
-The one-time step that turns the Captures into a usable Scan: it marks the floor, walls, Openings, and Originals on the Main Capture and lines up each Fill Capture with it.
+The one-time step that turns the Captures into a usable Scan: it marks the floor, walls, Openings, and Originals on the Main Capture, starting from the Layout when there is one, and lines up every other Capture with the Main Capture.
 _Avoid_: Annotation, labeling, calibration
 
 **Opening**:

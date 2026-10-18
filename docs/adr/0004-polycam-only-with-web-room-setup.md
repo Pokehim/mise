@@ -1,3 +1,7 @@
+---
+status: amended by ADR-0008 (KIRI Engine Captures and the KIRI Layout)
+---
+
 # Polycam is the only capture; the room's meaning is added by hand in Room Setup
 
 This supersedes ADR-0002. A Scan comes from Polycam alone. We have the **Business** tier, which unlocks every export. Polycam supplies the textured LiDAR mesh from a Space Mode capture (GLB) and a Gaussian splat (Splat PLY) built in its cloud. Developer Mode stays on during capture, so the raw photos and camera poses are kept as a fallback. The floor, walls, Openings, and Originals are marked once in a Room Setup step in our web editor.

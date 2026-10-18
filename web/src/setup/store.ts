@@ -1,0 +1,175 @@
+// The Room Setup page's state: the Scan being set up, the RoomSetup being edited, and the tool's UI state.
+import { Mesh, type Object3D, type WebGLRenderer } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { create } from 'zustand';
+import type { Category, Opening, Original, RoomSetup, ScanManifest, Vec3, YawTransform } from '@shared/types';
+import { listScans, loadSetup, saveManifest, saveSetup, scanFileUrl } from '../api';
+import { unlit } from '../scene/splitScan';
+import type { TriangleMesh } from './geometry/mesh';
+import { sceneTriangles } from './sceneTriangles';
+
+export const STEPS = [
+  { id: 'level', title: 'Level' },
+  { id: 'ceiling', title: 'Ceiling' },
+  { id: 'corners', title: 'Corners' },
+  { id: 'openings', title: 'Openings' },
+  { id: 'originals', title: 'Originals' },
+  { id: 'bake', title: 'Bake' },
+] as const;
+export type StepId = (typeof STEPS)[number]['id'];
+
+interface SetupState {
+  status: 'loading' | 'ready' | 'saving' | 'error';
+  /** A load or save error. */
+  message?: string;
+  /** A hint from the current step, such as auto-box finding nothing. */
+  notice?: string;
+  manifest?: ScanManifest;
+  setup?: RoomSetup;
+  /** The glTF scene as loaded, in the capture's frame, with unlit materials. */
+  scene?: Object3D;
+  /** The manifest and setup as last loaded or saved; anything else is an unsaved change. */
+  saved: { manifest?: ScanManifest; setup?: RoomSetup };
+  step: StepId;
+  selectedWallId?: string;
+  selectedOriginalId?: string;
+  /** Step 4: the kind for the next Opening, and the first of its two clicks. */
+  openingDraft: { kind: Opening['kind']; swing: NonNullable<Opening['swing']>; first?: Vec3 };
+  /** Step 5: the category the next click tags. */
+  tagCategory: Category;
+  /** "Preview split": show splitScan's nodes, tinted, instead of the raw mesh. */
+  preview: boolean;
+  hiddenOriginals: Record<string, boolean>;
+  /** How long the preview's last splitScan took, in ms. */
+  lastSplitMs?: number;
+  renderer?: WebGLRenderer;
+
+  load(scanId: string): Promise<void>;
+  setStep(step: StepId): void;
+  setMeshTransform(meshTransform: YawTransform): void;
+  /** Step 1's "Confirm level": saves the manifest alone. */
+  saveLevel(): Promise<void>;
+  updateSetup(change: (setup: RoomSetup) => RoomSetup): void;
+  updateOriginal(id: string, change: Partial<Original>): void;
+  updateOpening(id: string, change: Partial<Opening>): void;
+  selectWall(id: string): void;
+  save(): Promise<void>;
+}
+
+let latestLoad = 0;
+
+export const useSetup = create<SetupState>()((set, get) => ({
+  status: 'loading',
+  saved: {},
+  step: 'level',
+  openingDraft: { kind: 'window', swing: 'in-left' },
+  tagCategory: 'bed',
+  preview: false,
+  hiddenOriginals: {},
+
+  async load(scanId) {
+    const token = ++latestLoad;
+    set({ status: 'loading', message: undefined, manifest: undefined, setup: undefined, scene: undefined, hiddenOriginals: {} });
+    try {
+      const manifest = listScans().then((scans) => scans.find((m) => m.id === scanId) ?? fail(`There is no Scan "${scanId}".`));
+      const [setup, scene] = await Promise.all([
+        loadSetup(scanId).catch((error: Error) => {
+          // A Scan that hasn't been set up yet has no setup.json; anything else is a real error.
+          if (/: 404 /.test(error.message)) return emptySetup(scanId);
+          throw error;
+        }),
+        manifest.then((m) => loadScene(scanFileUrl(scanId, m.mesh))),
+      ]);
+      if (token !== latestLoad) return;   // a later load (another Scan, or StrictMode's second run) wins
+      set({
+        status: 'ready', manifest: await manifest, setup, scene,
+        saved: { manifest: await manifest, setup },
+        step: setup.walls.length > 0 ? 'originals' : 'level',
+      });
+    } catch (error) {
+      if (token === latestLoad) set({ status: 'error', message: (error as Error).message });
+    }
+  },
+
+  setStep: (step) => set({ step, selectedOriginalId: undefined, notice: undefined, openingDraft: { ...get().openingDraft, first: undefined } }),
+
+  setMeshTransform: (meshTransform) => set({ manifest: { ...get().manifest!, meshTransform } }),
+
+  async saveLevel() {
+    const { manifest, saved } = get();
+    if (!manifest) return;
+    set({ status: 'saving' });
+    try {
+      await saveManifest(manifest);
+      set({ status: 'ready', message: undefined, saved: { ...saved, manifest } });
+    } catch (error) {
+      set({ status: 'ready', message: `Not saved: ${(error as Error).message}` });
+    }
+  },
+
+  updateSetup: (change) => set({ setup: change(get().setup!) }),
+
+  updateOriginal: (id, change) => get().updateSetup((s) => ({
+    ...s, originals: s.originals.map((o) => (o.id === id ? { ...o, ...change } : o)),
+  })),
+
+  updateOpening: (id, change) => get().updateSetup((s) => ({
+    ...s, openings: s.openings.map((o) => (o.id === id ? { ...o, ...change } : o)),
+  })),
+
+  selectWall: (id) => set({ selectedWallId: id, openingDraft: { ...get().openingDraft, first: undefined } }),
+
+  async save() {
+    const { manifest, setup, saved } = get();
+    if (!manifest || !setup) return;
+    set({ status: 'saving' });
+    try {
+      await Promise.all([manifest !== saved.manifest && saveManifest(manifest), saveSetup(setup)]);
+      set({ status: 'ready', message: undefined, saved: { manifest, setup } });
+    } catch (error) {
+      set({ status: 'ready', message: `Not saved: ${(error as Error).message}` });
+    }
+  },
+}));
+
+export const hasUnsavedChanges = (s: SetupState) => s.manifest !== s.saved.manifest || s.setup !== s.saved.setup;
+
+/** True once step 1 has given the Scan a meshTransform. */
+export const isLeveled = ({ meshTransform: { position, rotationY } }: ScanManifest) =>
+  rotationY !== 0 || position.some((v) => v !== 0);
+
+const fail = (message: string): never => {
+  throw new Error(message);
+};
+
+const emptySetup = (scanId: string): RoomSetup => ({
+  version: 1, scanId, ceilingHeight: 2.5, floor: { polygon: [] }, walls: [], openings: [], originals: [],
+});
+
+async function loadScene(url: string): Promise<Object3D> {
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const { scene } = await loader.loadAsync(url);
+  // Unlit, like the editor (spec §10.6): the texture already holds the room's lighting.
+  scene.traverse((object) => {
+    if (object instanceof Mesh && !Array.isArray(object.material)) {
+      const source = object.material;
+      object.material = unlit(source);
+      source.dispose();
+    }
+  });
+  return scene;
+}
+
+// The scan's triangles, computed once per scene in the capture's frame, and once per meshTransform in the room frame.
+const triangleCache = new WeakMap<Object3D, { capture?: TriangleMesh; room?: { key: string; mesh: TriangleMesh } }>();
+
+/** The scan's triangles in the room frame, or in the capture's frame with no meshTransform. */
+export function scanTriangles(scene: Object3D, meshTransform?: YawTransform): TriangleMesh {
+  let cached = triangleCache.get(scene);
+  if (!cached) triangleCache.set(scene, (cached = {}));
+  if (!meshTransform) return (cached.capture ??= sceneTriangles(scene));
+  const key = JSON.stringify(meshTransform);
+  if (cached.room?.key !== key) cached.room = { key, mesh: sceneTriangles(scene, meshTransform) };
+  return cached.room.mesh;
+}

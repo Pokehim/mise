@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "scanId": "lounge-v1",
+  "ceilingHeight": 2.431,
+  "floor": {
+    "polygon": [
+      [
+        -1.568,
+        -3.545
+      ],
+      [
+        1.55,
+        -3.545
+      ],
+      [
+        1.55,
+        3.673
+      ],
+      [
+        -1.568,
+        3.673
+      ]
+    ]
+  },
+  "walls": [
+    {
+      "id": "wl_1",
+      "name": "North wall",
+      "start": [
+        -1.568,
+        -3.545
+      ],
+      "end": [
+        1.55,
+        -3.545
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_2",
+      "name": "East wall",
+      "start": [
+        1.55,
+        -3.545
+      ],
+      "end": [
+        1.55,
+        3.673
+      ],
+      "normal": [
+        -1,
+        0
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_3",
+      "name": "South wall",
+      "start": [
+        1.55,
+        3.673
+      ],
+      "end": [
+        -1.568,
+        3.673
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_4",
+      "name": "West wall",
+      "start": [
+        -1.568,
+        3.673
+      ],
+      "end": [
+        -1.568,
+        -3.545
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.431
+    }
+  ],
+  "openings": [
+    {
+      "id": "op_1",
+      "kind": "window",
+      "wallId": "wl_1",
+      "offset": 0.508,
+      "width": 1.717,
+      "bottom": 0.861,
+      "height": 1.467
+    },
+    {
+      "id": "op_2",
+      "kind": "door",
+      "wallId": "wl_4",
+      "offset": 0.053,
+      "width": 1.731,
+      "bottom": 0,
+      "height": 2.247,
+      "swing": "none"
+    }
+  ],
+  "originals": [
+    {
+      "id": "og_table",
+      "label": "Table",
+      "category": "table",
+      "box": {
+        "position": [
+          -0.795,
+          0,
+          -1.627
+        ],
+        "size": [
+          1.177,
+          0.845,
+          1.546
+        ],
+        "rotationY": 1.5707963267948966
+      },
+      "kept": false,
+      "partParams": {
+        "topThickness": 0.06
+      },
+      "floorColor": "#808080"
+    },
+    {
+      "id": "og_table_2",
+      "label": "Table 2",
+      "category": "table",
+      "box": {
+        "position": [
+          -0.857,
+          0,
+          -0.243
+        ],
+        "size": [
+          1.239,
+          0.853,
+          1.598
+        ],
+        "rotationY": 1.5707963267948966
+      },
+      "kept": false,
+      "partParams": {
+        "topThickness": 0.06
+      },
+      "floorColor": "#808080"
+    },
+    {
+      "id": "og_table_3",
+      "label": "Table 3",
+      "category": "table",
+      "box": {
+        "position": [
+          -0.83,
+          0,
+          1.798
+        ],
+        "size": [
+          1.2,
+          0.85,
+          1.55
+        ],
+        "rotationY": 1.5707963267948966
+      },
+      "kept": false,
+      "partParams": {
+        "topThickness": 0.06
+      },
+      "floorColor": "#808080"
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { copyFile, cp, mkdir, mkdtemp, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { type Document, Logger, NodeIO, Primitive } from '@gltf-transform/core';
@@ -112,7 +112,7 @@ export async function importScan({ input, scanId, name = scanId, raw, force = fa
     const document = await io.read(await locateModel(input, unzipped));
     await optimizeScan(document);
     await document.transform(unpartition()); // a .glb holds one buffer
-    await mkdir(join(dir, 'captures'), { recursive: true });
+    await mkdir(dirname(join(dir, mesh)), { recursive: true });
     await io.write(join(dir, mesh), document);
   } finally {
     await rm(unzipped, { recursive: true, force: true });

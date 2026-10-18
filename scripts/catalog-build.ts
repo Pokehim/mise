@@ -46,7 +46,7 @@ export type Listing = AboListing & { model?: AboModel };
 export interface CatalogPick { id: string; category: Category; price?: number; colors?: string[]; styleTags?: string[] }
 
 /** §8.3: ABO has no prices, so each Category has a default estimate. */
-const DEFAULT_PRICE_USD: Record<Category, number> = {
+export const DEFAULT_PRICE_USD: Record<Category, number> = {
   chair: 120, desk: 180, table: 90, nightstand: 70, bed: 300, sofa: 450, dresser: 220, wardrobe: 260,
   shelf: 90, storage: 110, rug: 80, lamp: 45, wall_art: 40, mirror: 60, plant: 30, decor: 25,
 };
@@ -237,7 +237,7 @@ async function loadListings(): Promise<Map<string, Listing>> {
 }
 
 /** Runs the gltf-transform CLI and returns what it printed. */
-async function gltfTransform(...args: string[]): Promise<string> {
+export async function gltfTransform(...args: string[]): Promise<string> {
   const { stdout } = await promisify(execFile)(GLTF_TRANSFORM, args, { maxBuffer: 64 * 1024 * 1024 });
   return stdout;
 }
@@ -318,6 +318,7 @@ async function build() {
   const used = new Set(catalog.items.flatMap((item) => [item.model, item.thumbnail]));
   for (const dir of ['models', 'thumbs']) {
     for (const name of await readdir(join(CATALOG_DIR, dir))) {
+      if (name.startsWith('gen_')) continue;   // text-to-3D's, listed in generated.json (server/generate-object)
       if (!used.has(`/data/catalog/${dir}/${name}`)) await rm(join(CATALOG_DIR, dir, name));
     }
   }

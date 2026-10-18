@@ -1,0 +1,5 @@
+/* Text-to-3D's offer in the Catalog panel's empty state (GenerateItem). It sits inside .editor (editor.css). */
+
+.generate { display: flex; flex-direction: column; gap: 8px; }
+.generate progress { width: 100%; accent-color: var(--accent); }
+.generate select { font: inherit; }

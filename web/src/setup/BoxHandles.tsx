@@ -27,12 +27,13 @@ export function BoxHandles({ originalId }: { originalId: string }) {
 
   const onDown = (handle: Handle) => (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
-    (e.target as unknown as Element).setPointerCapture(e.pointerId);
-    if (controls) controls.enabled = false;
     const start = original.box;
     const { origin, axis } = handleLine(handle, start);
     const t0 = handle.kind === 'move' ? 0 : axisParameter(origin, axis, e.ray);
+    // Looking straight down the handle's axis there is no drag, so onUp won't turn the controls back on.
     if (t0 === null) return;
+    (e.target as unknown as Element).setPointerCapture(e.pointerId);
+    if (controls) controls.enabled = false;
     drag.current = { handle, start, origin: handle.kind === 'move' ? floorPoint(e.ray, start.position[1]) ?? origin : origin, axis, t0 };
   };
 

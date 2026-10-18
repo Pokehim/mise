@@ -6,7 +6,7 @@ import { fillsAligned } from './fills';
 import { UNBAKED_FLOOR_COLOR } from './originals';
 import { StepPanel } from './panels';
 import { SetupCanvas } from './SetupCanvas';
-import { hasUnsavedChanges, isLeveled, STEPS, type StepId, useSetup } from './store';
+import { DEFAULT_CEILING_HEIGHT, hasUnsavedChanges, isLeveled, STEPS, type StepId, useSetup } from './store';
 import './setup.css';
 
 // Room Setup (spec §9.3): a stepper that turns a raw capture into a usable Scan.
@@ -77,8 +77,9 @@ function SetupLayout() {
 
 function isDone(step: StepId, manifest: ScanManifest, setup: RoomSetup): boolean {
   switch (step) {
-    case 'level': return isLeveled(manifest);
-    case 'ceiling': return setup.walls.length > 0;
+    // Some Scans are imported already in the room frame: their identity meshTransform is right once they have Walls.
+    case 'level': return isLeveled(manifest) || setup.walls.length > 0;
+    case 'ceiling': return setup.ceilingHeight !== DEFAULT_CEILING_HEIGHT || setup.walls.length > 0;
     case 'corners': return setup.walls.length >= 3;
     case 'openings': return setup.openings.length > 0;
     case 'originals': return setup.originals.length > 0;

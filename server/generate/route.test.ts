@@ -72,7 +72,7 @@ describe('POST /api/generate', () => {
     const res = await generate({ scanId: 'fixture', brief });
 
     expect(res.status).toBe(502);
-    expect((await res.json()).error).toMatch(/^Claude made no Designs: /);
+    expect((await res.json()).error).toMatch(/^The AI made no Designs: /);
   });
 
   it('takes the budget from the Brief text when it names one and budgetUsd is missing', async () => {

@@ -63,7 +63,7 @@ export function BriefDialog() {
         onClick={(event) => event.target === dialog.current && dialog.current.close()}
       >
         <header>
-          <h2 id="brief-title">{step === 'brief' ? 'Ask Claude for 3 Designs' : 'Three Designs for your Brief'}</h2>
+          <h2 id="brief-title">{step === 'brief' ? 'Generate 3 Designs with AI' : 'Three Designs for your Brief'}</h2>
           <button className="icon-button" aria-label="Close" onClick={() => dialog.current!.close()}><Close /></button>
         </header>
         {step !== 'brief' ? (
@@ -72,8 +72,9 @@ export function BriefDialog() {
           // Once the Mover starts writing a Brief, Claude's cache gets the room, so that the takes start sooner.
           <form onSubmit={(event) => void submit(event)} onInput={() => warm(scanId)}>
             <p className="muted">
-              Claude arranges real Catalog items in your Scan: art on the walls, a rug, lamps, plants and pillows, and paint.
-              You get three takes: literal, bolder, and budget-conscious.
+              Say what you want, and AI designs the room for you automatically. It arranges real Catalog items in your
+              Scan: art on the walls, a rug, lamps, plants and pillows, and paint. You get three takes: literal, bolder, and
+              budget-conscious.
             </p>
             <label className="field">
               <span>What do you want?</span>
@@ -109,9 +110,9 @@ export function BriefDialog() {
                 <button type="button" aria-pressed={!fromCurrent} onClick={() => setStart('empty')}>{hasOriginals ? 'Room as scanned' : 'Empty room'}</button>
               </div>
               <span className="hint">
-                {!designEdits ? 'This Design has no Edits yet, so Claude starts from the room as it is.'
-                  : fromCurrent ? `"${designName}" as it is now: Claude keeps its ${count(designEdits, 'Edit')} and designs around them. Its Pieces don't count toward the budget.`
-                  : hasOriginals ? "The room as it was scanned, without this Design's Edits." : "The room with nothing in it: Claude furnishes it from scratch."}
+                {!designEdits ? 'This Design has no Edits yet, so the AI starts from the room as it is.'
+                  : fromCurrent ? `"${designName}" as it is now: the AI keeps its ${count(designEdits, 'Edit')} and designs around them. Its Pieces don't count toward the budget.`
+                  : hasOriginals ? "The room as it was scanned, without this Design's Edits." : "The room with nothing in it: the AI furnishes it from scratch."}
               </span>
             </fieldset>
             <label className="field budget">
@@ -131,7 +132,7 @@ export function BriefDialog() {
               </span>
               {!budget && textBudget && <span className="hint">From your Brief</span>}
             </label>
-            {sent?.error && <p className="error" role="alert">Claude couldn't make the Designs: {sent.error}</p>}
+            {sent?.error && <p className="error" role="alert">The AI couldn't make the Designs: {sent.error}</p>}
             <footer>
               <button type="button" onClick={() => dialog.current!.close()}>Cancel</button>
               <button type="submit" className="primary" disabled={!text.trim()}>Generate 3 Designs</button>

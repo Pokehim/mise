@@ -72,12 +72,12 @@ export async function refineDesign(request: RefineRequest): Promise<RefineResult
   } catch (error) {
     if (!signal.aborted) throw error;
     // Out of time after some Edits: each passed every check when it was made, so they stand.
-    if (!made()) throw new Error(`Claude took longer than ${timeoutMs / 1000} s`);
+    if (!made()) throw new Error(`The AI took longer than ${timeoutMs / 1000} s`);
     console.warn(`Refine ${design.id}: out of time after ${made()} Edits, keeping them`);
   }
 
   const edits = session.edits.slice(design.edits.length);
-  if (!edits.length) throw new Error('Claude made no changes');
+  if (!edits.length) throw new Error('The AI made no changes');
   // Without finish_design, the Edits still count, and the Design keeps its name.
   const { name, rationale, palette } = session.finished ?? design;
   const refined: Design = { ...design, name, rationale, palette, edits: session.edits, updatedAt: new Date().toISOString() };
@@ -100,7 +100,7 @@ async function run(
     tools: session.tools,
   }, { signal });
   for await (const reply of runner) {
-    if (reply.stop_reason === 'refusal') throw new Error('Claude declined this Refine');
+    if (reply.stop_reason === 'refusal') throw new Error('The AI declined this Refine');
     // Any call that hasn't run yet runs now, so that a finished Refine ends without one more request.
     await runner.generateToolResponse();
     if (session.finished) break;

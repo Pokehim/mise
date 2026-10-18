@@ -122,7 +122,7 @@ function Elapsed() {
   }, []);
   return (
     <span className="muted" role="status">
-      Claude is decorating three takes · <span className="seconds">{((now - since) / 1000).toFixed(1)} s</span>
+      AI is designing three takes · <span className="seconds">{((now - since) / 1000).toFixed(1)} s</span>
     </span>
   );
 }

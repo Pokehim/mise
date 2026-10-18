@@ -153,7 +153,7 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
         attempt--;
       }
     }
-    if (!session.finished) throw new Error('Claude stopped without finishing the Design');
+    if (!session.finished) throw new Error('The AI stopped without finishing the Design');
     const now = new Date().toISOString();
     const { name, rationale, palette } = session.finished;
     const design: Design = {
@@ -167,7 +167,7 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
     onEvent?.({ type: 'design', direction, design, report });
     return { direction, design, report };
   } catch (error) {
-    const why = timeout.aborted ? `Claude took longer than ${loopTimeoutMs / 1000} s` : (error as Error).message;
+    const why = timeout.aborted ? `The AI took longer than ${loopTimeoutMs / 1000} s` : (error as Error).message;
     console.error(`Generate (${direction}) failed: ${why}`);
     finishReport(report, started, session);
     onEvent?.({ type: 'failure', direction, error: why, report });
@@ -213,7 +213,7 @@ async function run(
     }
     const reply = await stream.finalMessage();
     for (const key of Object.keys(report.usage) as (keyof LoopReport['usage'])[]) report.usage[key] += reply.usage[key] ?? 0;
-    if (reply.stop_reason === 'refusal') throw new Error('Claude declined to design this room');
+    if (reply.stop_reason === 'refusal') throw new Error('The AI declined to design this room');
     // Any call that hasn't run yet runs now, so that a finished Design ends the loop without one more request.
     await runner.generateToolResponse();
     conversation.edits = session.edits.length;

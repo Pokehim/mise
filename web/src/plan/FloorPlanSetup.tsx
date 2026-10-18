@@ -164,7 +164,7 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
       }
       setStatus({
         note: result.read === 'ok' ? `Read in ${result.seconds} s.` : result.read === 'skipped'
-          ? 'The server has no Claude API key, so trace the room by hand.' : `Claude couldn't read the plan (${result.error}). Trace the room by hand.`,
+          ? "AI isn't set up on this server, so trace the room by hand." : `The AI couldn't read the plan (${result.error}). Trace the room by hand.`,
       });
     } catch (err) {
       setStatus({ error: (err as Error).message });
@@ -256,7 +256,7 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
             <b>Trace the room.</b> Choose Trace, then click each corner of the room on the plan, and its first corner again to close it.
           </div>
         )}
-        {draft?.notes && <p className="fp-note"><b>Claude's notes:</b> {draft.notes}</p>}
+        {draft?.notes && <p className="fp-note"><b>Notes from the AI:</b> {draft.notes}</p>}
 
         {(draft?.rooms.length ?? 0) > 1 && (
           <section>
@@ -280,7 +280,7 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
               setCorners(() => []);
               setTool({ kind: 'trace' });
             }}>{tool.kind === 'trace' ? 'Done tracing' : room ? 'Trace again' : 'Trace'}</button>
-            <button type="button" disabled={Boolean(status.busy)} onClick={readAgain}>Read with Claude again</button>
+            <button type="button" disabled={Boolean(status.busy)} onClick={readAgain}>Read with AI again</button>
           </div>
         </section>
 

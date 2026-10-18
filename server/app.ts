@@ -313,7 +313,7 @@ app.post('/api/generate', async (c) => {
   }
   const result = await generateDesigns(request);
   if (!result.designs.length) {
-    return c.json({ error: `Claude made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
+    return c.json({ error: `The AI made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
   }
   return c.json(result);
 });
@@ -333,7 +333,7 @@ app.post('/api/designs/:id/refine', async (c) => {
     return c.json(result);
   } catch (error) {
     if (error instanceof HTTPException) throw error;
-    return c.json({ error: `Claude couldn't refine this Design: ${(error as Error).message}` }, 502);
+    return c.json({ error: `The AI couldn't refine this Design: ${(error as Error).message}` }, 502);
   }
 });
 

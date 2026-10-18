@@ -19,6 +19,12 @@ export const saveManifest = (manifest: ScanManifest) =>
   request<ScanManifest>('PUT', `/api/scans/${manifest.id}/manifest`, manifest);
 export const loadSetup = (scanId: string) => request<RoomSetup>('GET', scanFileUrl(scanId, 'setup.json'));
 export const saveSetup = (setup: RoomSetup) => request<RoomSetup>('PUT', `/api/scans/${setup.scanId}/setup`, setup);
+/** Saves a baked Patch image (spec §11.2) as patches/<name> in the Scan's folder; returns that path. */
+export async function savePatchImage(scanId: string, name: string, png: Blob): Promise<string> {
+  const res = await fetch(`/api/scans/${scanId}/files/${name}`, { method: 'PUT', headers: { 'Content-Type': 'image/png' }, body: png });
+  if (!res.ok) throw new Error(`PUT ${name}: ${res.status} ${await res.text()}`);
+  return ((await res.json()) as { path: string }).path;
+}
 /** Rebuilds a Scan's room.glb from its Main Capture and its lined-up Fill Captures (ADR-0007). */
 export const mergeScan = (scanId: string) => request<MergeSummary>('POST', `/api/scans/${scanId}/merge`);
 

@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { create } from 'zustand';
 import type { Category, Opening, Original, RoomSetup, ScanManifest, Vec2, Vec3, YawTransform } from '@shared/types';
-import { listScans, loadSetup, saveManifest, saveSetup, scanFileUrl } from '../api';
+import { listScans, loadSetup, saveManifest, savePatchImage, saveSetup, scanFileUrl } from '../api';
 import { unlit } from '../scene/splitScan';
 import type { TriangleMesh } from './geometry/mesh';
 import { sceneTriangles } from './sceneTriangles';
@@ -50,6 +50,8 @@ interface SetupState {
   renderer?: WebGLRenderer;
   /** Step 6: the Fill Capture being lined up (ADR-0007). */
   fill?: FillDraft;
+  /** Step 7: the last Bake's Patch images by file name, which Save uploads to patches/ before the setup. */
+  patchImages: Map<string, Blob>;
 
   load(scanId: string): Promise<void>;
   setStep(step: StepId): void;
@@ -101,12 +103,16 @@ export const useSetup = create<SetupState>()((set, get) => ({
   tagCategory: 'bed',
   preview: false,
   hiddenOriginals: {},
+  patchImages: new Map(),
 
   async load(scanId) {
     const token = ++latestLoad;
     const { fill } = get();
     // The open Fill Capture belongs to the Scan before: step 6 there would write it into this one's manifest.
-    set({ status: 'loading', message: undefined, manifest: undefined, setup: undefined, scene: undefined, fill: undefined, hiddenOriginals: {} });
+    set({
+      status: 'loading', message: undefined, manifest: undefined, setup: undefined, scene: undefined, fill: undefined,
+      hiddenOriginals: {}, patchImages: new Map(),
+    });
     if (fill?.scene) disposeScene(fill.scene);
     try {
       const manifest = listScans().then((scans) => scans.find((m) => m.id === scanId) ?? fail(`There is no Scan "${scanId}".`));
@@ -166,12 +172,18 @@ export const useSetup = create<SetupState>()((set, get) => ({
   selectWall: (id) => set({ selectedWallId: id, openingDraft: { ...get().openingDraft, first: undefined } }),
 
   async save() {
-    const { manifest, setup, saved } = get();
+    const { manifest, setup, saved, patchImages } = get();
     if (!manifest || !setup) return;
     set({ status: 'saving' });
     try {
+      // The images first, so setup.json never names a Patch image the server doesn't have yet.
+      await Promise.all(Array.from(patchImages, ([name, png]) => savePatchImage(manifest.id, name, png)));
       await Promise.all([manifest !== saved.manifest && saveManifest(manifest), saveSetup(setup)]);
-      set({ status: 'ready', message: undefined, saved: { manifest, setup } });
+      // A Bake during the Save staged newer images; those wait for the next Save.
+      set((s) => ({
+        status: 'ready', message: undefined, saved: { manifest, setup },
+        patchImages: s.patchImages === patchImages ? new Map() : s.patchImages,
+      }));
     } catch (error) {
       set({ status: 'ready', message: `Not saved: ${(error as Error).message}` });
     }

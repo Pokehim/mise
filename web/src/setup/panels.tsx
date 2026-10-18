@@ -387,15 +387,23 @@ function BakePanel() {
     try {
       const started = performance.now();
       const colors = bakeFloorColors(renderer, scene, setup, manifest);
+      // A Patch with no floor seen around it is filled with its Original's floorColor: this Bake's, not the last one's.
+      const colored = { ...setup, originals: setup.originals.map((o) => ({ ...o, floorColor: colors[o.id] ?? o.floorColor })) };
       if (manifest.captures) merged = await loadScene(scanFileUrl(manifest.id, manifest.mesh));
-      const { patches, images } = await bakePatches(renderer, merged, setup, manifest);
+      // The images wait in the store until Save uploads them, so a Bake changes nothing on the server.
+      const staged = new Map<string, Blob>();
+      const { patches, images } = await bakePatches(renderer, merged, colored, manifest, (name, png) => {
+        staged.set(name, png);
+        return Promise.resolve(`patches/${name}`);
+      });
       updateSetup((s) => ({
         ...s,
         originals: s.originals.map((o) => ({ ...o, floorColor: colors[o.id] ?? o.floorColor, patch: patches[o.id] })),
       }));
+      useSetup.setState({ patchImages: staged });
       const ms = Math.round(performance.now() - started);
       const missing = setup.originals.filter((o) => !colors[o.id]).length;
-      setResult(`Baked ${setup.originals.length - missing} floor colors and ${images} Patch images in ${ms} ms.${missing ? ` No floor was seen around ${missing}.` : ''} Save to keep them.`);
+      setResult(`Baked ${setup.originals.length - missing} floor colors and ${images} Patch images in ${ms} ms.${missing ? ` No floor was seen around ${missing}.` : ''} Save uploads them with the setup.`);
     } catch (error) {
       setResult(`Bake failed: ${(error as Error).message}`);
     } finally {

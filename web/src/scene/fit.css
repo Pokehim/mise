@@ -1,0 +1,16 @@
+/* The message chips of Fit rule warnings (spec §10.6), over the 3D view. */
+
+.fit-chip {
+  /* Centered on screen just above the top of the item, rather than over its middle. It is the
+     translate property, because <Html> sets an inline transform. */
+  translate: -50% calc(-100% - 8px);
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: #d93025;
+  color: white;
+  font: 600 12px/1.4 system-ui, sans-serif;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+  pointer-events: none;
+}
+/* One line per problem, each kept short: checkFit names a Piece by its full Catalog title. */
+.fit-chip div { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

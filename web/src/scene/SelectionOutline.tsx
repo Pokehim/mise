@@ -6,11 +6,12 @@ import { wallLength, wallRotationY } from './floorPlan';
 import { ignoreRaycast } from './objects';
 
 /**
- * The selection outline. Put it inside a mesh. With angle 0 it reuses the mesh's own normals
- * instead of copying the geometry on every selection; hard-edged boxes pass π to close the corners.
+ * The selection outline, or another color's (the Fit warnings' red). Put it inside a mesh. With
+ * angle 0 it reuses the mesh's own normals instead of copying the geometry on every selection;
+ * hard-edged boxes pass π to close the corners.
  */
-export const Outline = ({ renderOrder, angle = 0 }: { renderOrder?: number; angle?: number }) => (
-  <Outlines color="#1a73e8" thickness={4} angle={angle} renderOrder={renderOrder} />
+export const Outline = ({ renderOrder, angle = 0, color = '#1a73e8' }: { renderOrder?: number; angle?: number; color?: string }) => (
+  <Outlines color={color} thickness={4} angle={angle} renderOrder={renderOrder} />
 );
 
 type OutlineBox = { center: Vec3; size: Vec3; rotationY: number };

@@ -6,8 +6,10 @@ import { useShallow } from 'zustand/react/shallow';
 import { useEditor } from '../state/store';
 import { CATALOG_ITEM_TYPE } from '../ui/CatalogPanel';
 import { DollhouseCamera } from './DollhouseCamera';
+import { FitHighlights } from './FitHighlights';
 import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
+import { ResizeHandles } from './ResizeHandles';
 import { ScanMesh } from './ScanMesh';
 import { SelectionOutline } from './SelectionOutline';
 import { WalkControls } from './WalkControls';
@@ -87,6 +89,8 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
         </Suspense>
         <Pieces />
         <SelectionOutline />
+        <FitHighlights />
+        <ResizeHandles />
         {view === 'dollhouse' ? <DollhouseCamera /> : <WalkControls />}
         {debug && <Stats parent={container} className="stats" />}
       </Canvas>

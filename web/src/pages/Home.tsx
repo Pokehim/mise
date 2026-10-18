@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearch } from 'wouter';
 import type { Design, ScanManifest } from '@shared/types';
-import { listDesigns, listScans } from '../api';
+import { listDesigns, listScans, startFresh } from '../api';
 import { moveInLayoutId } from '../plan/library';
 import { count } from '../ui/format';
-import { ArrowRight, Plus, Sparkle } from '../ui/icons';
+import { ArrowRight, Plus, RotateLeft, Sparkle } from '../ui/icons';
 import { useServerConfig } from '../ui/useServerConfig';
 import { Credits } from './Credits';
 import { useStartDesign } from '../ui/useStartDesign';
@@ -113,6 +113,14 @@ export function Home() {
         {listed.map((scan) => <ScanSection key={scan.id} scan={scan} designs={designsOf(scan)} />)}
       </main>
       <Credits />
+      <button
+        type="button"
+        className="start-fresh"
+        onClick={startFresh}
+        title="Forget the Designs and settings this browser keeps, so the Scans open as they were scanned. Designs saved for a Brief stay."
+      >
+        <RotateLeft />Start fresh
+      </button>
     </div>
   );
 }

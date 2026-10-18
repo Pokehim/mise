@@ -1,5 +1,7 @@
 // shared/types.ts — Mise contract v1. Meters, +Y up, floor at y = 0.
 
+import type { Direction } from './generate';
+
 export type Vec2 = [x: number, z: number];            // a point on the floor plane
 export type Vec3 = [x: number, y: number, z: number];
 export type Hex = `#${string}`;                         // "#9caf88"
@@ -218,6 +220,7 @@ export interface Design {
   updatedAt: string;
   origin: Actor;                     // who created this Design
   brief?: Brief;                     // Phase 4
+  direction?: Direction;             // Phase 4: which of the Brief's three takes Claude made it as
   rationale?: string;                // Phase 4: one line from Claude
   palette?: Palette;                 // Phase 4
   startedFrom?: { designId: string; edits: number };  // Phase 4: made by Claude on top of that Design, from its first `edits` Edits

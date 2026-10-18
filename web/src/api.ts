@@ -1,4 +1,5 @@
 import type { FloorPlanDraft, PlanReading } from '@shared/floor-plan';
+import type { Direction } from '@shared/generate';
 import type { Catalog, Design, RoomSetup, ScanManifest } from '@shared/types';
 import type { MergeSummary } from '../../scripts/scan-merge';
 import type { ImportEvent } from '../../server/app';
@@ -143,6 +144,15 @@ export async function createDesign(from: { scanId: string } | { duplicateOf: str
 export const saveDesign = (design: Design, init?: Pick<RequestInit, 'keepalive'>) =>
   request<Design>('PUT', `/api/designs/${design.id}`, design, init);
 
+/* Saved takes: a Design the AI made, saved for its Brief, which Generate gives again when that Brief comes back. */
+type SavedTake = { direction: Direction | null };
+export const savedTake = (designId: string) => request<SavedTake>('GET', `/api/designs/${designId}/saved-take`);
+/** Saving and forgetting need the key, which changes what every visitor's Brief gives. */
+export const saveTake = (designId: string, key: string) =>
+  request<SavedTake>('PUT', `/api/designs/${designId}/saved-take`, undefined, { headers: { 'X-Mise-Key': key } });
+export const forgetTake = (designId: string, key: string) =>
+  request<SavedTake>('DELETE', `/api/designs/${designId}/saved-take`, undefined, { headers: { 'X-Mise-Key': key } });
+
 /* ───────────── The public demo (#42) ───────────── */
 
 /** What the server offers (GET /api/config). */
@@ -152,6 +162,21 @@ let config: Promise<ServerConfig> | undefined;
 /** The server's config, asked for once. A server that can't say is a local one, which offers everything. */
 export const loadConfig = () =>
   (config ??= request<ServerConfig>('GET', '/api/config').catch(() => ({ demo: false, seeds: [], generate: true, textTo3d: true })));
+
+/**
+ * Start fresh: forgets everything Mise keeps in this browser, its Designs and copies of the seeds in the
+ * demo and its settings, then opens the Scans anew, so the demo's rooms are as they were first scanned.
+ * The Designs stay on the server, as do the takes saved for a Brief.
+ */
+export function startFresh() {
+  try {
+    for (const key of Object.keys(localStorage)) if (key.startsWith('mise.')) localStorage.removeItem(key);
+  } catch {
+    // Storage is off, as in some private windows: there is nothing kept to forget.
+  }
+  // A whole new page, so no store keeps what was forgotten.
+  window.location.assign('/scans');
+}
 
 /** The Designs this browser made, and its copy of each seed Design it opened. */
 interface Mine { ids: string[]; copies: Record<string, string> }

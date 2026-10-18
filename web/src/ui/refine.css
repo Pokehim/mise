@@ -44,6 +44,23 @@
 
 .editor .refine-bar .replay { padding: 5px 10px 5px 8px; border-color: var(--pencil-strong); font-size: 13px; }
 .editor .refine-bar .replay .icon { color: var(--graphite); }
+.editor .refine-bar .save-take { padding: 5px 10px 5px 8px; border-color: var(--pencil-strong); font-size: 13px; }
+.editor .refine-bar .save-take .icon { color: var(--graphite); }
+.editor .refine-bar .save-take[aria-pressed='true'] .icon { color: var(--wash); fill: var(--wash-tint-strong); }
+.editor .refine-bar .save-take-key {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 3px 3px 3px 8px;
+  border: var(--line) solid var(--wash);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  font-size: 13px;
+}
+.editor .refine-bar .save-take-key > .icon { flex: none; color: var(--graphite); }
+.editor .refine-bar .save-take-key input { width: 96px; padding: 3px 0; border: 0; background: transparent; }
+.editor .refine-bar .save-take-key input:focus-visible { outline: none; }
+.editor .refine-bar .save-take-key button { padding: 3px 8px; }
 .editor .refine-bar .progress { color: var(--graphite); font-size: 12px; }
 
 .editor .refine-bar .error {

@@ -3,7 +3,7 @@
 // Brief so that it caches, and the same size however large the Catalog grows; search_catalog finds the rest.
 import type { Catalog, CatalogItem, Category } from '../../shared/types';
 import { m, offeredToClaude } from './forClaude';
-import { isFloorLamp, isLightOnWall, isUsefulOnWall } from './moves';
+import { isAccentLamp, isFloorLamp, isLightOnWall, isUsefulOnWall, standsOnFloor } from './moves';
 
 /** Chairs for sitting at a desk or a counter, not in a reading corner. */
 const WORK_CHAIR = /\b(office|desk chair|task|counter|stool|kitchen|dining|gaming)\b/i;
@@ -34,17 +34,29 @@ const COLLECTIONS: Record<string, string> = {
 const PER_COLLECTION = 5;   // 10 collections × 5, about the 7 × 8 it showed before art nouveau, Japanese prints and nature & science
 const OTHER_ART = 8;
 const NOT_ART = 4;
-const LIGHTS_ON_WALL = 6;
+const LIGHTS_ON_WALL = 16;
 
 const of = (category: Category) => (item: CatalogItem) => item.category === category;
 /** Books: rows for a shelf's levels, and stacks for a coffee table or a desk. */
 const isBooks = ({ category, title }: CatalogItem) => category === 'decor' && /\bbooks\b/i.test(title);
-/** The shortlist's sections after its wall art: how many items each shows, and which items belong in it. */
-const SECTIONS: { name: string; count: number; includes: (item: CatalogItem) => boolean }[] = [
+/** A plant that stands on the floor or rests on a top: plants on a wall hang with the lights. */
+const isPlant = (item: CatalogItem) => item.category === 'plant' && item.mount === 'floor';
+/**
+ * The shortlist's sections after its wall art: how many items each shows, which items belong in it, and how it picks
+ * among them when it has more: spread over their colors by default.
+ */
+const SECTIONS: { name: string; count: number; includes: (item: CatalogItem) => boolean; pick?: typeof spread }[] = [
   { name: 'mirror', count: 6, includes: of('mirror') },
   { name: 'rug', count: 14, includes: of('rug') },
   { name: 'lamp', count: 14, includes: of('lamp') },
-  { name: 'plant', count: 12, includes: (item) => item.category === 'plant' && item.mount === 'floor' },
+  // Plants are almost all green: picked over their heights instead, so that a tree is there as well as a succulent.
+  {
+    name: 'floor_plant (stands on the floor: by a window, in an empty corner or beside a chair)',
+    count: 10,
+    includes: (item) => isPlant(item) && standsOnFloor(item),
+    pick: overHeights,
+  },
+  { name: 'small_plant (on a top or a shelf level, in a group of 2 or 3)', count: 10, includes: (item) => isPlant(item) && !standsOnFloor(item), pick: overHeights },
   { name: 'decor', count: 18, includes: (item) => item.category === 'decor' && !isBooks(item) },
   { name: 'books (stock_shelves puts rows on a bookcase\'s levels; a stack goes on a coffee table or desk)', count: 6, includes: isBooks },
   { name: 'chair', count: 10, includes: (item) => item.category === 'chair' && !WORK_CHAIR.test(item.title) },
@@ -67,7 +79,7 @@ export function catalogList(catalog: Catalog): string {
   const offered = catalog.items.filter(offeredToClaude);
   const sections = [
     ...wallArt(offered),
-    ...SECTIONS.flatMap(({ name, count, includes }) => section(name, spread(offered.filter(includes), count))),
+    ...SECTIONS.flatMap(({ name, count, includes, pick = spread }) => section(name, pick(offered.filter(includes), count))),
   ];
   return [
     'Catalog shortlist, by category (size is width×height×depth; prices are estimates). search_catalog finds the rest.',
@@ -91,7 +103,11 @@ function wallArt(offered: CatalogItem[]): string[] {
     )),
     ...section('wall_art', spread(art.filter((item) => !collectionOf(item) && !isUsefulOnWall(item) && !isLightOnWall(item)), OTHER_ART)),
     ...section('not_art (hangs on its own by the desk or the door, never in a gallery)', spread(art.filter(isUsefulOnWall), NOT_ART)),
-    ...section('wall_lights_and_greenery (hangs on its own over the bed, the desk or a window, never in a gallery)', spread(offered.filter(isLightOnWall), LIGHTS_ON_WALL)),
+    ...section(
+      'wall_lights_and_greenery (hang_lights hangs each on its own, never in a gallery: an LED strip along the top of a wall; '
+        + 'string lights, a neon sign or a garland over the bed, the desk or a window)',
+      spread(offered.filter(isLightOnWall), LIGHTS_ON_WALL),
+    ),
   ];
 }
 
@@ -112,10 +128,17 @@ function spread(items: CatalogItem[], count: number): CatalogItem[] {
   return picked;
 }
 
+/** Up to `count` items evenly over their heights, from the tallest to the shortest. */
+function overHeights(items: CatalogItem[], count: number): CatalogItem[] {
+  const tallest = items.toSorted((a, b) => b.size[1] - a.size[1] || a.id.localeCompare(b.id));
+  if (tallest.length <= count) return tallest;
+  return Array.from({ length: count }, (_, i) => tallest[Math.round((i * (tallest.length - 1)) / (count - 1))]);
+}
+
 /** One item as a shortlist line. */
 function line(item: CatalogItem): string {
   const { id, title, category, size, colors, priceEstimateUsd } = item;
-  const kind = category === 'lamp' ? (isFloorLamp(item) ? ' (floor lamp)' : ' (table lamp)') : '';
+  const kind = category !== 'lamp' ? '' : isAccentLamp(item) ? ' (accent lamp, beside a real one)' : isFloorLamp(item) ? ' (floor lamp)' : ' (table lamp)';
   return `- ${id} | ${shorten(title)}${kind} | ${size.map(m).join('×')} m | ${colors[0] ?? '—'} | $${priceEstimateUsd}`;
 }
 

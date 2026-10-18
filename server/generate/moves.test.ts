@@ -25,7 +25,12 @@ const twinBed = item('bed-twin', 'bed', 'Twin Bed', [0.99, 0.6, 2.03], { priceEs
 const clock = item('clock-wall', 'wall_art', 'Vintage Decorative Wall Clock', [0.6, 0.6, 0.03], { mount: 'wall', priceEstimateUsd: 40 });
 const memoBoard = item('board-memo', 'wall_art', 'Dry Erase Memo Board', [0.56, 0.46, 0.03], { mount: 'wall', priceEstimateUsd: 40 });
 const ledStrip = item('led-strip', 'wall_art', 'Purple LED Strip Lights, 6.6 ft', [2, 0.36, 0.006], { mount: 'wall', priceEstimateUsd: 15 });
-const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug, twinBed, clock, memoBoard, ledStrip] };
+const fairyLights = item('lights-fairy', 'wall_art', 'Fairy String Lights on Copper Wire, Warm White', [1.55, 0.27, 0.012], { mount: 'wall', priceEstimateUsd: 12 });
+const curtainLights = item('lights-curtain', 'wall_art', 'LED Curtain String Lights, Warm White', [1.21, 1.33, 0.013], { mount: 'wall', priceEstimateUsd: 22 });
+const decorCatalog = {
+  ...catalog,
+  items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug, twinBed, clock, memoBoard, ledStrip, fairyLights, curtainLights],
+};
 
 const start = (onEdit?: (edit: Edit) => void) =>
   createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials: [], onEdit });
@@ -87,7 +92,7 @@ describe('the decorating moves', () => {
 
       expect(report.placed.map(({ catalog_id }: { catalog_id: string }) => catalog_id)).toEqual(['print-fern']);
       expect(report.skipped).toEqual([
-        { catalog_id: 'led-strip', why: "Purple LED Strip Lights, 6.6 ft isn't art: hang it on its own with place_piece (on_wall), over the bed, the desk or a window" },
+        { catalog_id: 'led-strip', why: "Purple LED Strip Lights, 6.6 ft isn't art: hang it on its own with hang_lights, over the bed, the desk or a window" },
       ]);
     });
 
@@ -103,6 +108,69 @@ describe('the decorating moves', () => {
       ]);
       await expect(call(session, 'hang_gallery', { over_id: 'og_bed', wall_id: 'wl_west', catalog_ids: ['pillow-navy'] }))
         .rejects.toThrow('Hung nothing: Navy Pillow is not wall art or a mirror');
+    });
+  });
+
+  describe('hang_lights', () => {
+    /** The Piece of this Catalog item in the room. */
+    const pieceOf = (session: DesignSession, catalogId: string) => roomOf(session).find(({ id }) => session.state.pieces[id]?.catalogId === catalogId)!;
+    /** How far along the West wall, from its left end, the middle of a Piece on it is. */
+    const middleOf = (session: DesignSession, catalogId: string) => {
+      const [from, to] = spanFromLeft(westWall, pieceOf(session, catalogId).corners);
+      return (from + to) / 2;
+    };
+
+    it('runs an LED strip along the top of the wall over the bed, its glow just under the ceiling', async () => {
+      const session = start();
+
+      await call(session, 'hang_lights', { catalog_id: 'led-strip', over_id: 'og_bed', wall_id: 'wl_west' });
+
+      // The wall is 2.6 m tall: the strip's 0.36 m of glow reaches to 2 cm under its top, centered over the bed's 0.97 to 3 m.
+      expect(pieceOf(session, 'led-strip').heights).toEqual([expect.closeTo(2.22), expect.closeTo(2.58)]);
+      expect(middleOf(session, 'led-strip')).toBeCloseTo(1.985);
+      expect(fit(session)).toEqual([]);
+    });
+
+    it('hangs string lights centered over the bed, above the gallery already there', async () => {
+      const session = start();
+      // The Fern Print, 0.6 m tall and centered 1.45 m up, reaches 1.75 m.
+      await call(session, 'hang_gallery', { over_id: 'og_bed', wall_id: 'wl_west', catalog_ids: ['print-fern', 'poster-city'] });
+
+      await call(session, 'hang_lights', { catalog_id: 'lights-fairy', over_id: 'og_bed', wall_id: 'wl_west' });
+
+      expect(pieceOf(session, 'lights-fairy').heights).toEqual([expect.closeTo(1.83), expect.closeTo(2.1)]);
+      expect(middleOf(session, 'lights-fairy')).toBeCloseTo(1.985);
+      expect(fit(session)).toEqual([]);
+    });
+
+    it("hangs string lights over a window, on the window's wall, just clear of its top", async () => {
+      const session = start();
+
+      await call(session, 'hang_lights', { catalog_id: 'lights-fairy', over_id: 'op_window', wall_id: '' });
+
+      // The window, x −0.6 to 0.6 on the North wall, reaches 2.1 m up.
+      expect(pieceOf(session, 'lights-fairy')).toMatchObject({ heights: [expect.closeTo(2.15), expect.closeTo(2.42)], placement: { wallId: 'wl_north', position: [expect.closeTo(0), expect.any(Number), expect.any(Number)] } });
+      expect(fit(session)).toEqual([]);
+    });
+
+    it('hangs them centered on a wall when there is nothing to hang them over', async () => {
+      const session = start();
+
+      await call(session, 'hang_lights', { catalog_id: 'lights-fairy', over_id: '', wall_id: 'wl_south' });
+
+      expect(pieceOf(session, 'lights-fairy')).toMatchObject({ heights: [expect.closeTo(1.315), expect.closeTo(1.585)], placement: { wallId: 'wl_south', position: [expect.closeTo(0), expect.any(Number), expect.any(Number)] } });
+      expect(fit(session)).toEqual([]);
+    });
+
+    it('says why when they fit nowhere over the target, and where else they can go', async () => {
+      // 1.33 m of curtain lights can't hang over a window whose top is 2.1 m up, under a 2.6 m ceiling.
+      await expect(call(start(), 'hang_lights', { catalog_id: 'lights-curtain', over_id: 'op_window', wall_id: '' }))
+        .rejects.toThrow(/doesn't fit on the North wall .*: hang it over something else, or on another wall/);
+    });
+
+    it('hangs only lights and greenery: art goes in a gallery', async () => {
+      await expect(call(start(), 'hang_lights', { catalog_id: 'print-fern', over_id: 'og_bed', wall_id: 'wl_west' }))
+        .rejects.toThrow("Fern Print is art: hang it with hang_gallery");
     });
   });
 

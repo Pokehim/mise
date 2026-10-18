@@ -3,9 +3,9 @@
 // out the spots with the same Anchors and Fit rules as place_piece. So a whole Design fits in one reply,
 // with no round trip to learn a Piece's id before hanging the next frame beside it.
 import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError';
-import { type Anchor, BY_WALL, GALLERY_GAP, type ShelfLevel } from '../../shared/anchors';
+import { type Anchor, BY_WALL, GALLERY_GAP, hungOver, type ShelfLevel } from '../../shared/anchors';
 import type { Item } from '../../shared/fit';
-import { isBy } from '../../shared/geometry';
+import { isBy, overlapLength, spanFromStart, wallLength } from '../../shared/geometry';
 import type { CatalogItem, Category, RoomSetup } from '../../shared/types';
 import { TOP_CATEGORIES } from './roomSummary';
 
@@ -34,6 +34,8 @@ export interface MoveReport {
 const FLOOR_LAMP = 1;
 /** A plant or decor shorter than this goes on a furniture top, not on the floor. */
 const FLOOR_DECOR = 0.6;
+/** Whether a plant or decor is tall enough to stand on the floor, rather than on a furniture top. */
+export const standsOnFloor = ({ size: [, height] }: CatalogItem) => height >= FLOOR_DECOR;
 /** What a table lamp can stand on, beside a reading chair. */
 const SIDE_TABLES: Category[] = ['table', 'nightstand', 'storage', 'shelf', 'dresser'];
 /** What a table lamp can stand on anywhere in the room, when it has no side table: the tops decor rests on, but a bed. */
@@ -48,9 +50,19 @@ const USEFUL_ON_WALL = /\b(clock|memo|message board|dry.?erase|cork.?board|pegbo
 export const isUsefulOnWall = ({ title }: CatalogItem) => USEFUL_ON_WALL.test(title);
 
 /** Wall pieces that light a wall or green it, as an LED strip, string lights, a neon sign or an ivy garland do. */
-const LIGHTS_ON_WALL = /\b(LED strip|string lights|curtain lights|neon|garland|plant hanger)\b/i;
+const LIGHTS_ON_WALL = /\b(LED strip|string lights|curtain lights|neon sign|garland|plant hanger)\b/i;
 /** Whether a wall piece lights or greens the wall it's on: it hangs on its own, never in a gallery. */
 export const isLightOnWall = ({ mount, title }: CatalogItem) => mount === 'wall' && LIGHTS_ON_WALL.test(title);
+
+/** Wall lights that run along the top of a wall, just under the ceiling, rather than hang over something at eye level. */
+const ALONG_THE_TOP = /\bLED strip\b/i;
+/** How far under the top of its wall, in meters, an LED strip's glow reaches. */
+const UNDER_CEILING = 0.02;
+
+/** Lamps that glow rather than light a room, as a lava lamp or a moon lamp does: an accent beside a real lamp. */
+const ACCENT_LAMP = /\b(lava lamp|moon lamp|night light)\b/i;
+/** Whether a lamp is an accent, not a light to read or work by. */
+export const isAccentLamp = ({ category, title }: CatalogItem) => category === 'lamp' && ACCENT_LAMP.test(title);
 
 /** Whether a lamp stands on the floor, rather than on a table. */
 export const isFloorLamp = ({ size: [, height] }: CatalogItem) => height >= FLOOR_LAMP;
@@ -131,7 +143,7 @@ export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { o
   const frames = lookUp(draft, catalog_ids, skip, (frame) => {
     if (frame.category !== 'wall_art' && frame.category !== 'mirror') return `${frame.title} is not wall art or a mirror`;
     if (isUsefulOnWall(frame)) return `${frame.title} isn't art: hang it on its own with place_piece (on_wall), by the desk or the door`;
-    if (isLightOnWall(frame)) return `${frame.title} isn't art: hang it on its own with place_piece (on_wall), over the bed, the desk or a window`;
+    if (isLightOnWall(frame)) return `${frame.title} isn't art: hang it on its own with hang_lights, over the bed, the desk or a window`;
     return undefined;
   });
   if (!frames.length) return done();
@@ -170,6 +182,50 @@ export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { o
     return done();
   }
   for (const frame of row) skip(frame.id, reason(firstFailure));
+  return done();
+}
+
+/**
+ * Lights or greenery on a wall, on their own: over a bed, sofa or desk, or a window, or centered on a wall. An LED strip
+ * runs along the top of the wall, its glow just under the ceiling; string lights, a neon sign or a garland hang centered
+ * over the target, clear of it, and above what already hangs there, such as a gallery.
+ */
+export function hangLights(draft: Draft, { catalog_id, over_id, wall_id }: { catalog_id: string; over_id: string; wall_id: string }): MoveReport {
+  const { skip, attempt, done } = reporter('Hung');
+  const [light] = lookUp(draft, [catalog_id], skip, (item) => {
+    if (isLightOnWall(item)) return undefined;
+    return item.mount === 'wall' ? `${item.title} is art: hang it with hang_gallery` : `${item.title} doesn't hang on a wall`;
+  });
+  if (!light) return done();
+  // The wall it hangs on, and the stretch of it it hangs over: the target's, or with none, the whole wall.
+  const over = over_id ? hungOver(draft.setup, draft.items(), over_id, wall_id || undefined) : undefined;
+  if (over && 'error' in over) throw new ToolError(over.error);
+  const wall = over?.wall ?? draft.setup.walls.find(({ id }) => id === wall_id);
+  if (!wall) throw new ToolError(wall_id ? `The room has no wall "${wall_id}"` : 'Give over_id or wall_id');
+  const [from, to] = over?.span ?? [0, wallLength(wall)];
+  const [width, height] = light.size;
+  const stretch: [number, number] = [(from + to) / 2 - width / 2, (from + to) / 2 + width / 2];
+  const hungTops = draft.items()
+    .filter(({ placement }) => placement.mount === 'wall' && placement.wallId === wall.id)
+    .filter(({ corners }) => overlapLength(spanFromStart(wall, corners), stretch) > 0)
+    .map(({ heights: [, top] }) => top);
+  // Its center heights to try: an LED strip's under the ceiling; anything else's above what hangs there, then where the Anchor puts it.
+  const alongTheTop = ALONG_THE_TOP.test(light.title);
+  const centerHeights = alongTheTop ? [wall.height - UNDER_CEILING - height / 2]
+    : [...(hungTops.length ? [Math.max(...hungTops) + GALLERY_GAP + height / 2] : []), undefined];
+  const anchors = centerHeights.map((center_height_m): Anchor => (over_id
+    ? { kind: 'on_wall_over', target_id: over_id, wall_id: wall.id, center_height_m }
+    : { kind: 'on_wall', wall_id: wall.id, along: 'center', center_height_m }));
+  attempt(light.id, () => {
+    try {
+      return {
+        pieceId: placeFirst(draft, light, anchors).pieceId,
+        as: `${alongTheTop ? `along the top of the ${wall.name}` : `on the ${wall.name}`}${over_id ? `, over ${over_id}` : ''}`,
+      };
+    } catch (error) {
+      throw new ToolError(`${reason(error)}: hang it over something else, or on another wall`);
+    }
+  });
   return done();
 }
 
@@ -230,7 +286,7 @@ export function makeCorner(
   const sideTableId = sideTable ? put(side, false) : undefined;
   if (lamp) put(lamp, !isFloorLamp(lamp), sideTableId);
   // A small plant or ornament beside a reading chair sits on a table, not on the floor.
-  if (side && !sideTable) put(side, side.size[1] < FLOOR_DECOR);
+  if (side && !sideTable) put(side, !standsOnFloor(side));
   return done();
 }
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { item } from '../../shared/test-room';
 import type { Catalog, CatalogItem } from '../../shared/types';
 import catalogJson from '../../data/catalog/catalog.json';
+import objectsJson from '../../data/catalog/objects.json';
 import postersJson from '../../data/catalog/posters.json';
 import { catalogList, SHORTLIST } from './catalogList';
 
@@ -37,6 +38,7 @@ describe('catalogList', () => {
       items: [
         item('lamp-floor', 'lamp', 'Arc Floor Lamp', [0.4, 1.6, 0.4]),
         item('lamp-table', 'lamp', 'Ceramic Table Lamp', [0.3, 0.5, 0.3]),
+        item('lamp-lava', 'lamp', 'Lava Lamp, 14.5", Purple Liquid with Pink Wax', [0.13, 0.37, 0.13]),
         item('chair-office', 'chair', 'Ergonomic Office Desk Chair', [0.6, 1, 0.6]),
         item('chair-accent', 'chair', 'Velvet Accent Chair', [0.7, 0.8, 0.7]),
         item('table-dining', 'table', 'Oak Dining Table', [1.8, 0.75, 0.9]),
@@ -46,7 +48,8 @@ describe('catalogList', () => {
     const text = catalogList(catalog);
 
     expect(lines(text, 'lamp')).toEqual([
-      expect.stringContaining('lamp-floor | Arc Floor Lamp (floor lamp)'), expect.stringContaining('lamp-table | Ceramic Table Lamp (table lamp)'),
+      expect.stringContaining('lamp-floor | Arc Floor Lamp (floor lamp)'), expect.stringContaining('lamp-lava | Lava Lamp (accent lamp, beside a real one)'),
+      expect.stringContaining('lamp-table | Ceramic Table Lamp (table lamp)'),
     ]);
     expect(lines(text, 'chair')).toEqual([expect.stringContaining('chair-accent')]);
     expect(lines(text, 'desk_chair')).toEqual([expect.stringContaining('chair-office')]);
@@ -108,14 +111,38 @@ describe('catalogList', () => {
         item('pothos-hanger', 'plant', 'Pothos in Macramé Plant Hanger, Wall Hook', [0.37, 1.03, 0.31], { mount: 'wall' }),
         item('pothos-pot', 'plant', 'Golden Pothos in White Ceramic Pot', [0.5, 0.29, 0.5]),
         item('neon-table', 'decor', 'Ciao Neon Light Sign', [0.28, 0.15, 0.05]),
+        item('poster-neon-kite', 'wall_art', 'Neon Kite', [0.46, 0.61, 0.003], { mount: 'wall', styleTags: ['poster', 'retro gaming'] }),
       ],
     };
     const text = catalogList(catalog);
 
     expect(lines(text, 'wall_art')).toEqual([expect.stringContaining('art-mountain')]);
+    expect(lines(text, 'wall_art, retro gaming')).toEqual([expect.stringContaining('poster-neon-kite')]);
     expect(lines(text, 'wall_lights_and_greenery').map((line) => line.split(' | ')[0])).toEqual(['- led-strip', '- neon-heart', '- pothos-hanger']);
-    expect(lines(text, 'plant')).toEqual([expect.stringContaining('pothos-pot')]);
+    expect(lines(text, 'small_plant')).toEqual([expect.stringContaining('pothos-pot')]);
     expect(lines(text, 'decor')).toEqual([expect.stringContaining('neon-table')]);
+  });
+
+  it("lists every light and piece of greenery the Catalog has for a wall: there are few, and each does something else", () => {
+    const objects = (objectsJson as Catalog).items.filter(({ mount, title }) => mount === 'wall' && /LED strip|lights|neon|garland|hanger/i.test(title));
+    const listed = lines(catalogList({ version: 1, items: objects }), 'wall_lights_and_greenery').map((line) => line.split(' | ')[0].slice(2));
+
+    expect(objects.length).toBeGreaterThanOrEqual(14);
+    expect(listed.toSorted()).toEqual(objects.map(({ id }) => id).toSorted());
+  });
+
+  it('lists the plants that stand on the floor apart from those for a top, each in a range of heights, not just the cheapest', () => {
+    // Plants are almost all green, so a spread over their colors would show only the cheapest: the smallest.
+    const plant = (height: number) => item(`plant-${height}`, 'plant', `Plant ${height} m`, [0.4, height, 0.4], { colors: ['Green'], priceEstimateUsd: Math.round(height * 50) });
+    const heights = [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9];
+    const listedHeights = (section: string) => lines(catalogList({ version: 1, items: heights.map(plant) }), section).map((line) => Number(line.split(' | ')[2].split('×')[1]));
+
+    const floor = listedHeights('floor_plant');
+    expect(floor).toHaveLength(SHORTLIST['floor_plant (stands on the floor: by a window, in an empty corner or beside a chair)']!);
+    expect([Math.max(...floor), Math.min(...floor)]).toEqual([1.9, 0.6]);
+    const small = listedHeights('small_plant');
+    expect(small.every((height) => height < 0.6)).toBe(true);
+    expect([Math.max(...small), Math.min(...small)]).toEqual([0.55, 0.2]);
   });
 
   it("never lists the Catalog's placeholder boxes", () => {
@@ -134,7 +161,7 @@ describe('catalogList', () => {
     const catalog: Catalog = { version: 1, items: [...(catalogJson as Catalog).items, ...(postersJson as Catalog).items] };
     const doubled: CatalogItem[] = [...catalog.items, ...catalog.items.map((each) => ({ ...each, id: `${each.id}-2` }))];
 
-    expect(catalogList(catalog).length).toBeLessThan(18000);
-    expect(catalogList({ version: 1, items: doubled }).length).toBeLessThan(18000);
+    expect(catalogList(catalog).length).toBeLessThan(19000);
+    expect(catalogList({ version: 1, items: doubled }).length).toBeLessThan(19000);
   });
 });

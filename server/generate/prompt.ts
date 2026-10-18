@@ -52,8 +52,13 @@ A Design the Mover would want to photograph, not a page from a catalog:
 - Art tells one story: a set from one poster collection, or works that share the subject the Brief points to (for a Japanese room, Hokusai's The Great Wave and Red Fuji with Hiroshige's Sudden Shower and Kambara: Night Snow; for a space lover, the space posters). One larger anchor piece with smaller ones beside it, not a row of equal small frames.
 - Clocks and memo boards do a job: they aren't art and never join a gallery. At most one clock, hung on its own by the desk or the door; a memo board over the desk.
 - Texture and pattern: mix at least three materials (wood, woven, metal, ceramic, linen, velvet) and one pattern, in the rug or a pillow. A room of smooth beige is flat.
-- Light in layers: a floor lamp in the dark corner and a table lamp at the bed or the desk, at different heights; warm light. A dorm or a cozy room can take one glow on a wall: string lights or an LED strip over the bed or the desk, or a neon sign; one, not several.
-- Plants: one larger floor plant by a window beats several tiny ones; small plants go in a group of 2 or 3 of different heights. A trailing pothos on a shelf's top, a pothos in a macramé hanger or an ivy garland over a window greens a room with no floor to spare.
+- Light in layers: a floor lamp in the dark corner and a table lamp at the bed or the desk, at different heights; warm light. A lava or moon lamp is an accent on a desk or nightstand, beside a real lamp, never instead of one.
+- A glow on a wall, for a dorm, a cozy room or a Brief that asks for lights, hung with hang_lights and never in a gallery. One, or two of different kinds when the Brief asks for lights:
+  - an LED strip along the top of the wall behind the bed or the desk, in a Palette color: warm white for cozy, Japandi or minimal; purple, ice blue or RGB for gaming; pink for Y2K;
+  - fairy or photo-clip string lights over the bed or a window, above the gallery;
+  - curtain lights behind the bed or the desk, a glowing backdrop instead of a gallery there;
+  - a neon sign as the focal point over the desk or the bed, instead of a gallery there.
+- Plants: one larger floor plant (a monstera, a ficus, a money tree, a tall snake plant) by a window or in an empty corner beats several tiny ones; small plants go in a group of 2 or 3 of different heights, on one top or shelf. With no floor to spare, green the walls and shelves: a trailing pothos or ivy on a shelf's top, an ivy garland over a window or the bed, or a pothos in a macramé hanger on a bare wall (hang_lights).
 - Tops: a group of three of different heights and shapes (a lamp, a plant, an object) on one top beats one small thing on every top.
 - Pillows: two, of different sizes or patterns, from the Palette.
 - Don't reach for the cheapest or the first item of a list by habit: choose what gives the room character.
@@ -79,12 +84,13 @@ Then make every tool call in the same reply, in this order:
 1. place_piece for each piece of furniture the room lacks and the Brief needs (against_wall, along within layout.main), and one remove for what a remodel clears. Skip this in a furnished room.
 2. apply_finish: one wall color, or one accent wall, usually behind the bed or sofa.
 3. hang_gallery: 2 to 4 frames over the bed, sofa or desk, each a different item, on the wall behind it.
-4. lay_rug under the bed, sofa or table.
-5. make_corner: a chair, a lamp and a plant or side table near a window (its Opening id), or wherever the Brief asks for a place, such as a reading corner. A table lamp needs a side table to stand on. When the Brief asks for no place to sit, light a chair the room already has: pass its id as the chair.
-6. dress_bed: one or two pillows on the bed.
-7. style_tops: plants and small decor on the desk, dresser, nightstands or shelves, and a stack of books on a coffee table or desk. stock_shelves: books on the levels of every bookcase, in one call for all of them: two or three different rows of books for each, and a plant or vase among them, so the levels alternate; a real bookcase is used, never empty. Books inside a shelf count toward no limit.
-8. recolor, if it helps: the bedding or a chair in the Palette's colors.
-9. finish_design: a name of 3 words or fewer, a one-line rationale that mentions the Brief, and the Palette.
+4. hang_lights, for a dorm, a cozy room or a Brief that asks for lights: the glow on a wall, after the gallery, so it hangs clear of it.
+5. lay_rug under the bed, sofa or table.
+6. make_corner: a chair, a lamp and a plant or side table near a window (its Opening id), or wherever the Brief asks for a place, such as a reading corner. A table lamp needs a side table to stand on. When the Brief asks for no place to sit, light a chair the room already has: pass its id as the chair.
+7. dress_bed: one or two pillows on the bed.
+8. style_tops: plants and small decor on the desk, dresser, nightstands or shelves, and a stack of books on a coffee table or desk. stock_shelves: books on the levels of every bookcase, in one call for all of them: two or three different rows of books for each, and a plant or vase among them, so the levels alternate; a real bookcase is used, never empty. Books inside a shelf count toward no limit.
+9. recolor, if it helps: the bedding or a chair in the Palette's colors.
+10. finish_design: a name of 3 words or fewer, a one-line rationale that mentions the Brief, and the Palette.
 A Piece you place in this reply has no id until the reply is done: in the calls after it, name it by its Catalog id (over_id, under_id, bed_id, on_id, near_id, target_id), and two of the same item by its Catalog id with #1 or #2, in the order you placed them. A catalog_id is always a plain Catalog id: the item to add. Skip a step only when the room has nothing for it. A Design makes ${EDIT_RANGE[0]} to ${EDIT_RANGE[1]} Edits (decorating alone, about 8 to 15), with at most ${MAX_LARGE_CHANGES} large furniture changes: ${LARGE_CHANGES}.
 
 ## Rules
@@ -98,7 +104,7 @@ A Piece you place in this reply has no id until the reply is done: in the calls 
 Brief: "cozy dorm, I need a twin XL bed", an empty L-shaped room: a main area 4.2 by 3.6 m with a window on the West wall, and a passage from the door along the east end of the North wall.
 Concept: warm oat walls with a sage accent wall along the bed; rust and indigo accents, light oak; the focal point is a set of Japanese prints over the bed.
 Layout: the twin XL bed in the South wall's west corner, its long side along the wall (in_corner), the farthest corner from the door; the desk by the window on the West wall, lit from the side, with its chair; the passage and the way in from it stay open.
-Decor: Red Fuji as the larger anchor with Sudden Shower beside it over the bed; a rust kilim rug beside the bed where feet land; a linen floor lamp and a large plant with a pouf by the window; a lamp, a small plant and a ceramic on the nightstand; two pillows of different sizes.
+Decor: Red Fuji as the larger anchor with Sudden Shower beside it over the bed, and warm fairy lights above them; a rust kilim rug beside the bed where feet land; a linen floor lamp and a large plant with a pouf by the window; a lamp, a small plant and a ceramic on the nightstand; two pillows of different sizes.
 Not: a bed in the middle of a wall that runs on into the passage, a wall clock in a gallery, six small prints in a row, a beige room with one tiny succulent.`;
 
 /** The room as every take of a Brief reads it: the Room Summary and the Catalog shortlist. */

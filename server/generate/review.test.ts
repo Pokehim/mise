@@ -39,6 +39,13 @@ describe('reviewFlags', () => {
     ], both).filter((flag) => flag.includes('group') || flag.includes('wider'))).toEqual([]);
   });
 
+  it('judges no lights as art: an LED strip along the top of the wall is no part of the gallery under it', () => {
+    const strip = item('led-strip', 'wall_art', 'Purple LED Strip Lights, 6.6 ft', [2, 0.36, 0.006], { mount: 'wall', colors: ['Purple'] });
+    const withStrip = { ...reviewCatalog, items: [...reviewCatalog.items, strip] };
+
+    expect(flagsOf([place('pc_print', 'print-fern', onEastWall(1.2)), place('pc_strip', 'led-strip', onEastWall(2.22, 0.2))], withStrip)).toEqual([]);
+  });
+
   it('flags a crowded top', () => {
     const vases = [1, 2, 3, 4].map((n) => place(`pc_vase${n}`, `vase-${n}`, onDesk(-0.4 + n * 0.16)));
 

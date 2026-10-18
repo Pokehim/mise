@@ -23,6 +23,8 @@ const OPEN_FLOOR_SPREAD = 0.5;
 export const CENTER_HEIGHT = 1.45;
 /** How far above the furniture under it a wall item hung over it keeps its bottom edge. */
 const ABOVE_FURNITURE = 0.15;
+/** How far above a window a wall item hung over it keeps its bottom edge, as string lights or a garland drape just over the frame. */
+const ABOVE_WINDOW = 0.05;
 /** How far apart, in meters, wall items hung beside each other are unless the Anchor says otherwise. */
 export const GALLERY_GAP = 0.08;
 /** How close to a wall, in meters, furniture stands to be against it: wall items hang over it, or behind it. */
@@ -45,7 +47,10 @@ export type Anchor =
   | { kind: 'beside'; target_id: string; side: 'left' | 'right' | 'front'; tucked?: boolean }
   | { kind: 'under_window'; opening_id: string }
   | { kind: 'on_wall'; wall_id: string; along: Along; center_height_m?: number }
-  /** Hung centered over furniture against the wall, `offset_m` to the right seen facing it; clear of the furniture by default. */
+  /**
+   * Hung centered over furniture against the wall, or over a window (its Opening id), `offset_m` to the right seen facing
+   * it; clear of the furniture or the window by default.
+   */
   | { kind: 'on_wall_over'; target_id: string; wall_id?: string; offset_m?: number; center_height_m?: number }
   /** Hung beside another wall item on its wall, `gap_m` apart, centers level by default: a gallery wall's next frame. */
   | { kind: 'on_wall_beside'; target_id: string; side: 'left' | 'right'; gap_m?: number; center_height_m?: number }
@@ -242,15 +247,12 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       return flushTo(wall, opening.offset + opening.width / 2, { from, to });
     }
     case 'on_wall_over': {
-      const target = targetOf(anchor.target_id);
-      if (!target) return noTarget(anchor.target_id);
-      if (target.placement.mount === 'wall') return { error: `${target.name} hangs on a wall: use on_wall_beside` };
-      const wall = anchor.wall_id === undefined ? wallBehind(setup.walls, target) : wallOf(anchor.wall_id);
-      if (!wall) return anchor.wall_id === undefined ? { error: `${target.name} stands against no wall: give wall_id` } : noWall(anchor.wall_id);
+      const over = hungOver(setup, inRoom, anchor.target_id, anchor.wall_id);
+      if ('error' in over) return over;
+      const { wall, span: [from, to], clearOf } = over;
       // Centered over the target, or offset to the right seen facing the wall, sliding but staying over it.
-      const [from, to] = spanFromStart(wall, target.corners);
       const center = (from + to) / 2 + (startIsLeft(wall) ? 1 : -1) * (anchor.offset_m ?? 0);
-      const centerHeight = anchor.center_height_m ?? Math.max(CENTER_HEIGHT, target.heights[1] + ABOVE_FURNITURE + height / 2);
+      const centerHeight = anchor.center_height_m ?? Math.max(CENTER_HEIGHT, clearOf + height / 2);
       return flushTo(wall, center, { centerHeight, from: Math.max(width / 2, from), to: Math.min(wallLength(wall) - width / 2, to) });
     }
     case 'on_wall_beside': {
@@ -471,6 +473,25 @@ function distanceToRect([x, z]: Vec2, { center: [cx, cz], size: [width, depth], 
 const FRACTIONS = { left: 0, center: 0.5, right: 1 };
 
 /** The wall an item's back is to, or failing that the first wall it stands against, within `distance`. */
+/** A wall item's target on its wall: the wall, how far along it from its start the target reaches, and how high an item over it keeps its bottom. */
+export interface HungOver { wall: Wall; span: [from: number, to: number]; clearOf: number }
+
+/** What a wall item hangs over: a window (its Opening id), or furniture against `wallId`, by default the wall its back is to. */
+export function hungOver(setup: RoomSetup, inRoom: RoomItem[], id: string, wallId?: string): HungOver | { error: string } {
+  const wallOf = (each: string) => setup.walls.find((wall) => wall.id === each);
+  const window = setup.openings.find((opening) => opening.id === id && opening.kind === 'window');
+  if (window) {
+    const wall = wallOf(window.wallId);
+    if (!wall) return { error: `The room has no wall "${window.wallId}"` };
+    return { wall, span: [window.offset, window.offset + window.width], clearOf: window.bottom + window.height + ABOVE_WINDOW };
+  }
+  const target = inRoom.find((each) => each.id === id);
+  if (!target) return { error: `The room has no Original, Piece or window "${id}"` };
+  if (target.placement.mount === 'wall') return { error: `${target.name} hangs on a wall: use on_wall_beside` };
+  const wall = wallId === undefined ? wallBehind(setup.walls, target) : wallOf(wallId);
+  if (!wall) return { error: wallId === undefined ? `${target.name} stands against no wall: give wall_id` : `The room has no wall "${wallId}"` };
+  return { wall, span: spanFromStart(wall, target.corners), clearOf: target.heights[1] + ABOVE_FURNITURE };
+}
 export function wallBehind(walls: Wall[], item: RoomItem, distance = BY_WALL): Wall | undefined {
   const [fx, fz] = frontOf(item.placement.rotationY);
   const by = walls.filter((wall) => isBy(wall, item, distance));

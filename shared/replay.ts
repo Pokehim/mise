@@ -1,6 +1,6 @@
-import { distanceToWall } from './geometry';
+import { wallPoint } from './geometry';
 import { partsFor } from './parts';
-import type { Catalog, Category, Edit, Original, Placement, RoomSetup, RoomState, SkipReason, Vec2, Wall } from './types';
+import type { Catalog, Category, Edit, Original, Placement, RoomSetup, RoomState, SkipReason, Wall } from './types';
 
 /**
  * The room a Design shows: its Scan, with the Edits applied in list order (spec §6, ADR-0001).
@@ -148,8 +148,15 @@ const WALL_CATEGORIES: Category[] = ['wall_art', 'mirror'];
 function startPlacement({ box: { position, rotationY }, category }: Original, walls: Wall[]): Placement {
   if (position[1] <= ABOVE_FLOOR) return { position, rotationY, mount: 'floor' };
   if (!WALL_CATEGORIES.includes(category)) return { position, rotationY, mount: 'surface' };
-  const point: Vec2 = [position[0], position[2]];
-  const distance = (wall: Wall) => Math.abs(distanceToWall(point, wall));
+  const [x, , z] = position;
+  // To the nearest point of the Wall itself, between its ends: in a room that isn't convex, two Walls can share a line.
+  const distance = (wall: Wall) => {
+    const { start: [sx, sz], end: [ex, ez] } = wall;
+    const length = Math.hypot(ex - sx, ez - sz);
+    const along = ((x - sx) * (ex - sx) + (z - sz) * (ez - sz)) / length;
+    const [wx, wz] = wallPoint(wall, Math.min(Math.max(along, 0), length));
+    return Math.hypot(x - wx, z - wz);
+  };
   const [nearest] = walls.toSorted((a, b) => distance(a) - distance(b));
   return { position, rotationY, mount: 'wall', wallId: nearest?.id };
 }

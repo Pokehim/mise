@@ -13,6 +13,7 @@ if (process.env.NODE_ENV !== 'production') {
   // localhost only, like Vite: the API writes files, so keep it off the venue Wi-Fi.
   serve({ fetch: app.fetch, port, hostname: 'localhost' }, (info) => console.log(`Mise API on http://localhost:${info.port}`));
 } else {
+  await pruneData();
   await seedDesigns();
 
   // npm start (#42): the API, the data and the built web app (npm run build) from one server.
@@ -30,6 +31,23 @@ if (process.env.NODE_ENV !== 'production') {
 
   const port = Number(process.env.PORT ?? 8080);
   serve({ fetch: site.fetch, port, hostname: '0.0.0.0' }, (info) => console.log(`Mise on port ${info.port}`));
+}
+
+/**
+ * Azure's zip deploy leaves behind files the repo has since deleted, such as a removed Scan (#42). The deploy
+ * lists every file it ships in .deployed-files, and on start, data/ is pruned to that list.
+ */
+async function pruneData() {
+  if (process.env.DATA_DIR) return;
+  const listed = await readFile('.deployed-files', 'utf8').catch(() => null);
+  if (!listed) return;
+  const shipped = new Set(listed.split('\n'));
+  const stale = (await readdir('data', { recursive: true, withFileTypes: true }))
+    .filter((entry) => entry.isFile())
+    .map((entry) => join(entry.parentPath, entry.name))
+    .filter((file) => !shipped.has(file));
+  await Promise.all(stale.map((file) => rm(file)));
+  if (stale.length) console.log(`Removed ${stale.length} files the deploy no longer ships`);
 }
 
 /**

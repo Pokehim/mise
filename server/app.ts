@@ -305,8 +305,11 @@ app.post('/api/generate', async (c) => {
   if (c.req.header('Accept')?.includes('application/x-ndjson')) {
     c.header('Content-Type', 'application/x-ndjson');
     return stream(c, async (out) => {
+      // A Mover who leaves stops the takes, which would otherwise go on calling Claude for no one.
+      const left = new AbortController();
+      out.onAbort(() => left.abort());
       const send = (event: GenerateEvent) => out.write(`${JSON.stringify(event)}\n`);
-      const result = await generateDesigns({ ...request, onEvent: (event) => void send(event) });
+      const result = await generateDesigns({ ...request, signal: left.signal, onEvent: (event) => void send(event) });
       await send({ type: 'done', result });
     });
   }

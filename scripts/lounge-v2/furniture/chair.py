@@ -62,12 +62,15 @@ R = mathutils.Matrix.Rotation(np.linalg.norm(icp['rotvec']), 4, mathutils.Vector
 M1 = mathutils.Matrix.Translation(icp['t']) @ R @ mathutils.Matrix.Scale(icp['s'], 4)
 src1 = import_glb(c1, M1)[0]
 src2 = import_glb(c2)[0]
-src1m = src1.copy(); src1m.data = src1.data.copy(); sc.collection.objects.link(src1m)
-src1m.matrix_world = mathutils.Matrix.Scale(-1, 4, (1, 0, 0)) @ src1.matrix_world
-for o in (src1, src1m, src2):
+def mirrored(src):
+    m = src.copy(); m.data = src.data.copy(); sc.collection.objects.link(m)
+    m.matrix_world = mathutils.Matrix.Scale(-1, 4, (1, 0, 0)) @ src.matrix_world
+    return m
+src1m, src2m = mirrored(src1), mirrored(src2)
+for o in (src1, src1m, src2, src2m):
     bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); bpy.context.view_layer.objects.active = o
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-recalc_normals(src1m)
+recalc_normals(src1m); recalc_normals(src2m)
 
 def emission_from_texture(o):
     for slot in o.material_slots:
@@ -79,9 +82,10 @@ def emission_from_texture(o):
         nt.links.new(em.outputs[0], out.inputs['Surface'])
 for o in (src1, src2):
     emission_from_texture(o)
-src1m.data.materials.clear()
-for m in src1.data.materials:
-    src1m.data.materials.append(m)
+for mo, so in ((src1m, src1), (src2m, src2)):
+    mo.data.materials.clear()
+    for m in so.data.materials:
+        mo.data.materials.append(m)
 white = bpy.data.materials.new('white'); white.use_nodes = True
 nt = white.node_tree; [nt.nodes.remove(n) for n in list(nt.nodes)]
 em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (1, 1, 1, 1)
@@ -92,8 +96,10 @@ sc.cycles.samples = 1
 sc.cycles.device = 'CPU'
 bk = sc.render.bake
 bk.use_selected_to_active = True
-bk.cage_extrusion = 0.012
-bk.max_ray_distance = 0.04
+# Rays look 6 mm either side of the surface. The shell is ~8 mm thick: a longer ray falls through a hole in a
+# capture and picks up the inside of the far face, which baked as dark grey-brown spots.
+bk.cage_extrusion = 0.006
+bk.max_ray_distance = 0.012
 bk.margin = 0
 bk.use_clear = True
 
@@ -138,13 +144,13 @@ for name, ob in parts.items():
     ob.data.materials.clear(); ob.data.materials.append(m)
     img = bpy.data.images.new(name + '_tmp', TEX, TEX, alpha=False, float_buffer=True)   # linear
     layers = []
-    for src in (src1, src1m, src2):
+    for src in (src1, src1m, src2, src2m):
         c = bake(ob, src, img).copy()
         k = bake(ob, src, img, mask=True)[..., 0] > 0.5
         layers.append((c, k))
-    # the mirror and CHAIR_2 were lit and exposed differently: match each to CHAIR_1 where both reached
+    # the mirrors and CHAIR_2 were lit and exposed differently: match each to CHAIR_1 where both reached
     c0, k0 = layers[0]
-    for j in (1, 2):
+    for j in (1, 2, 3):
         c, k = layers[j]; both = k & k0
         if both.sum() > 1000:
             g = np.median(c0[both], 0) / np.maximum(np.median(c[both], 0), 1e-4)
@@ -155,7 +161,8 @@ for name, ob in parts.items():
         take = k & ~valid
         col[take] = c[take]; valid |= take
     print(name, 'texels from chair1', layers[0][1].mean().round(3), 'any', valid.mean().round(3), flush=True)
-    np.save(f'{tmp}/{name}_col.npy', col); np.save(f'{tmp}/{name}_valid.npy', valid)
+    for j, (c, k) in enumerate(layers):
+        np.save(f'{tmp}/{name}_layer{j}.npy', c.astype(np.float16)); np.save(f'{tmp}/{name}_mask{j}.npy', k)
     baked[name] = (col, valid)
 
 # color: one gain per channel so the shell's median matches the real chairs (SPLAT_ROOM_1); same gain for the seat
@@ -173,7 +180,7 @@ for name, ob in parts.items():
     print(name, 'median sRGB after gain', (np.median(srgb[valid], 0) * 255).round(), flush=True)
     ob.data.materials.clear(); ob.data.materials.append(unlit_material(name, image=img))
 
-for o in (src1, src1m, src2):
+for o in (src1, src1m, src2, src2m):
     bpy.data.objects.remove(o)
 
 # ---------- legs + frame ----------

@@ -31,15 +31,21 @@ image (`alphaMode: BLEND`) on the floor, or on the wall for the whiteboard.
 6. `measure/chair_shell.py` then `measure/smooth.py`: the seat and back shell, screened Poisson (depth 9)
    from CHAIR_1 made symmetric (its left half, holes filled from its mirrored right half, then from CHAIR_2),
    trimmed to within 6 mm of the data, then two-step and Taubin smoothing.
-7. `chair_parts.py`: the shell cut at y = 0.50 m into `seat` and `back`, UV-unwrapped with xatlas.
-8. `chair.py` (Blender): textures baked from CHAIR_1, then its mirror, then CHAIR_2 (Cycles, emission,
-   selected-to-active), one color gain matching the shell to the real chairs in SPLAT_ROOM_1, the legs rebuilt
-   straight, the frame under the seat, the shadow.
-9. `measure/tpose.py`, `measure/tpeaks.py`, `measure/tthick.py`, `measure/tcolor.py`: the table, from the splat.
-10. `table_top_image.py`, then `table.py` (Blender).
-11. `render.py` (Blender) with the East wall view, `whiteboard_image.py`, then `whiteboard.py` (Blender).
-12. `recenter_glb.py` on each file, so its origin is the center of its footprint.
-13. `fit_originals.py`: the 16 Originals; `check_chair.py`: the chair's Done-when numbers.
+7. `close_holes.py`: every hole in the shell closed (the seat/back junction and the underside had some), so
+   nothing dark shows through.
+8. `chair_parts.py`: the shell cut at y = 0.50 m into `seat` and `back`, UV-unwrapped with xatlas.
+9. `chair.py` (Blender): bakes 4 texture layers, CHAIR_1, its mirror, CHAIR_2, and its mirror (Cycles, emission,
+   selected-to-active). Rays look only 6 mm either side of the surface: the shell is about 8 mm thick, and longer
+   rays fell through holes in a capture and baked the inside of the far face as dark spots. It also rebuilds the
+   legs straight, adds the frame under the seat and the shadow, and exports.
+10. `chair_texel_geometry.py` (Blender), then `chair_composite.py`: the final seat and back textures, cleaned in
+    3D. The white shell takes the smooth light of its white texels; the green cushion keeps its printed grid, with
+    brown or dark blotches refilled from a capture that is clean there. `swap_textures.py` puts them in the file.
+11. `measure/tpose.py`, `measure/tpeaks.py`, `measure/tthick.py`, `measure/tcolor.py`: the table, from the splat.
+12. `table_top_image.py`, then `table.py` (Blender).
+13. `render.py` (Blender) with the East wall view, `whiteboard_image.py`, then `whiteboard.py` (Blender).
+14. `recenter_glb.py` on each file, so its origin is the center of its footprint.
+15. `fit_originals.py`: the 16 Originals; `check_chair.py`: the chair's Done-when numbers.
 
 ## Measurements
 

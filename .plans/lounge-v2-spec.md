@@ -37,7 +37,7 @@ All sources are in `data/scans/real-scans/`, and all were captured with the furn
 | `KIRI_ENGINE_CHAIR_1/model.obj` | KIRI's whole-room LiDAR scene (despite its name) | Empty Room base, especially the floor (98% covered) |
 | `SPLAT_ROOM_1.ply` | Polycam splat, 1.6M splats | Empty Room surface layer; the better splat |
 | `SPLAT_ROOM_2.ply` | Polycam splat, 642k splats | Surface layer, only where it beats ROOM_1 |
-| `POLYCAM_CHAIR_1.glb`, `_2.glb` | Detail Captures: each is one chair up close, plus scraps of floor and wall | The chair's Master Copy. Also the sharpest floor sample. |
+| `POLYCAM_CHAIR_1.glb`, `_2.glb` | Detail Captures: each is one chair up close, plus scraps of floor and wall. **Their size is unreliable:** Polycam's close-ups came in 12–40% off. | The chair's shape and image. Also the sharpest floor sample. |
 | `KIRI_ENGINE_ROOM_1/room.usdz` | KIRI Layout: 4 walls, 2 windows, 2 doors, 3 tables, 12 chairs as boxes | Starting boxes for every Original, and the Openings |
 | `KIRI_ENGINE_ROOM_2/room.usdz` | The same Layout, turned 90°, one window missing | Cross-check only |
 | `POLYCAM_ROOM_PLY_*.ply`, `POLYCAM_ROOM_SPLAT_*.ply` | Point clouds, and stand-in "splats" made from them | Not used |
@@ -91,7 +91,7 @@ All sources are in `data/scans/real-scans/`, and all were captured with the furn
 
 | Master Copy | Built from | Parts (top-level node names) |
 |---|---|---|
-| `chair.glb` | The sharper of `POLYCAM_CHAIR_1` and `_2`, cut out of its surroundings and cleaned up in Blender. If each scan sees a different good side, combine them; the chair is left–right symmetric, so mirroring the better half is fine. | `seat`, `back`, `legs` (all 4 legs and their bracket) |
+| `chair.glb` | The sharper of `POLYCAM_CHAIR_1` and `_2`, cut out of its surroundings and cleaned up in Blender. Its **size** comes from the 12 chairs in the room scans (LiDAR, in meters), found by a registration that solves for scale. If each scan sees a different good side, combine them; the chair is left–right symmetric, so mirroring the better half is fine. | `seat`, `back`, `legs` (all 4 legs and their bracket) |
 | `table.glb` | Rebuilt from measurements of the room scans and the splat (the splat has whole tables): top size and thickness, height, metal legs, casters. The tabletop image comes from the sharpest view, with smudges removed. | `top`, `legs` |
 | `whiteboard.glb` | Rebuilt as a flat board plus its tray and trim, carrying the mesh's image so the writing stays readable | `board`, `frame` |
 
@@ -160,7 +160,7 @@ Keep each file under 95 MB, or put it in Git LFS.
 
 | Check | Target |
 |---|---|
-| Chair Master Copy vs the chair Detail Capture | median surface distance ≤ 1 cm; seat height, seat width, back height, and leg spread within 5 mm |
+| Chair Master Copy | shape vs the chair Detail Capture, scaled to fit: median surface distance ≤ 1 cm. Seat height, seat width, back height, and leg spread vs the chairs in the room scans: within 5 mm |
 | Table Master Copy vs the room scans | top size and height within 5 mm; leg positions within 1 cm |
 | Each Original's pose vs the real item | within 2 cm and 2° |
 | Empty Room walls and floor vs the Main Capture | within 1 cm |

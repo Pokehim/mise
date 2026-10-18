@@ -8,15 +8,16 @@
 // Each room is built in the room frame (meters, +Y up, floor at y = 0), saved as a raw .glb, and
 // imported with scan-import, so it goes through the same pipeline as a Polycam export. The room's true
 // setup.json is written too, which Room Setup can be checked against.
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Document, type TypedArray } from '@gltf-transform/core';
 import { PNG } from 'pngjs';
-import type { Box, Hex, Opening, Original, RoomSetup, Vec2, Vec3, Wall, YawTransform } from '../shared/types';
-import { applyYaw, invertYaw } from '../web/src/setup/geometry/align';
+import type { Box, Hex, Opening, Original, RoomSetup, ScanManifest, Vec2, Vec3, Wall, YawTransform } from '../shared/types';
+import { applyYaw, composeYaw, invertYaw } from '../web/src/setup/geometry/align';
 import { formatSummary, importScan, io, writeJson } from './scan-import';
+import { mergeScan } from './scan-merge';
 
 const CELL = 0.05; // Room Setup's auto-box grows over 5 cm voxels of vertices, so no gap may be wider
 const NOISE = 0.002; // ±2 mm along the normal, like a scan, so simplify can't flatten the cells away
@@ -54,8 +55,12 @@ interface Capture {
   exposure: number;
   /** Original id → where it stood during this Capture, when it wasn't in its usual place. */
   moved: Record<string, Pose>;
-  /** Leave out furniture faces that face a wall from less than 10 cm away, which a scanner can't see. */
-  hideFacesAgainstWalls?: boolean;
+  /**
+   * Leave out what a scanner can't see: the floor under furniture that rests on it, the wall behind
+   * furniture that stands within 10 cm of it (and 6 cm either side), and furniture faces that face a
+   * wall from less than 10 cm away.
+   */
+  occluded?: boolean;
 }
 
 /** Deterministic random numbers in [0, 1), so re-running gives the same files (mulberry32). */
@@ -77,7 +82,7 @@ const rotateY = ([x, y, z]: Vec3, angle: number): Vec3 => [
 ];
 
 /** The shapes one Capture of a room sees. */
-function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, exposure, moved, hideFacesAgainstWalls }: Capture): Shape[] {
+function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, exposure, moved, occluded }: Capture): Shape[] {
   const noise = seededRandom(noiseSeed);
   let seed = textureSeed;
   const shape = (name: string, color: Rgb): Shape =>
@@ -87,7 +92,7 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
    * Adds the rectangle corner + s·u + t·v (s, t in 0–1) as a grid of cells no larger than CELL, facing u × v.
    * Cells whose center is in one of the Openings are left out. The texture spans the whole rectangle.
    */
-  function addGrid(target: Shape, corner: Vec3, u: Vec3, v: Vec3, openingRects: Rect[] = []) {
+  function addGrid(target: Shape, corner: Vec3, u: Vec3, v: Vec3, openingRects: Rect[] = [], hidden?: (center: Vec3) => boolean) {
     const [nu, nv] = [u, v].map((edge) => Math.ceil(Math.hypot(...edge) / CELL - 1e-9));
     const normal = cross(u, v);
     const unitNormal = scale(normal, 1 / Math.hypot(...normal));
@@ -104,6 +109,7 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
       for (let i = 0; i < nu; i++) {
         const [s, t] = [(i + 0.5) / nu, (j + 0.5) / nv];
         if (openingRects.some(([s0, t0, s1, t1]) => s > s0 && s < s1 && t > t0 && t < t1)) continue;
+        if (hidden?.(add(corner, add(scale(u, s), scale(v, t))))) continue;
         const a = first + j * (nu + 1) + i;
         const c = a + nu + 2;
         target.indices.push(a, a + 1, c, a, c, c - 1);
@@ -125,7 +131,7 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
     if (raised) faces.push([[x0, y0, z0], [dx, 0, 0], [0, 0, dz]]);
     for (const [corner, u, v] of faces) {
       const [c, ru, rv] = [add(rotateY(corner, rotationY), position), rotateY(u, rotationY), rotateY(v, rotationY)];
-      if (hideFacesAgainstWalls && facesNearbyWall(add(c, scale(add(ru, rv), 0.5)), cross(ru, rv))) continue;
+      if (occluded && facesNearbyWall(add(c, scale(add(ru, rv), 0.5)), cross(ru, rv))) continue;
       addGrid(target, c, ru, rv);
     }
   }
@@ -137,9 +143,29 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
       (x - sx) * wx + (z - sz) * wz < 0.1 && (normal[0] * wx + normal[2] * wz) / length < -0.7);
   }
 
+  // Every furniture box where it stands during this Capture, as room-frame bounds (the poses are quarter turns).
+  const bounds = room.furniture.flatMap(({ original, parts }) => parts.flatMap(({ boxes }) => boxes.map(([min, max]) => {
+    const { position, rotationY } = moved[original.id] ?? original.box;
+    const corners = [min[0], max[0]].flatMap((x) => [min[2], max[2]].map((z) => add(rotateY([x, 0, z], rotationY), position)));
+    const xs = corners.map((c) => c[0]);
+    const zs = corners.map((c) => c[2]);
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: min[1], y1: max[1], z0: Math.min(...zs), z1: Math.max(...zs) };
+  })));
+  /** Under a box that rests on the floor. */
+  const underFurniture = ([x, , z]: Vec3) => bounds.some((b) => b.y0 === 0 && x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1);
+  /**
+   * On a wall that runs along X (or Z, with `alongZ`), behind a box less than 10 cm from it: the box's
+   * shadow, 6 cm wider than the box on each side.
+   */
+  const behindFurniture = (alongZ: boolean) => ([x, y, z]: Vec3) => bounds.some((b) => {
+    const [along, across] = alongZ ? [z, x] : [x, z];
+    const [a0, a1, c0, c1] = alongZ ? [b.z0, b.z1, b.x0, b.x1] : [b.x0, b.x1, b.z0, b.z1];
+    return along > a0 - 0.06 && along < a1 + 0.06 && across > c0 - 0.1 && across < c1 + 0.1 && y > b.y0 && y < b.y1;
+  });
+
   const [W, D, H] = room.size;
   const floor = shape('Floor', room.colors.floor);
-  addGrid(floor, [-W / 2, 0, D / 2], [W, 0, 0], [0, 0, -D]);
+  addGrid(floor, [-W / 2, 0, D / 2], [W, 0, 0], [0, 0, -D], [], occluded ? underFurniture : undefined);
   const ceiling = shape('Ceiling', room.colors.ceiling);
   addGrid(ceiling, [-W / 2, H, -D / 2], [W, 0, 0], [0, 0, D]);
 
@@ -151,7 +177,8 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
       .filter((opening) => opening.wallId === wall.id)
       .map(({ offset, width, bottom, height }): Rect => [offset / length, bottom / H, (offset + width) / length, (bottom + height) / H]);
     // Along the wall from start to end, then up: that faces the inward normal.
-    addGrid(wallShape, [wall.start[0], 0, wall.start[1]], [dx, 0, dz], [0, H, 0], openingRects);
+    addGrid(wallShape, [wall.start[0], 0, wall.start[1]], [dx, 0, dz], [0, H, 0], openingRects,
+      occluded ? behindFurniture(Math.abs(dz) > Math.abs(dx)) : undefined);
     return wallShape;
   });
 
@@ -391,11 +418,17 @@ export const LOUNGE_FILL_MOVED: Record<string, Pose> = {
   og_sofa: { position: [0.9, 0, -1.6], rotationY: -Math.PI / 2 },   // turned around: its back faces the room
   og_coffee_table: { position: [1.2, 0, 1], rotationY: 0 },
   og_side_table: { position: [0.2, 0, 2.2], rotationY: 0 },
-  og_armchair: { position: [1.9, 0, 1.6], rotationY: Math.PI / 2 },
+  og_armchair: { position: [1.9, 0, 2], rotationY: Math.PI / 2 },
 };
 
 /** The lounge's Fill Capture frame → its Main Capture's frame (here the room frame). Room Setup step 6 should recover it. */
 export const LOUNGE_FILL_TRANSFORM: YawTransform = { position: [1.2, -0.8, -0.6], rotationY: 0.37 };
+
+/** Each moved lounge piece's copy in the Fill Capture → where it stands in the Main Capture, as step 6 saves it. */
+export const LOUNGE_FILL_MOVED_TRANSFORMS = Object.entries(LOUNGE_FILL_MOVED).map(([originalId, pose]) => {
+  const { position, rotationY } = LOUNGE.furniture.find((f) => f.original.id === originalId)!.original.box;
+  return { originalId, transform: composeYaw({ position, rotationY }, invertYaw(pose)) };
+});
 
 /** Imports one Capture's shapes, through a temporary raw .glb, as `scan-import` would. */
 async function importCapture(shapes: Shape[], room: Room, fill: boolean, frame?: YawTransform) {
@@ -420,13 +453,18 @@ async function main() {
   // The lounge: a Main Capture, then a Fill Capture with the furniture moved, seen from another frame.
   {
     const { corners, walls } = roomWalls(LOUNGE.size);
-    const main = captureShapes(LOUNGE, walls, { noiseSeed: 101, textureSeed: 100, exposure: 1, moved: {}, hideFacesAgainstWalls: true });
-    const fill = captureShapes(LOUNGE, walls, { noiseSeed: 202, textureSeed: 200, exposure: 0.9, moved: LOUNGE_FILL_MOVED, hideFacesAgainstWalls: true });
+    const main = captureShapes(LOUNGE, walls, { noiseSeed: 101, textureSeed: 100, exposure: 1, moved: {}, occluded: true });
+    const fill = captureShapes(LOUNGE, walls, { noiseSeed: 202, textureSeed: 200, exposure: 0.9, moved: LOUNGE_FILL_MOVED, occluded: true });
     const { dir, stats } = await importCapture(main, LOUNGE, false);
     await rm(join(dir, 'captures'), { recursive: true, force: true });
     const filled = await importCapture(fill, LOUNGE, true, invertYaw(LOUNGE_FILL_TRANSFORM));
     await writeJson(join(dir, 'setup.json'), roomSetup(LOUNGE, walls, corners, main[0].texture));
-    console.log(`Wrote ${dir}: room.glb, ${filled.mesh}, manifest.json, and setup.json\n\n${formatSummary(stats)}`);
+    // Lined up as Room Setup step 6 would (it recovers these), then merged, so the editor shows its Patches.
+    const manifest: ScanManifest = JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8'));
+    manifest.captures!.fills[0] = { ...manifest.captures!.fills[0], transform: LOUNGE_FILL_TRANSFORM, moved: LOUNGE_FILL_MOVED_TRANSFORMS };
+    await writeJson(join(dir, 'manifest.json'), manifest);
+    const { patches, completions } = await mergeScan(dir);
+    console.log(`Wrote ${dir}: room.glb (with ${patches.length} Patches and ${completions.length} completions), ${filled.mesh}, manifest.json, and setup.json\n\n${formatSummary(stats)}`);
   }
 }
 

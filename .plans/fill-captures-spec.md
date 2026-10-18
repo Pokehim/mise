@@ -207,7 +207,8 @@ The splat-hiding box for a lifted or removed Original is its box **grown by 10 c
   - the armchair moved
   - the whole Capture offset by a known transform (yaw 0.37 rad, translation (1.2, −0.8, −0.6) m, where y simulates a different ARKit origin)
   - its textures darkened by 10%, so the gain has something to correct
-- Both Captures go through `scan-import`, the second with `--fill`. The committed manifest keeps the Fill transform at identity, so the Align step has something to solve.
+- Neither Capture has what a scanner can't see: the floor under furniture resting on it, the wall behind furniture standing against it, and furniture faces turned to a wall.
+- Both Captures go through `scan-import`, the second with `--fill`. The generator then writes the true transforms (the ones step 6 recovers: `LOUNGE_FILL_TRANSFORM`, `LOUNGE_FILL_MOVED_TRANSFORMS`) and runs the merge, so the committed Scan already shows its Patches in the editor. Step 6 can still line it up again.
 
 **Tests** (`scripts/scan-merge.test.ts` and Room Setup's alignment module):
 

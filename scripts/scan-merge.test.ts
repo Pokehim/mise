@@ -3,15 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Document } from '@gltf-transform/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { ScanManifest, YawTransform } from '../shared/types';
-import { composeYaw, invertYaw } from '../web/src/setup/geometry/align';
+import type { ScanManifest } from '../shared/types';
 import { type MergeSummary, mergeScan } from './scan-merge';
 import { io, measureScan, SCANS_DIR, writeJson } from './scan-import';
-import { LOUNGE, LOUNGE_FILL_MOVED, LOUNGE_FILL_TRANSFORM } from './synthetic-room';
-
-/** Where an Original stands, as a transform from its own frame. */
-const pose = ({ position, rotationY }: { position: YawTransform['position']; rotationY: number }): YawTransform => ({ position, rotationY });
-const sofa = LOUNGE.furniture.find((f) => f.original.id === 'og_sofa')!.original;
+import { LOUNGE_FILL_MOVED_TRANSFORMS, LOUNGE_FILL_TRANSFORM } from './synthetic-room';
 
 /** The synthetic lounge, copied, with its Fill Capture lined up as Room Setup step 6 would: the shell, and the moved sofa. */
 async function alignedLounge(): Promise<string> {
@@ -21,7 +16,7 @@ async function alignedLounge(): Promise<string> {
   manifest.captures!.fills[0] = {
     ...manifest.captures!.fills[0],
     transform: LOUNGE_FILL_TRANSFORM,
-    moved: [{ originalId: 'og_sofa', transform: composeYaw(pose(sofa.box), invertYaw(pose(LOUNGE_FILL_MOVED.og_sofa))) }],
+    moved: LOUNGE_FILL_MOVED_TRANSFORMS.filter((m) => m.originalId === 'og_sofa'),
   };
   await writeJson(join(dir, 'manifest.json'), manifest);
   return dir;

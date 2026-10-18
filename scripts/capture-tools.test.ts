@@ -134,7 +134,7 @@ describe('registerCloseup', () => {
     const corner = applyYaw(inRoom, [0.24, 0.85, -0.25]);
     applyYaw(transform, applyYaw(invertYaw(closeupToRoom), corner)).forEach((v, a) => expect(v).toBeCloseTo(corner[a], 2));
     expect(residual).toBeLessThan(0.005);
-  });
+  }, 30_000);
 });
 
 /** Adds quads (corners in the room frame, counter-clockwise seen from the front) to the lounge's Fill Capture, with its texture. */

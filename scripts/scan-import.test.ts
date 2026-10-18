@@ -101,7 +101,7 @@ describe('optimizeScan', () => {
       scene.addChild(document.createNode().setMesh(document.createMesh().addPrimitive(part)));
     }
 
-    await optimizeScan(document, 600);
+    await optimizeScan(document, 600, { lockBorders: true });
 
     // Where each part's vertices lie on the shared edge, in world space.
     const onEdge = document.getRoot().listNodes().filter((node) => node.getMesh()).map((node) => {

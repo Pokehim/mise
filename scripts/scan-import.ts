@@ -69,7 +69,8 @@ Options:
 What it does:
   1. Finds the .gltf, .glb or .obj in the export, and converts an OBJ to glTF (obj2gltf).
   2. Optimizes it like "gltf-transform optimize --texture-compress webp --texture-size 4096", and
-     simplifies it further while it has more than ${MAX_TRIANGLES.toLocaleString('en-US')} triangles (${DETAIL_MAX_TRIANGLES.toLocaleString('en-US')} for --detail).
+     simplifies it further while it has more than ${MAX_TRIANGLES.toLocaleString('en-US')} triangles (${DETAIL_MAX_TRIANGLES.toLocaleString('en-US')} for --detail),
+     never moving a part's border, so parts with different textures can't crack apart.
   3. Writes room.glb, and manifest.json with an identity meshTransform (Room Setup step 1 sets it).
      With --fill or --detail, writes the Capture into captures/ and adds it to the manifest instead.
   4. Prints a summary. Check that the sizes are in meters and +Y is up: a room's Y extent is ${ROOM_HEIGHT_TEXT}.
@@ -106,6 +107,8 @@ export interface ImportOptions {
    * meters in the export's own frame: for a Capture that also saw rooms beyond this one.
    */
   crop?: Crop;
+  /** Simplify without moving any part's border, so parts never crack apart (optimizeScan). The CLI sets it. */
+  lockBorders?: boolean;
   /** Where Scan folders go. Defaults to data/scans/. */
   scansDir?: string;
 }
@@ -115,7 +118,7 @@ export interface ImportOptions {
  * `room.glb`, or with `fill` or `detail`, the Capture's `captures/fill-<n>.glb` or `captures/detail-<n>.glb`.
  */
 export async function importScan({
-  input, scanId, name = scanId, raw, force = false, fill = false, detail = false, crop, scansDir = SCANS_DIR,
+  input, scanId, name = scanId, raw, force = false, fill = false, detail = false, crop, lockBorders = false, scansDir = SCANS_DIR,
 }: ImportOptions) {
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(scanId)) {
     throw new Error(`The scanId must look like lounge-v1 (lowercase letters, digits, and hyphens), not "${scanId}".`);
@@ -138,7 +141,7 @@ export async function importScan({
     : detail ? `captures/detail-${details.length + 1}.glb` : manifest.mesh;
 
   const document = await readExport(input, crop);
-  await optimizeScan(document, detail ? DETAIL_MAX_TRIANGLES : MAX_TRIANGLES);
+  await optimizeScan(document, detail ? DETAIL_MAX_TRIANGLES : MAX_TRIANGLES, { lockBorders });
   await document.transform(unpartition()); // a .glb holds one buffer
   await mkdir(dirname(join(dir, mesh)), { recursive: true });
   await io.write(join(dir, mesh), document);
@@ -267,19 +270,21 @@ const unzip = (zip: string, dir: string) => runUnzip(['-q', '-o', zip, '-d', dir
  * defaults (v4.5), in process. Then, while the mesh has more than maxTriangles, simplify passes target
  * that count. Scans have no animation, so the CLI's resample step is left out.
  *
- * Simplify never moves a part's border: parts with different textures meet there, and moving it
- * would open a crack between them. (meshoptimizer already keeps texture seams within a part.)
+ * With `lockBorders`, simplify never moves a part's border: parts with different textures meet there,
+ * and moving it can open a crack between them. (meshoptimizer already keeps texture seams within a
+ * part.) The scan-import CLI locks them for every Capture; it's off by default so other callers, such
+ * as scripts/synthetic-room.ts, keep the output they were checked with.
  */
-export async function optimizeScan(document: Document, maxTriangles = MAX_TRIANGLES) {
+export async function optimizeScan(document: Document, maxTriangles = MAX_TRIANGLES, { lockBorders = false } = {}) {
   await Promise.all([MeshoptSimplifier.ready, MeshoptEncoder.ready]);
   await document.transform(
     dedup(), instance(), palette(), flatten(), joinPrimitives(), weld(),
-    simplify({ simplifier: MeshoptSimplifier, error: 0.0001, lockBorder: true }),
+    simplify({ simplifier: MeshoptSimplifier, error: 0.0001, lockBorder: lockBorders }),
   );
   // meshoptimizer collapses the cheapest edges first, so with no error limit it stops at the target count.
   // The ratio applies to each primitive; when one can't shrink that far, the next pass takes more from the others.
   for (let triangles = countTriangles(document), before = Infinity; triangles > maxTriangles && triangles < before;) {
-    await document.transform(simplify({ simplifier: MeshoptSimplifier, ratio: maxTriangles / triangles, error: 1, lockBorder: true }));
+    await document.transform(simplify({ simplifier: MeshoptSimplifier, ratio: maxTriangles / triangles, error: 1, lockBorder: lockBorders }));
     [before, triangles] = [triangles, countTriangles(document)];
   }
   await document.transform(
@@ -375,7 +380,7 @@ async function main() {
   const [input, scanId] = positionals;
   const crop = values.crop === undefined ? undefined : parseCrop(values.crop);
   console.log(`Importing ${input} as Scan "${scanId}". Optimizing can take a minute…`);
-  const { dir, mesh, stats } = await importScan({ input, scanId, ...values, crop });
+  const { dir, mesh, stats } = await importScan({ input, scanId, ...values, crop, lockBorders: true });
   const shown = relative(process.cwd(), dir);
   console.log(`\nWrote ${shown}/${mesh} and manifest.json${values.raw ? ', and unpacked the Raw Data into raw/' : ''}.\n`);
   console.log(formatSummary(stats, values.detail ? 'detail' : 'room'));

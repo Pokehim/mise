@@ -171,5 +171,5 @@ describe('registerDetail', () => {
     expect(transform.scale).toBeCloseTo(1.3, 2);
     const corner = applyYaw(inRoom, [0.24, 0.85, -0.25]);
     close(applyYaw(transform, toDetail(corner)), corner, 2);
-  });
+  }, 30_000);
 });

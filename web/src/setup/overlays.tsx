@@ -1,25 +1,38 @@
-// What each step draws over the scan, and its click handling.
-import { Edges, Line } from '@react-three/drei';
+// What each step draws over the scan, and its click handling. The marks follow the sketch style
+// (docs/design/sketch-style.md): linework in ink, what is chosen in the wash, openings and guides in
+// graphite, dashed where they are construction lines. Nothing tints the Scan itself.
 import type { ThreeEvent } from '@react-three/fiber';
-import { memo, useMemo } from 'react';
+import { type Dispatch, memo, type SetStateAction, useMemo, useState } from 'react';
 import { DoubleSide } from 'three';
 import type { Opening, Original, Vec2, Vec3, Wall } from '@shared/types';
+import { DASH, InkLine } from '../scene/sketch/InkLine';
+import { boxEdges, sketchBox, visibleSegments } from '../scene/sketch/lines';
 import { BoxHandles } from './BoxHandles';
+import { Dot } from './Dot';
+import { SPLIT } from './geometry/classify';
 import { mm } from './geometry/mesh';
 import { openingFromClicks } from './geometry/openings';
 import { isNewCorner, type RoomBounds, wallAxis, withPolygon } from './geometry/walls';
 import { Label } from './Label';
 import { useSetup } from './store';
-import { ACCENT, clickOnly } from './ui';
+import { clickOnly, tone } from './ui';
 
-/** Step 2: the ceiling height as a translucent plane over the room. */
+/** Line segments (pairs of points) along a path of points. */
+const path = (points: Vec3[]) => points.slice(1).flatMap((point, i): Vec3[] => [points[i], point]);
+
+/** Step 2: the ceiling height, as a sheet of the wash with a dashed edge, over the room. */
 export function CeilingPlane({ bounds }: { bounds: RoomBounds }) {
   const height = useSetup((s) => s.setup!.ceilingHeight);
+  const [x0, x1, z0, z1] = [bounds.minX - 0.2, bounds.maxX + 0.2, bounds.minZ - 0.2, bounds.maxZ + 0.2];
+  const edge = useMemo(() => path([[x0, height, z0], [x1, height, z0], [x1, height, z1], [x0, height, z1], [x0, height, z0]]), [x0, x1, z0, z1, height]);
   return (
-    <mesh position={[(bounds.minX + bounds.maxX) / 2, height, (bounds.minZ + bounds.maxZ) / 2]} rotation-x={-Math.PI / 2}>
-      <planeGeometry args={[bounds.maxX - bounds.minX + 0.4, bounds.maxZ - bounds.minZ + 0.4]} />
-      <meshBasicMaterial color={ACCENT} transparent opacity={0.35} side={DoubleSide} depthWrite={false} />
-    </mesh>
+    <>
+      <mesh position={[(x0 + x1) / 2, height, (z0 + z1) / 2]} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[x1 - x0, z1 - z0]} />
+        <meshBasicMaterial color={tone('--wash')} transparent opacity={0.18} side={DoubleSide} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <InkLine segments={edge} color="--wash" width={1.5} dash={DASH} />
+    </>
   );
 }
 
@@ -40,22 +53,21 @@ export function CornersOverlay({ bounds }: { bounds: RoomBounds }) {
     const corner = e.nativeEvent.altKey ? ([mm(e.point.x), mm(e.point.z)] as Vec2) : snapCorner([e.point.x, e.point.z], polygon);
     updateSetup((s) => (isNewCorner(s.floor.polygon, corner) ? withPolygon(s, [...s.floor.polygon, corner]) : s));
   });
-  const outline = polygon.length >= 3 ? [...polygon, polygon[0]] : polygon;
+  const outline = useMemo(() => {
+    const closed = polygon.length >= 3 ? [...polygon, polygon[0]] : polygon;
+    return path(closed.map(([x, z]): Vec3 => [x, y, z]));
+  }, [polygon, y]);
   return (
     <>
       <mesh position={[(bounds.minX + bounds.maxX) / 2, 0, (bounds.minZ + bounds.maxZ) / 2]} rotation-x={-Math.PI / 2} onClick={onClick}>
         <planeGeometry args={[bounds.maxX - bounds.minX + 20, bounds.maxZ - bounds.minZ + 20]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
-      {outline.length >= 2 && (
-        <Line points={outline.map(([x, z]) => [x, y, z] as Vec3)} color={ACCENT} lineWidth={3} depthTest={false} renderOrder={10} />
-      )}
-      {polygon.map(([x, z], i) => (
-        <mesh key={i} position={[x, y, z]} renderOrder={11}>
-          <sphereGeometry args={[0.05, 16, 8]} />
-          <meshBasicMaterial color={i === 0 ? '#ffffff' : ACCENT} depthTest={false} />
-        </mesh>
-      ))}
+      <InkLine segments={outline} width={2} />
+      {/* The first corner is open, where the outline closes; the others are ink. */}
+      {polygon.map(([x, z], i) => (i === 0
+        ? <Dot key={i} position={[x, y, z]} size={13} fill="--paper-raised" />
+        : <Dot key={i} position={[x, y, z]} />))}
       {walls.map((wall) => (
         <Label key={wall.id} text={wall.name}
           position={[(wall.start[0] + wall.end[0]) / 2 + wall.normal[0] * 0.25, y, (wall.start[1] + wall.end[1]) / 2 + wall.normal[1] * 0.25]} />
@@ -100,41 +112,45 @@ export function OpeningsOverlay() {
         const wall = walls.find((w) => w.id === opening.wallId);
         return wall && <OpeningOutline key={opening.id} wall={wall} opening={opening} />;
       })}
-      {draft.first && (
-        <mesh position={draft.first}>
-          <sphereGeometry args={[0.03, 16, 8]} />
-          <meshBasicMaterial color={ACCENT} depthTest={false} />
-        </mesh>
-      )}
+      {draft.first && <Dot position={draft.first} size={11} fill="--wash" ring="--paper-raised" />}
     </>
   );
 }
 
+/** A Wall, as a plane to click (unseen), and when it is the chosen one, its outline in the wash. */
 function WallPlane({ wall, selected, onClick }: { wall: Wall; selected: boolean; onClick: (e: ThreeEvent<MouseEvent>) => void }) {
   const { length } = wallAxis(wall);
   const [nx, nz] = wall.normal;
+  const outline = useMemo(() => {
+    // The top stays under the ceiling clip, so it shows.
+    const top = wall.height - SPLIT.ceilingBand - 0.03;
+    const at = ([x, z]: Vec2, y: number): Vec3 => [x + nx * 0.01, y, z + nz * 0.01];
+    return path([at(wall.start, 0.01), at(wall.end, 0.01), at(wall.end, top), at(wall.start, top), at(wall.start, 0.01)]);
+  }, [wall, nx, nz]);
   return (
-    <mesh
-      position={[(wall.start[0] + wall.end[0]) / 2 + nx * 0.002, wall.height / 2, (wall.start[1] + wall.end[1]) / 2 + nz * 0.002]}
-      rotation-y={Math.atan2(nx, nz)}
-      onClick={onClick}
-    >
-      <planeGeometry args={[length, wall.height]} />
-      <meshBasicMaterial color="#60a5fa" transparent opacity={selected ? 0.12 : 0} depthWrite={false} />
-    </mesh>
+    <>
+      <mesh
+        position={[(wall.start[0] + wall.end[0]) / 2 + nx * 0.002, wall.height / 2, (wall.start[1] + wall.end[1]) / 2 + nz * 0.002]}
+        rotation-y={Math.atan2(nx, nz)}
+        onClick={onClick}
+      >
+        <planeGeometry args={[length, wall.height]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {selected && <InkLine segments={outline} color="--wash" width={2.5} />}
+    </>
   );
 }
 
-/** An Opening's rectangle on its wall, and for a door, its swing on the floor. */
+/** An Opening's rectangle on its wall in graphite, and for a door, its swing on the floor, dashed. */
 function OpeningOutline({ wall, opening }: { wall: Wall; opening: Opening }) {
   const { dx, dz } = wallAxis(wall);
   const [nx, nz] = wall.normal;
   const at = (along: number, y: number, out = 0.01): Vec3 =>
     [wall.start[0] + dx * along + nx * out, y, wall.start[1] + dz * along + nz * out];
   const { offset, width, bottom, height } = opening;
-  const color = opening.kind === 'door' ? '#fb923c' : '#22d3ee';
-  const rect = [at(offset, bottom), at(offset + width, bottom), at(offset + width, bottom + height), at(offset, bottom + height), at(offset, bottom)];
-  let swing: Vec3[] | null = null;
+  const rect = path([at(offset, bottom), at(offset + width, bottom), at(offset + width, bottom + height), at(offset, bottom + height), at(offset, bottom)]);
+  let swing: Vec3[] = [];
   if (opening.kind === 'door' && opening.swing && opening.swing !== 'none') {
     // Seen from inside the room (facing −normal), "left" is the direction (−nz, nx).
     const leftIsAlong = -nz * dx + nx * dz > 0;
@@ -142,49 +158,72 @@ function OpeningOutline({ wall, opening }: { wall: Wall; opening: Opening }) {
     const toLatch = hinge === offset ? 1 : -1;
     const [hx, , hz] = at(hinge, 0.01, 0);
     // From the hinge to the closed door's latch edge, then a quarter circle into the room.
-    swing = [[hx, 0.01, hz], ...Array.from({ length: 17 }, (_, i): Vec3 => {
+    swing = path([[hx, 0.01, hz], ...Array.from({ length: 17 }, (_, i): Vec3 => {
       const a = (i / 16) * (Math.PI / 2);
       return [hx + width * (Math.cos(a) * toLatch * dx + Math.sin(a) * nx), 0.01, hz + width * (Math.cos(a) * toLatch * dz + Math.sin(a) * nz)];
-    })];
+    })]);
   }
   return (
     <>
-      <Line points={rect} color={color} lineWidth={3} />
-      {swing && <Line points={swing} color={color} lineWidth={2} dashed dashSize={0.05} gapSize={0.04} />}
-      <Label position={at(offset + width / 2, bottom + height + 0.08)} text={opening.kind === 'door' ? 'Door' : 'Window'} />
+      <InkLine segments={rect} color="--graphite" width={2} />
+      <InkLine segments={swing} color="--graphite" width={1.5} dash={DASH} />
+      {/* In the middle of the opening: above it, the ceiling clip would cut the label. */}
+      <Label position={at(offset + width / 2, bottom + height / 2)} priority={1} text={opening.kind === 'door' ? 'Door' : 'Window'} />
     </>
   );
 }
 
-/** Steps 5 and 6: the Originals' boxes. In step 5 a box can be selected, and the selected one has handles. */
+/**
+ * Steps 5 and 7: the Originals' boxes. In step 5 a box can be selected, and the selected one has
+ * handles; while one is, the others' names are left out, unless hovered, so none covers a handle.
+ */
 export function OriginalsOverlay({ editable }: { editable: boolean }) {
   const originals = useSetup((s) => s.setup!.originals);
-  const selectedId = useSetup((s) => s.selectedOriginalId);
+  const selectedId = useSetup((s) => (editable ? s.selectedOriginalId : undefined));
+  const [hoveredId, setHoveredId] = useState<string>();
   return (
     <>
       {originals.map((original) => (
-        <OriginalBox key={original.id} original={original} selected={editable && original.id === selectedId} editable={editable} />
+        <OriginalBox key={original.id} original={original} selected={original.id === selectedId} editable={editable}
+          named={!selectedId || original.id === selectedId || original.id === hoveredId} hovered={original.id === hoveredId} onHover={setHoveredId} />
       ))}
-      {editable && selectedId && <BoxHandles originalId={selectedId} />}
+      {selectedId && <BoxHandles originalId={selectedId} />}
     </>
   );
 }
 
+interface OriginalBoxProps {
+  original: Original;
+  selected: boolean;
+  editable: boolean;
+  /** Whether its name shows. */
+  named: boolean;
+  hovered: boolean;
+  onHover: Dispatch<SetStateAction<string | undefined>>;
+}
+
 // Memoized, so dragging one box's handles doesn't rebuild every other box's lines.
-const OriginalBox = memo(function OriginalBox({ original, selected, editable }: { original: Original; selected: boolean; editable: boolean }) {
-  const { position, size: [w, h, d], rotationY } = original.box;
-  const color = selected ? ACCENT : original.kept ? '#a78bfa' : '#34d399';
+const OriginalBox = memo(function OriginalBox({ original, selected, editable, named, hovered, onHover }: OriginalBoxProps) {
+  const { position, size, rotationY } = original.box;
+  const [w, h, d] = size;
+  // Ruled in ink, dashed when Kept (it stays where it is); the selected one sketched in the wash.
+  const edges = useMemo(() => (selected ? visibleSegments(sketchBox([w, h, d], original.id), 0b111111) : { segments: boxEdges([w, h, d]), length: 0 }),
+    [selected, w, h, d, original.id]);
   const front = useMemo((): Vec3[] => [[-w / 2, 0.01, d / 2], [w / 2, 0.01, d / 2]], [w, d]);
+  const color = selected ? '--wash' : '--ink';
   const select = clickOnly(() => useSetup.setState({ selectedOriginalId: original.id, notice: undefined }));
   return (
     <group position={position} rotation-y={rotationY}>
-      <mesh position={[0, h / 2, 0]} onClick={editable ? select : undefined}>
+      <mesh position={[0, h / 2, 0]} onClick={editable ? select : undefined}
+        onPointerOver={(e) => { e.stopPropagation(); onHover(original.id); }} onPointerOut={() => onHover((id) => (id === original.id ? undefined : id))}>
         <boxGeometry args={[w, h, d]} />
-        <meshBasicMaterial color={color} transparent opacity={selected ? 0.18 : 0.08} depthWrite={false} />
-        <Edges color={color} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
+      {selected
+        ? <InkLine key={`selected:${original.id}`} segments={edges.segments} color="--wash" width={1.5} drawOn={edges.length} />
+        : <InkLine segments={edges.segments} width={hovered ? 1.5 : 1} dash={original.kept ? DASH : undefined} />}
       {/* The front (+Z) edge on the floor. */}
-      <Line points={front} color={color} lineWidth={4} />
+      <InkLine segments={front} color={color} width={3.5} />
       {/* Step 7: the simple Patch a replaced Original would leave, in its baked floorColor. */}
       {!editable && (
         <mesh position={[0, 0.004 - position[1], 0]} rotation-x={-Math.PI / 2}>
@@ -192,7 +231,10 @@ const OriginalBox = memo(function OriginalBox({ original, selected, editable }: 
           <meshBasicMaterial color={original.floorColor} />
         </mesh>
       )}
-      <Label position={[0, h + 0.1, 0]} text={`${original.label}${original.kept ? ' · Kept' : ''}`} selected={selected} />
+      {named && (
+        <Label position={[0, h, 0]} lift={selected ? 16 : 4} priority={hovered ? 2 : 0} selected={selected}
+          text={`${original.label}${original.kept ? ' · Kept' : ''}`} />
+      )}
     </group>
   );
 });
@@ -204,15 +246,15 @@ function nextId(prefix: string, existing: { id: string }[]) {
   return `${prefix}_${n}`;
 }
 
-/** Step 6: the corners clicked so far, numbered in pairs, and the moved copies marked in the Fill Capture. */
+/** Step 6: the corners clicked so far, numbered in pairs, and the moved copies marked in the Fill Capture, dashed. */
 export function FillsOverlay() {
   const fill = useSetup((s) => s.fill);
   const originals = useSetup((s) => s.setup!.originals);
   if (!fill?.scene) return null;
   const marker = (position: Vec3, text: string, key: string) => (
     <group key={key} position={position}>
-      <mesh><sphereGeometry args={[0.07, 16, 12]} /><meshBasicMaterial color={ACCENT} /></mesh>
-      <Label position={[0, 0.25, 0]} text={text} />
+      <Dot position={[0, 0, 0]} size={10} />
+      <Label position={[0, 0, 0]} lift={8} priority={1} text={text} mono />
     </group>
   );
   return (
@@ -221,14 +263,10 @@ export function FillsOverlay() {
       <group position={fill.transform.position} rotation-y={fill.transform.rotationY}>
         {fill.fillCorners.map(([x, z], i) => marker([x, fill.floorHeight + 0.02, z], `${i + 1}`, `fill-${i}`))}
       </group>
-      {Object.entries(fill.copies).map(([id, { box: { position, size: [w, h, d], rotationY } }]) => (
+      {Object.entries(fill.copies).map(([id, { box: { position, size, rotationY } }]) => (
         <group key={id} position={position} rotation-y={rotationY}>
-          <mesh position={[0, h / 2, 0]}>
-            <boxGeometry args={[w, h, d]} />
-            <meshBasicMaterial color="#60a5fa" transparent opacity={0.1} depthWrite={false} />
-            <Edges color="#60a5fa" />
-          </mesh>
-          <Label position={[0, h + 0.1, 0]} text={`${originals.find((o) => o.id === id)?.label ?? id}, moved`} />
+          <InkLine segments={boxEdges(size)} color="--graphite" width={1.5} dash={DASH} />
+          <Label position={[0, size[1], 0]} lift={4} text={`${originals.find((o) => o.id === id)?.label ?? id}, moved`} />
         </group>
       ))}
     </>

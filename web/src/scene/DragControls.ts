@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { type Intersection, MathUtils, type Object3D, type Ray, Raycaster, Vector2, Vector3 } from 'three';
 import { restsOnFloorOnly } from '@shared/fit';
 import { wallPoint } from '@shared/geometry';
+import { dragSnap } from '@shared/snap-together';
 import type { CatalogItem, Placement, RoomSetup, Vec2, Wall } from '@shared/types';
 import { pieceItem, useEditor } from '../state/store';
 import { faces, nearestWall, wallCoordinates, wallLength } from './floorPlan';
@@ -18,6 +19,9 @@ const facesUp = ({ face, object }: Intersection) =>
 
 /** What a drag needs to know about what it moves: a Piece's Catalog item, or an Original's box. */
 type Draggable = Pick<CatalogItem, 'category' | 'size' | 'mount'>;
+
+/** The snaps to other items (`dragSnap`): from where an item stands, wall-snapped and not, to where it goes. */
+type Snap = (placed: Placement, unsnapped: Placement) => Placement;
 
 /** Whether a hit is on the Original with this id: an Original being dragged mustn't rest on itself. */
 const onOriginal = (id: string) => ({ object }: Intersection) => {
@@ -35,12 +39,14 @@ const onOriginal = (id: string) => ({ object }: Intersection) => {
  * `lift` above the floor, its height on the item, so the item moves just as far as the pointer.
  * A big item (`restsOnFloorOnly`) never rests on a surface: over a desk top it goes on the floor under the pointer, so a chair goes under the desk. Either way walls are solid: its whole
  * footprint stays inside the room, so it stops flush at a wall while the pointer goes on, and slides
- * along it; and it snaps to a wall or into a corner near it, unless `snap` is off (Alt). Null where
+ * along it; and it snaps to a wall or into a corner near it, unless `snap` is off (Alt). On the
+ * floor, it then snaps to the furniture near it (`snaps`): a chair tucks in at a desk, a table
+ * pushes flush against another; unless `snap` is off. Null where
  * the item can't go, or fit at all, so the drag keeps its last good placement.
  */
 function onFloorOrSurface(
   raycaster: Raycaster, supports: Object3D[], skip: (hit: Intersection) => boolean,
-  item: Draggable, start: Placement, lift: number, offset: Vec2, setup: RoomSetup, snap: boolean,
+  item: Draggable, start: Placement, lift: number, offset: Vec2, setup: RoomSetup, snap: boolean, snaps?: Snap,
 ): Placement | null {
   const hit = raycaster.intersectObjects(supports, true).find((it) => isDrawn(it) && !skip(it));
   if (hit && facesUp(hit) && hit.point.y > FLOOR_TOLERANCE && !liesFlat(item) && !restsOnFloorOnly(item.category)) {
@@ -51,7 +57,11 @@ function onFloorOrSurface(
   // Past a wall, the floor plane is somewhere the Mover can't see or mean: they are pointing at the
   // wall, so the item goes the nearest spot inside the room to it, against that wall.
   const [x, z] = [pointer[0] + offset[0], pointer[1] + offset[1]];
-  return keepInRoom({ position: [x, 0, z], rotationY: start.rotationY, mount: 'floor' }, item.size, setup, { snap });
+  const free: Placement = { position: [x, 0, z], rotationY: start.rotationY, mount: 'floor' };
+  const placed = keepInRoom(free, item.size, setup, { snap });
+  if (!placed || !snap || !snaps) return placed;
+  // Walls win, so the snaps need to know where the wall snap moved it.
+  return snaps(placed, keepInRoom(free, item.size, setup, { snap: false }) ?? placed);
 }
 
 /**
@@ -187,8 +197,9 @@ export function pressIntent({ selected, movable, shiftKey, button }: {
  *
  * While the selected item is dragged, the camera holds still and the grabbed point stays under the
  * pointer; the store's preview holds where it is shown, and when the drag ends, that becomes one
- * move Edit (spec §10.3, §11.1). Holding Alt (Option on a Mac) drags it freely: no snapping, though
- * walls stay solid. A wall item slides over its own wall (`wallDrag`). A Kept Original never moves
+ * move Edit (spec §10.3, §11.1). Near other furniture it snaps against it, and a chair near a desk
+ * or table edge tucks in under it (`dragSnap`). Holding Alt (Option on a Mac) drags it freely: no
+ * snapping or tucking, though walls stay solid. A wall item slides over its own wall (`wallDrag`). A Kept Original never moves
  * (spec §11.1).
  */
 function useDrag(target: DragTarget) {
@@ -234,6 +245,7 @@ function useDrag(target: DragTarget) {
     ].filter((object) => !!object);
     const skip = kind === 'original' ? onOriginal(id) : () => false;
     const onWallDragged = item.mount === 'wall' ? wallDrag(raycaster.ray.clone(), start, item, setup!) : null;
+    const snaps = onWallDragged ? undefined : dragSnap(setup!, editor.catalog!, editor.roomState!, id);
     const [downX, downY] = [event.nativeEvent.clientX, event.nativeEvent.clientY];
     // The item cursor the node set on hover, back once the item is let go.
     const cursor = element.dataset.item;
@@ -252,7 +264,7 @@ function useDrag(target: DragTarget) {
       aim(e);
       const placement = onWallDragged
         ? onWallDragged(raycaster.ray)
-        : onFloorOrSurface(raycaster, supports, skip, item, start, lift, offset, setup!, !e.altKey);
+        : onFloorOrSurface(raycaster, supports, skip, item, start, lift, offset, setup!, !e.altKey, snaps);
       // The store's preview field is named for Pieces, but an Original's id fits it: ids are unique across both.
       if (placement) useEditor.getState().setPreview({ pieceId: id, placement });
     };

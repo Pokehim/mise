@@ -108,8 +108,12 @@ const anchorSchema = z.union([
   z.object({ kind: z.literal('in_corner'), wall_id: z.string(), end: z.enum(['left', 'right']) })
     .describe("Snug in the corner at a wall's left or right end: a bed lies along the wall, long side flush and head in the corner, "
       + "which opens up a small room's floor; anything else stands back to the wall there"),
-  z.object({ kind: z.literal('beside'), target_id: z.string(), side: z.enum(['left', 'right', 'front']) })
-    .describe("Next to an Original or Piece, backs in line; left and right as seen facing the target's front. 'front' faces it, like a chair at a desk"),
+  z.object({
+    kind: z.literal('beside'),
+    target_id: z.string(),
+    side: z.enum(['left', 'right', 'front']),
+    tucked: z.boolean().optional().describe("For side 'front' only: tucked: true pushes a chair in under the desk or table, as far as it fits"),
+  }).describe("Next to an Original or Piece, backs in line; left and right as seen facing the target's front. 'front' faces it, like a chair at a desk"),
   z.object({ kind: z.literal('under_window'), opening_id: z.string() }).describe('Centered below a window'),
   z.object({ kind: z.literal('on_wall'), wall_id: z.string(), along, center_height_m: z.number().optional() })
     .describe(`Hung on a wall, its center ${CENTER_HEIGHT} m up unless center_height_m says otherwise`),

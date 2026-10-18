@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { search } from '@shared/catalog-search';
 import type { CatalogItem, Category } from '@shared/types';
+import { search } from '../state/core';
 import { useEditor } from '../state/store';
 
 const CATEGORY_NAMES: Record<Category, string> = {

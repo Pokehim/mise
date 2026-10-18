@@ -3,27 +3,32 @@ import {
   ShapeGeometry, type Side, Vector2, Vector3,
 } from 'three';
 import type { RoomSetup, Wall } from '@shared/types';
+import type { SplitGroup } from '../setup/geometry/classify';
+import { luminance } from '../setup/geometry/color';
 import { floorGeometry } from './floorPlan';
-
-/** The Scan mesh as separate nodes in the room frame: the shape that splitScan (#8) returns. */
-export interface ScanNodes {
-  shell: Object3D;
-  floor: Object3D;
-  ceiling: Object3D;
-  walls: Record<string, Object3D>;
-  originals: Record<string, Object3D>;
-}
+import type { SplitNodeData, SplitScan } from './splitScan';
 
 const matte = (color: string, side: Side) => new MeshStandardMaterial({ color, side, roughness: 0.9 });
 
 /**
- * A plain room drawn from the Room Setup, for a Scan with no mesh file yet, such as the fixture.
- * Unlike a real Scan it has no baked lighting, so it keeps lit materials.
+ * Gives a stand-in node the userData splitScan gives its own. Its flat color's luminance stands in
+ * for a texture's average; the empty Shell has no color, so it takes splitScan's fallback, 0.5.
  */
-export function setupRoomNodes(setup: RoomSetup): ScanNodes {
+function withNodeData<T extends Object3D>(node: T, group: SplitGroup): T {
+  const color = node instanceof Mesh ? (node.material as MeshStandardMaterial).color : null;
+  node.userData = { ...group, avgLuminance: color ? luminance(color.r, color.g, color.b) : 0.5 } satisfies SplitNodeData;
+  return node;
+}
+
+/**
+ * A plain room drawn from the Room Setup, for a Scan with no mesh file yet, such as the fixture.
+ * Unlike a real Scan it has no baked lighting, so each node is one lit mesh. It returns what
+ * splitScan returns, with the same userData, so the editor treats both the same way.
+ */
+export function setupRoomNodes(setup: RoomSetup): SplitScan {
   const plan = floorGeometry(setup);
-  const floor = new Mesh(plan, matte('#cbbfa9', DoubleSide));
-  const ceiling = new Mesh(plan, matte('#f2efe9', BackSide));
+  const floor = withNodeData(new Mesh(plan, matte('#cbbfa9', DoubleSide)), { kind: 'floor' });
+  const ceiling = withNodeData(new Mesh(plan, matte('#f2efe9', BackSide)), { kind: 'ceiling' });
   ceiling.position.y = setup.ceilingHeight;
 
   const walls = Object.fromEntries(setup.walls.map((wall) => [wall.id, wallMesh(wall, setup)]));
@@ -33,9 +38,9 @@ export function setupRoomNodes(setup: RoomSetup): ScanNodes {
     mesh.name = label;
     mesh.position.set(...box.position);
     mesh.rotation.y = box.rotationY;
-    return [id, mesh];
+    return [id, withNodeData(mesh, { kind: 'original', id })];
   }));
-  return { shell: new Group(), floor, ceiling, walls, originals };
+  return { shell: withNodeData(new Group(), { kind: 'shell' }), floor, ceiling, walls, originals };
 }
 
 /** A Wall as a flat panel with its Openings cut out. Double-sided, so WallFader has something to fade. */
@@ -56,5 +61,5 @@ function wallMesh(wall: Wall, setup: RoomSetup) {
   const toRoom = new Matrix4().makeBasis(x, y, new Vector3().crossVectors(x, y)).setPosition(sx, 0, sz);
   const mesh = new Mesh(new ShapeGeometry(outline).applyMatrix4(toRoom), matte('#e9e4da', DoubleSide));
   mesh.name = wall.name;
-  return mesh;
+  return withNodeData(mesh, { kind: 'wall', id: wall.id });
 }

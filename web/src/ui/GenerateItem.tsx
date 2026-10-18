@@ -29,21 +29,21 @@ export function GenerateItem({ query, category }: { query: string; category: Cat
   const text = query.trim();
   if (!text) return null;
 
-  async function generate(category: Category) {
+  async function generate(inCategory: Category) {
     const startedAt = Date.now();
-    const show = (job: Job) => setRun({ ...job, startedAt });
-    show({ status: 'running', step: 'photo', progress: 0 });
+    const showJob = (job: Job) => setRun({ ...job, startedAt });
+    showJob({ status: 'running', step: 'photo', progress: 0 });
     try {
-      const { jobId } = await generateObject({ query: text, category });
+      const { jobId } = await generateObject({ query: text, category: inCategory });
       for (;;) {
         const job = await getJob(jobId);
-        show(job);
+        showJob(job);
         if (job.status === 'done') return addToCatalog(job.item);
         if (job.status === 'failed') return;
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      show({ status: 'failed', error: (error as Error).message });
+      showJob({ status: 'failed', progress: 0, error: (error as Error).message });
     }
   }
 

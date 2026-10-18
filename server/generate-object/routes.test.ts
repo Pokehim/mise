@@ -23,6 +23,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  vi.useRealTimers();
   vi.unstubAllEnvs();
   fal.subscribe.mockReset();
   await rm(dataDir, { recursive: true, force: true });
@@ -96,7 +97,7 @@ describe('POST /api/generate-object', () => {
     const { min, max } = getBounds((await io.readBinary(new Uint8Array(await model.arrayBuffer()))).getRoot().listScenes()[0]);
     [...min, ...max].forEach((value, i) => expect(value).toBeCloseTo([-0.5, 0, -0.25, 0.5, 0.5, 0.25][i], 2));
     expect((await app.request(generated.thumbnail)).status).toBe(200);
-    expect((await getJson('/data/catalog/generated.json')).items).toEqual([generated]);
+    expect((await getJson('/api/catalog/generated')).items).toEqual([generated]);
   }, 30_000);
 
   it("scales into the category's typical size from catalog.json when the Mover gave no size", async () => {
@@ -109,7 +110,8 @@ describe('POST /api/generate-object', () => {
     expect(generated.size).toEqual([1, 0.5, 0.5]);   // the 2 × 1 × 1 box, fit by its height
   }, 30_000);
 
-  it('reports the step it is on while TRELLIS.2 runs', async () => {
+  it('reports its step, and progress that keeps moving while TRELLIS.2 runs', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
     await falMakesABox();
     const makeBox = fal.subscribe.getMockImplementation()!;
     let finishModel = () => {};
@@ -123,6 +125,10 @@ describe('POST /api/generate-object', () => {
     const jobId = await start({ query: 'globe', category: 'decor', targetSize: [0.3, 0.4, 0.3] });
 
     await vi.waitFor(async () => expect(await getJson(`/api/jobs/${jobId}`)).toEqual({ status: 'running', step: 'model', progress: 0.15 }));
+    vi.setSystemTime(Date.now() + 25_000);   // TRELLIS.2's usual time
+    const { progress } = await getJson(`/api/jobs/${jobId}`);
+    expect(progress).toBeGreaterThan(0.5);
+    expect(progress).toBeLessThan(0.9);       // where fitting starts
     finishModel();
     expect((await finished(jobId)).status).toBe('done');
   }, 30_000);
@@ -132,7 +138,7 @@ describe('POST /api/generate-object', () => {
 
     const job = await finished(await start({ query: 'lava lamp', category: 'lamp' }));
 
-    expect(job).toEqual({ status: 'failed', error: 'Unprocessable Entity' });
+    expect(job).toEqual({ status: 'failed', progress: 0, error: 'Unprocessable Entity' });
   });
 
   it('refuses a category that is not a Category', async () => {
@@ -152,7 +158,13 @@ describe('POST /api/generate-object', () => {
   });
 });
 
-describe('the cache, by query', () => {
+describe('GET /api/catalog/generated', () => {
+  it('is an empty Catalog before anything is generated', async () => {
+    expect(await getJson('/api/catalog/generated')).toEqual({ version: 1, items: [] });
+  });
+});
+
+describe('the cache, by query and category', () => {
   it('joins the running job when the same query comes again, so fal is paid once', async () => {
     await falMakesABox();
 
@@ -164,6 +176,16 @@ describe('the cache, by query', () => {
     expect(fal.subscribe).toHaveBeenCalledTimes(2);   // one photo, one model
   }, 30_000);
 
+  it('generates the same query again in another category, which sets its size', async () => {
+    await falMakesABox();
+
+    const asChair = itemOf(await finished(await start({ query: 'pouf', category: 'chair', targetSize: [0.5, 0.5, 0.5] })));
+    const asStorage = itemOf(await finished(await start({ query: 'pouf', category: 'storage', targetSize: [1, 1, 1] })));
+
+    expect(asStorage.id).not.toBe(asChair.id);
+    expect([asChair.category, asStorage.category]).toEqual(['chair', 'storage']);
+  }, 30_000);
+
   it('reuses an item generated before the server restarted, without calling fal', async () => {
     await falMakesABox();
     const before = itemOf(await finished(await start({ query: 'bubble chair', category: 'chair', targetSize: [1, 1, 1] })));
@@ -173,7 +195,7 @@ describe('the cache, by query', () => {
 
     const { jobId } = await (await post({ query: 'Bubble chair', category: 'chair' }, restarted)).json();
 
-    expect(await getJson(`/api/jobs/${jobId}`, restarted)).toEqual({ status: 'done', item: before });
+    expect(await getJson(`/api/jobs/${jobId}`, restarted)).toEqual({ status: 'done', progress: 1, item: before });
     expect(fal.subscribe).not.toHaveBeenCalled();
   }, 30_000);
 });

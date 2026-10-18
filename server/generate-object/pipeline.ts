@@ -65,7 +65,7 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
   const { query, category, targetSize } = request;
   const model = `/data/catalog/models/${id}.glb`;
   const thumbnail = `/data/catalog/thumbs/${id}.jpg`;
-  const inData = (url: string) => join(dataDir, url.slice('/data/'.length));
+  const onDisk = (url: string) => join(dataDir, url.slice('/data/'.length));
 
   const { data: photo } = await fal.subscribe('fal-ai/flux/schnell', {
     input: {
@@ -85,7 +85,7 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
   });
 
   onStep('fitting');
-  const work = await mkdtemp(join(tmpdir(), 'mise-generate-'));
+  const tmp = await mkdtemp(join(tmpdir(), 'mise-generate-'));
   try {
     // Bottom-center pivot, then one uniform scale about it into the box.
     const doc = await io.readBinary(await download(trellis.model_glb.url));
@@ -97,12 +97,12 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
     for (const node of scene.listChildren()) {
       node.setTranslation(node.getTranslation().map((v) => v * scale) as Vec3).setScale(node.getScale().map((v) => v * scale) as Vec3);
     }
-    const centered = join(work, 'centered.glb');
+    const centered = join(tmp, 'centered.glb');
     await io.write(centered, doc);
     await mkdir(join(dataDir, 'catalog/models'), { recursive: true });
     await mkdir(join(dataDir, 'catalog/thumbs'), { recursive: true });
-    const { size } = await optimizeModel(centered, inData(model));
-    await writeFile(inData(thumbnail), await thumbnailJpeg);
+    const { size } = await optimizeModel(centered, onDisk(model));
+    await writeFile(onDisk(thumbnail), await thumbnailJpeg);
 
     const item: CatalogItem = {
       id,
@@ -123,6 +123,6 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
     await addGenerated(dataDir, item);
     return item;
   } finally {
-    await rm(work, { recursive: true, force: true });
+    await rm(tmp, { recursive: true, force: true });
   }
 }

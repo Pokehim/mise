@@ -64,7 +64,7 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
         ))}
       </ul>
       {shown.length === 0 && <p className="muted empty"><b>Nothing matches.</b> Try another word, or another category.</p>}
-      {shown.length === 0 && <GenerateItem key={text} query={text} category={category} />}
+      {shown.length === 0 && <GenerateItem key={`${category}:${text}`} query={text} category={category} />}
     </aside>
   );
 }

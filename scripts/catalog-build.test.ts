@@ -52,9 +52,9 @@ describe('toCatalogItem', () => {
     expect(item.priceEstimateUsd).toBe(95);
   });
 
-  it("uses the pick's colors and styleTags, for listings where ABO has none", () => {
-    const pick = { id: 'B07BWJCZJX', category: 'chair' as const, colors: ['Antique Espresso'], styleTags: ['Casual'] };
-    expect(toCatalogItem(pick, LUMMI_CHAIR, [0.5, 0.8, 0.6])).toMatchObject({ colors: ['Antique Espresso'], styleTags: ['Casual'] });
+  it("uses the pick's colors, materials and styleTags, for listings where ABO has none", () => {
+    const overrides = { colors: ['Antique Espresso'], materials: ['Pine'], styleTags: ['Casual'] };
+    expect(toCatalogItem({ id: 'B07BWJCZJX', category: 'chair', ...overrides }, LUMMI_CHAIR, [0.5, 0.8, 0.6])).toMatchObject(overrides);
   });
 
   it('mounts wall art and mirrors on the wall, and everything else on the floor', () => {

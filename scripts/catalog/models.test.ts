@@ -1,7 +1,7 @@
 import { Document } from '@gltf-transform/core';
 import { getBounds } from '@gltf-transform/functions';
 import { describe, expect, it } from 'vitest';
-import { boundsOf, keepNodes, potted, turn } from './models';
+import { boundsOf, clearGlass, keepNodes, potted, turn } from './models';
 
 /** A Document of axis-aligned boxes, each a top-level node named for it: [name, min, max]. */
 function boxes(...specs: [string, [number, number, number], [number, number, number]][]) {
@@ -20,6 +20,19 @@ function boxes(...specs: [string, [number, number, number], [number, number, num
 }
 
 const rounded = (values: ArrayLike<number>) => Array.from(values, (v) => Math.round(v * 1000) / 1000);
+
+describe('clearGlass', () => {
+  it("makes BLEND glass clear, as Poly Haven's takes the body's opaque texture, and leaves other materials alone", () => {
+    const doc = new Document();
+    const texture = doc.createTexture('alarm_clock_01_diff');
+    const glass = doc.createMaterial('alarm_clock_01_Glass').setAlphaMode('BLEND').setBaseColorTexture(texture);
+    const body = doc.createMaterial('alarm_clock_01').setBaseColorTexture(texture);
+    const leaves = doc.createMaterial('leaves_glassy').setAlphaMode('MASK').setBaseColorTexture(texture);
+    clearGlass(doc);
+    expect([glass.getBaseColorTexture(), glass.getAlpha(), glass.getMetallicFactor()]).toEqual([null, 0.12, 0]);
+    expect([body.getBaseColorTexture(), leaves.getBaseColorTexture()]).toEqual([texture, texture]);
+  });
+});
 
 describe('keepNodes', () => {
   it('keeps one of the variants a Poly Haven botany asset lays side by side', async () => {

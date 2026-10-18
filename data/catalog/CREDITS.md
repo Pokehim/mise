@@ -6,9 +6,9 @@ Written by `scripts/catalog-build.ts` from `catalog.json`: edit the script, not 
 
 | Source | License | Items | Terms |
 |---|---|---|---|
-| [Amazon Berkeley Objects](https://amazon-berkeley-objects.s3.amazonaws.com/index.html) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 120 | Credit "Amazon Berkeley Objects (CC BY 4.0), Amazon.com" wherever the models are shown, as the app footer does. Covers both the 3D models and the product photos the flat rugs and thumbnails are made from. |
-| [Poly Haven](https://polyhaven.com/license) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 15 | Public domain: no conditions. Credited here anyway. |
-| [Google Scanned Objects](https://app.gazebosim.org/GoogleResearch/fuel/collections/Scanned%20Objects%20by%20Google%20Research) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 12 | Credit "Google Scanned Objects (CC BY 4.0), Google LLC" wherever the models are shown. Downs, L., et al. (2022), "Google Scanned Objects: A High-Quality Dataset of 3D Scanned Household Items", ICRA 2022. |
+| [Amazon Berkeley Objects](https://amazon-berkeley-objects.s3.amazonaws.com/index.html) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 161 | Credit "Amazon Berkeley Objects (CC BY 4.0), Amazon.com" wherever the models are shown, as the app footer does. Covers both the 3D models and the product photos the flat rugs and thumbnails are made from. |
+| [Poly Haven](https://polyhaven.com/license) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 22 | Public domain: no conditions. Credited here anyway. |
+| [Google Scanned Objects](https://app.gazebosim.org/GoogleResearch/fuel/collections/Scanned%20Objects%20by%20Google%20Research) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 16 | Credit "Google Scanned Objects (CC BY 4.0), Google LLC" wherever the models are shown. Downs, L., et al. (2022), "Google Scanned Objects: A High-Quality Dataset of 3D Scanned Household Items", ICRA 2022. |
 | Mise | — | 3 | Made for this project: placeholder boxes, and text-to-3D items (generated.json). |
 
 Excluded on purpose: datasets whose license forbids commercial use (3D-FUTURE, ShapeNet), and Objaverse, whose license
@@ -70,6 +70,8 @@ differs from object to object.
 | B084HV7BC3 | [Rivet Modern Oval Hanging Mirror, 39"H, Black](https://www.amazon.com/dp/B084HV7BC3) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B084HTZ8PW | [Rivet Modern Round Hanging Mirror with Shelf, 18" Diameter, Black](https://www.amazon.com/dp/B084HTZ8PW) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B073WGSN2Q | [Stone & Beam Modern Arc Metal Frame Hanging Wall Mirror Decor, 46.25 Inch Height, Silver Finish](https://www.amazon.com/dp/B073WGSN2Q) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07RQMSJRX | [Amazon Basics Rectangular Wall Mirror - 20" x 28", Peaked Trim, Walnut](https://www.amazon.com/dp/B07RQMSJRX) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B073WHZKBF | [Rivet Modern Hexagon Wood Frame Hanging Wall Mirror, 30 Inch Height, Natural](https://www.amazon.com/dp/B073WHZKBF) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07PSZHDMW | [AmazonBasics Modern 5-Tier Ladder Bookshelf Organizer with Solid Rubber Wood Frame, Walnut](https://www.amazon.com/dp/B07PSZHDMW) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B0754KHKCX | [Furniture 247 2 Tier (4 Cube) Shelving Unit - White](https://www.amazon.com/dp/B0754KHKCX) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07PNHSR4G | [AmazonBasics Classic 5-Tier Open Bookcase with Solid Rubber Wood - White](https://www.amazon.com/dp/B07PNHSR4G) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
@@ -84,21 +86,31 @@ differs from object to object.
 | B07TP4SSTZ | [AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 5', Pink](https://www.amazon.com/dp/B07TP4SSTZ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07HJ66BLL | [AmazonBasics Gaming/Racing Style Office Chair with Removable Headrest and High Back Cushion - Blue](https://www.amazon.com/dp/B07HJ66BLL) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B075X33QXP | [Rivet Modern Upholstered Cube Ottoman Pouf, 20"W, Bear](https://www.amazon.com/dp/B075X33QXP) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07DB8XJZH | [Ravenna Home Justin Round Tufted Storage Pouf Ottoman Bench, 24"W, Beige](https://www.amazon.com/dp/B07DB8XJZH) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B0876PDMJR | [AmazonBasics 40" Multipurpose Foldable Computer Study Desk - Black](https://www.amazon.com/dp/B0876PDMJR) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07QX2BYDH | [AmazonBasics Gaming Computer Desk with Storage for Controller, Headphone & Speaker - Black](https://www.amazon.com/dp/B07QX2BYDH) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07HSJDN75 | [Rivet Modern Computer Desk, 30"H, Walnut and White](https://www.amazon.com/dp/B07HSJDN75) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B082DFL4JW | [Rivet Avery Industrial Home Office Writing Desk with Metal Base, 40"W, Chestnut Brown Finish](https://www.amazon.com/dp/B082DFL4JW) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07QC8772Q | [Ravenna Home Springdale Modern Desk, 47"W, White](https://www.amazon.com/dp/B07QC8772Q) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07HSM6C1J | [Rivet Two-Toned Modern Nightstand 15.75"W, Natural & White](https://www.amazon.com/dp/B07HSM6C1J) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07DBF1R71 | [Ravenna Home Priscilla Modern X-Frame End Table Nightstand, 18.9"W, Black](https://www.amazon.com/dp/B07DBF1R71) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07NRQVY26 | [AmazonBasics Classic 2-Drawer Wood Nightstand End Table - Black Oak](https://www.amazon.com/dp/B07NRQVY26) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B4Y45RJ | [Rivet Mid-Century Modern Curved and Hairpin Nightstand, Brass Hardware, 24", Off White](https://www.amazon.com/dp/B07B4Y45RJ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07RR3K7M8 | [AmazonBasics - 1-Drawer 1-Shelf Bedside Table, 45 x 38 x 53 cm, Beige with Yellow Drawer](https://www.amazon.com/dp/B07RR3K7M8) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07RGR6XYT | [Max & Finn Twin Floor Bunk Bed, Gray](https://www.amazon.com/dp/B07RGR6XYT) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B075XZN7NV | [AmazonBasics Faux Leather Upholstered Platform Bed Frame with Wooden Slats, Full](https://www.amazon.com/dp/B075XZN7NV) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B4W31CX | [Stone & Beam Industry French Metal Queen Bed with Headboard, 63.5"W, Black](https://www.amazon.com/dp/B07B4W31CX) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07MJL5SZB | [Ravenna Home Westcott Tufted Loveseat Sofa Couch, 60"W, Blue Velvet](https://www.amazon.com/dp/B07MJL5SZB) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07HZ8N5DD | [Stone & Beam Kristin Chair-and-a-Half Upholstered Sleeper Sofa, 55.5"W, Navy](https://www.amazon.com/dp/B07HZ8N5DD) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B072M1WJC7 | [Rivet North End Modern Wood Accent Loveseat Sofa Couch, 58.7"W, Grey Weave](https://www.amazon.com/dp/B072M1WJC7) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07PXFVNXR | [Ameriwood Home Classic 5 Drawer Dresser, White](https://www.amazon.com/dp/B07PXFVNXR) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B084ZB8L8W | [Stone & Beam Rustic 3-Drawer Bedroom Dresser, 31.9"W, Oak Finish](https://www.amazon.com/dp/B084ZB8L8W) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07HSDP2CP | [Rivet Modern Chest of Drawers with Diamond Pattern 17.3"W, Walnut & Gray Wash](https://www.amazon.com/dp/B07HSDP2CP) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07PYKQNKK | [AmazonBasics Classic Dresser Drawers 4-Drawer, Espresso](https://www.amazon.com/dp/B07PYKQNKK) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B075YZ16V7 | [Rivet Mid-Century Stark 6-Drawer Dresser, 61"W, Warm Espresso](https://www.amazon.com/dp/B075YZ16V7) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07H8V7P3H | [Movian Moselle 2-Door Wardrobe, 100 x 60 x 196 cm, Light Brown Oak-Effect/White](https://www.amazon.com/dp/B07H8V7P3H) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07TWQSZL4 | [AmazonBasics Leaning Garment Rack, Silver](https://www.amazon.com/dp/B07TWQSZL4) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B079TYF1GK | [Movian Hulio 2 Door Wardrobe, High Gloss, White, 170 x 76 x 47 cm](https://www.amazon.com/dp/B079TYF1GK) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07HSHPJQQ | [Rivet Modern Color-Block Area Rug, 5 x 8 Foot, Round, Multicolor](https://www.amazon.com/dp/B07HSHPJQQ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07QGG5LLM | [Ravenna Home Floral Medallion Tiled Rug, 5'3" Round, Cerulean Blue with Ivory](https://www.amazon.com/dp/B07QGG5LLM) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07QGG5NFC | [Ravenna Home Round Vintage Damask Patterned Rug, 5'3" Round, Ivory on Warm Grey](https://www.amazon.com/dp/B07QGG5NFC) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
@@ -113,16 +125,34 @@ differs from object to object.
 | B075LDWMZ8 | [Rivet Woven Bordered Sisal Rug, 8' x 10', Natural](https://www.amazon.com/dp/B075LDWMZ8) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B075LB2WD8 | [Rivet Motion Modern Grid Pop Runner Rug](https://www.amazon.com/dp/B075LB2WD8) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B075JQ8VH6 | [Stone & Beam Contemporary Striped Rug](https://www.amazon.com/dp/B075JQ8VH6) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B4SMRBS | [Stone & Beam Casual Geometric Kilim Cotton Runner Rug, 2' 6" x 8', Flatweave, Blue, Grey, Ivory](https://www.amazon.com/dp/B07B4SMRBS) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07TS7ZCVM | [Amazon Basics - 4'X6' Plush Diamond Trellis Shag Rug, Grey](https://www.amazon.com/dp/B07TS7ZCVM) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07TS83QM9 | [Amazon Basics - 2'X5' Solid Color Shag Rug, Beige](https://www.amazon.com/dp/B07TS83QM9) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07QBRG2R4 | [Amazon Basics Modern Plush Moroccan Trellis Shag Area Rug - 4x6 (3'11" x 5'3"), Grey](https://www.amazon.com/dp/B07QBRG2R4) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B4WKMB1 | [Rivet Contemporary Striated Jute Area Rug, 5' 9" x 3' 9", Oatmeal](https://www.amazon.com/dp/B07B4WKMB1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07HSHMQ62 | [Stone & Beam Modern Global Bohemian Kilim Rug, 4 x 6 Foot, Multicolor](https://www.amazon.com/dp/B07HSHMQ62) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B4ZJV1V | [Rivet Contemporary Striated Jute Runner Rug, 7' 6" x 2' 3", Oatmeal](https://www.amazon.com/dp/B07B4ZJV1V) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B001DA0KU6 | [Pinzon 3'6 X 5'6 Hand-tufted Woodstock Wool Rug](https://www.amazon.com/dp/B001DA0KU6) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B001DA0KVK | [Pinzon 5 X 8 Hand-tufted Loft Wool Rug](https://www.amazon.com/dp/B001DA0KVK) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B001DA3864 | [Pinzon Kimono 5-by-8-Foot Hand-Tufted Wool Rug](https://www.amazon.com/dp/B001DA3864) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07MF1RNW1 | [Ravenna Home Classic Straight Banker's Task Desk Lamp with LED Light Bulb, 16"H, Brushed Nickel](https://www.amazon.com/dp/B07MF1RNW1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07MBFDJMP | [Ravenna Home Curvy Table Desk Lamp with LED Light Bulb, 22.5"H, Brushed Nickel](https://www.amazon.com/dp/B07MBFDJMP) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07MBFDWY5 | [Ravenna Home Floor Lamp with Shelves, LED Light Bulb included, 62.75"H, Black](https://www.amazon.com/dp/B07MBFDWY5) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07DBCN3KB | [Ravenna Home Torchiere Living Room Standing Floor Lamp with LED Light Bulbs - 69.75 Inches, Dark Bronze with Frosted Glass Shade](https://www.amazon.com/dp/B07DBCN3KB) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B082XMFBY2 | [Rivet Globe Stick Floor Lamp, 69"H, Black Marble](https://www.amazon.com/dp/B082XMFBY2) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07HK3PNSK | [Rivet Contemporary Palm Tree Neon Table Lamp, 11.75"H, White AF44228](https://www.amazon.com/dp/B07HK3PNSK) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B0742D9X4R | [Rivet Mid-Century Modern Tripod Décor Living Room Standing Floor Lamp with Light Bulb and Drum Shade, 58"H, Black](https://www.amazon.com/dp/B0742D9X4R) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B082XLC9B4 | [Rivet Scandinavian Task Lamp, 19"H, Matte Black](https://www.amazon.com/dp/B082XLC9B4) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07MHMSDJL | [Ravenna Home Elegant Banker's Lamp with LED Light Bulb, 16"H, Dark Bronze / Antique Brass](https://www.amazon.com/dp/B07MHMSDJL) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B0825CP3NS | [Rivet Scandinavian Real Blond-Wood Table Lamp with Marble Bottom, LED Bulb Included, 18.5"H, Beige](https://www.amazon.com/dp/B0825CP3NS) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| ph-pipe-lamp | [Industrial Pipe Desk Lamp with Edison Bulb](https://polyhaven.com/a/industrial_pipe_lamp) | Poly Haven (CC0): industrial_pipe_lamp |
 | B07PMK78R8 | [AmazonBasics Modern 5-Tier Ladder Bookshelf Organizer with Solid Rubber Wood Frame, Espresso](https://www.amazon.com/dp/B07PMK78R8) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07L9BVBCJ | [AmazonBasics 2-Tier Stackable Storage Shelf](https://www.amazon.com/dp/B07L9BVBCJ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07GP6DMDF | [Civet Home Bookshelf, Honey](https://www.amazon.com/dp/B07GP6DMDF) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B082JGV1YM | [Stone & Beam 5-Shelf Bookcase, 75"H, Weathered Oak Finish](https://www.amazon.com/dp/B082JGV1YM) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B00NUS5GXA | [AmazonBasics 5-Shelf Shelving Unit on Wheels - Chrome](https://www.amazon.com/dp/B00NUS5GXA) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B075ZBW1RR | [Stone & Beam Larson Industrial Wood and Metal 2-Shelf Bookcase, 39"H, Walnut](https://www.amazon.com/dp/B075ZBW1RR) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07QC876WJ | [Rivet Davenport Contemporary Shelf, 34"W, Elm and Metal](https://www.amazon.com/dp/B07QC876WJ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B0735CKD6R | [AmazonBasics 4 Cube Grid Wire Storage Shelves, Black](https://www.amazon.com/dp/B0735CKD6R) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B0735CKFJK | [AmazonBasics 6 Cube Grid Wire Storage Shelves, White](https://www.amazon.com/dp/B0735CKFJK) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07B8MSPDC | [Stone & Beam Modern Rustic Farmhouse Wood Slat Storage Bins - Set of 3, Natural](https://www.amazon.com/dp/B07B8MSPDC) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
@@ -131,6 +161,13 @@ differs from object to object.
 | B07B8CX5W5 | [Rivet Modern Metal Kitchen Rolling Bar Cart with Wheels, 30" Inch Height, Gold](https://www.amazon.com/dp/B07B8CX5W5) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07M7NSYD3 | [Ravenna Home 2-Drawer Kitchen Cart, 36.5"H, White Wood](https://www.amazon.com/dp/B07M7NSYD3) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07M7MMPXB | [Ravenna Home Vegan Leather Classic Tufted Storage Ottoman - 24 Inch, Black](https://www.amazon.com/dp/B07M7MMPXB) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B0711RQMNF | [AmazonBasics Collapsible Fabric Storage Cubes Organizer with Handles, Beige - Pack of 6](https://www.amazon.com/dp/B0711RQMNF) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07WMQ8P8Q | [Amazon Basics 3-Tier Utility Cart - Plastic, Black](https://www.amazon.com/dp/B07WMQ8P8Q) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B08DW41H2G | [AmazonBasics Multipurpose Rolling Cart, Desk Extender - Espresso](https://www.amazon.com/dp/B08DW41H2G) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07TZ9BMJZ | [Iris Ohyama, 3 lockers MDF wood shelf/storage furniture/Cube Bookcase CX-3, brown, 41.5 x 29 x 88 cm, compartments](https://www.amazon.com/dp/B07TZ9BMJZ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B082JH6LSF | [Stone & Beam Mid-Century 2-Drawer File Cabinet, 21.7"W, Pine Finish](https://www.amazon.com/dp/B082JH6LSF) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07HSJSH7G | [Stone & Beam Industrial Rolling Bar Cart, 20.67"W, Natural and Black](https://www.amazon.com/dp/B07HSJSH7G) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07P7VBMKP | [AmazonBasics Modern 50-Inch Wood TV Console and Cube Organizer - Solid Black](https://www.amazon.com/dp/B07P7VBMKP) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07C8WMTZM | [Rivet Glam Soft Faux Fur Throw Pillow - 20 x 20 Inch, Black](https://www.amazon.com/dp/B07C8WMTZM) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07JLZC56G | [Rivet Contemporary Shiny Luxe Velvet Throw Pillow - 17 x 17 Inch, Blush](https://www.amazon.com/dp/B07JLZC56G) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07JL5PNGZ | [Rivet Mid-Century Round Velvet Throw Pillow - 16 x 16 Inch, Aqua](https://www.amazon.com/dp/B07JL5PNGZ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
@@ -148,6 +185,7 @@ differs from object to object.
 | ph-fern | [Fern Plant in Tall Square Turquoise Planter](https://polyhaven.com/a/fern_02) | Poly Haven (CC0): fern_02; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_Quadra_Turquoise_QP12 |
 | ph-fern-bowl | [Fern Plant in Wide Turquoise Bowl Planter](https://polyhaven.com/a/fern_02) | Poly Haven (CC0): fern_02; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_SB9Turquoise |
 | ph-money-tree | [Money Tree Plant (Pachira) in 12" Green Pot](https://polyhaven.com/a/pachira_aquatica_01) | Poly Haven (CC0): pachira_aquatica_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_12_Pot_Nova |
+| ph-anthurium-tall | [Large Anthurium Plant in Tall Square Turquoise Planter](https://polyhaven.com/a/anthurium_botany_01) | Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_Quadra_Turquoise_QP12 |
 | ph-ceramic-vase | [Speckled Ceramic Vase, 16" Tall](https://polyhaven.com/a/ceramic_vase_01) | Poly Haven (CC0): ceramic_vase_01 |
 | ph-book-set | [Encyclopedia Book Set, 20 Volumes](https://polyhaven.com/a/book_encyclopedia_set_01) | Poly Haven (CC0): book_encyclopedia_set_01 |
 | ph-wicker-basket | [Small Round Wicker Basket](https://polyhaven.com/a/wicker_basket_02) | Poly Haven (CC0): wicker_basket_02 |
@@ -159,6 +197,19 @@ differs from object to object.
 | gso-basket | [Threshold Woven Basket with Fabric Liner, Small](https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Basket_Natural_Finish_Fabric_Liner_Small) | Google Scanned Objects (CC BY 4.0), Google LLC: Threshold_Basket_Natural_Finish_Fabric_Liner_Small |
 | gso-waste-basket | [Hefty Decorative Waste Basket, 8.5 Liter, Bronze](https://app.gazebosim.org/GoogleResearch/fuel/models/Hefty_Waste_Basket_Decorative_Bronze_85_liter) | Google Scanned Objects (CC BY 4.0), Google LLC: Hefty_Waste_Basket_Decorative_Bronze_85_liter |
 | gso-keyboard | [Razer BlackWidow Ultimate Mechanical Gaming Keyboard](https://app.gazebosim.org/GoogleResearch/fuel/models/Razer_BlackWidow_Ultimate_2014_Mechanical_Gaming_Keyboard) | Google Scanned Objects (CC BY 4.0), Google LLC: Razer_BlackWidow_Ultimate_2014_Mechanical_Gaming_Keyboard |
+| B07JLSSWLN | [Rivet Contemporary Tassel Throw Pillow - 17 x 17 Inch, Mustard](https://www.amazon.com/dp/B07JLSSWLN) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07BMQXWX1 | [Stone & Beam Farmhouse Buffalo Check Plaid Decorative Throw Pillow, 20" x 20", Cover and Insert, Light Grey](https://www.amazon.com/dp/B07BMQXWX1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B075HXHKTZ | [Stone & Beam Rustic Farmhouse Stoneware Pillar Candle Decor Holder - 8 Inch, White and Clay](https://www.amazon.com/dp/B075HXHKTZ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07QC8C7Y4 | [Stone & Beam Textured Modern Vase, 12.4"H, White](https://www.amazon.com/dp/B07QC8C7Y4) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B078JM52VN | [Rivet Mid Century Modern Glam Serving Tray - 3.5 x 11 x 11 Inch, Gold and Blue](https://www.amazon.com/dp/B078JM52VN) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| ph-antique-vase | [Blue and White Patterned Ceramic Vase, 17" Tall](https://polyhaven.com/a/antique_ceramic_vase_01) | Poly Haven (CC0): antique_ceramic_vase_01 |
+| ph-wicker-tray | [Low Wicker Tray Basket](https://polyhaven.com/a/wicker_basket_01) | Poly Haven (CC0): wicker_basket_01 |
+| ph-throw-pillows | [Chevron Throw Pillows, 18 x 18 Inch, Set of 2](https://polyhaven.com/a/throw_pillows_01) | Poly Haven (CC0): throw_pillows_01 |
+| ph-alarm-clock | [Twin-Bell Alarm Clock, Mint Green](https://polyhaven.com/a/alarm_clock_01) | Poly Haven (CC0): alarm_clock_01 |
+| ph-lantern | [Wooden Candle Lantern](https://polyhaven.com/a/wooden_lantern_01) | Poly Haven (CC0): wooden_lantern_01 |
+| gso-mug | [Threshold White Beaded Porcelain Coffee Mug](https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White) | Google Scanned Objects (CC BY 4.0), Google LLC: Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White |
+| gso-pitcher-vase | [Threshold White Porcelain Pitcher Vase](https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Porcelain_Pitcher_White) | Google Scanned Objects (CC BY 4.0), Google LLC: Threshold_Porcelain_Pitcher_White |
+| gso-bowl | [Now Designs Akita Pattern Bowl, Black](https://app.gazebosim.org/GoogleResearch/fuel/models/Now_Designs_Bowl_Akita_Black) | Google Scanned Objects (CC BY 4.0), Google LLC: Now_Designs_Bowl_Akita_Black |
 | placeholder-chair | [Placeholder Desk Chair](https://www.amazon.com/s?k=desk+chair) | Mise placeholder box model |
 | placeholder-desk | [Placeholder Writing Desk](https://www.amazon.com/s?k=writing+desk) | Mise placeholder box model |
 | placeholder-rug | [Placeholder 5×7 Rug](https://www.amazon.com/s?k=5x7+rug) | Mise placeholder box model |

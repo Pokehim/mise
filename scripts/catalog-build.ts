@@ -25,7 +25,7 @@ import sharp from 'sharp';
 import type { Catalog, CatalogItem, Category, Hex, Vec2, Vec3 } from '../shared/types';
 import { ASPECT_TOLERANCE, rugDocument, rugTexture } from './catalog/flat-rug';
 import { gsoDocument, gsoUrl, writeGlb } from './catalog/gso';
-import { io, keepNodes, potted, turn } from './catalog/models';
+import { clearGlass, io, keepNodes, potted, turn } from './catalog/models';
 import { polyHavenGltf, polyHavenUrl } from './catalog/polyhaven';
 import { renderThumbnails } from './catalog/thumbnail';
 
@@ -58,8 +58,8 @@ export type Listing = AboListing & { model?: AboModel };
 export interface ModelRef { source: 'polyhaven' | 'gso'; asset: string }
 
 /**
- * One entry of scripts/catalog-picks.json. `price`, `colors`, `styleTags` and `title` override the defaults and ABO's
- * data. An ABO pick's `id` is its item_id; another's is the Catalog id it gets, and it must give every field ABO would.
+ * One entry of scripts/catalog-picks.json. `price`, `colors`, `materials`, `styleTags` and `title` override the
+ * defaults and ABO's data. An ABO pick's `id` is its item_id; another's is the Catalog id it gets, and it must give every field ABO would.
  */
 export interface CatalogPick {
   id: string;
@@ -192,7 +192,7 @@ export function toCatalogItem(pick: CatalogPick, listing: AboListing, size: Vec3
     thumbnail: `/data/catalog/thumbs/${id}.jpg`,
     colors: pick.colors ?? tidy(englishValues(listing.color)),
     colorHex: listing.color_code?.[0]?.toLowerCase() as Hex | undefined,
-    materials: tidy(materials),
+    materials: pick.materials ?? tidy(materials),
     styleTags: pick.styleTags ?? (styles.length > 0 ? styles : tidy(titleStyles(title))),
     priceEstimateUsd: pick.price ?? DEFAULT_PRICE_USD[pick.category],
     url: `https://www.amazon.com/dp/${id}`,
@@ -415,6 +415,8 @@ export async function optimizeModel(centered: string, glb: string): Promise<{ si
     const inspect = await gltfTransform('inspect', glb, '--format', 'csv');
     const triangles = trianglesFromInspect(inspect);
     if (triangles > MAX_TRIANGLES) continue;
+    // A few ABO models lost their materials and were exported with a placeholder, which draws magenta.
+    if (inspect.includes('PinkErrorMaterial')) throw new Error('its material is PinkErrorMaterial, a placeholder');
     await gltfTransform('validate', glb);      // exits with an error when the glTF validator reports one
     const bytes = (await stat(glb)).size;
     if (bytes > MAX_GLB_BYTES) throw new Error(`${megabytes(bytes)} MB is over the 2 MB budget`);
@@ -482,7 +484,7 @@ async function buildFlatRug(pick: CatalogPick, listing: Listing | undefined, ima
 
 /** A Poly Haven or Google Scanned Objects model as a glTF Document. */
 async function sourcedDocument({ source, asset }: ModelRef) {
-  return source === 'polyhaven' ? io().read(await polyHavenGltf(asset)) : gsoDocument(asset);
+  return source === 'polyhaven' ? clearGlass(await io().read(await polyHavenGltf(asset))) : gsoDocument(asset);
 }
 
 /** Builds a Poly Haven or Google Scanned Objects pick, its thumbnail rendered from the finished GLB. */

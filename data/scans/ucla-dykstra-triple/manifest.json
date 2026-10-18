@@ -10,5 +10,13 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "University of California, Los Angeles",
+    "aliases": [
+      "UCLA"
+    ],
+    "hall": "Dykstra Hall",
+    "room": "Classic triple"
   }
 }

@@ -21,6 +21,17 @@ export interface ScanManifest {
   splatTransform?: YawTransform & { scale: number }; // Phase 3: splat frame → room frame
   captures?: ScanCaptures;           // Phase 2 (ADR-0007): what room.glb was merged from
   floorPlan?: FloorPlanSource;       // ADR-0011: built from a Floor Plan; there are no Captures and no room.glb
+
+  mine?: boolean;                    // the Mover's own: listed under "Your Scans" on Home
+  library?: LibraryEntry;            // a room of the floor plan library, which "Import from floor plan" searches
+}
+
+/** Who a library room is for, as the Mover would search for it. */
+export interface LibraryEntry {
+  school: string;                    // "University of Washington"
+  aliases: string[];                 // ["UW", "UDub"]
+  hall: string;                      // "Lander Hall"
+  room: string;                      // "Double, private bath"
 }
 
 export interface FloorPlanSource {

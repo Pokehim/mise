@@ -134,3 +134,77 @@
 .home-heading-row { display: flex; align-items: center; gap: var(--s-4); }
 .home-heading-row .home-heading { flex: 1; }
 .scan-tag { color: var(--wash); }
+
+/* ───────────── The floor plan library, in "Import from floor plan" ───────────── */
+
+.library > p { margin: 0 0 var(--s-4); color: var(--graphite); }
+.library .error { margin: 0 0 var(--s-3); }
+.library-results {
+  max-height: min(52vh, 440px);
+  margin: 0 0 var(--s-3);
+  padding: 0;
+  overflow-y: auto;
+  border-block: var(--line) solid var(--pencil);
+  list-style: none;
+}
+.library-results li { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-2) 0; }
+.library-results li + li { border-top: var(--line) solid var(--pencil); }
+
+/* A room: the whole row opens it furnished; "Start empty" sits beside it. */
+.home button.library-pick {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 16px;
+  justify-content: stretch;
+  gap: var(--s-3);
+  padding: var(--s-1) var(--s-2) var(--s-1) var(--s-1);
+  border-color: transparent;
+  background: transparent;
+  text-align: left;
+}
+.home button.library-pick:disabled { border-style: solid; border-color: transparent; background: transparent; opacity: 0.55; }
+@media (hover: hover) {
+  .home button.library-pick:hover:not(:disabled) { border-color: transparent; background: var(--ink-wash); }
+  .library-pick:hover:not(:disabled) .icon { color: var(--ink); translate: 2px 0; }
+}
+.library-pick .icon { color: var(--graphite); transition: translate 160ms var(--ease-out), color 120ms ease-out; }
+.library-room { display: grid; gap: 1px; min-width: 0; }
+.library-room .school { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.library-room .muted { color: var(--graphite); font-size: 13px; }
+.library-room .hint { color: var(--wash); font-size: 12px; }
+.home button.library-empty { flex: none; font-size: 13px; }
+
+/* The plan from the room's university, on a white sheet like a print; the room's own drawing when there's none. */
+.library-thumb {
+  display: block;
+  width: 56px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-2);
+  background: #fff;
+}
+.library-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.library-thumb .plan { width: 100%; height: 100%; }
+.library-thumb .plan figcaption { border: 0; font-size: 11px; }
+
+.home .library-none { display: grid; justify-items: start; gap: var(--s-3); margin: 0 0 var(--s-1); }
+.library-none p { margin: 0; }
+.library-other { margin: 0; font-size: 13px; }
+.home button.link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--wash);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 3px;
+}
+@media (hover: hover) {
+  .home button.link:hover:not(:disabled) { text-decoration-color: currentColor; }
+}
+.library-other button.link:active { scale: none; }
+/* Held near the top, so the dialog doesn't jump as the results under the field come and go. */
+.home .fp-dialog { margin-top: 12vh; }

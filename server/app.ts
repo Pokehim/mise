@@ -280,7 +280,7 @@ app.post(
     const reading = await readFloorPlan(planReader(), png, info);
     await writeJson(join(dir, 'plan/draft.json'), reading.draft);
     const manifest: ScanManifest = {
-      version: 1, id, name, mesh: 'room.glb', meshTransform: { position: [0, 0, 0], rotationY: 0 },
+      version: 1, id, name, mesh: 'room.glb', meshTransform: { position: [0, 0, 0], rotationY: 0 }, mine: true,
       // 0 until a printed dimension, or the Mover, gives the plan its scale.
       floorPlan: { image: 'plan/floor-plan.png', draft: 'plan/draft.json', metersPerPixel: draftScale(reading.draft, reading.draft.rooms[0]) ?? 0 },
     };

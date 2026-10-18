@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useSearch } from 'wouter';
 import type { Design, ScanManifest } from '@shared/types';
 import { listDesigns, listScans } from '../api';
 import { FloorPlanDialog } from '../plan/FloorPlanDialog';
+import { moveInLayoutId } from '../plan/library';
 import { count } from '../ui/format';
 import { ArrowRight, Plus } from '../ui/icons';
 import { useStartDesign } from '../ui/useStartDesign';
@@ -59,8 +60,12 @@ const Loading = () => (
   </div>
 );
 
-/** `/`: each Scan, and the Designs under it (spec §10.8). */
+/**
+ * `/`: the Mover's own Scans, and the Designs under each (spec §10.8). `/?all=1` lists every Scan,
+ * the library's and the test rooms too, for development.
+ */
 export function Home() {
+  const all = new URLSearchParams(useSearch()).get('all') === '1';
   const [loaded, setLoaded] = useState<[ScanManifest[], Design[]]>();
   const [error, setError] = useState<string>();
 
@@ -69,6 +74,10 @@ export function Home() {
   }, []);
 
   const [scans, designs] = loaded ?? [[], []];
+  const listed = all ? scans : scans.filter((scan) => scan.mine);
+  // A library room's own Move-in layout is copied, never edited, so only its copies are the Mover's.
+  const designsOf = (scan: ScanManifest) => designs.filter((design) =>
+    design.scanId === scan.id && (all || !scan.library || design.id !== moveInLayoutId(scan.id)));
   return (
     <div className="home">
       <header className="home-intro">
@@ -80,19 +89,17 @@ export function Home() {
       </header>
       <main className="home-scans">
         <div className="home-heading-row">
-          <h2 className="home-heading">Your Scans</h2>
-          <FloorPlanDialog />
+          <h2 className="home-heading">{all ? 'Every Scan' : 'Your Scans'}</h2>
+          <FloorPlanDialog scans={scans} />
         </div>
         {error && (
           <p className="error" role="alert">Could not load the Scans ({error}). Check that the API server is running, then reload.</p>
         )}
         {!loaded && !error && <Loading />}
-        {loaded && !scans.length && (
-          <p className="empty"><b>No Scans yet.</b> Import one with <code>scripts/scan-import.ts</code>, then mark it up in Room Setup.</p>
+        {loaded && !listed.length && (
+          <p className="empty"><b>No Scans yet.</b> Find your dorm with “Import from floor plan”, or import a Scan with <code>scripts/scan-import.ts</code>, then mark it up in Room Setup.</p>
         )}
-        {scans.map((scan) => (
-          <ScanSection key={scan.id} scan={scan} designs={designs.filter((design) => design.scanId === scan.id)} />
-        ))}
+        {listed.map((scan) => <ScanSection key={scan.id} scan={scan} designs={designsOf(scan)} />)}
       </main>
     </div>
   );

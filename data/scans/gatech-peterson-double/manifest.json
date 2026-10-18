@@ -10,5 +10,15 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "Georgia Institute of Technology",
+    "aliases": [
+      "Georgia Tech",
+      "GT",
+      "GaTech"
+    ],
+    "hall": "Peterson Hall",
+    "room": "Double, N303"
   }
 }

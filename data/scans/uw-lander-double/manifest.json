@@ -10,5 +10,15 @@
       0
     ],
     "rotationY": 0
+  },
+  "library": {
+    "school": "University of Washington",
+    "aliases": [
+      "UW",
+      "UDub",
+      "U Dub"
+    ],
+    "hall": "Lander Hall",
+    "room": "Double, private bath"
   }
 }

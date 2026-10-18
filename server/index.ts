@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
@@ -35,7 +35,8 @@ if (process.env.NODE_ENV !== 'production') {
 /**
  * The public demo keeps its Designs in DESIGNS_DIR, which outlives a redeploy (#42). Every Design that ships
  * in data/designs is a seed: copied in over any older copy of it, and listed in _seed.json, which makes it
- * read-only. Designs that visitors made aren't in data/designs, so they are left alone.
+ * read-only. A seed the deploy no longer ships is removed. Designs that visitors made aren't in data/designs,
+ * so they are left alone.
  */
 async function seedDesigns() {
   const dir = process.env.DESIGNS_DIR;
@@ -43,7 +44,10 @@ async function seedDesigns() {
   const from = join(process.env.DATA_DIR ?? './data', 'designs');
   const seeds = (await readdir(from)).filter((file) => file.endsWith('.json') && !file.startsWith('_'));
   await mkdir(dir, { recursive: true });
+  const ids = seeds.map((file) => file.slice(0, -'.json'.length));
+  const before: string[] = JSON.parse(await readFile(join(dir, '_seed.json'), 'utf8').catch(() => '[]'));
+  await Promise.all(before.filter((id) => !ids.includes(id)).map((id) => rm(join(dir, `${id}.json`), { force: true })));
   await Promise.all(seeds.map((file) => copyFile(join(from, file), join(dir, file))));
-  await writeFile(join(dir, '_seed.json'), JSON.stringify(seeds.map((file) => file.slice(0, -'.json'.length))));
+  await writeFile(join(dir, '_seed.json'), JSON.stringify(ids));
   console.log(`${seeds.length} seed Designs in ${dir}`);
 }

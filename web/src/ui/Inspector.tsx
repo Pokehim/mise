@@ -3,8 +3,8 @@ import type { SearchResult } from '@shared/catalog-search';
 import type { CatalogItem, Category, Vec3 } from '@shared/types';
 import { wallLength } from '../scene/floorPlan';
 import { removePiece, rotatePiece } from '../scene/pieceEdits';
-import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget } from '../scene/swapResize';
-import { setResizeSide, useResize } from '../state/resize';
+import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget, targetBox } from '../scene/swapResize';
+import { closeResize, openResize, setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
 import './inspector.css';
 
@@ -90,7 +90,13 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
   const size = useResize((s) => s.session?.size) ?? startSize;
   const [category, setCategory] = useState(startCategory);
   const [lockHeight, setLockHeight] = useState(false);
-  const categories = useMemo(() => [...new Set(catalog.items.map((item) => item.category))], [catalog]);
+  // Only categories that hang where the target does, so a floor item can't become a mirror; and
+  // the target's own, even when the Catalog has none of it.
+  const onWall = useEditor((s) => targetBox({ setup: s.setup!, catalog, roomState: s.roomState! }, target)?.placement.mount === 'wall');
+  const categories = useMemo(
+    () => [...new Set([startCategory, ...catalog.items.filter((item) => (item.mount === 'wall') === onWall).map((item) => item.category)])],
+    [catalog, startCategory, onWall],
+  );
   const candidates = useMemo(
     () => resizeCandidates(catalog, { category, targetSize: size, lockHeight, currentId }),
     [catalog, category, size, lockHeight, currentId],
@@ -98,8 +104,8 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
   const { kind, id } = target;
 
   useEffect(() => {
-    useResize.setState({ session: { target: { kind, id }, size: startSize } });
-    return () => useResize.setState({ session: null });
+    openResize({ kind, id }, startSize);
+    return closeResize;
   }, [kind, id, startSize]);
 
   const setSide = (axis: 0 | 2, centimeters: number) => {
@@ -127,7 +133,7 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
             putInPlace(target, item, size);
             onDone();
           }} />
-        : <p className="muted">Nothing in the Catalog is a {category.replace('_', ' ')}.</p>}
+        : <p className="muted">Nothing {currentId && category === startCategory ? 'else ' : ''}in the Catalog is a {category.replace('_', ' ')}.</p>}
     </div>
   );
 }

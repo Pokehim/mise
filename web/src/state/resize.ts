@@ -15,6 +15,11 @@ export interface ResizeSession {
  */
 export const useResize = create<{ session: ResizeSession | null }>(() => ({ session: null }));
 
+/** Opens a Resize of a Piece or an Original, with the box at its own size. */
+export const openResize = (target: SwapTarget, size: Vec3) => useResize.setState({ session: { target, size } });
+
+export const closeResize = () => useResize.setState({ session: null });
+
 /** Sets the width (axis 0) or the depth (axis 2) of the Resize box, in meters. */
 export function setResizeSide(axis: 0 | 2, meters: number) {
   const { session } = useResize.getState();

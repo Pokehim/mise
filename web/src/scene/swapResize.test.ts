@@ -31,10 +31,10 @@ describe('resizeCandidates', () => {
     expect(results.map(({ label }) => label)).toEqual(['fits', 'fits', 'fits']);
   });
 
-  it('fills the 3 with Closest available when fewer than 3 fit', () => {
+  it('offers only the items that fit when any do, even fewer than 3', () => {
     const results = resizeCandidates(desks, { category: 'desk', targetSize: [1.55, 0.75, 0.75] });
-    expect(ids(results)).toEqual(['desk-far', 'desk-wide', 'desk-exact']);
-    expect(results.map(({ label }) => label)).toEqual(['fits', 'closest', 'closest']);
+    expect(ids(results)).toEqual(['desk-far']);
+    expect(results[0].label).toBe('fits');
   });
 
   it('offers the 3 closest, labeled Closest available, when nothing fits', () => {
@@ -52,14 +52,13 @@ describe('resizeCandidates', () => {
     const catalog: Catalog = { version: 1, items: [item('desk-low', 'desk', [1.2, 0.6, 0.6]), item('desk-tall', 'desk', [1.25, 0.9, 0.62])] };
     const targetSize: Vec3 = [1.2, 0.9, 0.6];
     expect(ids(resizeCandidates(catalog, { category: 'desk', targetSize }))).toEqual(['desk-low', 'desk-tall']);
-    const locked = resizeCandidates(catalog, { category: 'desk', targetSize, lockHeight: true });
-    expect(ids(locked)).toEqual(['desk-tall', 'desk-low']);
-    expect(locked[1].label).toBe('closest');   // 33% too short
+    // Locked, the low desk is 33% too short, so it no longer fits.
+    expect(ids(resizeCandidates(catalog, { category: 'desk', targetSize, lockHeight: true }))).toEqual(['desk-tall']);
   });
 
-  it('never offers a Piece its own item, and still offers 3', () => {
+  it('never offers a Piece its own item', () => {
     const results = resizeCandidates(desks, { category: 'desk', targetSize: [1.2, 0.75, 0.6], currentId: 'desk-exact' });
-    expect(ids(results)).toEqual(['desk-close', 'desk-edge', 'desk-wide']);
+    expect(ids(results)).toEqual(['desk-close', 'desk-edge']);
   });
 });
 

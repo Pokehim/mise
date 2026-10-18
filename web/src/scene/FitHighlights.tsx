@@ -6,7 +6,9 @@ import { useEditor } from '../state/store';
 import { ignoreRaycast } from './objects';
 import { Outline } from './SelectionOutline';
 import { targetBox } from './swapResize';
+import './fit.css';
 
+/** The red of the outline; the chips' is in fit.css. */
 const RED = '#d93025';
 
 /**
@@ -22,6 +24,7 @@ export function FitHighlights() {
   const preview = useEditor((s) => s.preview);
 
   const warned = useMemo(() => {
+    // The dragged Piece where it is shown, as PieceNode does.
     const dragged = preview && roomState.pieces[preview.pieceId];
     const shown: RoomState = dragged
       ? { ...roomState, pieces: { ...roomState.pieces, [preview.pieceId]: { ...dragged, placement: preview.placement } } }
@@ -31,7 +34,10 @@ export function FitHighlights() {
     const violations = checkFit(setup, catalog, shown, [...Object.keys(shown.pieces), ...moved])
       .toSorted((a, b) => Number(a.rule === 'overlap') - Number(b.rule === 'overlap'));
     const messages = new Map<string, Set<string>>();
-    for (const { subjectId, message } of violations) messages.set(subjectId, (messages.get(subjectId) ?? new Set()).add(message));
+    for (const { subjectId, message } of violations) {
+      if (!messages.has(subjectId)) messages.set(subjectId, new Set());
+      messages.get(subjectId)!.add(message);
+    }
     return [...messages].flatMap(([id, found]) => {
       const box = targetBox({ setup, catalog, roomState: shown }, { kind: id in shown.pieces ? 'piece' : 'original', id });
       return box ? [{ id, messages: [...found], ...box }] : [];
@@ -53,25 +59,10 @@ export function FitHighlights() {
         ))}
       </Hud>
       {warned.map(({ id, messages, placement: { position: [x, y, z] }, size }) => (
-        <Html key={id} position={[x, y + size[1], z]} zIndexRange={[10, 0]} style={chipStyle}>
-          {messages.map((message) => <div key={message} style={lineStyle}>{message}</div>)}
+        <Html key={id} position={[x, y + size[1], z]} zIndexRange={[10, 0]} className="fit-chip">
+          {messages.map((message) => <div key={message}>{message}</div>)}
         </Html>
       ))}
     </>
   );
 }
-
-// Centered on screen just above the top of the item, rather than over its middle.
-const chipStyle = {
-  transform: 'translate(-50%, calc(-100% - 8px))',
-  padding: '3px 10px',
-  borderRadius: 10,
-  background: RED,
-  color: 'white',
-  font: '600 12px/1.4 system-ui, sans-serif',
-  boxShadow: '0 1px 4px rgb(0 0 0 / 0.3)',
-  pointerEvents: 'none',
-} as const;
-
-// One line per problem, each kept short (spec §10.6): checkFit names a Piece by its full Catalog title.
-const lineStyle = { maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as const;

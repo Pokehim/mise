@@ -19,21 +19,24 @@ export interface ResizeQuery {
   currentId?: string;
 }
 
-/** Resize's live candidates (spec §8.2, §10.5): the 3 items closest to the target size. */
+/**
+ * Resize's live candidates (spec §8.2, §10.5): up to 3 items that fit the target size, closest
+ * first, or, when none does, the 3 closest, labeled "Closest available".
+ */
 export function resizeCandidates(catalog: Catalog, { category, targetSize, lockHeight, currentId }: ResizeQuery): SearchResult[] {
-  return search(catalog, { category, targetSize, lockHeight, limit: Infinity })
-    .filter(({ item }) => item.id !== currentId)
-    .slice(0, 3);
+  const ranked = search(catalog, { category, targetSize, lockHeight, limit: Infinity }).filter(({ item }) => item.id !== currentId);
+  const fits = ranked.filter(({ label }) => label === 'fits');
+  return (fits.length ? fits : ranked).slice(0, 3);
 }
 
 /** What a swap or a Resize changes: a Piece, or an Original that a Piece will replace. */
 export type SwapTarget = { kind: 'piece' | 'original'; id: string };
 
-/** The parts of the editor's state a swap reads. */
-export interface Room { setup: RoomSetup; catalog: Catalog; roomState: RoomState }
+/** What a swap reads from the editor: the Scan's setup, the Catalog, and the Design's room state. */
+export interface SwapContext { setup: RoomSetup; catalog: Catalog; roomState: RoomState }
 
 /** The box a Piece or a visible Original takes up: where it stands, and its size. */
-export function targetBox({ setup, catalog, roomState }: Room, { kind, id }: SwapTarget): { placement: Placement; size: Vec3 } | undefined {
+export function targetBox({ setup, catalog, roomState }: SwapContext, { kind, id }: SwapTarget): { placement: Placement; size: Vec3 } | undefined {
   if (kind === 'piece') {
     const piece = roomState.pieces[id];
     const item = piece && catalog.items.find(({ id: itemId }) => itemId === piece.catalogId);
@@ -49,8 +52,8 @@ export function targetBox({ setup, catalog, roomState }: Room, { kind, id }: Swa
  * back-center (spec §10.5): a swap for a Piece, a replace for an Original. With a targetSize, it
  * is a Resize.
  */
-export function swapEdit(room: Room, target: SwapTarget, item: CatalogItem, targetSize?: Vec3): NewEdit {
-  const fields = { catalogId: item.id, placement: swapPlacement(room, target, item.size[2])!, ...(targetSize && { targetSize }) };
+export function swapEdit(context: SwapContext, target: SwapTarget, item: CatalogItem, targetSize?: Vec3): NewEdit {
+  const fields = { catalogId: item.id, placement: swapPlacement(context, target, item.size[2])!, ...(targetSize && { targetSize }) };
   return target.kind === 'piece'
     ? { type: 'swap', pieceId: target.id, via: targetSize ? 'resize' : 'swap', ...fields }
     : { type: 'replace', originalId: target.id, pieceId: newId('pc'), via: targetSize ? 'resize' : 'replace', ...fields };
@@ -62,11 +65,11 @@ export function swapEdit(room: Room, target: SwapTarget, item: CatalogItem, targ
  * within 10 cm of, as a dragged Piece does (spec §10.3): a Room Setup box can stand a few cm off
  * the wall the real item is against, while a Piece stands exactly where the Mover put it.
  */
-export function swapPlacement(room: Room, target: SwapTarget, depth: number): Placement | undefined {
-  const box = targetBox(room, target);
+export function swapPlacement(context: SwapContext, target: SwapTarget, depth: number): Placement | undefined {
+  const box = targetBox(context, target);
   if (!box) return undefined;
   const { position: [x, y, z], rotationY } = box.placement;
   const forward = (depth - box.size[2]) / 2;
   const moved: Placement = { ...box.placement, position: [x + Math.sin(rotationY) * forward, y, z + Math.cos(rotationY) * forward] };
-  return (target.kind === 'original' && moved.mount !== 'wall' && snapToWall(moved, depth, room.setup.walls)) || moved;
+  return (target.kind === 'original' && moved.mount !== 'wall' && snapToWall(moved, depth, context.setup.walls)) || moved;
 }

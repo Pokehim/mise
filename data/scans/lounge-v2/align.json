@@ -1,0 +1,347 @@
+{
+  "version": 1,
+  "frame": "lounge-v1's room frame: meters, +Y up, floor at y = 0, walls on the axes (x -1.568..1.55, z -3.545..3.673)",
+  "formula": "room = matrix \u00b7 [p_file, 1] (4x4, row-major). Splats: p_file is the raw PLY position (stored Y down).",
+  "sources": {
+    "POLYCAM_ROOM_GLB_1.glb": {
+      "matrix": [
+        [
+          0.999968,
+          0.0,
+          -0.008005,
+          -0.044
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.202
+        ],
+        [
+          0.008005,
+          0.0,
+          0.999968,
+          0.029
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "Main Capture: lounge-v1's meshTransform",
+      "scale": 1.0,
+      "yawDeg": -0.459
+    },
+    "POLYCAM_ROOM_GLB_2.glb": {
+      "matrix": [
+        [
+          0.999926,
+          -0.007785,
+          -0.0094,
+          -0.003657
+        ],
+        [
+          0.007816,
+          0.999964,
+          0.003303,
+          1.199761
+        ],
+        [
+          0.009374,
+          -0.003376,
+          0.99995,
+          0.046896
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "floor level, wall occupancy, then point-to-plane ICP to GLB_1",
+      "scale": 1.0,
+      "yawDeg": -0.538,
+      "residual": {
+        "points": 157476,
+        "medianM": 0.0116,
+        "inlierShareLt5cm": 0.929,
+        "medianInliersM": 0.011
+      }
+    },
+    "POLYCAM_ROOM_GLB_3.glb": {
+      "matrix": [
+        [
+          0.999947,
+          0.000251,
+          -0.01026,
+          -0.005908
+        ],
+        [
+          -0.000297,
+          0.99999,
+          -0.004483,
+          1.207554
+        ],
+        [
+          0.010259,
+          0.004485,
+          0.999937,
+          0.028227
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "floor level, wall occupancy, then point-to-plane ICP to GLB_1",
+      "scale": 1.0,
+      "yawDeg": -0.588,
+      "residual": {
+        "points": 165034,
+        "medianM": 0.0139,
+        "inlierShareLt5cm": 0.897,
+        "medianInliersM": 0.0128
+      }
+    },
+    "KIRI_ENGINE_CHAIR_1/model.obj": {
+      "matrix": [
+        [
+          0.508794,
+          -0.00329,
+          0.860882,
+          0.713234
+        ],
+        [
+          0.000613,
+          0.999994,
+          0.003459,
+          1.341269
+        ],
+        [
+          -0.860888,
+          -0.001232,
+          0.508793,
+          0.805043
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "KIRI's whole-room scene: floor level, wall occupancy, then point-to-plane ICP to GLB_1",
+      "scale": 1.0,
+      "yawDeg": 59.416,
+      "residual": {
+        "points": 107863,
+        "medianM": 0.014,
+        "inlierShareLt5cm": 0.898,
+        "medianInliersM": 0.0128
+      }
+    },
+    "SPLAT_ROOM_1.ply": {
+      "matrix": [
+        [
+          0.959764,
+          -0.018559,
+          -1.251426,
+          -0.9309
+        ],
+        [
+          -0.016124,
+          -1.577079,
+          0.011023,
+          -0.2224
+        ],
+        [
+          -1.251461,
+          0.006085,
+          -0.959881,
+          1.6813
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "docs/research/lounge-compare/align-ROOM_1.json full fit (room = t + s R F p_raw), tilt included",
+      "scale": 1.5772,
+      "yawDeg": 52.513
+    },
+    "SPLAT_ROOM_2.ply": {
+      "matrix": [
+        [
+          -1.109677,
+          0.005573,
+          -0.938129,
+          -4.0105
+        ],
+        [
+          -0.011491,
+          -1.453046,
+          0.004959,
+          -0.0994
+        ],
+        [
+          -0.938075,
+          0.011206,
+          1.10968,
+          2.3332
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "docs/research/lounge-compare/align-ROOM_2.json full fit (room = t + s R F p_raw), tilt included",
+      "scale": 1.4531,
+      "yawDeg": 139.789
+    },
+    "POLYCAM_CHAIR_1.glb": {
+      "matrix": [
+        [
+          0.235911,
+          0.0,
+          -1.429667,
+          0.427321
+        ],
+        [
+          0.0,
+          1.449,
+          0.0,
+          -0.022825
+        ],
+        [
+          1.429667,
+          0.0,
+          0.235911,
+          -2.226954
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "Detail Capture, not to scale (align.py SCALE): leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair and a grid over the room, best fit",
+      "scale": 1.449,
+      "yawDeg": -80.63,
+      "residual": {
+        "points": 119156,
+        "medianM": 0.0156,
+        "inlierShareLt5cm": 0.876,
+        "medianInliersM": 0.014
+      }
+    },
+    "POLYCAM_CHAIR_2.glb": {
+      "matrix": [
+        [
+          0.34426,
+          0.0,
+          0.980309,
+          -0.416952
+        ],
+        [
+          0.0,
+          1.039,
+          0.0,
+          -0.02188
+        ],
+        [
+          -0.980309,
+          0.0,
+          0.34426,
+          -3.343311
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "Detail Capture, not to scale (align.py SCALE): leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair and a grid over the room, best fit",
+      "scale": 1.039,
+      "yawDeg": 70.65,
+      "residual": {
+        "points": 65607,
+        "medianM": 0.0179,
+        "inlierShareLt5cm": 0.827,
+        "medianInliersM": 0.015
+      }
+    },
+    "KIRI_ENGINE_ROOM_1/room.usdz": {
+      "matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.009
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.247133
+        ],
+        [
+          -0.0,
+          0.0,
+          -1.0,
+          0.064
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "KIRI Layout: its walls fitted to the room walls (layout.py)",
+      "scale": 1.0,
+      "yawDeg": 180.0
+    },
+    "KIRI_ENGINE_ROOM_2/room.usdz": {
+      "matrix": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          -0.009
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.23174
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.064
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "note": "KIRI Layout: its walls fitted to the room walls (layout.py)",
+      "scale": 1.0,
+      "yawDeg": -90.0
+    }
+  }
+}

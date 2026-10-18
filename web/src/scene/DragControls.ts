@@ -160,26 +160,56 @@ function dragged(editor: ReturnType<typeof useEditor.getState>, { kind, id }: Dr
   return { start: state.placement, item: { category, size: box.size, mount: state.placement.mount === 'wall' ? 'wall' : 'floor' } };
 }
 
+/** What a press on a Piece or an Original is for (spec §10.3). */
+export type PressIntent = 'select' | 'move-item' | 'view';
+
 /**
- * The pointerdown handler of a Piece or an Original: selects it, then drags it. While dragging, the
- * store's preview holds where it is shown; when the drag ends, that becomes one move Edit (spec §10.3,
- * §11.1). Holding Alt (Option on a Mac) drags it freely: no snapping, though walls stay solid. A wall item
- * slides over its own wall (`wallDrag`). A Kept Original is only selected: a drag on it moves the
- * view, as a drag on empty space does.
+ * What a press on a Piece or an Original is for (spec §10.3). Only the selected one moves, if it
+ * can: a press on it with the main button is `move-item`. Any other press with the main button is
+ * `select`: a click selects the item, and a drag moves the view. Shift never moves an item, since
+ * Shift+drag turns the view. Other buttons are `view`: the view alone has the press.
+ */
+export function pressIntent({ selected, movable, shiftKey, button }: {
+  selected: boolean; movable: boolean; shiftKey: boolean; button: number;
+}): PressIntent {
+  if (button !== 0) return 'view';
+  return selected && movable && !shiftKey ? 'move-item' : 'select';
+}
+
+/**
+ * The pointerdown handler of a Piece or an Original. A click selects it (the node's click handler);
+ * a drag moves only the selected one (pressIntent). A drag that starts on any other item, a Kept
+ * Original, or with Shift held moves the view, as it does on empty space, and selects nothing, so
+ * the Mover can't move furniture by accident.
+ *
+ * While the selected item is dragged, the camera holds still and the grabbed point stays under the
+ * pointer; the store's preview holds where it is shown, and when the drag ends, that becomes one
+ * move Edit (spec §10.3, §11.1). Holding Alt (Option on a Mac) drags it freely: no snapping, though
+ * walls stay solid. A wall item slides over its own wall (`wallDrag`). A Kept Original never moves
+ * (spec §11.1).
  */
 function useDrag(target: DragTarget) {
   const get = useThree((s) => s.get);
   const { kind, id } = target;
   return useCallback((event: ThreeEvent<PointerEvent>) => {
-    if (event.button !== 0) return;
-    event.stopPropagation();
     const editor = useEditor.getState();
-    editor.select({ kind, id });
     const found = dragged(editor, { kind, id });
-    if (!found) return;
+    const { selection } = editor;
+    const intent = pressIntent({
+      selected: selection?.kind === kind && selection.id === id,
+      movable: !!found,
+      shiftKey: event.shiftKey,
+      button: event.button,
+    });
+    if (intent === 'view') return;
+    // Not on to the Scan behind it.
+    event.stopPropagation();
+    // The view has this press: a click selects the item, and a drag moves the view.
+    if (intent === 'select' || !found) return;
     const { start, item } = found;
     const { setup } = editor;
-    const { camera, gl, scene, controls, setEvents } = get();
+    const { camera, gl, scene, controls, setEvents, events } = get();
+    const element = (events.connected as HTMLElement | undefined) ?? gl.domElement;
     const raycaster = new Raycaster();
     const aim = ({ clientX, clientY }: PointerEvent) => {
       const { left, top, width, height } = gl.domElement.getBoundingClientRect();
@@ -198,6 +228,8 @@ function useDrag(target: DragTarget) {
     const skip = kind === 'original' ? onOriginal(id) : () => false;
     const onWallDragged = item.mount === 'wall' ? wallDrag(raycaster.ray.clone(), start, item, setup!) : null;
     const [downX, downY] = [event.nativeEvent.clientX, event.nativeEvent.clientY];
+    // The item cursor the node set on hover, back once the item is let go.
+    const cursor = element.dataset.item;
     let dragging = false;
 
     // Until the pointer is released it moves the item: the camera holds still, and nothing else
@@ -209,6 +241,7 @@ function useDrag(target: DragTarget) {
     const onMove = (e: PointerEvent) => {
       if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) <= CLICK_TOLERANCE_PX) return;
       dragging = true;
+      element.dataset.item = 'moving';
       aim(e);
       const placement = onWallDragged
         ? onWallDragged(raycaster.ray)
@@ -222,6 +255,8 @@ function useDrag(target: DragTarget) {
       window.removeEventListener('pointercancel', onUp);
       if (cameraControls) cameraControls.enabled = true;
       setEvents({ enabled: true });
+      if (cursor) element.dataset.item = cursor;
+      else delete element.dataset.item;
       const { preview, applyEdit, setPreview } = useEditor.getState();
       if (preview && JSON.stringify(preview.placement) !== JSON.stringify(start)) {
         applyEdit({ type: 'move', targetId: id, placement: preview.placement });

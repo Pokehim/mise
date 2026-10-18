@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MathUtils, Ray, Vector3 } from 'three';
 import { setup } from '@shared/test-room';
 import type { Placement, Vec3 } from '@shared/types';
-import { wallDrag } from './DragControls';
+import { pressIntent, wallDrag } from './DragControls';
 
 /** A whiteboard 3.5 m wide: it fits on the 4 m North and South walls, not the 3 m East and West ones. */
 const BOARD = { category: 'decor' as const, size: [3.5, 1.2, 0.05] as Vec3, mount: 'wall' as const };
@@ -82,5 +82,33 @@ describe('wallDrag', () => {
       expect(moved).toBeGreaterThan(0.04);
       expect(moved).toBeLessThan(0.15);
     });
+  });
+});
+
+describe('pressIntent', () => {
+  const press = { selected: false, movable: true, shiftKey: false, button: 0 };
+
+  it('leaves a drag on an unselected item to the view: a click selects it', () => {
+    expect(pressIntent(press)).toBe('select');
+  });
+
+  it('moves the selected item', () => {
+    expect(pressIntent({ ...press, selected: true })).toBe('move-item');
+  });
+
+  it('never moves a Kept Original, selected or not', () => {
+    expect(pressIntent({ ...press, movable: false })).toBe('select');
+    expect(pressIntent({ ...press, movable: false, selected: true })).toBe('select');
+  });
+
+  it('never moves an item with Shift held: Shift+drag turns the view', () => {
+    expect(pressIntent({ ...press, selected: true, shiftKey: true })).toBe('select');
+    expect(pressIntent({ ...press, shiftKey: true })).toBe('select');
+  });
+
+  it('leaves other buttons to the view alone', () => {
+    expect(pressIntent({ ...press, button: 2 })).toBe('view');
+    expect(pressIntent({ ...press, selected: true, button: 2 })).toBe('view');
+    expect(pressIntent({ ...press, selected: true, button: 1 })).toBe('view');
   });
 });

@@ -25,6 +25,11 @@ if (process.env.NODE_ENV !== 'production') {
     await next();
     c.header('Cache-Control', 'public, max-age=31536000, immutable');
   });
+  // Without a header, a browser may keep its old index.html for a while after a deploy, and so the old app.
+  site.use('*', async (c, next) => {
+    await next();
+    if (c.res.headers.get('Content-Type')?.startsWith('text/html')) c.header('Cache-Control', 'no-cache');
+  });
   site.use('/*', serveStatic({ root: './dist/web' }));
   // Every other page is the web app's to route, such as /d/:designId. A missing /api or /data file stays a 404.
   site.get('*', (c, next) => (/^\/(api|data)\//.test(c.req.path) ? next() : serveStatic({ path: './dist/web/index.html' })(c, next)));

@@ -13,11 +13,12 @@ data/scans/*/*.ply
 !data/scans/real-scans/*.ply
 scripts/.cache/
 
-# Text-to-3D's items (server/generate-object): made on this machine, paid for per item
-data/catalog/generated*.json
+# Text-to-3D (server/generate-object): its items are committed like the Catalog's, as each was paid for. Not the
+# sandbox's stand-ins, or fal's original outputs (data/catalog/raw), which stay on the machine that made them.
+data/catalog/generated-sandbox.json
+data/catalog/models/gen_sandbox_*
+data/catalog/thumbs/gen_sandbox_*
 data/catalog/raw/
-data/catalog/models/gen_*
-data/catalog/thumbs/gen_*
 
 # Local env files (.superset/setup.sh copies these into new workspaces)
 .env

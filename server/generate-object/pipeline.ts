@@ -42,7 +42,6 @@ async function download(url: string): Promise<Uint8Array> {
 
 const generatedPath = (dataDir: string) =>
   join(dataDir, 'catalog', inSandbox() ? 'generated-sandbox.json' : 'generated.json');
-const rawDir = (dataDir: string, id: string) => join(dataDir, 'catalog/raw', id);
 
 /**
  * The items text-to-3D has made: data/catalog/generated.json, kept apart from the built catalog.json (and the sandbox's
@@ -66,11 +65,11 @@ function addGenerated(dataDir: string, item: CatalogItem): Promise<void> {
 }
 
 /**
- * fal's photo of `query` and TRELLIS.2's GLB of it. They wait in data/catalog/raw/<id> until the item is done, so that
- * trying again after a failed fitting step doesn't pay fal again.
+ * fal's photo of `query` and TRELLIS.2's GLB of it, as fal sent them. They stay in data/catalog/raw/<id>, so that trying
+ * again after a failed fitting step, or fitting the item again later, doesn't pay fal again.
  */
 async function falOutputs(query: string, id: string, dataDir: string, onStep: (step: Step) => void) {
-  const raw = rawDir(dataDir, id);
+  const raw = join(dataDir, 'catalog/raw', id);
   if (existsSync(join(raw, 'model.glb'))) {
     const [photo, glb] = await Promise.all([readFile(join(raw, 'photo')), readFile(join(raw, 'model.glb'))]);
     return { photo, glb };
@@ -151,7 +150,6 @@ export async function generateObject(request: GenerateRequest, id: string, dataD
         : 'Generated with FLUX.1 [schnell] and TRELLIS.2 (MIT) on fal',
     };
     await addGenerated(dataDir, item);
-    await rm(rawDir(dataDir, id), { recursive: true, force: true });
     return item;
   } finally {
     await rm(tmp, { recursive: true, force: true });

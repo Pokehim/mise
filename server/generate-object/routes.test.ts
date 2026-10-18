@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Document, getBounds } from '@gltf-transform/core';
@@ -242,6 +242,16 @@ describe('the cache, by query and category', () => {
     expect([asChair.category, asStorage.category]).toEqual(['chair', 'storage']);
   }, 30_000);
 
+  it("keeps fal's own photo and GLB beside the item, so it can be fitted again without paying", async () => {
+    await falMakesABox();
+
+    const generated = itemOf(await finished(await start({ query: 'lava lamp tower', category: 'lamp', targetSize: [1, 1, 1] })));
+
+    const raw = join(dataDir, 'catalog/raw', generated.id);
+    expect(await triangles(new Uint8Array(await readFile(join(raw, 'model.glb'))))).toBe(12);   // the box as fal sent it
+    expect((await sharp(await readFile(join(raw, 'photo'))).metadata()).width).toBe(64);
+  }, 30_000);
+
   it("keeps what fal made when fitting fails, so trying again doesn't pay fal again", async () => {
     await falMakesABox();
     await mkdir(join(dataDir, 'catalog'));
@@ -289,6 +299,7 @@ describe('the sandbox, FAL_KEY=sandbox', () => {
     const sandboxed = itemOf(await finished(jobId));
 
     expect(fal.subscribe).not.toHaveBeenCalled();
+    expect(sandboxed.model).toMatch(/\/gen_sandbox_\w+\.glb$/);   // which .gitignore keeps out of the repo
     expect(fetched).toHaveLength(2);
     expect(fetched.every((url) => url.startsWith('https://v3b.fal.media/'))).toBe(true);
     expect((await getJson('/api/catalog/generated')).items).toEqual([sandboxed]);

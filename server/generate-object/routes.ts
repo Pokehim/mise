@@ -60,11 +60,12 @@ function parseRequest({ query, category, targetSize }: Record<string, unknown>):
 
 /**
  * The id of a query, in any case, in a category, which sets its size: its job's, its item's and its cache key, so each is
- * generated, and paid for, once. The sandbox's are other ids, so its stand-ins never answer a real request.
+ * generated, and paid for, once. The sandbox's start gen_sandbox_, so its stand-ins never answer a real request or get
+ * committed.
  */
 function idFor({ query, category }: GenerateRequest) {
-  const key = `${inSandbox() ? 'sandbox:' : ''}${category}:${query.toLowerCase()}`;
-  return `gen_${createHash('sha256').update(key).digest('hex').slice(0, 8)}`;
+  const hash = createHash('sha256').update(`${category}:${query.toLowerCase()}`).digest('hex').slice(0, 8);
+  return `${inSandbox() ? 'gen_sandbox_' : 'gen_'}${hash}`;
 }
 
 /**

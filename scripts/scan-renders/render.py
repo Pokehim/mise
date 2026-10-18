@@ -10,23 +10,25 @@ def turbo(t):
     p = np.concatenate([t**i for i in range(6)], -1)
     return np.clip(np.stack([p @ r, p @ g, p @ b], -1), 0, 1)
 
-def camera(xyz, eye, target, fov_deg, W, H):
+def camera(xyz, eye, target, fov_deg, W, H, f=None, cy=None):
+    """f: focal length in px (else from fov_deg and H); cy: the principal point's row (else the middle)."""
     eye, target = np.asarray(eye, float), np.asarray(target, float)
     fwd = target - eye; fwd /= np.linalg.norm(fwd)
     right = np.cross(fwd, [0, 1, 0]); right /= np.linalg.norm(right)
     up = np.cross(right, fwd)
     rel = xyz - eye
     xc, yc, zc = rel @ right, rel @ up, rel @ fwd
-    f = 0.5 * H / np.tan(np.radians(fov_deg) / 2)
+    if f is None: f = 0.5 * H / np.tan(np.radians(fov_deg) / 2)
+    if cy is None: cy = H / 2
     with np.errstate(divide='ignore', invalid='ignore'):
         u = W / 2 + f * xc / zc
-        v = H / 2 - f * yc / zc
+        v = cy - f * yc / zc
     return u, v, zc, f
 
-def render_z(xyz, col, eye, target, fov, W, H, size=1.0, bg=(0, 0, 0), ss=2, alpha=None):
+def render_z(xyz, col, eye, target, fov, W, H, size=1.0, bg=(0, 0, 0), ss=2, alpha=None, f=None, cy=None):
     """Opaque points with a depth buffer. size: point radius in output px at 1 m."""
     Ws, Hs = W * ss, H * ss
-    u, v, z, f = camera(xyz, eye, target, fov, Ws, Hs)
+    u, v, z, f = camera(xyz, eye, target, fov, Ws, Hs, None if f is None else f * ss, None if cy is None else cy * ss)
     m = (z > 0.1) & (u >= 0) & (u < Ws) & (v >= 0) & (v < Hs)
     u, v, z, c = u[m], v[m], z[m], col[m]
     a = None if alpha is None else alpha[m]
@@ -50,12 +52,13 @@ def render_z(xyz, col, eye, target, fov, W, H, size=1.0, bg=(0, 0, 0), ss=2, alp
     # Note: buckets break strict depth order between sizes; sizes grow as z shrinks, so draw order still far->near by bucket
     return downsample(img, ss)
 
-def render_glow(xyz, col, eye, target, fov, W, H, gain=1.0, ss=2, bg=(0, 0, 0)):
+def render_glow(xyz, col, eye, target, fov, W, H, gain=1.0, ss=2, bg=(0, 0, 0), f=None, cy=None, weight=None):
     """Additive points: density reads as brightness, like a LiDAR viewer."""
     Ws, Hs = W * ss, H * ss
-    u, v, z, f = camera(xyz, eye, target, fov, Ws, Hs)
+    u, v, z, f = camera(xyz, eye, target, fov, Ws, Hs, None if f is None else f * ss, None if cy is None else cy * ss)
     m = (z > 0.1) & (u >= 0) & (u < Ws - 1) & (v >= 0) & (v < Hs - 1)
     u, v, z, c = u[m], v[m], z[m], col[m]
+    if weight is not None: c = c * weight[m][:, None]
     acc = np.zeros((Hs * Ws, 3))
     idx = v.astype(int) * Ws + u.astype(int)
     w = (1.0 / np.maximum(z, 0.5)) ** 0  # flat weight

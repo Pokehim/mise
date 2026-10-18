@@ -1,16 +1,23 @@
+import json, os
 import numpy as np
 from load import load
 from render import turbo
-import os
-D = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../data/scans/real-scans")
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../..")
+D = os.path.join(ROOT, "data/scans/real-scans")
 OUT = os.environ.get("OUT", "scan-renders")
-# The room's inside, from wall histograms (walls.py); all three passes share this frame.
-X0, X1, Z0, Z1, FLOOR, CEIL = -1.6, 1.62, -3.68, 3.57, -1.27, 1.25
+# The splats are in the Polycam capture's frame, which data/scans/lounge/align.json maps into the
+# lounge's (meters, +Y up, floor at 0) for POLYCAM_ROOM_GLB_1: the three passes all share it.
+ALIGN = np.array(json.load(open(os.path.join(ROOT, "data/scans/lounge/align.json")))["sources"]["POLYCAM_ROOM_GLB_1.glb"]["matrix"])
+# The room's inside: the lounge's Room Setup floor and ceiling.
+_setup = json.load(open(os.path.join(ROOT, "data/scans/lounge/setup.json")))
+_xs, _zs = [x for x, _ in _setup["floor"]["polygon"]], [z for _, z in _setup["floor"]["polygon"]]
+X0, X1, Z0, Z1, FLOOR, CEIL = min(_xs), max(_xs), min(_zs), max(_zs), 0.0, _setup["ceilingHeight"]
 C = np.array([(X0 + X1) / 2, (FLOOR + CEIL) / 2 - 0.3, (Z0 + Z1) / 2])
 BG = np.array([10, 12, 16]) / 255
 
 def room(i):
     xyz, rgb, op = load(f"{D}/POLYCAM_ROOM_SPLAT_{i}.ply")
+    xyz = xyz @ ALIGN[:3, :3].T + ALIGN[:3, 3]
     m = (xyz[:, 0] > X0 - 0.12) & (xyz[:, 0] < X1 + 0.12) & (xyz[:, 2] > Z0 - 0.12) & (xyz[:, 2] < Z1 + 0.12)
     xyz, rgb = xyz[m], rgb[m]
     h = (xyz[:, 1] - FLOOR) / (CEIL - FLOOR)

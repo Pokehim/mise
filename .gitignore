@@ -30,3 +30,4 @@ data/catalog/raw/
 
 # macOS
 .DS_Store
+scripts/scan-renders/scan-renders/

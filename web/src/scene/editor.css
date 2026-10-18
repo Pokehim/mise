@@ -163,6 +163,10 @@
   line-height: 15px;
 }
 
+/* The Dollhouse view moves like a map (DollhouseCamera): grab over the room, grabbing while a drag moves or turns it. */
+.view [data-dollhouse] { cursor: grab; }
+.view [data-dollhouse='moving'] { cursor: grabbing; }
+
 /* The lock over a Kept Original (spec §11.1). It only marks the Original, so it never catches the pointer. */
 .kept-lock {
   display: grid;

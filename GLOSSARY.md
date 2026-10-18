@@ -17,15 +17,15 @@ One walk-through of the real room with a scanning app, such as Polycam or KIRI E
 _Avoid_: Scan (a Scan is what the Captures and Room Setup produce), take, pass
 
 **Main Capture**:
-The Capture taken with the furniture in its usual places. Room Setup, the Originals, and the photoreal look all come from it.
+The Capture every other Capture is lined up to, so it decides where everything sits in the Scan. Each spot of the Scan still looks like whichever Capture saw it best.
 _Avoid_: Primary scan, base scan
 
 **Fill Capture**:
-An extra Capture of the whole room, used only for what the Main Capture missed: holes anywhere in the room, and, if furniture was moved for it, the floor and walls that furniture hid and the furniture's own backs and sides.
+An extra Capture of the whole room, with the furniture in the same places as the Main Capture, used only to fill what the Main Capture missed or saw poorly.
 _Avoid_: Clean plate, reveal scan, empty scan
 
 **Detail Capture**:
-A close-up Capture of a few Originals, such as one table and its chairs, used to replace their geometry with a sharper copy.
+A close-up Capture of a single Original, such as one chair, used to make the Master Copy for its kind of furniture.
 _Avoid_: Object scan, close-up, hero scan
 
 **Layout**:
@@ -53,6 +53,10 @@ _Avoid_: Plane, mesh, background
 **Original**:
 A furniture item that was physically in the room when it was scanned, such as the Mover's own table.
 _Avoid_: Fixture, scanned object, existing item
+
+**Master Copy**:
+The one cleaned-up copy of a kind of furniture in the room, such as the lounge's chair, made from the Captures and drawn in the place of every Original of that kind.
+_Avoid_: Template, prefab, instance, model
 
 **Piece**:
 A furniture or decor item added to a Design, either taken from the Catalog or generated on request.
@@ -104,10 +108,6 @@ _Avoid_: Slot, snap point, position
 Separating an Original from the rest of the Scan so it can be moved or changed on its own.
 _Avoid_: Extract, cut out, segment
 
-**Completion**:
-The parts of a moved Original that only a Fill Capture saw, such as its back against the wall, added so the Original looks whole once it moves.
-_Avoid_: Reconstruction, infill
-
-**Patch**:
-What covers the spot an Original used to occupy, including the wall behind it, after it has been moved away or removed: the real floor and wall from a Fill Capture wherever one saw them, and a generated fill where none did.
-_Avoid_: Hole fill, inpaint (that is how part of a Patch is made, not what it is)
+**Empty Room**:
+The Scan's room with every Original taken out: its walls, floor, ceiling, and Openings, whole, with whatever the Originals hid filled in from the Captures, or generated from the surrounding surface where no Capture saw it. It is what shows where an Original stood once that Original is moved or removed.
+_Avoid_: Patch, clean plate, shell, background

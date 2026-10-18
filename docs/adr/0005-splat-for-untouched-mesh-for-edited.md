@@ -1,3 +1,7 @@
+---
+status: amended by ADR-0009 (lounge-v2 draws Originals from Master Copies, never from the splat)
+---
+
 # Untouched things render from the splat; anything an Edit touches renders from the mesh
 
 In the photoreal phase, a Scan has two looks of the same room in the same coordinates:

@@ -1,3 +1,7 @@
+---
+status: amended by ADR-0009 (for lounge-v2 the Layout's boxes only seed the Master Copy fits)
+---
+
 # Captures from Polycam and KIRI Engine are merged into one Scan, and KIRI's Layout pre-fills Room Setup
 
 Every capture we have of the lounge has holes. KIRI Engine's Room mode also exports a **Layout**: a RoomPlan-style USDZ with labeled walls, doors, windows, tables, and chairs at real size (meters, Y-up), but no scanned surfaces. We combine all of it in the Main Capture's frame, extending ADR-0007:

@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0009 for lounge-v2 (no Fill Capture has moved furniture; the Empty Room replaces Patches)
+---
+
 # Patches and the backs of moved Originals come from Fill Captures
 
 A LiDAR scan never sees the floor under a sofa, the wall behind a dresser, or the back of anything pushed against a wall. So removing or moving an Original leaves a gap that a generated fill can only guess at. We take extra Polycam Captures of the same room with the furniture moved (Fill Captures), line each one up with the Main Capture in Room Setup, and merge what they saw into `room.glb`. That merged geometry covers two things: the real floor and wall under and behind each Original, which becomes its Patch, and the unseen backs and sides of moved Originals. Generated fill (Patch v2's push-pull diffusion) remains only for spots no Capture saw.

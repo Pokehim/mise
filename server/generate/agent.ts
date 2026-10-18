@@ -213,11 +213,15 @@ async function designLoop(
   } catch (error) {
     stopped = error as Error;
   }
+  // No one is left to see it: a take cut short by the Mover leaving isn't saved.
+  if (signal?.aborted) return fail('The Mover left before the Design was done');
+  // The take's own Edits, after those of the Design it starts from.
+  const made = session.edits.length - (request.current?.edits.length ?? 0);
   let finished: Pick<Design, 'name' | 'rationale' | 'palette'> | undefined = session.finished;
+  // A Design that changes nothing isn't one, even when Claude calls it finished.
+  if (finished && !made) return fail('The AI made no changes');
   if (!finished) {
     const why = timeout.aborted ? `The AI took longer than ${loopTimeoutMs / 1000} s` : stopped?.message ?? 'The AI stopped without finishing the Design';
-    // The take's own Edits, after those of the Design it starts from.
-    const made = session.edits.length - (request.current?.edits.length ?? 0);
     if (!made) return fail(why);
     console.warn(`Generate (${direction}): ${why}, so its Design keeps the ${made} Edits made until then`);
     const cause = timeout.aborted ? `Out of time after ${loopTimeoutMs / 1000} s` : stopped ? 'Cut short by an error' : 'Stopped before finishing';

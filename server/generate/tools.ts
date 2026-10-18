@@ -30,6 +30,7 @@ export interface DesignContext extends AnchorOptions {
   /**
    * Another Design's Edits a new Design starts from instead: Generate from the current Design. Its Pieces are the
    * room's furniture, not this Design's: they count toward neither the budget nor the large furniture changes.
+   * With `edits` (a Refine of such a Design), it is the start of those Edits, which the Design began from.
    */
   startsFrom?: Edit[];
   /** How many Edits this session makes, at least and at most, not counting removals; EDIT_RANGE by default. */
@@ -153,8 +154,9 @@ export function createSession({
   let edits: Edit[] = before;
   let state = replay(setup, catalog, edits);
   /** The Pieces and moved Originals of the Design a new Design starts from: the room's, not this Design's. */
-  const theRoomsPieces = new Set(startsFrom ? Object.keys(state.pieces) : []);
-  const theRoomsMoves = new Set(startsFrom ? Object.keys(state.originals).filter((id) => state.originals[id].moved) : []);
+  const theRooms = startsFrom && earlier ? replay(setup, catalog, startsFrom) : state;
+  const theRoomsPieces = new Set(startsFrom ? Object.keys(theRooms.pieces) : []);
+  const theRoomsMoves = new Set(startsFrom ? Object.keys(theRooms.originals).filter((id) => theRooms.originals[id].moved) : []);
   let finished: DesignSession['finished'];
   let toolCalls = 0;
   // finish_design sends Claude back at most once for what the Design lacks, and once for a name another take has.

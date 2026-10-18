@@ -576,3 +576,39 @@ describe('replay', () => {
     });
   });
 });
+
+describe('what rests on something', () => {
+  const lowDesk = { ...catalog.items.find(({ id }) => id === 'desk-walnut')!, id: 'desk-low', size: [0.76, 0.6, 0.5] as Vec3 };
+  const withLowDesk = { ...catalog, items: [...catalog.items, lowDesk] };
+  const onDesk = { position: [0.2, 0.75, 0] as Vec3, rotationY: 0, mount: 'surface' as const };
+  const deskWithLamp = [place('pc_desk', 'desk-walnut', onFloor(0, 0)), place('pc_lamp', 'lamp-brass', onDesk), place('pc_chair', 'chair-ergo', onFloor(0, 0.1))];
+
+  it('goes with it when it is moved, turning with it', () => {
+    const state = replay(setup, catalog, [...deskWithLamp, edit('ed_move', { type: 'move', targetId: 'pc_desk', placement: onFloor(1, 1, Math.PI / 2) })]);
+
+    const { position: [x, y, z], rotationY } = state.pieces.pc_lamp.placement;
+    expect([x, y, z, rotationY].map((n) => Number(n.toFixed(6)))).toEqual([1, 0.75, 0.8, Number((Math.PI / 2).toFixed(6))]);
+    // The chair stands on the floor under the desk's edge: it stays.
+    expect(state.pieces.pc_chair.placement).toEqual(onFloor(0, 0.1));
+  });
+
+  it('goes up or down with the top of what it is swapped for', () => {
+    const state = replay(setup, withLowDesk, [...deskWithLamp, edit('ed_swap', { type: 'swap', pieceId: 'pc_desk', catalogId: 'desk-low', placement: onFloor(0, 0), via: 'swap' })]);
+
+    expect(state.pieces.pc_lamp.placement.position[1]).toBeCloseTo(0.6);
+  });
+
+  it('goes with an Original, which is then moved too', () => {
+    const state = replay(withLampAndMirror, catalog, [edit('ed_move', { type: 'move', targetId: 'og_desk', placement: { position: [1.7, 0, 0.4], rotationY: -Math.PI / 2, mount: 'floor' } })]);
+
+    expect(state.originals.og_lamp).toMatchObject({ moved: true, placement: { position: [1.7, 0.76, expect.closeTo(0.4)] } });
+    expect(state.patches).toEqual(['og_lamp', 'og_desk']);
+  });
+
+  it('stays when what is beside it moves', () => {
+    const beside = place('pc_lamp2', 'lamp-brass', { position: [1, 0.75, 0], rotationY: 0, mount: 'surface' });
+    const state = replay(setup, catalog, [...deskWithLamp, beside, edit('ed_move', { type: 'move', targetId: 'pc_desk', placement: onFloor(-1, 0) })]);
+
+    expect(state.pieces.pc_lamp2.placement.position).toEqual([1, 0.75, 0]);
+  });
+});

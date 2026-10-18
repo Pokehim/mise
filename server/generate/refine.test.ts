@@ -166,6 +166,30 @@ describe('refineDesign', () => {
     expect(results(requests[1])[0].content).toContain('must stay under the $310 budget');
     expect(edits.map(({ type }) => type)).toEqual(['recolor']);
   });
+
+  it("reads a price below what the Pieces cost as the price of what to add, not the budget", async () => {
+    const { client } = scriptedClaude([
+      () => ({ content: [use('toolu_bed', 'dress_bed', { bed_id: 'og_bed', catalog_ids: ['pillow-navy'] }), finish()] }),
+    ]);
+
+    // $30 is far under the $300 the Pieces cost: the Brief's $600 stands, and the $25 pillow fits.
+    const { edits } = await refine(client, 'add a pillow, something under $30');
+
+    expect(edits).toMatchObject([{ type: 'place', catalogId: 'pillow-navy' }]);
+  });
+
+  it("doesn't count the Pieces of the room a Generate began from against the budget", async () => {
+    const { client, requests } = scriptedClaude([
+      () => ({ content: [use('toolu_bed', 'dress_bed', { bed_id: 'og_bed', catalog_ids: ['pillow-navy'] }), finish()] }),
+    ]);
+    // Made from another Design with all 5 Pieces ($300), for a $50 Brief: it has spent nothing yet.
+    const fromTheRoom: Design = { ...design, brief: { text: 'cozy', budgetUsd: 50 }, startedFrom: { designId: 'ds_room', edits: design.edits.length } };
+
+    const { edits } = await refineDesign({ client, design: fromTheRoom, text: 'add a pillow', setup, catalog: decorCatalog, materials: [] });
+
+    expect(edits).toMatchObject([{ type: 'place', catalogId: 'pillow-navy' }]);
+    expect(requests[0].messages[0].content).toContain('$50 for all the Pieces this Design added to the room');
+  });
 });
 
 describe('POST /api/designs/:id/refine', () => {
@@ -216,7 +240,7 @@ describe('POST /api/designs/:id/refine', () => {
     expect((await post('ds_nope', { text: 'cozier' })).status).toBe(404);
     const res = await post(id, { text: 'cozier' });
     expect(res.status).toBe(502);
-    expect((await res.json()).error).toBe("The AI couldn't refine this Design: The AI made no changes");
+    expect((await res.json()).error).toBe('The AI made no changes');
   });
 });
 

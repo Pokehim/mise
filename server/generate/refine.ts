@@ -34,13 +34,18 @@ export interface RefineResult { design: Design; edits: Edit[]; seconds: number }
 export async function refineDesign(request: RefineRequest): Promise<RefineResult> {
   const { client, design, text, setup, catalog, fast = false, timeoutMs = LOOP_TIMEOUT_MS } = request;
   const started = performance.now();
-  // A budget the Mover's words name ("keep it under $300") is this Refine's; otherwise the Brief's stands.
-  const budgetUsd = budgetInText(text) ?? design.brief?.budgetUsd;
+  // The Edits of the Design a Generate began from: their Pieces are the room's, not this Design's.
+  const startsFrom = design.startedFrom && design.edits.slice(0, design.startedFrom.edits);
+  // A dollar amount in the Mover's words above what the Design's Pieces cost is a new budget ("keep it under $500"). One
+  // below can't be, it's the price of what to add ("a lamp under $30"), which Claude reads in the words; the Brief's budget stands.
+  const named = budgetInText(text);
+  const budgetUsd = named !== undefined && named > piecesUsd(setup, catalog, design.edits, startsFrom) ? named : design.brief?.budgetUsd;
   const brief: Brief = { ...(design.brief ?? { text }), ...(budgetUsd !== undefined && { budgetUsd }) };
   const session = createSession({
     ...request,
     brief,
     edits: design.edits,
+    startsFrom,
     editRange: REFINE_EDITS,
     maxToolCalls: MAX_TOOL_CALLS,
     // A Refine of 1 to 4 Edits can't remodel a room: the Design's own large changes don't hold it back.
@@ -85,6 +90,14 @@ export async function refineDesign(request: RefineRequest): Promise<RefineResult
   return { design: refined, edits, seconds };
 }
 
+/** What the Pieces of these Edits cost by the Catalog's estimates, but for those of the Edits they start from. */
+function piecesUsd(setup: RoomSetup, catalog: Catalog, edits: Edit[], startsFrom: Edit[] = []): number {
+  const theRooms = replay(setup, catalog, startsFrom).pieces;
+  const prices = new Map(catalog.items.map(({ id, priceEstimateUsd }) => [id, priceEstimateUsd]));
+  return Object.entries(replay(setup, catalog, edits).pieces)
+    .filter(([id]) => !theRooms[id]).reduce((total, [, { catalogId }]) => total + (prices.get(catalogId) ?? 0), 0);
+}
+
 /** Runs the Tool Runner until Claude stops calling tools or finishes, and returns the conversation so far. */
 async function run(
   client: Anthropic, params: ReturnType<typeof sharedRequest>, session: DesignSession,
@@ -115,7 +128,7 @@ export function refineMessage(setup: RoomSetup, catalog: Catalog, design: Design
     `The Design: "${design.name}", for the Brief "${brief.text}"${brief.styles?.length ? ` (${brief.styles.join(', ')})` : ''}.`,
     ...(design.rationale ? [`Its idea: ${design.rationale}`] : []),
     ...(design.palette ? [`Its Palette: ${JSON.stringify(design.palette)}`] : []),
-    `Budget: ${brief.budgetUsd !== undefined ? `$${brief.budgetUsd} for all the Pieces, those already placed included` : 'none given'}`,
+    `Budget: ${brief.budgetUsd !== undefined ? `$${brief.budgetUsd} for all the Pieces ${design.startedFrom ? 'this Design added to the room' : 'in it'}, those already placed included` : 'none given'}`,
     '',
     `The Mover asks: "${text}"`,
     '',

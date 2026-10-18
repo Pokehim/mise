@@ -49,6 +49,8 @@ export interface RoomSetup {
   openings: Opening[];
   originals: Original[];
   surfaces?: RoomSurfaces;           // ADR-0010: a room with no Capture, drawn from this setup alone
+  wholeEmptyRoom?: true;             // the mesh has the floor and walls whole behind every Original (a synthetic Scan), so
+                                     // the Empty Room shows where an Original stood, and no Patch is drawn
 }
 
 /**

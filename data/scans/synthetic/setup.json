@@ -194,5 +194,6 @@
       },
       "floorColor": "#b08d6a"
     }
-  ]
+  ],
+  "wholeEmptyRoom": true
 }

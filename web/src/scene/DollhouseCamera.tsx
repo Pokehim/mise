@@ -23,10 +23,14 @@ const PINCH_GAIN = 2;
 /** Wheel events further apart than this start a new zoom, which looks again at what is under the pointer. */
 const GESTURE_GAP_MS = 200;
 /**
- * How long the camera takes to catch up with the wheel, in seconds: most of the way in 2 of them.
- * camera-controls eases there with a critically damped spring, which never overshoots.
+ * How long the camera takes to catch up with the wheel or a drag, in seconds: most of the way in 2 of
+ * them. camera-controls eases there with a critically damped spring, which never overshoots.
  */
 const SMOOTH_TIME = 0.1;
+/** A move drag let go while moving glides on as far as it would have gone in this long, in ms. */
+const GLIDE_MS = 200;
+/** How far back a let-go drag looks for its speed, in ms; a pointer held still this long doesn't glide. */
+const GLIDE_WINDOW_MS = 80;
 const UP = new Vector3(0, 1, 0);
 
 /** How far the wheel event scrolled, in pixels, where a mouse-wheel notch is NOTCH_PX on every platform. */
@@ -118,13 +122,15 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
     const center = room.getCenter(new Vector3());
     const floor = new Plane(UP, -room.min.y);
     // Where the camera is going, rather than where it is this frame: a move drag aims from it, so
-    // pointer events between two frames, or during the zoom's easing, don't count a move twice.
+    // pointer events between two frames, or while the view eases, don't count a move twice.
     const goal = new PerspectiveCamera();
     let last = { time: -Infinity, x: 0, y: 0 };
     let drag: {
       pointerId: number; x: number; y: number; downX: number; downY: number;
       // A move drag holds the grabbed point on the plane through it; a turn drag has none.
       grabbed: { point: Vector3; plane: Plane } | null; turn: boolean;
+      // Where a move drag has sent the target lately, for the glide when it is let go.
+      trail: { time: number; x: number; z: number }[];
     } | null = null;
 
     const aimFrom = (clientX: number, clientY: number, from = camera) => {
@@ -198,7 +204,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
         const point = hitOf();
         if (point && point.y < goal.position.y - 0.1) grabbed = { point, plane: new Plane(UP, -point.y) };
       }
-      drag = { pointerId: event.pointerId, x, y, downX: x, downY: y, grabbed, turn };
+      drag = { pointerId: event.pointerId, x, y, downX: x, downY: y, grabbed, turn, trail: [] };
       element.dataset.dollhouse = 'moving';
     };
     const onPointerMove = (event: PointerEvent) => {
@@ -211,9 +217,12 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
         if (!grabbed) return;
         aimFrom(event.clientX, event.clientY, toGoal());
         if (!raycaster.ray.intersectPlane(grabbed.plane, under)) return;
-        // The boundary stops the target, and from there the grabbed point slips.
+        // Eased like the zoom, so uneven pointer events don't jerk the view; it catches up within
+        // a few frames. The boundary stops the target, and from there the grabbed point slips.
         cameraControls.getTarget(target, true).add(grabbed.point).sub(under);
-        void cameraControls.moveTo(target.x, target.y, target.z, false);
+        void cameraControls.moveTo(target.x, target.y, target.z, true);
+        cameraControls.getTarget(target, true);
+        drag.trail = [...drag.trail.filter(({ time }) => event.timeStamp - time <= GLIDE_WINDOW_MS), { time: event.timeStamp, x: target.x, z: target.z }];
         return;
       }
       const { height } = gl.domElement.getBoundingClientRect();
@@ -225,7 +234,18 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       void cameraControls.moveTo(target.x, target.y, target.z, true);
       void cameraControls.rotate(azimuth, polar, true);
     };
+    // Let go while moving, a move drag glides on and eases to a stop, like a map.
     const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerId !== drag?.pointerId) return;
+      const [first, last] = [drag.trail[0], drag.trail.at(-1)];
+      if (first && last && last.time > first.time && event.timeStamp - last.time <= GLIDE_WINDOW_MS) {
+        const glide = GLIDE_MS / (last.time - first.time);
+        cameraControls.getTarget(target, true);
+        void cameraControls.moveTo(target.x + (last.x - first.x) * glide, target.y, target.z + (last.z - first.z) * glide, true);
+      }
+      endDrag();
+    };
+    const onPointerCancel = (event: PointerEvent) => {
       if (event.pointerId === drag?.pointerId) endDrag();
     };
     // The right button turns the view, so it opens no menu.
@@ -238,7 +258,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
     element.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
+    window.addEventListener('pointercancel', onPointerCancel);
     return () => {
       element.removeEventListener('wheel', onWheel);
       element.removeEventListener('pointerdown', onPointerDown);
@@ -246,7 +266,7 @@ export function DollhouseCamera({ start }: { start?: Shot }) {
       delete element.dataset.dollhouse;
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
     };
   }, [element, gl, scene, camera, room]);
 

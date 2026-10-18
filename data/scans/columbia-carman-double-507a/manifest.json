@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "columbia-carman-double-507a",
+  "name": "Columbia · Carman Hall double",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  }
+}

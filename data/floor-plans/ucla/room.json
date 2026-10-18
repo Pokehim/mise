@@ -1,0 +1,150 @@
+{
+  "id": "ucla-dykstra-triple",
+  "school": "UCLA",
+  "hall": "Dykstra Hall (classic residence hall)",
+  "roomType": "Triple (classic; most classic-hall rooms are triples)",
+  "name": "UCLA · Dykstra Hall classic triple",
+  "sourceUrls": [
+    "https://housing.ucla.edu/new-students/classic-residence-hall",
+    "https://my.matterport.com/show/?m=iJ5yFEstcUU",
+    "https://ask.housing.ucla.edu/app/answers/detail/a_id/539/~/square-footage-of-rooms-in-on-campus-housing",
+    "https://ask.housing.ucla.edu/app/answers/detail/a_id/518",
+    "https://ask.housing.ucla.edu/app/answers/detail/a_id/541/~/desk-size-in-university-housing",
+    "https://ask.housing.ucla.edu/app/answers/detail/a_id/60",
+    "https://ask.housing.ucla.edu/app/answers/detail/a_id/522/~/drawer-size-in-on-campus-housing"
+  ],
+  "photoUrls": [
+    "https://my.matterport.com/show/?m=iJ5yFEstcUU"
+  ],
+  "planFile": "plan.jpg",
+  "derivedFrom": "scaled from plan (top-down 'floor plan' view of UCLA Housing's official Matterport tour) using the tour's measured 15'5\" entry-to-window length; cross-checked against the stated 12'5\" x 10'6\" classic-hall room size",
+  "ceilingHeightM": 2.45,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "carpet",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "Official Dykstra Matterport tour (https://my.matterport.com/show/?m=iJ5yFEstcUU) shows wall-to-wall beige carpet and smooth painted walls; the ceiling is not visible in the tour views checked, so 'drywall' is an assumption. No finish text published."
+  },
+  "polygon": [
+    [-1.723, -1.096],
+    [-1.092, -1.096],
+    [-1.092, -1.644],
+    [2.379, -1.644],
+    [2.379, 1.644],
+    [-0.046, 1.644],
+    [-0.046, 1.054],
+    [-1.723, 1.054],
+    [-1.723, 0.623],
+    [-2.379, 0.623],
+    [-2.379, -0.556],
+    [-1.723, -0.556]
+  ],
+  "openings": [
+    {
+      "kind": "window",
+      "wall": 3,
+      "offsetM": 0.95,
+      "widthM": 2.1
+    },
+    {
+      "kind": "door",
+      "wall": 9,
+      "offsetM": 0.134,
+      "widthM": 0.91,
+      "swing": "in-left"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Bunk bed (2 sleepers, XL twin)",
+      "category": "bed",
+      "center": [0.091, -1.142],
+      "size": [1.0, 1.65, 2.117],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Loft bed (elevated, over desks)",
+      "category": "bed",
+      "center": [1.019, 1.143],
+      "size": [1.0, 1.8, 2.109],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Triple-occupant wardrobe",
+      "category": "wardrobe",
+      "center": [1.814, -1.287],
+      "size": [0.914, 1.422, 0.635],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk (under window)",
+      "category": "desk",
+      "center": [2.061, -0.058],
+      "size": [1.092, 0.762, 0.635],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (window)",
+      "category": "chair",
+      "center": [1.772, -0.058],
+      "size": [0.457, 0.813, 0.457],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Desk A (south alcove)",
+      "category": "desk",
+      "center": [0.565, 1.326],
+      "size": [1.092, 0.762, 0.635],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk B (south alcove)",
+      "category": "desk",
+      "center": [1.71, 1.326],
+      "size": [1.092, 0.762, 0.635],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair A",
+      "category": "chair",
+      "center": [0.565, 0.86],
+      "size": [0.457, 0.813, 0.457],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair B",
+      "category": "chair",
+      "center": [1.71, 0.86],
+      "size": [0.457, 0.813, 0.457],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Built-in closet with drawers (north of entry)",
+      "category": "wardrobe",
+      "center": [-1.407, -0.826],
+      "size": [0.631, 1.93, 0.54],
+      "facing": "south",
+      "builtIn": true
+    },
+    {
+      "label": "Built-in closet with drawers (south of entry)",
+      "category": "wardrobe",
+      "center": [-1.407, 0.839],
+      "size": [0.631, 1.93, 0.432],
+      "facing": "north",
+      "builtIn": true
+    }
+  ],
+  "confidence": "low — no 2D plan is published; geometry is read from a top-down render of the official 3D scan, scaled by one in-tour measurement (±0.1 m), and agrees only roughly with the stated 12'5\" x 10'6\"; window width and all furniture positions are estimated from the tour.",
+  "notes": "No official 2D floor plan was found. UCLA Housing embeds Matterport tours (by FloorPlanOnline) and lists approximate sizes. The ask.housing room-size answer gives Hedrick/Rieber/Sproul/Dykstra as 12'5\" x 10'6\", and the scan's main room measures about 11'5\"-13'6\" x 10'10\" including the south desk alcove. Layout: a narrow entry passage from the west door between two built-in closets, then the main room. A bunk runs along the north wall. The south wall has a 0.6 m-deep desk alcove, with the loft bed above its desks (estimated). A wide three-panel window spans most of the east wall, with a desk below it. Official sizes: XL twin 36 x 80 in; desk 43W x 25D x 30H in; chair seat 18 x 18 in, back 32 in; Dykstra closet 76H x 41L x 24.5D in plus a side closet with 4 drawers 70 x 23 x 20; triple wardrobe 56H x 36W x 25D; classic-hall drawers are built into the closets. The alcove closets in the scan are smaller than the stated 41 in closet, so they are approximate. The door hinge side is assumed. Classic halls have no A/C and use community bathrooms."
+}

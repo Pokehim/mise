@@ -1,0 +1,132 @@
+{
+  "id": "columbia-carman-double-507a",
+  "school": "Columbia University (substitute for Princeton)",
+  "hall": "Carman Hall (room 507A)",
+  "roomType": "Double (suite: two doubles share a bathroom)",
+  "name": "Columbia · Carman Hall double",
+  "sourceUrls": [
+    "https://www.housing.columbia.edu/carman",
+    "https://www.housing.columbia.edu/sites/www.housing.columbia.edu/files/content/img/Buildings/Floor%20Plans/Carman/CAR_FL_05.jpg",
+    "https://roomselection.housing.columbia.edu/carman",
+    "https://www.housing.columbia.edu/content/about-your-new-home"
+  ],
+  "photoUrls": [
+    "https://www.housing.columbia.edu/sites/www.housing.columbia.edu/files/styles/cu_crop/public/content/img/Buildings/Carman/Carman1009A.jpg.webp",
+    "https://www.housing.columbia.edu/sites/www.housing.columbia.edu/files/styles/cu_crop/public/content/img/Buildings/Carman/Carman_Half%20of%20Double.JPG.webp"
+  ],
+  "planFile": "plan.png",
+  "derivedFrom": "scaled from plan using the printed room area (507A DBL 215 sf) on the official floor-5 sheet; no printed lengths",
+  "ceilingHeightM": 2.5,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "LVP",
+    "walls": "painted drywall",
+    "ceiling": "concrete",
+    "evidence": "Carman building page: 'Flooring: Hard surface'; room-selection page: 'Flooring: No carpet' (https://www.housing.columbia.edu/carman). Official room photos show wood-look plank floor and smooth painted walls. Ceiling not visible/stated: painted concrete slab is inferred from the 1959 concrete high-rise."
+  },
+  "polygon": [
+    [-1.551, -3.22],
+    [1.551, -3.22],
+    [1.551, 3.22],
+    [-1.551, 3.22]
+  ],
+  "openings": [
+    {
+      "kind": "door",
+      "wall": 1,
+      "offsetM": 0.73,
+      "widthM": 0.803,
+      "swing": "in-left"
+    },
+    {
+      "kind": "window",
+      "wall": 2,
+      "offsetM": 0.926,
+      "widthM": 1.25
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Closet A (built-in, bifold doors)",
+      "category": "wardrobe",
+      "center": [-0.775, -2.89],
+      "size": [1.551, 1.9, 0.66],
+      "facing": "south",
+      "builtIn": true
+    },
+    {
+      "label": "Closet B (built-in, bifold doors)",
+      "category": "wardrobe",
+      "center": [0.775, -2.89],
+      "size": [1.551, 1.9, 0.66],
+      "facing": "south",
+      "builtIn": true
+    },
+    {
+      "label": "Bed A (XL twin)",
+      "category": "bed",
+      "center": [-1.055, 2.204],
+      "size": [0.991, 0.75, 2.032],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Bed B (XL twin)",
+      "category": "bed",
+      "center": [1.055, 2.204],
+      "size": [0.991, 0.75, 2.032],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk A (with hutch)",
+      "category": "desk",
+      "center": [-1.246, 0.633],
+      "size": [0.91, 0.76, 0.61],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Desk B (with hutch)",
+      "category": "desk",
+      "center": [1.246, 0.633],
+      "size": [0.91, 0.76, 0.61],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair A",
+      "category": "chair",
+      "center": [-0.791, 0.633],
+      "size": [0.5, 0.85, 0.5],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair B",
+      "category": "chair",
+      "center": [0.791, 0.633],
+      "size": [0.5, 0.85, 0.5],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser A",
+      "category": "dresser",
+      "center": [-1.296, -0.302],
+      "size": [0.76, 0.76, 0.51],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser B",
+      "category": "dresser",
+      "center": [1.296, -0.302],
+      "size": [0.76, 0.76, 0.51],
+      "facing": "west",
+      "builtIn": false
+    }
+  ],
+  "confidence": "medium-low — official sheet prints only area (215 sf), so the 6.44 x 3.10 m (21'2\" x 10'2\") shell is scaled from that area on a low-res image (±3-4%); window size, all furniture sizes and positions are estimated from official photos because Columbia states it cannot provide furniture dimensions.",
+  "notes": "Substitute for Princeton. Princeton's floor plans are on a NetID-only SharePoint, and its hall pages give no room dimensions. The sheet's north arrow points left, so plan.png is rotated 90 degrees clockwise to put north up; plan-2.jpg is the original sheet. Double 507A pairs with 507B, which shares a vestibule and a single-use bathroom (one per four residents). Closets run along the full north wall behind bifold doors, about 0.6-0.7 m deep. Brick piers sit at both ends of the south (exterior) wall. The window is centered with a heating/AC unit below it (photo); its width (1.25 m) is an estimate and its heights are unknown. The entry-door gap measures about 0.80 m on the low-res sheet; it is probably a standard 0.86-0.91 m door. Furniture layout follows the official photo of 1009A: beds head-to-window along both long walls, desks with hutches mid-room, dressers near the door. All furniture sizes are generic estimates."
+}

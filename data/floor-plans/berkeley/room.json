@@ -1,0 +1,197 @@
+{
+  "id": "berkeley-blackwell-double",
+  "school": "UC Berkeley",
+  "hall": "Blackwell Hall",
+  "roomType": "Double",
+  "name": "UC Berkeley \u00b7 Blackwell Hall double",
+  "sourceUrls": [
+    "https://housing.berkeley.edu/blackwell-residence-hall/",
+    "https://housing.berkeley.edu/wp-content/uploads/BH-Double-Bed-Typical.jpg",
+    "https://housing.berkeley.edu/resident-resources/furnishings-in-my-room/"
+  ],
+  "photoUrls": [
+    "https://housing.berkeley.edu/wp-content/uploads/Blackwell-Room1-750px-700x500.jpg"
+  ],
+  "planFile": "plan.jpg",
+  "derivedFrom": "scaled from plan using the 80\" length of the twin XL bed (cross-check: door clear opening scales to 34\")",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "LVP",
+    "walls": "painted drywall",
+    "ceiling": "concrete",
+    "evidence": "Official Blackwell room photo shows wood-look plank flooring, smooth painted walls, and an exposed concrete ceiling slab with surface conduit and a ceiling fan (https://housing.berkeley.edu/wp-content/uploads/Blackwell-Room1-750px-700x500.jpg). Note the general furnishings page says 'Most rooms are carpeted' \u2014 the Blackwell photo contradicts that for this hall."
+  },
+  "polygon": [
+    [
+      -2.728,
+      -1.587
+    ],
+    [
+      2.728,
+      -1.587
+    ],
+    [
+      2.728,
+      1.587
+    ],
+    [
+      -2.728,
+      1.587
+    ]
+  ],
+  "openings": [
+    {
+      "kind": "window",
+      "wall": 1,
+      "offsetM": 1.366,
+      "widthM": 0.891
+    },
+    {
+      "kind": "door",
+      "wall": 3,
+      "offsetM": 0.83,
+      "widthM": 0.865,
+      "swing": "in-left"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Bed (west)",
+      "category": "bed",
+      "center": [
+        -1.66,
+        -1.081
+      ],
+      "size": [
+        0.943,
+        0.6,
+        2.032
+      ],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Bed (east)",
+      "category": "bed",
+      "center": [
+        1.656,
+        -1.081
+      ],
+      "size": [
+        0.943,
+        0.6,
+        2.023
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Microchill fridge/microwave niche",
+      "category": "storage",
+      "center": [
+        0.004,
+        -1.137
+      ],
+      "size": [
+        0.778,
+        0.8,
+        0.899
+      ],
+      "facing": "south",
+      "builtIn": true
+    },
+    {
+      "label": "Closet (west, built-in)",
+      "category": "wardrobe",
+      "center": [
+        -1.829,
+        1.249
+      ],
+      "size": [
+        1.349,
+        1.9,
+        0.674
+      ],
+      "facing": "north",
+      "builtIn": true
+    },
+    {
+      "label": "Desk (west)",
+      "category": "desk",
+      "center": [
+        -0.48,
+        1.245
+      ],
+      "size": [
+        1.038,
+        0.76,
+        0.597
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Closet (east, built-in)",
+      "category": "wardrobe",
+      "center": [
+        0.77,
+        1.249
+      ],
+      "size": [
+        1.375,
+        1.9,
+        0.674
+      ],
+      "facing": "north",
+      "builtIn": true
+    },
+    {
+      "label": "Desk (east)",
+      "category": "desk",
+      "center": [
+        2.14,
+        1.245
+      ],
+      "size": [
+        1.038,
+        0.76,
+        0.597
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (west)",
+      "category": "chair",
+      "center": [
+        -0.476,
+        0.631
+      ],
+      "size": [
+        0.631,
+        0.85,
+        0.631
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (east)",
+      "category": "chair",
+      "center": [
+        2.144,
+        0.631
+      ],
+      "size": [
+        0.631,
+        0.85,
+        0.631
+      ],
+      "facing": "south",
+      "builtIn": false
+    }
+  ],
+  "confidence": "medium \u2014 a real architectural plan of the typical Blackwell double, but with no printed dimensions; all lengths are scaled from the 80\" bed (door width agrees). Ceiling height is assumed and chair footprints are rounded from 5-star-base glyphs.",
+  "notes": "Official text: door swings in and faces a window centred on the opposite wall; left wall has two XL twin beds with the Microchill fridge/microwave between them; right wall alternates closet, desk, closet, desk. Beds have dashed under-bed drawers. Closets show a dashed shelf/rod line. A narrow ~8\"x24\" element (pilaster/chase or shelf) sits in the SW corner beside the west closet and is not modelled. Scaled room ~17.9' x 10.4' (~186 sq ft); Blackwell advertises larger-than-standard rooms. Blackwell is a residence hall used by first-years but is the premium option; the classic Units 1-3 doubles only have a 250px 3D render (units-double_top-250px.jpg kept for reference)."
+}

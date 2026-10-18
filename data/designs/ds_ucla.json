@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "id": "ds_ucla",
+  "scanId": "ucla-dykstra-triple",
+  "name": "Move-in layout",
+  "createdAt": "2026-10-18T08:00:00.000Z",
+  "updatedAt": "2026-10-18T08:00:00.000Z",
+  "origin": "mover",
+  "edits": [
+    {
+      "id": "ed_1",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_1",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          0.199,
+          0,
+          -1.142
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_2",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_2",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          0.299,
+          0,
+          -0.164
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_3",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_3",
+      "catalogId": "B07GFFPKFV",
+      "placement": {
+        "position": [
+          1.728,
+          0,
+          -1.347
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_4",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_4",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          2.058,
+          0,
+          -0.44
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_6",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_6",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          -0.078,
+          0,
+          0.719
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_7",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_7",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          1.808,
+          0,
+          0.426
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_8",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_8",
+      "catalogId": "B07MDJXWGN",
+      "placement": {
+        "position": [
+          -0.959,
+          0,
+          -0.013
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_10",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_10",
+      "catalogId": "B079TYF1GK",
+      "placement": {
+        "position": [
+          -1.35,
+          0,
+          -0.846
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_11",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_11",
+      "catalogId": "B07TWQSZL4",
+      "placement": {
+        "position": [
+          -1.407,
+          0,
+          0.881
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    }
+  ]
+}

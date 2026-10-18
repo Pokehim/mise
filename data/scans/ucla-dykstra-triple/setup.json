@@ -1,0 +1,292 @@
+{
+  "version": 1,
+  "scanId": "ucla-dykstra-triple",
+  "ceilingHeight": 2.45,
+  "floor": {
+    "polygon": [
+      [
+        -1.723,
+        -1.096
+      ],
+      [
+        -1.092,
+        -1.096
+      ],
+      [
+        -1.092,
+        -1.644
+      ],
+      [
+        2.379,
+        -1.644
+      ],
+      [
+        2.379,
+        1.644
+      ],
+      [
+        -0.046,
+        1.644
+      ],
+      [
+        -0.046,
+        1.054
+      ],
+      [
+        -1.723,
+        1.054
+      ],
+      [
+        -1.723,
+        0.623
+      ],
+      [
+        -2.379,
+        0.623
+      ],
+      [
+        -2.379,
+        -0.556
+      ],
+      [
+        -1.723,
+        -0.556
+      ]
+    ]
+  },
+  "walls": [
+    {
+      "id": "wl_1",
+      "name": "North wall",
+      "start": [
+        -1.723,
+        -1.096
+      ],
+      "end": [
+        -1.092,
+        -1.096
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_2",
+      "name": "West wall",
+      "start": [
+        -1.092,
+        -1.096
+      ],
+      "end": [
+        -1.092,
+        -1.644
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_3",
+      "name": "North wall 2",
+      "start": [
+        -1.092,
+        -1.644
+      ],
+      "end": [
+        2.379,
+        -1.644
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_4",
+      "name": "East wall",
+      "start": [
+        2.379,
+        -1.644
+      ],
+      "end": [
+        2.379,
+        1.644
+      ],
+      "normal": [
+        -1,
+        0
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_5",
+      "name": "South wall",
+      "start": [
+        2.379,
+        1.644
+      ],
+      "end": [
+        -0.046,
+        1.644
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_6",
+      "name": "West wall 2",
+      "start": [
+        -0.046,
+        1.644
+      ],
+      "end": [
+        -0.046,
+        1.054
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_7",
+      "name": "South wall 2",
+      "start": [
+        -0.046,
+        1.054
+      ],
+      "end": [
+        -1.723,
+        1.054
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_8",
+      "name": "West wall 3",
+      "start": [
+        -1.723,
+        1.054
+      ],
+      "end": [
+        -1.723,
+        0.623
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_9",
+      "name": "South wall 3",
+      "start": [
+        -1.723,
+        0.623
+      ],
+      "end": [
+        -2.379,
+        0.623
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_10",
+      "name": "West wall 4",
+      "start": [
+        -2.379,
+        0.623
+      ],
+      "end": [
+        -2.379,
+        -0.556
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_11",
+      "name": "North wall 3",
+      "start": [
+        -2.379,
+        -0.556
+      ],
+      "end": [
+        -1.723,
+        -0.556
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.45
+    },
+    {
+      "id": "wl_12",
+      "name": "West wall 5",
+      "start": [
+        -1.723,
+        -0.556
+      ],
+      "end": [
+        -1.723,
+        -1.096
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.45
+    }
+  ],
+  "openings": [
+    {
+      "id": "op_1",
+      "kind": "window",
+      "wallId": "wl_4",
+      "offset": 0.95,
+      "width": 2.1,
+      "bottom": 0.9,
+      "height": 1.3
+    },
+    {
+      "id": "op_2",
+      "kind": "door",
+      "wallId": "wl_10",
+      "offset": 0.134,
+      "width": 0.91,
+      "bottom": 0,
+      "height": 2.03,
+      "swing": "in-left"
+    }
+  ],
+  "originals": [],
+  "surfaces": {
+    "walls": "drywall",
+    "wallColor": "#ede8de",
+    "floor": "carpet-grey",
+    "ceiling": "drywall",
+    "baseboard": "rubber"
+  }
+}

@@ -53,6 +53,11 @@ interface FinishUniforms {
   /** The meters one repeat of the texture is wide. */
   uMatTile: IUniform<number>;
   uMatTint: IUniform<Color>;
+  /**
+   * How much of the surface's own texture shows through the material: 1 for a Scan, whose texture
+   * holds its light, 0 for a room with no Capture (ADR-0010), whose light is in a light map instead.
+   */
+  uMatDetail: IUniform<number>;
 }
 
 // The world position and normal of each fragment. The normal is the mesh's, when it has one, and the
@@ -71,6 +76,7 @@ uniform bool uMatEnabled;
 uniform sampler2D uMatMap;
 uniform float uMatTile;
 uniform vec3 uMatTint;
+uniform float uMatDetail;
 `;
 const COLOR_CHUNK = '#include <color_fragment>';
 const FRAGMENT = `${COLOR_CHUNK}
@@ -85,7 +91,7 @@ if ( uMatEnabled ) {
     texture2D( uMatMap, vFinishPos.zy * tiles ).rgb * w.x +
     texture2D( uMatMap, vFinishPos.xz * tiles ).rgb * w.y +
     texture2D( uMatMap, vFinishPos.xy * tiles ).rgb * w.z;
-  diffuseColor.rgb = finishColor * uMatTint * clamp( luminance( diffuseColor.rgb ) / uAvgLum, 0.0, 2.0 );
+  diffuseColor.rgb = finishColor * uMatTint * mix( 1.0, clamp( luminance( diffuseColor.rgb ) / uAvgLum, 0.0, 2.0 ), uMatDetail );
 }`;
 
 // recolor.ts keeps its patch to itself, so this takes it from a material it has patched. It is the
@@ -124,6 +130,7 @@ export function applyFinish(
   if (!uniforms) {
     uniforms = {
       uMatEnabled: { value: false }, uMatMap: { value: null }, uMatTile: { value: 1 }, uMatTint: { value: new Color(1, 1, 1) },
+      uMatDetail: { value: material.userData.finishDetail ?? 1 },
     };
     uniformsOf.set(material, uniforms);
     recolor(material, null, avgLuminance);   // its uniforms, and the patch ours chains to

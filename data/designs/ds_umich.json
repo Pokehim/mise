@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "id": "ds_umich",
+  "scanId": "umich-wolverine-village-double",
+  "name": "Move-in layout",
+  "createdAt": "2026-10-18T08:00:00.000Z",
+  "updatedAt": "2026-10-18T08:00:00.000Z",
+  "origin": "mover",
+  "edits": [
+    {
+      "id": "ed_1",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_1",
+      "catalogId": "B07H8V7P3H",
+      "placement": {
+        "position": [
+          -2.367,
+          0,
+          -1.329
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_2",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_2",
+      "catalogId": "B07H8V7P3H",
+      "placement": {
+        "position": [
+          -2.424,
+          0,
+          1.331
+        ],
+        "rotationY": 1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_3",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_3",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          -0.607,
+          0,
+          -1.396
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_4",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_4",
+      "catalogId": "B07MDJXWGN",
+      "placement": {
+        "position": [
+          -0.607,
+          0,
+          -0.74
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_5",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_5",
+      "catalogId": "B07QGFS4JC",
+      "placement": {
+        "position": [
+          -0.607,
+          0,
+          1.435
+        ],
+        "rotationY": 3.141592653589793,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_6",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_6",
+      "catalogId": "B07MDJXWGN",
+      "placement": {
+        "position": [
+          -0.607,
+          0,
+          0.779
+        ],
+        "rotationY": 0,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_7",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_7",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          1.782,
+          0,
+          -1.179
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_8",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_8",
+      "catalogId": "B0856FL9HR",
+      "placement": {
+        "position": [
+          1.779,
+          0,
+          1.042
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_9",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_9",
+      "catalogId": "B07M7NSYD3",
+      "placement": {
+        "position": [
+          0.548,
+          0,
+          -1.256
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    },
+    {
+      "id": "ed_10",
+      "at": "2026-10-18T08:00:00.000Z",
+      "by": "mover",
+      "type": "place",
+      "pieceId": "pc_10",
+      "catalogId": "B07M7NSYD3",
+      "placement": {
+        "position": [
+          0.557,
+          0,
+          1.215
+        ],
+        "rotationY": -1.5707963267948966,
+        "mount": "floor"
+      }
+    }
+  ]
+}

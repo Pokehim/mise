@@ -1,0 +1,131 @@
+{
+  "id": "gatech-peterson-double",
+  "school": "Georgia Tech",
+  "hall": "Bud & Val Peterson Residence Hall (room N303 type)",
+  "roomType": "Double (traditional)",
+  "name": "Georgia Tech · Peterson Hall double",
+  "sourceUrls": [
+    "https://housing.gatech.edu/locations/bud-val-peterson",
+    "https://housing.gatech.edu/wp-content/uploads/2026/04/PTR-3.pdf",
+    "https://housing.gatech.edu/housing-options/residence-halls/room-specifications"
+  ],
+  "photoUrls": [
+    "https://housing.gatech.edu/wp-content/uploads/2026/08/DSC00981-HDR-scaled.jpg",
+    "https://housing.gatech.edu/wp-content/uploads/2026/08/DSC01000-HDR-scaled.jpg"
+  ],
+  "planFile": "plan.png",
+  "derivedFrom": "scaled from plan using the official bed frame length (85.5 in, Room & Furniture Info page) drawn in the room; cross-checked with bed width 38 in (2% off) and the 36 in entry door",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "LVP",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "Official Peterson room photos show wood-look plank flooring, smooth painted walls and a smooth painted ceiling (https://housing.gatech.edu/wp-content/uploads/2026/08/DSC00981-HDR-scaled.jpg). No finish text published."
+  },
+  "polygon": [
+    [-1.622, -2.503],
+    [1.622, -2.503],
+    [1.622, 2.503],
+    [-1.622, 2.503]
+  ],
+  "openings": [
+    {
+      "kind": "door",
+      "wall": 0,
+      "offsetM": 1.344,
+      "widthM": 0.91,
+      "swing": "in-left"
+    },
+    {
+      "kind": "window",
+      "wall": 2,
+      "offsetM": 1.022,
+      "widthM": 1.201
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Closet A (built-in, open front)",
+      "category": "wardrobe",
+      "center": [-1.245, -2.206],
+      "size": [0.755, 1.9, 0.595],
+      "facing": "south",
+      "builtIn": true
+    },
+    {
+      "label": "Closet B (built-in, open front)",
+      "category": "wardrobe",
+      "center": [1.246, -2.206],
+      "size": [0.753, 1.9, 0.595],
+      "facing": "south",
+      "builtIn": true
+    },
+    {
+      "label": "Dresser A",
+      "category": "dresser",
+      "center": [-1.241, -1.101],
+      "size": [0.762, 0.762, 0.61],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser B",
+      "category": "dresser",
+      "center": [1.241, -1.101],
+      "size": [0.762, 0.762, 0.61],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk A",
+      "category": "desk",
+      "center": [-1.318, -0.261],
+      "size": [0.814, 0.762, 0.61],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Desk B",
+      "category": "desk",
+      "center": [1.318, -0.261],
+      "size": [0.814, 0.762, 0.61],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair A",
+      "category": "chair",
+      "center": [-0.84, -0.261],
+      "size": [0.508, 0.838, 0.584],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair B",
+      "category": "chair",
+      "center": [0.84, -0.261],
+      "size": [0.508, 0.838, 0.584],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Bed A (XL twin)",
+      "category": "bed",
+      "center": [-1.14, 1.356],
+      "size": [0.965, 0.6, 2.172],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Bed B (XL twin)",
+      "category": "bed",
+      "center": [1.14, 1.356],
+      "size": [0.965, 0.6, 2.172],
+      "facing": "north",
+      "builtIn": false
+    }
+  ],
+  "confidence": "medium — official vector floor plan with furniture drawn but no printed dimensions; room (3.24 x 5.01 m, about 10'8\" x 16'5\") is scaled from the official 85.5 in bed frame, so ±2-3%; door hinge side, window height and ceiling height are not shown.",
+  "notes": "Peterson (opened Fall 2026) is a First-Year Wellness Experience hall of traditional doubles, and the floor plans draw furniture, which older halls such as Towers do not. Georgia Tech publishes no room dimensions. Its window FAQ says only that sizes vary. Closets are open niches formed by two 0.59 m fins off the corridor wall. The page lists 'Closet, Desk, Desk Chair, Dresser, Twin Bed', so there is no wardrobe. The plan draws each desk about 32 in wide, but the campus-wide spec gives Desk 42 x 24 x 30 in. The plan width is used here. Other official sizes: Dresser 30W x 24D x 30H in, Chair 20 x 23 x 33 in, Wardrobe (other halls) 36 x 24 x 76 in. Beds loft to Low (8 in clearance), Medium (~3 ft), High (~6 ft) or bunked, and the bed height of 0.6 m is a default. The door swing is not drawn, so in-left is assumed. Chairs are drawn partly tucked under the desks."
+}

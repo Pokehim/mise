@@ -1,0 +1,227 @@
+{
+  "id": "uw-lander-double",
+  "school": "University of Washington (Seattle)",
+  "hall": "Lander Hall",
+  "roomType": "Double, private bath",
+  "name": "UW \u00b7 Lander Hall double",
+  "sourceUrls": [
+    "https://hfs.uw.edu/live-on-campus/undergraduate-housing/lander-hall",
+    "https://hfs.uw.edu/media/auga1540/lander-double.jpg",
+    "https://hfs.uw.edu/conference-services/summer-conference-center/seattle-intern-housing/"
+  ],
+  "photoUrls": [
+    "https://hfs.uw.edu/media/qk1fbocg/lander-bedroom.jpg"
+  ],
+  "planFile": "plan.jpg",
+  "derivedFrom": "scaled from plan using the 80\" length of the twin XL bed (cross-check: entry door scales to 36\", wardrobes and desks to 36\")",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "carpet",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "Official Lander double photo shows dark charcoal carpet (likely carpet tile), smooth painted walls, and a smooth painted ceiling with a dropped soffit over the entry (https://hfs.uw.edu/media/qk1fbocg/lander-bedroom.jpg). No text states finishes."
+  },
+  "polygon": [
+    [
+      -3.642,
+      -1.819
+    ],
+    [
+      3.642,
+      -1.819
+    ],
+    [
+      3.642,
+      -0.295
+    ],
+    [
+      0.574,
+      -0.295
+    ],
+    [
+      0.574,
+      1.819
+    ],
+    [
+      -3.642,
+      1.819
+    ]
+  ],
+  "openings": [
+    {
+      "kind": "window",
+      "wall": 5,
+      "offsetM": 1.118,
+      "widthM": 2.154
+    },
+    {
+      "kind": "door",
+      "wall": 1,
+      "offsetM": 0.518,
+      "widthM": 0.925,
+      "swing": "in-right"
+    },
+    {
+      "kind": "door",
+      "wall": 2,
+      "offsetM": 1.981,
+      "widthM": 0.864,
+      "swing": "none"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Bed (north)",
+      "category": "bed",
+      "center": [
+        -2.593,
+        -1.303
+      ],
+      "size": [
+        0.97,
+        0.6,
+        2.068
+      ],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Bed (south)",
+      "category": "bed",
+      "center": [
+        -0.472,
+        1.328
+      ],
+      "size": [
+        0.96,
+        0.6,
+        2.042
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk (north)",
+      "category": "desk",
+      "center": [
+        -0.742,
+        -1.468
+      ],
+      "size": [
+        0.925,
+        0.76,
+        0.62
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (north)",
+      "category": "chair",
+      "center": [
+        -0.569,
+        -0.818
+      ],
+      "size": [
+        0.508,
+        0.85,
+        0.508
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk (southwest)",
+      "category": "desk",
+      "center": [
+        -3.183,
+        1.486
+      ],
+      "size": [
+        0.919,
+        0.76,
+        0.665
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (southwest)",
+      "category": "chair",
+      "center": [
+        -3.18,
+        0.838
+      ],
+      "size": [
+        0.508,
+        0.85,
+        0.508
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Wardrobe (west)",
+      "category": "wardrobe",
+      "center": [
+        1.026,
+        -1.514
+      ],
+      "size": [
+        0.925,
+        1.9,
+        0.61
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Wardrobe (east)",
+      "category": "wardrobe",
+      "center": [
+        1.953,
+        -1.514
+      ],
+      "size": [
+        0.93,
+        1.9,
+        0.61
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (northwest)",
+      "category": "dresser",
+      "center": [
+        -3.365,
+        -0.61
+      ],
+      "size": [
+        0.554,
+        0.9,
+        0.396
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (south)",
+      "category": "dresser",
+      "center": [
+        0.292,
+        0.617
+      ],
+      "size": [
+        0.564,
+        0.9,
+        0.401
+      ],
+      "facing": "north",
+      "builtIn": false
+    }
+  ],
+  "confidence": "medium \u2014 a real official plan without printed dimensions; scaled from the bed with three independent 36\" cross-checks agreeing (\u00b13%). HFS says exact dimensions vary room to room. Ceiling height assumed; chairs are rotated glyphs approximated as 20\" squares.",
+  "notes": "L-shaped bedroom: the private bathroom (toilet, sink, shower; ~10' x 6.9' outside the polygon) occupies the SE corner. Third opening is the bathroom door, which swings INTO the bathroom (hinge on its west side), hence swing 'none'. Entry door on the east wall. Wardrobes are freestanding wood units (per photo). The two ~22\"x16\" casegoods are labelled dressers but may be nightstand-height. Official photo shows beds lofted over desks. Overall envelope incl. bath ~23.9' x 11.9'; bedroom floor ~215 sq ft. Lander houses many first-years."
+}

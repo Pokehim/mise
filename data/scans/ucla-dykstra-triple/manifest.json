@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "ucla-dykstra-triple",
+  "name": "UCLA · Dykstra Hall classic triple",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  }
+}

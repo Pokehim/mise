@@ -100,8 +100,17 @@ describe('applyFinish', () => {
     const afterColor = fragmentShader.slice(fragmentShader.indexOf('#include <color_fragment>'));
     expect(afterColor.indexOf('if ( uEnabled )')).toBeGreaterThan(-1);
     expect(afterColor.indexOf('if ( uMatEnabled )')).toBeGreaterThan(afterColor.indexOf('if ( uEnabled )'));
-    expect(afterColor).toMatch(/diffuseColor\.rgb = finishColor \* uMatTint \* clamp\(.*\/ uAvgLum, 0\.0, 2\.0\s*\)/);
+    expect(afterColor).toMatch(/diffuseColor\.rgb = finishColor \* uMatTint \* mix\( 1\.0, clamp\(.*\/ uAvgLum, 0\.0, 2\.0\s*\), uMatDetail \)/);
     expect(fragmentShader.match(/#include <color_fragment>/g)).toHaveLength(1);
+    // A Scan's texture holds its light, so all of it shows through the material.
+    expect(uniforms.uMatDetail.value).toBe(1);
+  });
+
+  it("drops a room's own detail under a material when its light is in a light map (ADR-0010)", () => {
+    const material = new MeshBasicMaterial();
+    material.userData.finishDetail = 0;
+    applyFinish(material, { kind: 'material', materialId: 'oak' }, 0.4, library);
+    expect(compile(material, ShaderLib.basic).uniforms.uMatDetail.value).toBe(0);
   });
 
   it('gives every material the same patch function, so they all share one compiled program', () => {

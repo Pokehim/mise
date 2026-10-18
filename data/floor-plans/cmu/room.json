@@ -1,0 +1,199 @@
+{
+  "id": "cmu-donner-double",
+  "school": "Carnegie Mellon University",
+  "hall": "Donner House",
+  "roomType": "Traditional Double",
+  "name": "CMU \u00b7 Donner House traditional double",
+  "sourceUrls": [
+    "https://www.cmu.edu/housing/our-communities/residences/donner.html",
+    "https://www.cmu.edu/housing/our-communities/residences/floor-plans/donner-house/donner_traditional-double_floor-plan.pdf",
+    "https://www.cmu.edu/housing/about-us/frequently-asked-questions.html",
+    "https://www.cmu.edu/housing/resident-services/what-to-bring.html"
+  ],
+  "photoUrls": [
+    "https://www.cmu.edu/housing/our-communities/housing-images-tours/Donner/Donner%20standard%20double-min.JPG",
+    "https://www.cmu.edu/housing/our-communities/housing-images-tours/Donner/Donner%20standard%20double%20with%20view%20toward%20closets-min.jpg"
+  ],
+  "planFile": "plan.png",
+  "derivedFrom": "printed dimensions (13'-3 1/8\" x 15'-11 1/16\" interior); furniture and openings scaled from the plan using those printed dimensions",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "carpet",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "Official Donner double photos show wall-to-wall blue-grey carpet, smooth white painted walls with a chair rail, and a smooth painted ceiling with cove trim (wall/ceiling could be painted plaster; no text states the finish). https://www.cmu.edu/housing/our-communities/housing-images-tours/Donner/Donner%20standard%20double-min.JPG"
+  },
+  "polygon": [
+    [
+      -2.021,
+      -2.426
+    ],
+    [
+      2.021,
+      -2.426
+    ],
+    [
+      2.021,
+      2.426
+    ],
+    [
+      -2.021,
+      2.426
+    ]
+  ],
+  "openings": [
+    {
+      "kind": "window",
+      "wall": 0,
+      "offsetM": 0.05,
+      "widthM": 3.94
+    },
+    {
+      "kind": "door",
+      "wall": 2,
+      "offsetM": 1.681,
+      "widthM": 0.852,
+      "swing": "in-right"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Bed (west)",
+      "category": "bed",
+      "center": [
+        -1.484,
+        -1.174
+      ],
+      "size": [
+        0.99,
+        0.6,
+        2.135
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Bed (east)",
+      "category": "bed",
+      "center": [
+        1.486,
+        -1.278
+      ],
+      "size": [
+        0.993,
+        0.6,
+        1.982
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk",
+      "category": "desk",
+      "center": [
+        -0.032,
+        -1.964
+      ],
+      "size": [
+        1.219,
+        0.76,
+        0.611
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair",
+      "category": "chair",
+      "center": [
+        -0.024,
+        -1.715
+      ],
+      "size": [
+        0.458,
+        0.85,
+        0.458
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Chair (by west bed)",
+      "category": "chair",
+      "center": [
+        -0.759,
+        -0.724
+      ],
+      "size": [
+        0.458,
+        0.85,
+        0.458
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (west)",
+      "category": "dresser",
+      "center": [
+        -1.73,
+        0.342
+      ],
+      "size": [
+        0.812,
+        0.9,
+        0.502
+      ],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (east)",
+      "category": "dresser",
+      "center": [
+        1.717,
+        0.18
+      ],
+      "size": [
+        0.812,
+        0.9,
+        0.507
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Closet (west, built-in)",
+      "category": "wardrobe",
+      "center": [
+        -1.31,
+        2.103
+      ],
+      "size": [
+        1.423,
+        1.9,
+        0.644
+      ],
+      "facing": "north",
+      "builtIn": true
+    },
+    {
+      "label": "Closet (east, built-in)",
+      "category": "wardrobe",
+      "center": [
+        1.348,
+        2.103
+      ],
+      "size": [
+        1.347,
+        1.9,
+        0.644
+      ],
+      "facing": "north",
+      "builtIn": true
+    }
+  ],
+  "confidence": "high \u2014 room size is printed on the official plan and furniture/door positions are scaled from it (\u00b11\"); the window extent and ceiling height are estimated from official photos, and CMU notes plan measurements are estimates.",
+  "notes": "A 5\"-deep sill/convector strip runs the full north (window) wall; furniture sits in front of it. Built-in closets are open alcoves (shelf + rod, no doors) under a soffit flanking the recessed entry door, per the official photo. Plan shows one 48\"x24\" desk centred under the window and two chairs; the official photo shows furniture rearranged (two desks along the side walls, dressers under the window). CMU states the mattress is twin XL 39\"x80\"; beds are drawn 39\"x84\" (west) and 39\"x78\" (east). Hall is first-year housing."
+}

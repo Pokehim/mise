@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "gatech-peterson-double",
+  "name": "Georgia Tech · Peterson Hall double",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  }
+}

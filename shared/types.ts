@@ -48,6 +48,19 @@ export interface RoomSetup {
   walls: Wall[];                     // one per polygon edge
   openings: Opening[];
   originals: Original[];
+  surfaces?: RoomSurfaces;           // ADR-0010: a room with no Capture, drawn from this setup alone
+}
+
+/**
+ * What a room with no Capture is made of, so the editor can draw it as it really is (ADR-0010).
+ * Its light is computed when it loads, so paint and Finishes keep the room's light and shadows.
+ */
+export interface RoomSurfaces {
+  walls: 'drywall' | 'cinderblock';
+  wallColor: Hex;                    // the paint on the walls now: "#ece8df"
+  floor: string;                     // a Material Library id ("carpet-grey", "oak"), or "vct": vinyl tile
+  ceiling: 'drywall' | 'acoustic-tile';
+  baseboard: 'rubber' | 'wood';
 }
 
 export interface Wall {

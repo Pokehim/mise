@@ -1,0 +1,138 @@
+{
+  "id": "umich-wolverine-village-double",
+  "school": "University of Michigan",
+  "hall": "Wolverine Village (Building 1)",
+  "roomType": "Double",
+  "name": "Michigan · Wolverine Village double",
+  "sourceUrls": [
+    "https://housing.umich.edu/wp-content/uploads/2025/12/CCRD-Room-Floor-Plans-Double.pdf",
+    "https://housing.umich.edu/residence-hall/wolverine-village-building-1/",
+    "https://kb.housing.umich.edu/hc/en-us/articles/360003071492-Lifespace-II-Modular-Furniture-Information",
+    "https://kb.housing.umich.edu/hc/en-us/articles/360002986491-Room-Furniture",
+    "https://kb.housing.umich.edu/hc/en-us/articles/27512969150861-Residence-Hall-Room-Dimensions"
+  ],
+  "photoUrls": [
+    "https://housing.umich.edu/wp-content/uploads/2026/06/SL-6-017-Wolverine-Village-Room-Doodles-01-R1.jpg"
+  ],
+  "planFile": "plan.png",
+  "derivedFrom": "scaled from plan using the official Lifespace II furniture drawn on it (bed 80in x 40.5in, desk/dresser 36.5in x 24in; all four agree within 1%)",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "LVP",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "Official Wolverine Village room photo shows wood-look plank flooring, smooth painted walls and a smooth ceiling with a linear light (https://housing.umich.edu/wp-content/uploads/2026/06/SL-6-017-Wolverine-Village-Room-Doodles-01-R1.jpg). No finish text found."
+  },
+  "polygon": [
+    [-2.724, -1.824],
+    [2.724, -1.824],
+    [2.724, 1.824],
+    [-2.724, 1.824]
+  ],
+  "openings": [
+    {
+      "kind": "window",
+      "wall": 1,
+      "offsetM": 0.573,
+      "widthM": 0.958
+    },
+    {
+      "kind": "window",
+      "wall": 1,
+      "offsetM": 1.927,
+      "widthM": 0.942
+    },
+    {
+      "kind": "door",
+      "wall": 3,
+      "offsetM": 1.152,
+      "widthM": 0.916,
+      "swing": "in-left"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Closet (open, rod) A",
+      "category": "wardrobe",
+      "center": [-2.416, -1.347],
+      "size": [0.954, 1.9, 0.616],
+      "facing": "east",
+      "builtIn": true
+    },
+    {
+      "label": "Closet (open, rod) B",
+      "category": "wardrobe",
+      "center": [-2.416, 1.331],
+      "size": [0.986, 1.9, 0.616],
+      "facing": "east",
+      "builtIn": true
+    },
+    {
+      "label": "Desk A",
+      "category": "desk",
+      "center": [-0.607, -1.421],
+      "size": [0.927, 0.768, 0.61],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair A",
+      "category": "chair",
+      "center": [-0.607, -0.933],
+      "size": [0.342, 0.85, 0.321],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk B",
+      "category": "desk",
+      "center": [-0.607, 1.46],
+      "size": [0.927, 0.768, 0.61],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair B",
+      "category": "chair",
+      "center": [-0.607, 0.972],
+      "size": [0.342, 0.85, 0.321],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Bed A (XL twin, Lifespace II)",
+      "category": "bed",
+      "center": [1.609, -1.255],
+      "size": [1.029, 0.762, 2.032],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Bed B (XL twin, Lifespace II)",
+      "category": "bed",
+      "center": [1.64, 1.213],
+      "size": [1.029, 0.762, 2.032],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser A (under bed foot)",
+      "category": "dresser",
+      "center": [0.662, -1.256],
+      "size": [0.927, 0.768, 0.61],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser B (under bed foot)",
+      "category": "dresser",
+      "center": [0.692, 1.213],
+      "size": [0.927, 0.768, 0.61],
+      "facing": "west",
+      "builtIn": false
+    }
+  ],
+  "confidence": "medium — official to-scale layout diagram with no printed dimensions; scale comes from official furniture sizes drawn on it (agree within 1%), so room size (5.45 x 3.65 m, about 17'10\" x 12'0\") is measured to roughly ±3%; the sheet says 'Example Room Layout | Actual Room Layouts May Vary'; window heights and ceiling are unknown.",
+  "notes": "Wolverine Village (Central Campus Residential Development) opened 2026; Building 1 houses 'first-year and returning students'. Older halls (Markley, Bursley, Mosher-Jordan) publish no plans; Housing's KB says 'Many of our double rooms are 11 feet by 12 feet' as an average and now points students to Roomie 3D models. Closets are open niches formed by 0.10 m-thick, 0.61 m-deep partition fins off the west wall (no doors drawn). The drawing shows each dresser partly under the foot of its bed (Lifespace II beds can sit on/over the dresser), so bed and dresser footprints overlap by design. Other official Lifespace II pieces: bookcase 36in W x 12in D x 30in H, desktop SmartBar 36 x 12 x 30; loft clearance 58in, half-loft 28.5in. Window sizes are measured on plan; sill/head heights not given."
+}

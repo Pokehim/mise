@@ -1,0 +1,180 @@
+{
+  "id": "stanford-wilbur-double",
+  "school": "Stanford University",
+  "hall": "Wilbur Hall",
+  "roomType": "Double",
+  "name": "Stanford \u00b7 Wilbur Hall double",
+  "sourceUrls": [
+    "https://rde.stanford.edu/studenthousing/wilbur-hall",
+    "https://rde.stanford.edu/sites/default/files/housing_heading_image_images/wilbur_2bed_0_1000x680.jpg",
+    "https://rde.stanford.edu/studenthousing/preparing-to-move-in"
+  ],
+  "photoUrls": [],
+  "planFile": "plan.jpg",
+  "derivedFrom": "scaled from plan using the 80\" length of the extra-long twin bed (Stanford: twin XL 36\"x80\")",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "carpet",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "Floor: Wilbur Hall page lists 'Wall-to-wall carpeting' (https://rde.stanford.edu/studenthousing/wilbur-hall). Walls and ceiling are NOT documented and no official room photo was found; painted drywall/drywall are assumptions."
+  },
+  "polygon": [
+    [
+      -2.394,
+      -1.733
+    ],
+    [
+      2.394,
+      -1.733
+    ],
+    [
+      2.394,
+      1.733
+    ],
+    [
+      -2.394,
+      1.733
+    ]
+  ],
+  "openings": [
+    {
+      "kind": "window",
+      "wall": 1,
+      "offsetM": 0.957,
+      "widthM": 1.552
+    },
+    {
+      "kind": "door",
+      "wall": 3,
+      "offsetM": 1.347,
+      "widthM": 0.765,
+      "swing": "in-left"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Bed (north)",
+      "category": "bed",
+      "center": [
+        0.222,
+        -1.226
+      ],
+      "size": [
+        0.97,
+        0.6,
+        2.032
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Bed (south)",
+      "category": "bed",
+      "center": [
+        0.222,
+        1.229
+      ],
+      "size": [
+        0.963,
+        0.6,
+        2.032
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (north)",
+      "category": "dresser",
+      "center": [
+        -1.205,
+        -1.446
+      ],
+      "size": [
+        0.726,
+        0.9,
+        0.528
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (south)",
+      "category": "dresser",
+      "center": [
+        -1.205,
+        1.446
+      ],
+      "size": [
+        0.726,
+        0.9,
+        0.528
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk (north)",
+      "category": "desk",
+      "center": [
+        1.822,
+        -1.432
+      ],
+      "size": [
+        1.085,
+        0.76,
+        0.557
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk (south)",
+      "category": "desk",
+      "center": [
+        1.822,
+        1.437
+      ],
+      "size": [
+        1.085,
+        0.76,
+        0.547
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (north)",
+      "category": "chair",
+      "center": [
+        1.819,
+        -0.827
+      ],
+      "size": [
+        0.483,
+        0.85,
+        0.563
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (south)",
+      "category": "chair",
+      "center": [
+        1.819,
+        0.829
+      ],
+      "size": [
+        0.483,
+        0.85,
+        0.566
+      ],
+      "facing": "south",
+      "builtIn": false
+    }
+  ],
+  "confidence": "medium \u2014 a real official plan, but it has no printed dimensions, so every length is scaled from the bed (assumed drawn at 80\"); if the drawn bed is the frame (~84\") everything is ~5% smaller. Bed head ends are not marked; finishes other than carpet are assumed.",
+  "notes": "Plan labels: DD = dresser, D = desk, CH = chair, B = bed. Dashed rectangles (~9\"x35\") above each desk at the east wall are overhead/wall-mounted shelves (page lists bookshelves) and are not modelled as floor furniture. Scaled room is ~15.7' x 11.4' (~178 sq ft). Door scales to ~30\" wide, hinge at its south jamb. Page also lists mirror, window coverings, waste/recycling bins. Wilbur is a first-year (frosh) hall."
+}

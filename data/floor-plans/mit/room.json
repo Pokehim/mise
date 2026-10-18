@@ -1,0 +1,243 @@
+{
+  "id": "mit-new-vassar-double",
+  "school": "MIT",
+  "hall": "New Vassar",
+  "roomType": "Double",
+  "name": "MIT \u00b7 New Vassar double",
+  "sourceUrls": [
+    "https://newvassar.mit.edu/facilities",
+    "https://housing.mit.edu/residences/new-vassar",
+    "https://housing.mit.edu/compare-residences",
+    "https://web.mit.edu/Facilities/maps/DesignStandards/T15%20-%20Residences%202022.pdf"
+  ],
+  "photoUrls": [
+    "https://housing.mit.edu/sites/default/files/house-images/NV%20Double%20Furnished.png"
+  ],
+  "planFile": null,
+  "derivedFrom": "text",
+  "ceilingHeightM": 2.6,
+  "ceilingHeightSource": "assumed",
+  "finishes": {
+    "floor": "vinyl/VCT tile",
+    "walls": "painted drywall",
+    "ceiling": "drywall",
+    "evidence": "MIT Design Standards T15 Residences (2022) \u00a71.13: undergraduate student rooms get 'VCT or similar type flooring to accommodate allergy concerns'; housing.mit.edu lists New Vassar 'Carpeting: Hallways only'. Walls/ceiling are assumptions. The official 'NV Double Furnished' image carries C2PA metadata marking it as AI-generated, so it is not used as finish evidence."
+  },
+  "polygon": [
+    [
+      -1.829,
+      -2.286
+    ],
+    [
+      1.829,
+      -2.286
+    ],
+    [
+      1.829,
+      2.286
+    ],
+    [
+      -1.829,
+      2.286
+    ]
+  ],
+  "openings": [
+    {
+      "kind": "window",
+      "wall": 0,
+      "offsetM": 1.229,
+      "widthM": 1.2
+    },
+    {
+      "kind": "door",
+      "wall": 2,
+      "offsetM": 1.374,
+      "widthM": 0.91,
+      "swing": "in-right"
+    }
+  ],
+  "furniture": [
+    {
+      "label": "Bed (west)",
+      "category": "bed",
+      "center": [
+        -1.344,
+        -1.271
+      ],
+      "size": [
+        0.97,
+        0.6,
+        2.03
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Bed (east)",
+      "category": "bed",
+      "center": [
+        1.344,
+        -1.271
+      ],
+      "size": [
+        0.97,
+        0.6,
+        2.03
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (west)",
+      "category": "dresser",
+      "center": [
+        -0.38,
+        -2.031
+      ],
+      "size": [
+        0.76,
+        0.9,
+        0.51
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Dresser (east)",
+      "category": "dresser",
+      "center": [
+        0.38,
+        -2.031
+      ],
+      "size": [
+        0.76,
+        0.9,
+        0.51
+      ],
+      "facing": "south",
+      "builtIn": false
+    },
+    {
+      "label": "Desk (west)",
+      "category": "desk",
+      "center": [
+        -1.524,
+        0.38
+      ],
+      "size": [
+        1.07,
+        0.76,
+        0.61
+      ],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Desk (east)",
+      "category": "desk",
+      "center": [
+        1.524,
+        0.38
+      ],
+      "size": [
+        1.07,
+        0.76,
+        0.61
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (west)",
+      "category": "chair",
+      "center": [
+        -0.969,
+        0.38
+      ],
+      "size": [
+        0.46,
+        0.85,
+        0.46
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Desk chair (east)",
+      "category": "chair",
+      "center": [
+        0.969,
+        0.38
+      ],
+      "size": [
+        0.46,
+        0.85,
+        0.46
+      ],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Bookshelf (west)",
+      "category": "shelf",
+      "center": [
+        -1.679,
+        1.295
+      ],
+      "size": [
+        0.76,
+        1.22,
+        0.3
+      ],
+      "facing": "east",
+      "builtIn": false
+    },
+    {
+      "label": "Bookshelf (east)",
+      "category": "shelf",
+      "center": [
+        1.679,
+        1.295
+      ],
+      "size": [
+        0.76,
+        1.22,
+        0.3
+      ],
+      "facing": "west",
+      "builtIn": false
+    },
+    {
+      "label": "Wardrobe (west)",
+      "category": "wardrobe",
+      "center": [
+        -1.374,
+        1.981
+      ],
+      "size": [
+        0.91,
+        1.9,
+        0.61
+      ],
+      "facing": "north",
+      "builtIn": false
+    },
+    {
+      "label": "Wardrobe (east)",
+      "category": "wardrobe",
+      "center": [
+        1.374,
+        1.981
+      ],
+      "size": [
+        0.91,
+        1.9,
+        0.61
+      ],
+      "facing": "north",
+      "builtIn": false
+    }
+  ],
+  "confidence": "low \u2014 only the ~180 sq ft area and the furniture list are official; the 12'x15' proportions, opening positions/sizes, furniture sizes and the mirrored layout are illustrative estimates (MIT floor plans are restricted to the MIT network).",
+  "notes": "Official furniture list for a NV double: two Twin XL beds, dressers, bookshelves, desks, chairs, and 'bureaus' (the NV site describes singles as having a 'movable closet', modelled here as wardrobes). MIT design standard also specifies XL twin loftable beds, wardrobes with drawers, 3- or 5-drawer dressers, 4' and 6' bookshelves, oak finish. New Vassar (2020) houses first-years; it has central A/C. No public plan image exists, so planFile is null."
+}

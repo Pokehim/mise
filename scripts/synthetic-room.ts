@@ -24,14 +24,19 @@ import { mergeScan } from './scan-merge';
 const CELL = 0.05; // Room Setup's auto-box grows over 5 cm voxels of vertices, so no gap may be wider
 const NOISE = 0.002; // ±2 mm along the normal, like a scan, so simplify can't flatten the cells away
 const TEXTURE_SIZE = 128;
+const PAINT_SIZE = 512; // the paint tile's pixels across: about 1 mm each
+const PAINT_TILE = 0.5; // the meters one paint tile covers before it repeats
 
 type Rgb = [r: number, g: number, b: number];
 /** A rectangle in a grid's 0–1 coordinates. */
 type Rect = [s0: number, t0: number, s1: number, t1: number];
 type Pose = Pick<Box, 'position' | 'rotationY'>;
 
-/** One primitive of the room (the floor, the ceiling, a wall, or an Original's Part), with its own noise texture. */
-interface Shape { name: string; texture: PNG; positions: number[]; uvs: number[]; indices: number[] }
+/**
+ * One primitive of the room (the floor, the ceiling, a wall, or an Original's Part), with its own
+ * texture: one that spans each of its rectangles, or, with `tile`, one that repeats every `tile` meters.
+ */
+interface Shape { name: string; texture: PNG; tile?: number; positions: number[]; uvs: number[]; indices: number[] }
 
 /** An Original, with its Parts as boxes in its own frame: bottom-center origin, +Z front. */
 interface Furniture {
@@ -116,13 +121,22 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
     texture: photo ? PNG.sync.read(readFileSync(photo)) : noiseTexture(color.map((c) => c * exposure) as Rgb, ++seed),
     positions: [], uvs: [], indices: [],
   });
+  /** A painted surface: a photo when there is one, or else rolled paint in `color`, repeating every PAINT_TILE. */
+  const painted = (name: string, color: Rgb, photo?: string): Shape => (photo ? shape(name, color, photo) : {
+    name,
+    texture: paintTexture(color.map((c) => c * exposure) as Rgb, ++seed),
+    tile: PAINT_TILE,
+    positions: [], uvs: [], indices: [],
+  });
 
   /**
    * Adds the rectangle corner + s·u + t·v (s, t in 0–1) as a grid of cells no larger than CELL, facing u × v.
-   * Cells whose center is in one of the Openings are left out. The texture spans the whole rectangle.
+   * Cells whose center is in one of the Openings are left out. The texture spans the whole rectangle,
+   * or repeats along it every `target.tile` meters.
    */
   function addGrid(target: Shape, corner: Vec3, u: Vec3, v: Vec3, openingRects: Rect[] = [], hidden?: (center: Vec3) => boolean) {
     const [nu, nv] = [u, v].map((edge) => Math.ceil(Math.hypot(...edge) / CELL - 1e-9));
+    const [repeatsU, repeatsV] = [u, v].map((edge) => (target.tile ? Math.hypot(...edge) / target.tile : 1));
     const normal = cross(u, v);
     const unitNormal = scale(normal, 1 / Math.hypot(...normal));
     const first = target.positions.length / 3;
@@ -131,7 +145,7 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
         const edge = i === 0 || j === 0 || i === nu || j === nv; // edges stay put, so boxes and walls meet exactly
         const offset = edge ? 0 : NOISE * (2 * noise() - 1);
         target.positions.push(...add(add(corner, add(scale(u, i / nu), scale(v, j / nv))), scale(unitNormal, offset)));
-        target.uvs.push(i / nu, 1 - j / nv);
+        target.uvs.push(repeatsU * (i / nu), repeatsV * (1 - j / nv));
       }
     }
     for (let j = 0; j < nv; j++) {
@@ -195,11 +209,11 @@ function captureShapes(room: Room, walls: Wall[], { noiseSeed, textureSeed, expo
   const [W, D, H] = room.size;
   const floor = shape('Floor', room.colors.floor, room.textures?.floor);
   addGrid(floor, [-W / 2, 0, D / 2], [W, 0, 0], [0, 0, -D], [], occluded ? underFurniture : undefined);
-  const ceiling = shape('Ceiling', room.colors.ceiling, room.textures?.ceiling);
+  const ceiling = painted('Ceiling', room.colors.ceiling, room.textures?.ceiling);
   addGrid(ceiling, [-W / 2, H, -D / 2], [W, 0, 0], [0, 0, D]);
 
   const wallShapes = walls.map((wall, i) => {
-    const wallShape = shape(wall.name, room.colors.walls[i], room.textures?.walls?.[i]);
+    const wallShape = painted(wall.name, room.colors.walls[i], room.textures?.walls?.[i]);
     const [dx, dz] = [wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]];
     const length = Math.hypot(dx, dz);
     const openingRects = room.openings
@@ -274,6 +288,52 @@ function noiseTexture(color: Rgb, seed: number): PNG {
       const i = (y * TEXTURE_SIZE + x) * 4;
       color.forEach((channel, c) => (png.data[i + c] = Math.min(255, Math.round(channel * brightness))));
       png.data[i + 3] = 255;
+    }
+  }
+  return png;
+}
+
+/**
+ * Latex paint rolled onto drywall, in `color`: a seamless PAINT_SIZE tile of the roller's stipple,
+ * small round bumps 2–6 mm across, overlapping until the wall is covered about twice over, over a
+ * faint mottle a few centimeters across where the roller laid on a little more paint. Lit from
+ * above and a little from the left, each bump catches light on top and a little shade below, and
+ * the hollows between them sit in shade. It averages to `color`.
+ */
+function paintTexture(color: Rgb, seed: number): PNG {
+  const size = PAINT_SIZE;
+  const random = seededRandom(seed);
+  const at = (x: number, y: number) => (((y % size) + size) % size) * size + (((x % size) + size) % size);
+  /** Adds `count` soft round bumps with radii r0–r1 pixels, wrapping around the tile's edges. */
+  const bumps = (height: Float32Array, count: number, [r0, r1]: [number, number]) => {
+    for (let n = 0; n < count; n++) {
+      const [cx, cy, r, amount] = [random() * size, random() * size, r0 + (r1 - r0) * random(), 0.6 + 0.4 * random()];
+      for (let dy = -Math.ceil(2 * r); dy <= 2 * r; dy++) {
+        for (let dx = -Math.ceil(2 * r); dx <= 2 * r; dx++) {
+          const [x, y] = [Math.floor(cx) + dx, Math.floor(cy) + dy];
+          const d2 = ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2) / (r * r);
+          if (d2 < 4) height[at(x, y)] += amount * Math.exp(-d2);
+        }
+      }
+    }
+  };
+  const stipple = new Float32Array(size * size);
+  bumps(stipple, Math.round((2 * size * size) / (Math.PI * 2.25 ** 2)), [1, 3]);
+  const mottle = new Float32Array(size * size);
+  bumps(mottle, 60, [15, 40]);
+  const mean = (values: Float32Array) => values.reduce((sum, v) => sum + v, 0) / values.length;
+  const [stippleMean, mottleMean] = [mean(stipple), mean(mottle)];
+
+  const png = new PNG({ width: size, height: size });
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const p = at(x, y);
+      // Row 0 is the top of the wall: a bump's upper side, which rises going down, faces the light.
+      const facingUp = stipple[at(x, y + 1)] - stipple[at(x, y - 1)];
+      const facingLeft = stipple[at(x + 1, y)] - stipple[at(x - 1, y)];
+      const brightness = 1 + 0.07 * facingUp + 0.025 * facingLeft + 0.02 * (stipple[p] - stippleMean) + 0.012 * (mottle[p] - mottleMean);
+      color.forEach((channel, c) => (png.data[p * 4 + c] = Math.min(255, Math.max(0, Math.round(channel * brightness)))));
+      png.data[p * 4 + 3] = 255;
     }
   }
   return png;

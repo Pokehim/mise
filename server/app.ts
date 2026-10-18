@@ -8,8 +8,11 @@ import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import { MergeInputError, mergeScan } from '../scripts/scan-merge';
 import { generateObjectRoutes } from './generate-object/routes';
+import { budgetInText } from '../shared/generate';
 import { newId } from '../shared/ids';
-import type { Design, ScanManifest } from '../shared/types';
+import type { Brief, Catalog, Design, LibraryMaterial, RoomSetup, ScanManifest } from '../shared/types';
+import { anthropic, generateDesigns } from './generate/agent';
+import { shelfLevels } from './generate/shelves';
 
 // Read per request, so tests can point DATA_DIR at a temporary folder.
 const dataDir = () => process.env.DATA_DIR ?? './data';
@@ -194,8 +197,41 @@ app.put('/api/designs/:id', async (c) => {
   return c.json(saved);
 });
 
-// Phase 4: Brief → 3 Designs (spec §13).
-app.post('/api/generate', (c) => c.json({ error: 'Generate is not built yet (Phase 4)' }, 501));
+// Phase 4: Brief → 3 Designs (spec §13). Each Design is saved as soon as Claude finishes it; the
+// response has every Design that was finished, and why the others weren't.
+app.post('/api/generate', async (c) => {
+  const { scanId, brief, fast } = await readBody<{ scanId?: string; brief?: Partial<Brief>; fast?: boolean }>(c);
+  const { text, styles } = brief ?? {};
+  if (!scanId || typeof text !== 'string' || !text.trim()) fail(400, 'Send {scanId, brief: {text, styles?, budgetUsd?}}');
+  // A budget the Brief only names in its words ("under $400") is still its budget.
+  const budgetUsd = brief?.budgetUsd ?? budgetInText(text);
+  if (budgetUsd !== undefined && !(typeof budgetUsd === 'number' && budgetUsd > 0)) fail(400, 'budgetUsd must be a positive number');
+  const scanDir = requireScan(scanId);
+  const [setup, catalog, materials] = await Promise.all([
+    readJson<RoomSetup>(join(scanDir, 'setup.json')),
+    readJson<Catalog>(join(dataDir(), 'catalog/catalog.json')),
+    readJson<LibraryMaterial[]>(join(dataDir(), 'materials/materials.json')),
+    mkdir(join(dataDir(), 'designs'), { recursive: true }),
+  ]);
+  if (!setup) fail(400, `Scan ${scanId} has no Room Setup yet`);
+  const items: Catalog = catalog ?? { version: 1, items: [] };
+  const result = await generateDesigns({
+    client: anthropic(),
+    scanId,
+    setup,
+    catalog: items,
+    materials: materials ?? [],
+    shelfLevels: await shelfLevels(items, dataDir()),
+    brief: { text: text.trim(), ...(styles?.length && { styles }), ...(budgetUsd !== undefined && { budgetUsd }) },
+    // Fast mode (spec §13.3) for this request, or for every request with GENERATE_FAST_MODE=1 in .env.
+    fast: fast ?? process.env.GENERATE_FAST_MODE === '1',
+    save: (design) => writeJson(designPath(design.id), design),
+  });
+  if (!result.designs.length) {
+    return c.json({ error: `Claude made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
+  }
+  return c.json(result);
+});
 
 // Stretch: text-to-3D for categories the Catalog lacks (spec §13.3).
 app.route('/api', generateObjectRoutes(dataDir));

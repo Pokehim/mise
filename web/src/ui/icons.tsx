@@ -22,6 +22,7 @@ export const RotateRight = () => <Icon><path d="M13 3.5v3h-3" /><path d="M12.6 6
 export const Lock = () => <Icon><rect x="3.5" y="7" width="9" height="6.5" rx="1" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></Icon>;
 export const Unlock = () => <Icon><rect x="3.5" y="7" width="9" height="6.5" rx="1" /><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7" /></Icon>;
 export const Pencil = () => <Icon><path d="m10.5 3 2.5 2.5-7.5 7.5H3v-2.5z" /><path d="m9 4.5 2.5 2.5" /></Icon>;
+export const Sparkle = () => <Icon><path d="M8 1.5 9.4 6.6 14.5 8 9.4 9.4 8 14.5 6.6 9.4 1.5 8 6.6 6.6Z" /></Icon>;
 export const Cart = () => (
   <Icon>
     <path d="M1.5 2h2l1.6 8.2a1 1 0 0 0 1 .8h6.1a1 1 0 0 0 1-.8L14.5 5H4.3" />

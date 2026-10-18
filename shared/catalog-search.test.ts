@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { search, type SearchQuery } from './catalog-search';
-import { catalog } from './test-room';
+import { catalog, item } from './test-room';
 import type { Vec3 } from './types';
 
 // The test Catalog, [w, h, d] in meters: chair-ergo [0.6, 0.95, 0.6], desk-walnut [0.76, 0.75, 0.5],
@@ -19,6 +19,16 @@ describe('search', () => {
     expect(ids({ text: 'modern' })).toEqual(['chair-ergo', 'desk-walnut']);
     expect(ids({ text: 'brass lamp' })).toEqual(['lamp-brass']);
     expect(ids({ text: 'modern lamp' })).toEqual([]);
+  });
+
+  it('lists the best text matches first: each word starting a word, then the earliest in the title', () => {
+    const items = [
+      item('beanbag', 'chair', 'Memory Foam Filled Beanbag Chair', [1, 0.6, 1]),
+      item('lamp-led', 'lamp', 'Banker\'s Desk Lamp with LED Light Bulb', [0.3, 0.4, 0.3]),
+      item('strip-led', 'wall_art', 'Purple LED Strip Lights, 6.6 ft', [2, 0.36, 0.006], { mount: 'wall' }),
+    ];
+
+    expect(search({ version: 1, items }, { text: 'led' }).map((result) => result.item.id)).toEqual(['strip-led', 'lamp-led', 'beanbag']);
   });
 
   it('matches a color by name, word for word, or by its hex code, ignoring case', () => {

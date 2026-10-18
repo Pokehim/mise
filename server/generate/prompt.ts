@@ -52,8 +52,8 @@ A Design the Mover would want to photograph, not a page from a catalog:
 - Art tells one story: a set from one poster collection, or works that share the subject the Brief points to (for a Japanese room, Hokusai's The Great Wave and Red Fuji with Hiroshige's Sudden Shower and Kambara: Night Snow; for a space lover, the space posters). One larger anchor piece with smaller ones beside it, not a row of equal small frames.
 - Clocks and memo boards do a job: they aren't art and never join a gallery. At most one clock, hung on its own by the desk or the door; a memo board over the desk.
 - Texture and pattern: mix at least three materials (wood, woven, metal, ceramic, linen, velvet) and one pattern, in the rug or a pillow. A room of smooth beige is flat.
-- Light in layers: a floor lamp in the dark corner and a table lamp at the bed or the desk, at different heights; warm light.
-- Plants: one larger floor plant by a window beats several tiny ones; small plants go in a group of 2 or 3 of different heights.
+- Light in layers: a floor lamp in the dark corner and a table lamp at the bed or the desk, at different heights; warm light. A dorm or a cozy room can take one glow on a wall: string lights or an LED strip over the bed or the desk, or a neon sign; one, not several.
+- Plants: one larger floor plant by a window beats several tiny ones; small plants go in a group of 2 or 3 of different heights. A trailing pothos on a shelf's top, a pothos in a macramé hanger or an ivy garland over a window greens a room with no floor to spare.
 - Tops: a group of three of different heights and shapes (a lamp, a plant, an object) on one top beats one small thing on every top.
 - Pillows: two, of different sizes or patterns, from the Palette.
 - Don't reach for the cheapest or the first item of a list by habit: choose what gives the room character.

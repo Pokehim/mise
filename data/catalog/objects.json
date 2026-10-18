@@ -1000,6 +1000,574 @@
       "priceEstimateUsd": 190,
       "url": "",
       "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-led-strip-warm",
+      "source": "generated",
+      "title": "Warm White LED Strip Lights, 6.6 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        2,
+        0.36,
+        0.006
+      ],
+      "model": "/data/catalog/objects/obj-led-strip-warm.glb",
+      "thumbnail": "/data/catalog/objects/obj-led-strip-warm.jpg",
+      "colors": [
+        "White",
+        "Orange"
+      ],
+      "materials": [
+        "LED",
+        "Silicone"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Modern",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-led-strip-purple",
+      "source": "generated",
+      "title": "Purple LED Strip Lights, 6.6 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        2,
+        0.36,
+        0.006
+      ],
+      "model": "/data/catalog/objects/obj-led-strip-purple.glb",
+      "thumbnail": "/data/catalog/objects/obj-led-strip-purple.jpg",
+      "colors": [
+        "Purple"
+      ],
+      "materials": [
+        "LED",
+        "Silicone"
+      ],
+      "styleTags": [
+        "Modern",
+        "Gaming",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-led-strip-blue",
+      "source": "generated",
+      "title": "Ice Blue LED Strip Lights, 6.6 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        2,
+        0.36,
+        0.006
+      ],
+      "model": "/data/catalog/objects/obj-led-strip-blue.glb",
+      "thumbnail": "/data/catalog/objects/obj-led-strip-blue.jpg",
+      "colors": [
+        "Blue"
+      ],
+      "materials": [
+        "LED",
+        "Silicone"
+      ],
+      "styleTags": [
+        "Modern",
+        "Gaming",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-led-strip-pink",
+      "source": "generated",
+      "title": "Pink LED Strip Lights, 6.6 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        2,
+        0.36,
+        0.006
+      ],
+      "model": "/data/catalog/objects/obj-led-strip-pink.glb",
+      "thumbnail": "/data/catalog/objects/obj-led-strip-pink.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "materials": [
+        "LED",
+        "Silicone"
+      ],
+      "styleTags": [
+        "Modern",
+        "Y2K",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-led-strip-rgb",
+      "source": "generated",
+      "title": "RGB Color Changing LED Strip Lights, 6.6 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        2,
+        0.36,
+        0.006
+      ],
+      "model": "/data/catalog/objects/obj-led-strip-rgb.glb",
+      "thumbnail": "/data/catalog/objects/obj-led-strip-rgb.jpg",
+      "colors": [
+        "Multicolor"
+      ],
+      "materials": [
+        "LED",
+        "Silicone"
+      ],
+      "styleTags": [
+        "Gaming",
+        "Modern",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-fairy-lights-warm",
+      "source": "generated",
+      "title": "Fairy String Lights on Copper Wire, Warm White, Draped in Swags",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.548,
+        0.268,
+        0.012
+      ],
+      "model": "/data/catalog/objects/obj-fairy-lights-warm.glb",
+      "thumbnail": "/data/catalog/objects/obj-fairy-lights-warm.jpg",
+      "colors": [
+        "White",
+        "Copper"
+      ],
+      "materials": [
+        "LED",
+        "Copper wire"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Bohemian",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 12,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-curtain-lights-warm",
+      "source": "generated",
+      "title": "LED Curtain String Lights, Warm White, 4 x 4.6 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.214,
+        1.334,
+        0.013
+      ],
+      "model": "/data/catalog/objects/obj-curtain-lights-warm.glb",
+      "thumbnail": "/data/catalog/objects/obj-curtain-lights-warm.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [
+        "LED",
+        "Wire"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Romantic",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 22,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-photo-string-lights",
+      "source": "generated",
+      "title": "Photo Clip String Lights with 8 Instant Photos, Warm White",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.214,
+        0.254,
+        0.015
+      ],
+      "model": "/data/catalog/objects/obj-photo-string-lights.glb",
+      "thumbnail": "/data/catalog/objects/obj-photo-string-lights.jpg",
+      "colors": [
+        "White",
+        "Multicolor"
+      ],
+      "materials": [
+        "LED",
+        "Wood",
+        "Paper"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Dorm",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 16,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-neon-heart-pink",
+      "source": "generated",
+      "title": "Pink Heart Neon Sign, LED, 14 x 13 in",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.536,
+        0.504,
+        0.029
+      ],
+      "model": "/data/catalog/objects/obj-neon-heart-pink.glb",
+      "thumbnail": "/data/catalog/objects/obj-neon-heart-pink.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "materials": [
+        "LED neon",
+        "Acrylic"
+      ],
+      "styleTags": [
+        "Y2K",
+        "Romantic",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-neon-moon-star",
+      "source": "generated",
+      "title": "Crescent Moon and Star Neon Sign, Warm Yellow, LED, 15 in",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.508,
+        0.54,
+        0.028
+      ],
+      "model": "/data/catalog/objects/obj-neon-moon-star.glb",
+      "thumbnail": "/data/catalog/objects/obj-neon-moon-star.jpg",
+      "colors": [
+        "Yellow"
+      ],
+      "materials": [
+        "LED neon",
+        "Acrylic"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Celestial",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 38,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-neon-rainbow",
+      "source": "generated",
+      "title": "Rainbow Neon Sign, Pastel, LED, 15 x 8 in",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.54,
+        0.37,
+        0.028
+      ],
+      "model": "/data/catalog/objects/obj-neon-rainbow.glb",
+      "thumbnail": "/data/catalog/objects/obj-neon-rainbow.jpg",
+      "colors": [
+        "Multicolor",
+        "Pink",
+        "Yellow",
+        "Blue"
+      ],
+      "materials": [
+        "LED neon",
+        "Acrylic"
+      ],
+      "styleTags": [
+        "Playful",
+        "Kids",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-moon-lamp",
+      "source": "generated",
+      "title": "3D Moon Lamp on Wooden Stand, 6\"",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.15,
+        0.172,
+        0.15
+      ],
+      "model": "/data/catalog/objects/obj-moon-lamp.glb",
+      "thumbnail": "/data/catalog/objects/obj-moon-lamp.jpg",
+      "colors": [
+        "White",
+        "Brown"
+      ],
+      "materials": [
+        "PLA",
+        "Wood"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Celestial",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lava-lamp-purple",
+      "source": "generated",
+      "title": "Lava Lamp, 14.5\", Purple Liquid with Pink Wax",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.128,
+        0.37,
+        0.128
+      ],
+      "model": "/data/catalog/objects/obj-lava-lamp-purple.glb",
+      "thumbnail": "/data/catalog/objects/obj-lava-lamp-purple.jpg",
+      "colors": [
+        "Purple",
+        "Pink",
+        "Silver"
+      ],
+      "materials": [
+        "Glass",
+        "Metal"
+      ],
+      "styleTags": [
+        "Retro",
+        "70s",
+        "Playful"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-lava-lamp-orange",
+      "source": "generated",
+      "title": "Lava Lamp, 14.5\", Yellow Liquid with Orange Wax",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.128,
+        0.37,
+        0.128
+      ],
+      "model": "/data/catalog/objects/obj-lava-lamp-orange.glb",
+      "thumbnail": "/data/catalog/objects/obj-lava-lamp-orange.jpg",
+      "colors": [
+        "Yellow",
+        "Orange",
+        "Silver"
+      ],
+      "materials": [
+        "Glass",
+        "Metal"
+      ],
+      "styleTags": [
+        "Retro",
+        "70s",
+        "Playful"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-ivy-garland",
+      "source": "generated",
+      "title": "Artificial Ivy Vine Garland, Hanging, 5 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.545,
+        0.478,
+        0.051
+      ],
+      "model": "/data/catalog/objects/obj-ivy-garland.glb",
+      "thumbnail": "/data/catalog/objects/obj-ivy-garland.jpg",
+      "colors": [
+        "Green"
+      ],
+      "materials": [
+        "Faux greenery",
+        "Wire"
+      ],
+      "styleTags": [
+        "Cottagecore",
+        "Bohemian",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 14,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-ivy-garland-lights",
+      "source": "generated",
+      "title": "Artificial Ivy Garland with Fairy Lights, Warm White, 5 ft",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.544,
+        0.553,
+        0.044
+      ],
+      "model": "/data/catalog/objects/obj-ivy-garland-lights.glb",
+      "thumbnail": "/data/catalog/objects/obj-ivy-garland-lights.jpg",
+      "colors": [
+        "Green",
+        "White"
+      ],
+      "materials": [
+        "Faux greenery",
+        "LED",
+        "Wire"
+      ],
+      "styleTags": [
+        "Cottagecore",
+        "Cozy",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-pothos-trailing",
+      "source": "generated",
+      "title": "Golden Pothos in White Ceramic Pot, Trailing",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.506,
+        0.29,
+        0.492
+      ],
+      "model": "/data/catalog/objects/obj-pothos-trailing.glb",
+      "thumbnail": "/data/catalog/objects/obj-pothos-trailing.jpg",
+      "colors": [
+        "Green",
+        "White"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Modern",
+        "Cozy"
+      ],
+      "priceEstimateUsd": 28,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-pothos-macrame",
+      "source": "generated",
+      "title": "Pothos in Macramé Plant Hanger, Wall Hook",
+      "category": "plant",
+      "mount": "wall",
+      "size": [
+        0.37,
+        1.029,
+        0.311
+      ],
+      "model": "/data/catalog/objects/obj-pothos-macrame.glb",
+      "thumbnail": "/data/catalog/objects/obj-pothos-macrame.jpg",
+      "colors": [
+        "Green",
+        "Cream",
+        "Terracotta"
+      ],
+      "materials": [
+        "Cotton rope",
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Cottagecore",
+        "Dorm"
+      ],
+      "priceEstimateUsd": 32,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-pampas-vase",
+      "source": "generated",
+      "title": "Dried Pampas Grass in White Ceramic Vase, 3 ft",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.364,
+        1.002,
+        0.477
+      ],
+      "model": "/data/catalog/objects/obj-pampas-vase.glb",
+      "thumbnail": "/data/catalog/objects/obj-pampas-vase.jpg",
+      "colors": [
+        "Beige",
+        "White"
+      ],
+      "materials": [
+        "Dried grass",
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Japandi",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "",
+      "attribution": "Modeled for Mise"
     }
   ]
 }

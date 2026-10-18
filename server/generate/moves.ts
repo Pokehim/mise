@@ -47,6 +47,11 @@ const USEFUL_ON_WALL = /\b(clock|memo|message board|dry.?erase|cork.?board|pegbo
 /** Whether a wall piece does a job rather than being looked at. */
 export const isUsefulOnWall = ({ title }: CatalogItem) => USEFUL_ON_WALL.test(title);
 
+/** Wall pieces that light a wall or green it, as an LED strip, string lights, a neon sign or an ivy garland do. */
+const LIGHTS_ON_WALL = /\b(LED strip|string lights|curtain lights|neon|garland|plant hanger)\b/i;
+/** Whether a wall piece lights or greens the wall it's on: it hangs on its own, never in a gallery. */
+export const isLightOnWall = ({ mount, title }: CatalogItem) => mount === 'wall' && LIGHTS_ON_WALL.test(title);
+
 /** Whether a lamp stands on the floor, rather than on a table. */
 export const isFloorLamp = ({ size: [, height] }: CatalogItem) => height >= FLOOR_LAMP;
 
@@ -126,6 +131,7 @@ export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { o
   const frames = lookUp(draft, catalog_ids, skip, (frame) => {
     if (frame.category !== 'wall_art' && frame.category !== 'mirror') return `${frame.title} is not wall art or a mirror`;
     if (isUsefulOnWall(frame)) return `${frame.title} isn't art: hang it on its own with place_piece (on_wall), by the desk or the door`;
+    if (isLightOnWall(frame)) return `${frame.title} isn't art: hang it on its own with place_piece (on_wall), over the bed, the desk or a window`;
     return undefined;
   });
   if (!frames.length) return done();

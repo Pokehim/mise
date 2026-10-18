@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "lounge-v1",
+  "name": "Study lounge",
+  "mesh": "room.glb",
+  "meshTransform": {
+    "position": [
+      -0.044,
+      1.202,
+      0.029
+    ],
+    "rotationY": -0.008005
+  }
+}

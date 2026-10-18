@@ -49,8 +49,6 @@ export interface RoomSetup {
   openings: Opening[];
   originals: Original[];
   surfaces?: RoomSurfaces;           // ADR-0010: a room with no Capture, drawn from this setup alone
-  wholeEmptyRoom?: true;             // the mesh has the floor and walls whole behind every Original (a synthetic Scan), so
-                                     // the Empty Room shows where an Original stood, and no Patch is drawn
 }
 
 /**
@@ -118,7 +116,7 @@ export interface PartDef { id: string; name: string }   // { id: 'legs', name: '
 
 export interface CatalogItem {
   id: string;                        // ABO item_id (an ASIN), e.g. "B07HSLGGDB"
-  source: 'abo' | 'polyhaven' | 'gso' | 'generated' | 'publicdomain';   // gso: Google Scanned Objects
+  source: 'abo' | 'polyhaven' | 'gso' | 'generated';   // gso: Google Scanned Objects
   title: string;
   brand?: string;
   category: Category;

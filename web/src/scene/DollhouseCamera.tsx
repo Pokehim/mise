@@ -1,7 +1,7 @@
 import { CameraControls, CameraControlsImpl } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { MathUtils, Plane, Raycaster, Vector2, Vector3 } from 'three';
+import { MathUtils, Plane, Raycaster, Spherical, Vector2, Vector3 } from 'three';
 import { useEditor } from '../state/store';
 import { roomBounds } from './floorPlan';
 import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
@@ -23,6 +23,7 @@ const GESTURE_GAP_MS = 200;
  * camera-controls eases there with a critically damped spring, which never overshoots.
  */
 const SMOOTH_TIME = 0.1;
+const UP = new Vector3(0, 1, 0);
 
 /** How far the wheel event scrolled, in pixels, where a mouse-wheel notch is NOTCH_PX on every platform. */
 function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
@@ -39,7 +40,11 @@ function scrolledPx({ deltaY, deltaMode, ctrlKey }: WheelEvent) {
  * that box, a 45° view is too close to frame the room, so its distance is capped instead.
  *
  * The wheel, a trackpad swipe and a pinch all zoom toward what is under the pointer, which stays
- * under it.
+ * under it. Dragging turns the view around the room's center, wherever the zoom has taken it.
+ *
+ * Nothing here sets the camera's azimuth from a position (setLookAt does), since that gives an
+ * angle within ±180° while the camera's own adds up as it turns: smoothing from one to the other
+ * spins the camera through every turn between them.
  */
 export function DollhouseCamera() {
   const setup = useEditor((s) => s.setup!);
@@ -55,20 +60,23 @@ export function DollhouseCamera() {
   const element = useThree((s) => (s.events.connected as HTMLElement | undefined) ?? s.gl.domElement);
 
   useEffect(() => {
-    controls.current.setBoundary(boundary);
+    const cameraControls = controls.current;
+    cameraControls.setBoundary(boundary);
     const { x, z } = room.getCenter(new Vector3());
-    const offset = distance * Math.SQRT1_2;
-    void controls.current.setLookAt(x, 0.5 + offset, z + offset, x, 0.5, z, true);
+    // From the south, at the turn nearest the camera's.
+    void cameraControls.rotateTo(Math.round(cameraControls.azimuthAngle / (2 * Math.PI)) * 2 * Math.PI, Math.PI / 4, true);
+    void cameraControls.moveTo(x, 0.5, z, true);
+    void cameraControls.dollyTo(distance, true);
   }, [room, boundary, distance]);
 
   useEffect(() => {
     const cameraControls = controls.current;
     const raycaster = new Raycaster();
     const pivot = new Vector3();
-    const position = new Vector3();
     const target = new Vector3();
-    const inside = new Vector3();
+    const center = room.getCenter(new Vector3());
     let last = { time: -Infinity, x: 0, y: 0 };
+    let drag: { pointerId: number; x: number; y: number } | null = null;
 
     // What the pointer is on: the Scan or a Piece, else the floor, else (above the horizon) the target.
     const aimAt = (clientX: number, clientY: number) => {
@@ -82,8 +90,9 @@ export function DollhouseCamera() {
       }
     };
 
-    // The zoom scales the camera and its target about the point under the pointer, so that point
-    // stays put on screen and the view keeps its direction.
+    // The zoom scales the camera's distance, and its target about the point under the pointer: the
+    // camera keeps its angles, so the view keeps its direction and that point stays put on screen.
+    // Past the boundary, the camera slides back with its target, still looking the same way.
     const onWheel = (event: WheelEvent) => {
       // A Piece drag turns the controls off; the wheel waits for it too.
       if (!cameraControls.enabled) return;
@@ -92,22 +101,52 @@ export function DollhouseCamera() {
       if (time - last.time > GESTURE_GAP_MS || Math.hypot(x - last.x, y - last.y) > CLICK_TOLERANCE_PX) aimAt(x, y);
       last = { time, x, y };
 
-      cameraControls.getPosition(position, true);
-      cameraControls.getTarget(target, true);
-      const radius = position.distanceTo(target);
-      const zoomed = radius * ZOOM_PER_NOTCH ** (scrolledPx(event) / NOTCH_PX);
-      const scale = MathUtils.clamp(zoomed, cameraControls.minDistance, cameraControls.maxDistance) / radius;
-      position.sub(pivot).multiplyScalar(scale).add(pivot);
-      target.sub(pivot).multiplyScalar(scale).add(pivot);
-      // Past the boundary, the camera slides back with its target, still looking the same way.
-      position.add(boundary.clampPoint(target, inside).sub(target));
-      target.add(inside);
-      void cameraControls.setLookAt(position.x, position.y, position.z, target.x, target.y, target.z, true);
+      const radius = cameraControls.getSpherical(new Spherical(), true).radius;
+      const zoomed = MathUtils.clamp(radius * ZOOM_PER_NOTCH ** (scrolledPx(event) / NOTCH_PX), cameraControls.minDistance, cameraControls.maxDistance);
+      cameraControls.getTarget(target, true).sub(pivot).multiplyScalar(zoomed / radius).add(pivot);
+      void cameraControls.moveTo(target.x, target.y, target.z, true);
+      void cameraControls.dollyTo(zoomed, true);
+    };
+
+    // A drag turns the camera and its target together about the vertical line through the room's
+    // center, so the camera circles the room even when zoomed in on a corner of it. Tilting stays
+    // about the target. One pointer only: two fingers pinch and pan in camera-controls.
+    const onPointerDown = (event: PointerEvent) => {
+      // A second finger isn't primary, and hands the gesture over.
+      drag = event.isPrimary && event.button === 0 && cameraControls.enabled
+        ? { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+        : null;
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerId !== drag?.pointerId) return;
+      // A Piece drag can start on this same press, and turns the controls off.
+      if (!cameraControls.enabled) return void (drag = null);
+      const { height } = gl.domElement.getBoundingClientRect();
+      // As camera-controls turns: a drag the view's height long is a full turn.
+      const azimuth = (-2 * Math.PI * (event.clientX - drag.x)) / height;
+      const polar = (-2 * Math.PI * (event.clientY - drag.y)) / height;
+      drag = { ...drag, x: event.clientX, y: event.clientY };
+      cameraControls.getTarget(target, true).sub(center).applyAxisAngle(UP, azimuth).add(center);
+      void cameraControls.moveTo(target.x, target.y, target.z, true);
+      void cameraControls.rotate(azimuth, polar, true);
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerId === drag?.pointerId) drag = null;
     };
 
     element.addEventListener('wheel', onWheel, { passive: false });
-    return () => element.removeEventListener('wheel', onWheel);
-  }, [element, gl, scene, camera, room, boundary]);
+    element.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+    return () => {
+      element.removeEventListener('wheel', onWheel);
+      element.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+    };
+  }, [element, gl, scene, camera, room]);
 
   return (
     <CameraControls
@@ -117,8 +156,11 @@ export function DollhouseCamera() {
       maxDistance={distance * 2}
       maxPolarAngle={Math.PI * 0.45}
       smoothTime={SMOOTH_TIME}
-      // The wheel is handled above; a touch screen's pinch still zooms toward the fingers here.
+      // The wheel and a one-pointer drag are handled above; a touch screen's pinch still zooms
+      // toward the fingers here.
       mouseButtons-wheel={CameraControlsImpl.ACTION.NONE}
+      mouseButtons-left={CameraControlsImpl.ACTION.NONE}
+      touches-one={CameraControlsImpl.ACTION.NONE}
       dollyToCursor
     />
   );

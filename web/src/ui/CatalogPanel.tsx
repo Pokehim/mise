@@ -12,31 +12,18 @@ const CATEGORY_NAMES: Record<Category, string> = {
   rug: 'Rugs', lamp: 'Lamps', wall_art: 'Wall art', mirror: 'Mirrors', plant: 'Plants', decor: 'Decor',
 };
 
-/** The poster collections (#85), by the styleTag every poster of one carries beside 'poster'. */
-const POSTER_COLLECTIONS: [tag: string, name: string][] = [
-  ['museum', 'Museum'], ['space', 'Space'], ['y2k', 'Y2K'], ['retro gaming', 'Retro gaming'],
-  ['anime sunsets', 'Anime sunsets'], ['gig posters', 'Gig posters'], ['parks & travel', 'Parks & travel'],
-];
-const isPoster = (item: CatalogItem) => item.styleTags.includes('poster');
-
 /** The drag-and-drop type of a Catalog card dragged into the view; its data is the item id. */
 export const CATALOG_ITEM_TYPE = 'application/x-mise-catalog-item';
 
 /** Browse the Catalog by category and text, and Add an item to the Design as a Piece (spec §10.1). */
 export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) {
   const catalog = useEditor((s) => s.catalog!);
-  // 'posters' is the Posters section: wall art with a 'poster' styleTag, narrowed by a collection.
-  const [category, setCategory] = useState<Category | 'posters' | null>(null);
-  const [collection, setCollection] = useState<string | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
   const [text, setText] = useState('');
   const categories = useMemo(() => [...new Set(catalog.items.map((item) => item.category))], [catalog]);
-  const hasPosters = useMemo(() => catalog.items.some(isPoster), [catalog]);
-  const posters = category === 'posters';
 
   // Every match, in Catalog order, found the way Claude's search_catalog finds items (spec §8.2).
-  const shown = search(catalog, { category: posters ? 'wall_art' : category ?? undefined, text, limit: Infinity })
-    .map(({ item }) => item)
-    .filter((item) => !posters || (isPoster(item) && (!collection || item.styleTags.includes(collection))));
+  const shown = search(catalog, { category: category ?? undefined, text, limit: Infinity }).map(({ item }) => item);
 
   return (
     <aside className="catalog" aria-labelledby="catalog-title">
@@ -46,16 +33,7 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
         {categories.map((c) => (
           <button key={c} aria-pressed={c === category} onClick={() => setCategory(c)}>{CATEGORY_NAMES[c]}</button>
         ))}
-        {hasPosters && <button aria-pressed={posters} onClick={() => setCategory('posters')}>Posters</button>}
       </div>
-      {posters && (
-        <div className="tabs" role="group" aria-label="Poster collection">
-          <button aria-pressed={!collection} onClick={() => setCollection(null)}>Every collection</button>
-          {POSTER_COLLECTIONS.map(([tag, name]) => (
-            <button key={tag} aria-pressed={tag === collection} onClick={() => setCollection(tag)}>{name}</button>
-          ))}
-        </div>
-      )}
       <input
         type="search"
         name="catalogSearch"
@@ -86,7 +64,7 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
         ))}
       </ul>
       {shown.length === 0 && <p className="muted empty"><b>Nothing matches.</b> Try another word, or another category.</p>}
-      {shown.length === 0 && !posters && <GenerateItem key={`${category}:${text}`} query={text} category={category} />}
+      {shown.length === 0 && <GenerateItem key={`${category}:${text}`} query={text} category={category} />}
     </aside>
   );
 }

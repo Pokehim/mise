@@ -24,7 +24,7 @@ describe('addScanFiles', () => {
     expect(addScanFiles({}, [glb, file('plan.png'), file('notes.txt'), file('room.gltf')])).toEqual({
       files: { mesh: glb },
       refused: [
-        'plan.png is an image, not a scan. For a floor plan, find your dorm above.',
+        'plan.png is an image, not a scan. For a floor plan, find your dorm below.',
         "notes.txt isn't a GLB or a PLY.",
         "room.gltf isn't a GLB or a PLY.",
       ],

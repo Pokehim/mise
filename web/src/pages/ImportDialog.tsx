@@ -11,8 +11,8 @@ import { ScanPlan } from './ScanPlan';
 type Working = (working: boolean) => void;
 
 /**
- * "Import" on Home, and its dialog, with the two ways a room becomes the Mover's: find it in the
- * library of school dorm rooms, or drop the scan they made of it.
+ * "Import" on Home, and its dialog, with the two ways a room becomes the Mover's: drop the scan they
+ * made of it, or find it in the library of school dorm rooms.
  */
 export function ImportDialog({ scans }: { scans: ScanManifest[] }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -44,10 +44,10 @@ export function ImportDialog({ scans }: { scans: ScanManifest[] }) {
           <h2 id="import-dialog-title">Import</h2>
           <button type="button" className="icon-button" aria-label="Close" disabled={working} onClick={close}><Close /></button>
         </header>
-        <fieldset disabled={working} className="import-part">
+        <ScanDrop busy={working} onWorking={setWorking} />
+        <fieldset disabled={working} className="import-part library-part">
           <LibrarySearch inputRef={search} scans={scans} query={query} onQuery={setQuery} onWorking={setWorking} />
         </fieldset>
-        <ScanDrop busy={working} onWorking={setWorking} />
       </dialog>
     </>
   );
@@ -92,7 +92,7 @@ function LibrarySearch({ inputRef, scans, query, onQuery, onWorking }: {
   return (
     <div className="library">
       <label className="import-field">
-        <span>Find your school or dorm</span>
+        <span>Or find your school or dorm</span>
         <input
           ref={inputRef}
           type="search"
@@ -101,7 +101,6 @@ function LibrarySearch({ inputRef, scans, query, onQuery, onWorking }: {
           autoComplete="off"
           onChange={(event) => onQuery(event.target.value)}
         />
-        <span className="muted">Open a school's room furnished as the school furnishes it, or empty.</span>
       </label>
       {error && <p className="error" role="alert">{error}</p>}
       {found.length ? (
@@ -127,7 +126,7 @@ function LibrarySearch({ inputRef, scans, query, onQuery, onWorking }: {
           })}
         </ul>
       ) : typed && (
-        <p className="empty library-none" role="status"><b>We don't have {typed} yet.</b> Drop your room's scan below.</p>
+        <p className="empty library-none" role="status"><b>We don't have {typed} yet.</b> Drop your room's scan above.</p>
       )}
     </div>
   );
@@ -221,7 +220,6 @@ function ScanDrop({ busy, onWorking }: { busy: boolean; onWorking: Working }) {
 
   return (
     <form className="import-part scan-drop" onSubmit={submit}>
-      <h3>Or bring your own scan</h3>
       <button
         type="button"
         className={`drop-zone${over ? ' over' : ''}`}

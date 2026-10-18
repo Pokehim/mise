@@ -9,7 +9,7 @@ const fieldOf = (file: File) => (/\.glb$/i.test(file.name) ? 'mesh' : /\.ply$/i.
 
 /** Why a file can't be part of a scan, by its name alone, so it is turned away before anything uploads. */
 function refusal(file: File) {
-  if (IMAGE.test(file.name)) return `${file.name} is an image, not a scan. For a floor plan, find your dorm above.`;
+  if (IMAGE.test(file.name)) return `${file.name} is an image, not a scan. For a floor plan, find your dorm below.`;
   return `${file.name} isn't a GLB or a PLY.`;
 }
 

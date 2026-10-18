@@ -135,7 +135,7 @@
 .home-heading-row .home-heading { flex: 1; }
 .scan-tag { color: var(--wash); }
 
-/* ───────────── Import: the library search, then the drop zone ───────────── */
+/* ───────────── Import: the drop zone, then the library search ───────────── */
 
 .import-dialog {
   box-sizing: border-box;
@@ -154,7 +154,6 @@
 .import-dialog::backdrop { background: transparent; }
 .import-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-3); }
 .import-dialog h2 { margin: 0; font: 400 24px/1.2 var(--font-hand); }
-.import-dialog h3 { margin: 0 0 var(--s-3); font: 400 19px/1.2 var(--font-hand); }
 .import-part { min-width: 0; margin: 0; padding: 0; border: 0; }
 .import-field { display: grid; gap: var(--s-1); margin-bottom: var(--s-3); }
 .import-field > span:first-child { font-weight: 600; }
@@ -239,12 +238,11 @@
 .library-thumb .plan figcaption { border: 0; font-size: 11px; }
 
 .home .library-none { margin: 0 0 var(--s-3); }
-/* Short enough that the drop zone stays in view under the whole library (about three rooms). Its rule
-   closes the list, so the list draws no line of its own below. */
-.import-dialog .library-results { max-height: min(30vh, 272px); margin-bottom: 0; border-bottom: 0; }
+/* About three rooms, so the whole library under the drop zone doesn't stretch the dialog. */
+.import-dialog .library-results { max-height: min(30vh, 272px); margin-bottom: 0; }
 
-/* The scan the Mover brings: under a rule, a dashed sheet to drop it on, like the blank area of a drawing. */
-.scan-drop { margin-top: var(--s-4); padding-top: var(--s-4); border-top: var(--line) solid var(--pencil); }
+/* The library search, under a rule below the drop zone. */
+.library-part { margin-top: var(--s-4); padding-top: var(--s-4); border-top: var(--line) solid var(--pencil); }
 .home button.drop-zone {
   display: grid;
   justify-items: center;

@@ -22,6 +22,8 @@ const FAST_MODEL = 'claude-opus-5-5';
 const FAST_MODE_BETA = 'fast-mode-2026-02-01';
 /** How long one loop may take: past it, the Design keeps the Edits Claude made until then. */
 export const LOOP_TIMEOUT_MS = 120_000;
+/** How long the takes wait for the shared prefix to be cached before each writes it itself. */
+const WARM_TIMEOUT_MS = 20_000;
 /** The most requests one loop makes: one reply of moves, a turn of fixes, and room to spare. */
 const MAX_REQUESTS = 6;
 const NUDGE = 'Call finish_design now to finish this Design.';
@@ -50,6 +52,8 @@ export interface GenerateDesignsRequest extends Omit<DesignContext, 'edits' | 's
   /** Fast mode: quicker Designs from Claude Opus 5.5 at its fast speed, for several times the cost of the standard, Sonnet 5.5. */
   fast?: boolean;
   loopTimeoutMs?: number;
+  /** Stops every take, as when the Mover leaves before they finish. */
+  signal?: AbortSignal;
   /** Called with each step as it happens: each Edit, and each Design finished or failed. */
   onEvent?: (event: GenerateEvent) => void;
 }
@@ -88,8 +92,8 @@ export async function warmCache(request: WarmRequest, shared = sharedRequest(req
   // The conversation isn't cached: there is none.
   const { cache_control, ...prefix } = shared;
   const tools = createSession({ ...request, brief: { text: '' } }).tools.map(({ run, parse, ...definition }) => definition);
-  // A warm-up is worth little late: it isn't retried.
-  const written = request.client.withOptions({ maxRetries: 0 }).beta.messages.create({
+  // A warm-up is worth little late: it isn't retried, and the takes don't wait long for it.
+  const written = request.client.withOptions({ maxRetries: 0, timeout: WARM_TIMEOUT_MS }).beta.messages.create({
     ...prefix,
     tools: tools as Anthropic.Beta.BetaToolUnion[],
     max_tokens: 0,
@@ -160,7 +164,7 @@ export function standardSpeed({ speed, betas, ...params }: SharedRequest): Share
 async function designLoop(
   request: GenerateDesignsRequest, shared: SharedRequest, direction: Direction, current?: string,
 ): Promise<{ direction: Direction; report: LoopReport; design?: Design; error?: string }> {
-  const { client, brief, loopTimeoutMs = LOOP_TIMEOUT_MS, onEvent } = request;
+  const { client, brief, loopTimeoutMs = LOOP_TIMEOUT_MS, onEvent, signal } = request;
   const started = performance.now();
   const report: LoopReport = {
     direction, seconds: 0, requests: 0, toolCalls: 0,
@@ -181,6 +185,7 @@ async function designLoop(
     return { direction, error: why, report };
   };
   const timeout = AbortSignal.timeout(loopTimeoutMs);
+  const stop = signal ? AbortSignal.any([timeout, signal]) : timeout;
   let stopped: Error | undefined;
   try {
     let messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: briefMessage(brief, direction, current) }];
@@ -192,7 +197,7 @@ async function designLoop(
       const conversation: Conversation = { messages, edits: session.edits.length };
       try {
         messages = await run(client, params, session, conversation, report, {
-          started, signal: timeout, onText: (text) => onEvent?.({ type: 'plan', direction, text }),
+          started, signal: stop, onText: (text) => onEvent?.({ type: 'plan', direction, text }),
         });
       } catch (error) {
         // Fast mode has its own rate limit, and its requests aren't retried: refused, the take goes on at

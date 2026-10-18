@@ -23,6 +23,8 @@ function useEditorKeys() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) return;
+      // Nor while a dialog (Generate, Refine) is open over the room.
+      if (document.querySelector('dialog[open]')) return;
       const { selection, preview, select } = useEditor.getState();
       if (event.key === 'Escape') select(null);
       // A drag finishes before undo.

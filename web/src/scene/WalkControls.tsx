@@ -151,6 +151,8 @@ export function WalkControls({ start }: { start?: Shot['pose'] }) {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!(e.code in STEPS) || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]')) return;
+      // Nor while a dialog (Generate, Refine) is open over the room.
+      if (document.querySelector('dialog[open]')) return;
       e.preventDefault();
       held.add(e.code);
     };

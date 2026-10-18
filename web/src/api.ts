@@ -83,8 +83,22 @@ export const saveFloorPlanDraft = (scanId: string, draft: FloorPlanDraft) =>
   request<FloorPlanDraft>('PUT', `/api/floor-plans/${scanId}/draft`, draft);
 export const saveManifest = (manifest: ScanManifest) =>
   request<ScanManifest>('PUT', `/api/scans/${manifest.id}/manifest`, manifest);
-export const loadSetup = (scanId: string) => request<RoomSetup>('GET', scanFileUrl(scanId, 'setup.json'));
-export const saveSetup = (setup: RoomSetup) => request<RoomSetup>('PUT', `/api/scans/${setup.scanId}/setup`, setup);
+/** Each Scan's Room Setup, fetched once: the same object each time, so the room's light, baked per setup, is baked once too. */
+const setups = new Map<string, Promise<RoomSetup>>();
+export function loadSetup(scanId: string) {
+  let setup = setups.get(scanId);
+  if (!setup) {
+    setup = request<RoomSetup>('GET', scanFileUrl(scanId, 'setup.json'));
+    setups.set(scanId, setup);
+    setup.catch(() => setups.get(scanId) === setup && setups.delete(scanId));
+  }
+  return setup;
+}
+export async function saveSetup(setup: RoomSetup) {
+  const saved = await request<RoomSetup>('PUT', `/api/scans/${setup.scanId}/setup`, setup);
+  setups.set(setup.scanId, Promise.resolve(saved));
+  return saved;
+}
 /** Saves a baked Patch image (spec §11.2) as patches/<name> in the Scan's folder; returns that path. */
 export async function savePatchImage(scanId: string, name: string, png: Blob): Promise<string> {
   const res = await fetch(`/api/scans/${scanId}/files/${name}`, { method: 'PUT', headers: { 'Content-Type': 'image/png' }, body: png });

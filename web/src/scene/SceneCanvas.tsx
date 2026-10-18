@@ -29,11 +29,13 @@ import { WalkControls } from './WalkControls';
 
 /**
  * Loads its children in the background, and renders nothing in their place if they fail, so one
- * bad file can't blank the editor.
+ * bad file can't blank the editor. A new `retry` (a Piece swapped to another item) tries again.
  */
-class Optional extends Component<{ what: string; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
+class Optional extends Component<{ what: string; retry?: string; children: ReactNode }, { failed: boolean; retry?: string }> {
+  state = { failed: false, retry: this.props.retry };
   static getDerivedStateFromError = () => ({ failed: true });
+  static getDerivedStateFromProps = ({ retry }: { retry?: string }, state: { retry?: string }) =>
+    retry === state.retry ? null : { failed: false, retry };
   componentDidCatch(error: Error) {
     console.warn(`${this.props.what} failed to load: ${error.message}`);
   }
@@ -43,11 +45,11 @@ class Optional extends Component<{ what: string; children: ReactNode }, { failed
 }
 
 function Pieces() {
-  const ids = useEditor(useShallow((s) => Object.keys(s.roomState!.pieces)));
+  const pieces = useEditor(useShallow((s) => Object.entries(s.roomState!.pieces).map(([id, { catalogId }]) => `${id} ${catalogId}`)));
   return (
     <group name="pieces">
-      {ids.map((id) => (
-        <Optional key={id} what={`Piece ${id}`}>
+      {pieces.map((piece) => piece.split(' ')).map(([id, catalogId]) => (
+        <Optional key={id} what={`Piece ${id}`} retry={catalogId}>
           <PieceNode pieceId={id} />
         </Optional>
       ))}
@@ -109,7 +111,8 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
           <>
             <hemisphereLight args={FILL_LIGHT} />
             <Optional what="The environment map">
-              <Environment preset="apartment" />
+              {/* drei's "apartment" preset (Poly Haven's Lebombo, CC0), served here so a venue's Wi-Fi can't leave Pieces unlit. */}
+              <Environment files="/hdri/lebombo_1k.hdr" />
             </Optional>
           </>
         )}

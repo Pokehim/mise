@@ -37,6 +37,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "concurrently": "^10.0.6",
     "meshoptimizer": "~1.2.0",
+    "obj2gltf": "^3.2.0",
     "pngjs": "^7.0.0",
     "sharp": "^0.35.5",
     "tsx": "^4.23.15",

@@ -9,32 +9,39 @@ import { parseArgs } from 'node:util';
 import { type Document, Logger, NodeIO, Primitive } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import {
-  dedup, flatten, getBounds, getGLPrimitiveCount, instance, join as joinPrimitives, meshopt, palette, prune, simplify, sparse,
+  compactPrimitive, dedup, flatten, getBounds, getGLPrimitiveCount, instance, join as joinPrimitives, meshopt, palette, prune, simplify, sparse,
   textureCompress, unpartition, weld,
 } from '@gltf-transform/functions';
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
+// @ts-expect-error obj2gltf ships no types: (objPath, options) => Promise<Buffer> with { binary: true }.
+import obj2gltf from 'obj2gltf';
 import sharp from 'sharp';
 import type { ScanManifest, Vec3 } from '../shared/types';
 
 /** Spec §2.3: the room mesh is at most 500k triangles in all, Fill Captures included, with up to 4K WebP textures. */
 export const MAX_TRIANGLES = 500_000;
+/** A Detail Capture is decimated to this on import; the merge keeps only its copy of the Originals (ADR-0008). */
+export const DETAIL_MAX_TRIANGLES = 80_000;
 const TEXTURE_SIZE = 4096;
 /** A room's height, in meters. A Y extent outside it usually means +Y isn't up, or the units aren't meters. */
 const ROOM_HEIGHT = { min: 2.0, max: 3.5 };
 const ROOM_HEIGHT_TEXT = `${ROOM_HEIGHT.min.toFixed(1)}–${ROOM_HEIGHT.max.toFixed(1)} m`;
 export const SCANS_DIR = fileURLToPath(new URL('../data/scans', import.meta.url));
-const MODEL = /\.(gltf|glb)$/i;
+const MODEL = /\.(gltf|glb|obj)$/i;
 const ZIP = /\.zip$/i;
 
 const HELP = `
-Turns a Polycam glTF export into a Scan folder that the editor can load: data/scans/<scanId>/.
+Turns a Polycam glTF export or a KIRI Engine OBJ export into a Scan folder that the editor can load:
+data/scans/<scanId>/.
 
 Usage:
-  npx tsx scripts/scan-import.ts <export> <scanId> [--raw <rawdata>] [--name "Maple Hall 412"] [--force]
-  npx tsx scripts/scan-import.ts <export> <scanId> --fill
+  npx tsx scripts/scan-import.ts <export> <scanId> [--raw <rawdata>] [--name "Maple Hall 412"] [--crop <rect>] [--force]
+  npx tsx scripts/scan-import.ts <export> <scanId> --fill [--crop <rect>]
+  npx tsx scripts/scan-import.ts <export> <scanId> --detail [--crop <rect>]
 
 Arguments:
-  <export>   The Polycam glTF export: the .glb or .gltf file, a .zip of it, or an unzipped folder.
+  <export>   The export: a Polycam .glb or .gltf, a KIRI Engine .obj (with its .mtl and texture beside
+             it), a .zip of either, or an unzipped folder.
   <scanId>   A short id for the Scan, such as venue-test or lounge-v1: lowercase letters, digits,
              and hyphens. It names the folder.
 
@@ -43,26 +50,36 @@ Options:
                    unpacked into data/scans/<scanId>/raw/, which git ignores. The fallback splat
                    (msplat-train) is trained from it.
   --name <name>    The name the editor shows, such as "Maple Hall 412". Defaults to <scanId>.
+  --crop <rect>    Keep only the triangles whose center lies inside a floor rectangle,
+                   "minX,minZ,maxX,maxZ" in meters in the export's own frame (as the summary's
+                   bounds print it). For a Capture that also saw the rooms around this one.
+                   Write it as --crop=<rect> when it starts with a minus sign.
   --force          Replace a Scan that already exists. This resets its meshTransform, so redo
                    Room Setup step 1 afterwards.
-  --fill           Add this export to an existing Scan as a Fill Capture: one taken after moving
-                   the furniture, for what it hid (ADR-0007). It is saved as captures/fill-<n>.glb;
-                   room.glb and meshTransform stay as they are. Then line it up in Room Setup,
-                   step 6 (Fill Captures).
+  --fill           Add this export to an existing Scan as a Fill Capture: another Capture of the
+                   whole room, from either app, for what the Main Capture missed (ADR-0007, 0008).
+                   It is saved as captures/fill-<n>.glb; room.glb and meshTransform stay as they
+                   are. Then line it up in Room Setup, step 6 (Fill Captures).
+  --detail         Add this export to an existing Scan as a Detail Capture: a close-up of a few
+                   Originals, such as a chair (ADR-0008). It is decimated to ${DETAIL_MAX_TRIANGLES.toLocaleString('en-US')} triangles
+                   and saved as captures/detail-<n>.glb. Then find its size and place with
+                   scripts/register-closeup.ts: an app's close-up can be 10–40% off in size.
   -h, --help       Show this help.
 
 What it does:
-  1. Finds the .gltf or .glb in the export.
+  1. Finds the .gltf, .glb or .obj in the export, and converts an OBJ to glTF (obj2gltf).
   2. Optimizes it like "gltf-transform optimize --texture-compress webp --texture-size 4096", and
-     simplifies it further while it has more than 500,000 triangles.
+     simplifies it further while it has more than ${MAX_TRIANGLES.toLocaleString('en-US')} triangles (${DETAIL_MAX_TRIANGLES.toLocaleString('en-US')} for --detail).
   3. Writes room.glb, and manifest.json with an identity meshTransform (Room Setup step 1 sets it).
-     With --fill, writes captures/fill-<n>.glb and adds it to the manifest's captures instead.
+     With --fill or --detail, writes the Capture into captures/ and adds it to the manifest instead.
   4. Prints a summary. Check that the sizes are in meters and +Y is up: a room's Y extent is ${ROOM_HEIGHT_TEXT}.
 
 Examples:
   npx tsx scripts/scan-import.ts ~/Downloads/venue.glb venue-test --name "Venue test"
   npx tsx scripts/scan-import.ts ~/Downloads/lounge-main.glb lounge-v1 --raw ~/Downloads/lounge-raw.zip --name "Study lounge"
   npx tsx scripts/scan-import.ts ~/Downloads/lounge-fill-1.glb lounge-v1 --fill
+  npx tsx scripts/scan-import.ts "~/Downloads/Scene 1_lidarDataSet.zip" lounge-v1 --fill --crop=-5.5,-3.6,0.3,3.8
+  npx tsx scripts/scan-import.ts ~/Downloads/chair-close-up.glb lounge-v1 --detail
 `.trim();
 
 // Registering the extensions also teaches gltf-transform to read WebP image sizes.
@@ -82,46 +99,57 @@ export interface ImportOptions {
   force?: boolean;
   /** Add the export to an existing Scan as a Fill Capture, instead of making it the Scan's mesh. */
   fill?: boolean;
+  /** Add the export to an existing Scan as a Detail Capture: a close-up of a few Originals, decimated to 80k triangles. */
+  detail?: boolean;
+  /**
+   * Keep only the triangles whose centroid lies inside this floor rectangle, [minX, minZ, maxX, maxZ] in
+   * meters in the export's own frame: for a Capture that also saw rooms beyond this one.
+   */
+  crop?: Crop;
   /** Where Scan folders go. Defaults to data/scans/. */
   scansDir?: string;
 }
 
 /**
- * Imports a Polycam export as data/scans/<scanId>/ and measures the mesh it wrote: `room.glb`, or with
- * `fill`, the Fill Capture's `captures/fill-<n>.glb`.
+ * Imports a Polycam or KIRI Engine export as data/scans/<scanId>/ and measures the mesh it wrote:
+ * `room.glb`, or with `fill` or `detail`, the Capture's `captures/fill-<n>.glb` or `captures/detail-<n>.glb`.
  */
-export async function importScan({ input, scanId, name = scanId, raw, force = false, fill = false, scansDir = SCANS_DIR }: ImportOptions) {
+export async function importScan({
+  input, scanId, name = scanId, raw, force = false, fill = false, detail = false, crop, scansDir = SCANS_DIR,
+}: ImportOptions) {
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(scanId)) {
     throw new Error(`The scanId must look like lounge-v1 (lowercase letters, digits, and hyphens), not "${scanId}".`);
   }
   for (const path of [input, raw]) if (path !== undefined && !existsSync(path)) throw new Error(`Not found: ${path}`);
+  if (fill && detail) throw new Error('A Capture is either a Fill Capture (--fill) or a Detail Capture (--detail), not both.');
+  const extra = fill ? '--fill' : detail ? '--detail' : null;
   const dir = join(scansDir, scanId);
   const manifestPath = join(dir, 'manifest.json');
-  if (fill) {
-    if (!existsSync(manifestPath)) throw new Error(`There is no Scan "${scanId}" yet. Import its Main Capture first, without --fill.`);
-    if (raw) throw new Error('--raw goes with the Main Capture, not with --fill.');
+  if (extra) {
+    if (!existsSync(manifestPath)) throw new Error(`There is no Scan "${scanId}" yet. Import its Main Capture first, without ${extra}.`);
+    if (raw) throw new Error(`--raw goes with the Main Capture, not with ${extra}.`);
   } else if (existsSync(manifestPath) && !force) {
     throw new Error(`${dir} already exists. Pass --force to replace it; then redo Room Setup step 1.`);
   }
-  const manifest: ScanManifest = fill ? JSON.parse(await readFile(manifestPath, 'utf8')) : scanManifest(scanId, name);
+  const manifest: ScanManifest = extra ? JSON.parse(await readFile(manifestPath, 'utf8')) : scanManifest(scanId, name);
   const captures = manifest.captures ?? { main: 'captures/main.glb', fills: [] };
-  const mesh = fill ? `captures/fill-${captures.fills.length + 1}.glb` : manifest.mesh;
+  const details = captures.details ?? [];
+  const mesh = fill ? `captures/fill-${captures.fills.length + 1}.glb`
+    : detail ? `captures/detail-${details.length + 1}.glb` : manifest.mesh;
 
-  const unzipped = await mkdtemp(join(tmpdir(), 'scan-import-'));
-  try {
-    const document = await io.read(await locateModel(input, unzipped));
-    await optimizeScan(document);
-    await document.transform(unpartition()); // a .glb holds one buffer
-    await mkdir(dirname(join(dir, mesh)), { recursive: true });
-    await io.write(join(dir, mesh), document);
-  } finally {
-    await rm(unzipped, { recursive: true, force: true });
-  }
-  if (fill) {
+  const document = await readExport(input, crop);
+  await optimizeScan(document, detail ? DETAIL_MAX_TRIANGLES : MAX_TRIANGLES);
+  await document.transform(unpartition()); // a .glb holds one buffer
+  await mkdir(dirname(join(dir, mesh)), { recursive: true });
+  await io.write(join(dir, mesh), document);
+  if (extra) {
     // The merge always rebuilds room.glb from the Main Capture, so keep it before room.glb changes.
     if (!manifest.captures) await copyFile(join(dir, manifest.mesh), join(dir, captures.main));
+    // Lined up later: a Fill Capture in Room Setup step 6 (the merge leaves it out until then), a Detail Capture with register-closeup.
     const identity = { position: [0, 0, 0] as Vec3, rotationY: 0 };
-    manifest.captures = { ...captures, fills: [...captures.fills, { mesh, transform: identity, moved: [] }] };
+    manifest.captures = fill
+      ? { ...captures, fills: [...captures.fills, { mesh, transform: identity, moved: [] }] }
+      : { ...captures, details: [...details, { mesh, transform: identity, originalIds: [] }] };
   }
   if (raw) await unpackRaw(raw, join(dir, 'raw'));
   // Written last: a manifest is what makes the folder a Scan (GET /api/scans lists them).
@@ -131,6 +159,61 @@ export async function importScan({ input, scanId, name = scanId, raw, force = fa
 
 /** Writes JSON the way the server's PUT routes do, so a later save makes a small diff. */
 export const writeJson = (path: string, value: unknown) => writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
+
+/**
+ * An export as a glTF Document, as it is (not optimized): a Polycam .glb or .gltf, a KIRI Engine
+ * .obj, a .zip of either, or a folder holding one; optionally cropped to a floor rectangle.
+ */
+export async function readExport(input: string, crop?: Crop): Promise<Document> {
+  const unzipped = await mkdtemp(join(tmpdir(), 'scan-import-'));
+  try {
+    const document = await readModel(await locateModel(input, unzipped), unzipped);
+    if (crop) cropScan(document, crop);
+    return document;
+  } finally {
+    await rm(unzipped, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Reads the model as a glTF Document. KIRI Engine exports an OBJ with its MTL and texture beside it,
+ * which obj2gltf converts (into `workDir`) first; it reads nothing outside the OBJ's folder.
+ */
+async function readModel(path: string, workDir: string): Promise<Document> {
+  if (!/\.obj$/i.test(path)) return io.read(path);
+  const glb: Buffer = await obj2gltf(path, { binary: true, secure: true });
+  const converted = join(workDir, 'converted-from-obj.glb');
+  await writeFile(converted, glb);
+  return io.read(converted);
+}
+
+/** A floor rectangle, [minX, minZ, maxX, maxZ] in meters. */
+export type Crop = [minX: number, minZ: number, maxX: number, maxZ: number];
+
+/** Drops every triangle whose centroid, in world space, lies outside the floor rectangle. */
+function cropScan(document: Document, [minX, minZ, maxX, maxZ]: Crop) {
+  for (const node of document.getRoot().listNodes()) {
+    const m = node.getWorldMatrix();
+    for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
+      if (primitive.getMode() !== Primitive.Mode.TRIANGLES) continue;
+      const position = primitive.getAttribute('POSITION')!;
+      const indices = primitive.getIndices()?.getArray() ?? Uint32Array.from({ length: position.getCount() }, (_, i) => i);
+      const kept: number[] = [];
+      const v: number[] = [];
+      for (let t = 0; t < indices.length; t += 3) {
+        let [x, z] = [0, 0];
+        for (let k = 0; k < 3; k++) {
+          const [px, py, pz] = position.getElement(indices[t + k], v);
+          x += (m[0] * px + m[4] * py + m[8] * pz + m[12]) / 3;
+          z += (m[2] * px + m[6] * py + m[10] * pz + m[14]) / 3;
+        }
+        if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) kept.push(indices[t], indices[t + 1], indices[t + 2]);
+      }
+      const index = document.createAccessor().setType('SCALAR').setArray(new Uint32Array(kept)).setBuffer(position.getBuffer());
+      compactPrimitive(primitive.setIndices(index));
+    }
+  }
+}
 
 /** The path of the model to import: the input itself, or the one model inside the folder or .zip. */
 async function locateModel(input: string, unzipDir: string): Promise<string> {
@@ -153,7 +236,7 @@ export function findModel(files: string[]): string {
   }
   // Zips made on a Mac also hold "__MACOSX/" and "._name" copies of each file.
   const models = files.filter((file) => MODEL.test(file) && !/(^|\/)(__MACOSX\/|\._)/.test(file));
-  if (models.length === 0) throw new Error('No .gltf or .glb file in the export');
+  if (models.length === 0) throw new Error('No .gltf, .glb or .obj file in the export');
   if (models.length > 1) {
     throw new Error(`The export has ${models.length} models (${models.join(', ')}). Pass the one to import instead of the whole export.`);
   }
@@ -180,20 +263,23 @@ const listZip = (zip: string) => runUnzip(['-Z1', zip]).split('\n');
 const unzip = (zip: string, dir: string) => runUnzip(['-q', '-o', zip, '-d', dir, '-x', '__MACOSX/*', '._*', '*/._*']);
 
 /**
- * Does what `gltf-transform optimize --texture-compress webp --texture-size 2048` does, with the CLI's
+ * Does what `gltf-transform optimize --texture-compress webp --texture-size 4096` does, with the CLI's
  * defaults (v4.5), in process. Then, while the mesh has more than maxTriangles, simplify passes target
  * that count. Scans have no animation, so the CLI's resample step is left out.
+ *
+ * Simplify never moves a part's border: parts with different textures meet there, and moving it
+ * would open a crack between them. (meshoptimizer already keeps texture seams within a part.)
  */
 export async function optimizeScan(document: Document, maxTriangles = MAX_TRIANGLES) {
   await Promise.all([MeshoptSimplifier.ready, MeshoptEncoder.ready]);
   await document.transform(
     dedup(), instance(), palette(), flatten(), joinPrimitives(), weld(),
-    simplify({ simplifier: MeshoptSimplifier, error: 0.0001 }),
+    simplify({ simplifier: MeshoptSimplifier, error: 0.0001, lockBorder: true }),
   );
   // meshoptimizer collapses the cheapest edges first, so with no error limit it stops at the target count.
   // The ratio applies to each primitive; when one can't shrink that far, the next pass takes more from the others.
   for (let triangles = countTriangles(document), before = Infinity; triangles > maxTriangles && triangles < before;) {
-    await document.transform(simplify({ simplifier: MeshoptSimplifier, ratio: maxTriangles / triangles, error: 1 }));
+    await document.transform(simplify({ simplifier: MeshoptSimplifier, ratio: maxTriangles / triangles, error: 1, lockBorder: true }));
     [before, triangles] = [triangles, countTriangles(document)];
   }
   await document.transform(
@@ -246,8 +332,8 @@ const formatBytes = (bytes: number) =>
 const formatMeters = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'negative' }).format;
 const formatPoint = (point: Vec3) => `(${point.map(formatMeters).join(', ')})`;
 
-/** The summary printed after an import. */
-export function formatSummary({ triangles, textures, bounds: { min, max } }: ScanStats): string {
+/** The summary printed after an import: of a room, or of a Detail Capture (a close-up, so not a room's height). */
+export function formatSummary({ triangles, textures, bounds: { min, max } }: ScanStats, of: 'room' | 'detail' = 'room'): string {
   const [sx, sy, sz] = max.map((value, axis) => value - min[axis]);
   const textureList = textures
     .map(({ width, height, mimeType, bytes }) => `${width}×${height} ${mimeType.replace('image/', '')} (${formatBytes(bytes)})`)
@@ -261,7 +347,7 @@ export function formatSummary({ triangles, textures, bounds: { min, max } }: Sca
   if (triangles > MAX_TRIANGLES) {
     lines.push(`⚠ ${triangles.toLocaleString('en-US')} triangles is over the limit of ${MAX_TRIANGLES.toLocaleString('en-US')}.`);
   }
-  if (sy < ROOM_HEIGHT.min || sy > ROOM_HEIGHT.max) {
+  if (of === 'room' && (sy < ROOM_HEIGHT.min || sy > ROOM_HEIGHT.max)) {
     lines.push(`⚠ The Y extent is ${formatMeters(sy)} m, outside ${ROOM_HEIGHT_TEXT} for a room. Check that +Y is up and the units are meters.`);
   }
   return lines.join('\n');
@@ -275,6 +361,8 @@ async function main() {
       name: { type: 'string' },
       force: { type: 'boolean' },
       fill: { type: 'boolean' },
+      detail: { type: 'boolean' },
+      crop: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -285,14 +373,24 @@ async function main() {
     return;
   }
   const [input, scanId] = positionals;
+  const crop = values.crop === undefined ? undefined : parseCrop(values.crop);
   console.log(`Importing ${input} as Scan "${scanId}". Optimizing can take a minute…`);
-  const { dir, mesh, stats } = await importScan({ input, scanId, ...values });
+  const { dir, mesh, stats } = await importScan({ input, scanId, ...values, crop });
   const shown = relative(process.cwd(), dir);
   console.log(`\nWrote ${shown}/${mesh} and manifest.json${values.raw ? ', and unpacked the Raw Data into raw/' : ''}.\n`);
-  console.log(formatSummary(stats));
-  console.log(values.fill
-    ? `\nNext: commit ${mesh}, captures/main.glb and manifest.json, then line it up in /setup/${scanId}, step 6 (Fill Captures).`
-    : `\nNext: commit room.glb and manifest.json (git ignores raw/), then open /setup/${scanId} for Room Setup.`);
+  console.log(formatSummary(stats, values.detail ? 'detail' : 'room'));
+  if (values.fill) console.log(`\nNext: commit ${mesh}, captures/main.glb and manifest.json, then line it up in /setup/${scanId}, step 6 (Fill Captures).`);
+  else if (values.detail) console.log(`\nNext: commit ${mesh}, captures/main.glb and manifest.json, then find its size and place with scripts/register-closeup.ts.`);
+  else console.log(`\nNext: commit room.glb and manifest.json (git ignores raw/), then open /setup/${scanId} for Room Setup.`);
+}
+
+/** --crop's "minX,minZ,maxX,maxZ". */
+export function parseCrop(text: string): Crop {
+  const values = text.split(',').map(Number);
+  if (values.length !== 4 || values.some((v) => !Number.isFinite(v)) || values[0] >= values[2] || values[1] >= values[3]) {
+    throw new Error(`--crop takes "minX,minZ,maxX,maxZ" in meters, with each min below its max, not "${text}".`);
+  }
+  return values as Crop;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

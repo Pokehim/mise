@@ -8,18 +8,18 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { type Document, type Material, Primitive, type Texture } from '@gltf-transform/core';
+import { type Document, Primitive } from '@gltf-transform/core';
 import {
-  copyToDocument, createDefaultPropertyResolver, dedup, dequantize, getGLPrimitiveCount, meshopt, prune, simplify, unpartition,
-  weld,
+  createDefaultPropertyResolver, dedup, getGLPrimitiveCount, meshopt, prune, simplify, unpartition, weld,
 } from '@gltf-transform/functions';
 import { MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
-import sharp from 'sharp';
 import { pointInPolygon } from '../shared/geometry';
 import type { RoomSetup, ScanManifest, Vec3, YawTransform } from '../shared/types';
 import { IDENTITY, applyYaw, composeYaw, inGrownBox, invertYaw, sampleGrid } from '../web/src/setup/geometry/align';
 import { triangleClassifier } from '../web/src/setup/geometry/classify';
-import { type TriangleMesh, newTriangleInfo, triangleInfo } from '../web/src/setup/geometry/mesh';
+import {
+  type Picked, Pixels, type Source, addPieces, captureSources, distanceToTriangle, pick, pickedArea, readCapture,
+} from './capture-tools';
 import { io, MAX_TRIANGLES, SCANS_DIR } from './scan-import';
 
 const MERGE = {
@@ -64,18 +64,6 @@ export interface MergeSummary {
 
 /** A Scan the merge can't work on yet, such as one with no Fill Captures: the caller's to fix, not a fault. */
 export class MergeInputError extends Error {}
-
-/** One triangle primitive of a Capture: its vertices in the Main Capture's frame, and its triangles in the room frame. */
-interface Source {
-  main: Float32Array;
-  room: TriangleMesh;
-  uvs: Float32Array | null;
-  material: Material | null;
-  /** The split's group of each triangle, by the room's setup (spec §9.4). */
-  groups: Uint16Array;
-}
-
-type Rgb = [number, number, number];
 
 /**
  * Rebuilds `room.glb` in a Scan folder from `captures.main` and each lined-up Fill Capture, using the
@@ -178,70 +166,6 @@ export async function mergeScan(dir: string, { maxTriangles = MAX_TRIANGLES } = 
   return summary;
 }
 
-async function readCapture(path: string): Promise<Document> {
-  const document = await io.read(path);
-  // Float vertices, so the merge can add to them and quantize everything again once at the end.
-  await document.transform(dequantize());
-  return document;
-}
-
-/** A Capture's triangle primitives, in the Main Capture's frame (by `toMain`) and the room frame (by meshTransform). */
-function captureSources(
-  document: Document, toMain: YawTransform, meshTransform: YawTransform, classify: (info: ReturnType<typeof newTriangleInfo>) => number,
-): Source[] {
-  const sources: Source[] = [];
-  const info = newTriangleInfo();
-  for (const node of document.getRoot().listNodes()) {
-    const m = node.getWorldMatrix();
-    for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
-      if (primitive.getMode() !== Primitive.Mode.TRIANGLES) continue;
-      const position = primitive.getAttribute('POSITION')!;
-      const count = position.getCount();
-      const main = new Float32Array(count * 3);
-      const roomPositions = new Float32Array(count * 3);
-      const v: number[] = [];
-      for (let i = 0; i < count; i++) {
-        const [x, y, z] = position.getElement(i, v);
-        const inMain = applyYaw(toMain, [
-          m[0] * x + m[4] * y + m[8] * z + m[12], m[1] * x + m[5] * y + m[9] * z + m[13], m[2] * x + m[6] * y + m[10] * z + m[14],
-        ]);
-        main.set(inMain, 3 * i);
-        roomPositions.set(applyYaw(meshTransform, inMain), 3 * i);
-      }
-      const indexArray = primitive.getIndices()?.getArray();
-      const index = indexArray ? Uint32Array.from(indexArray) : Uint32Array.from({ length: count }, (_, i) => i);
-      const roomMesh = { positions: roomPositions, index };
-      const groups = new Uint16Array(index.length / 3);
-      for (let t = 0; t < groups.length; t++) groups[t] = classify(triangleInfo(roomMesh, t, info));
-      const uv = primitive.getAttribute('TEXCOORD_0');
-      sources.push({
-        main, room: roomMesh, groups,
-        uvs: uv ? Float32Array.from(uv.getArray()!) : null,
-        material: primitive.getMaterial(),
-      });
-    }
-  }
-  return sources;
-}
-
-/** A triangle picked from a source, with its room-frame centroid, normal and area. */
-interface Picked { source: Source; t: number; centroid: Vec3; normal: Vec3; area: number }
-
-function pick(sources: Source[], keep: (source: Source, t: number, centroid: Vec3) => boolean): Picked[] {
-  const picked: Picked[] = [];
-  const info = newTriangleInfo();
-  for (const source of sources) {
-    for (let t = 0; t < source.groups.length; t++) {
-      triangleInfo(source.room, t, info);
-      const centroid: Vec3 = [info.cx, info.cy, info.cz];
-      if (info.area > 0 && keep(source, t, centroid)) picked.push({ source, t, centroid, normal: [info.nx, info.ny, info.nz], area: info.area });
-    }
-  }
-  return picked;
-}
-
-const pickedArea = (picked: Picked[]) => picked.reduce((sum, p) => sum + p.area, 0);
-
 /** The floor area inside a region: the room's floor polygon, sampled every 5 cm. */
 function floorArea(inRegion: (point: Vec3) => boolean, { floor: { polygon } }: RoomSetup) {
   const step = 0.05;
@@ -274,86 +198,6 @@ function mainCopyOf(mainSources: Source[], group: number) {
     },
   };
 }
-
-/** The distance from a point to a picked triangle's surface (Ericson, Real-Time Collision Detection §5.1.5). */
-function distanceToTriangle(p: Vec3, { source, t }: Picked): number {
-  const vertex = (k: number): Vec3 => {
-    const v = 3 * source.room.index[3 * t + k];
-    return [source.room.positions[v], source.room.positions[v + 1], source.room.positions[v + 2]];
-  };
-  const [a, b, c] = [vertex(0), vertex(1), vertex(2)];
-  const sub = (u: Vec3, w: Vec3): Vec3 => [u[0] - w[0], u[1] - w[1], u[2] - w[2]];
-  const dot = (u: Vec3, w: Vec3) => u[0] * w[0] + u[1] * w[1] + u[2] * w[2];
-  const at = (s: number, r: number): Vec3 => [0, 1, 2].map((k) => a[k] + s * (b[k] - a[k]) + r * (c[k] - a[k])) as Vec3;
-  const [ab, ac, ap] = [sub(b, a), sub(c, a), sub(p, a)];
-  const [d1, d2] = [dot(ab, ap), dot(ac, ap)];
-  let closest: Vec3;
-  if (d1 <= 0 && d2 <= 0) closest = a;
-  else {
-    const bp = sub(p, b);
-    const [d3, d4] = [dot(ab, bp), dot(ac, bp)];
-    const cp = sub(p, c);
-    const [d5, d6] = [dot(ab, cp), dot(ac, cp)];
-    const [va, vb, vc] = [d3 * d6 - d5 * d4, d5 * d2 - d1 * d6, d1 * d4 - d3 * d2];
-    if (d3 >= 0 && d4 <= d3) closest = b;
-    else if (d6 >= 0 && d5 <= d6) closest = c;
-    else if (vc <= 0 && d1 >= 0 && d3 <= 0) closest = at(d1 / (d1 - d3), 0);
-    else if (vb <= 0 && d2 >= 0 && d6 <= 0) closest = at(0, d2 / (d2 - d6));
-    else if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) {
-      const w = (d4 - d3) / (d4 - d3 + (d5 - d6));
-      closest = [0, 1, 2].map((k) => b[k] + w * (c[k] - b[k])) as Vec3;
-    } else {
-      const denominator = 1 / (va + vb + vc);
-      closest = at(vb * denominator, vc * denominator);
-    }
-  }
-  return Math.hypot(...sub(p, closest));
-}
-
-/** Decoded texture pixels, read once per texture. */
-class Pixels {
-  private cache = new Map<Texture, Promise<{ data: Buffer; width: number; height: number } | null>>();
-
-  get(texture: Texture) {
-    let pixels = this.cache.get(texture);
-    if (!pixels) {
-      const image = texture.getImage();
-      pixels = image
-        ? sharp(Buffer.from(image)).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-          .then(({ data, info }) => ({ data, width: info.width, height: info.height }))
-        : Promise.resolve(null);
-      this.cache.set(texture, pixels);
-    }
-    return pixels;
-  }
-
-  /**
-   * A triangle's color in linear RGB, the space glTF's baseColorFactor multiplies in: its sRGB
-   * texture at its UV centroid (repeating), decoded, times its material's base color.
-   */
-  async colorOf({ source, t }: Picked): Promise<Rgb | null> {
-    const material = source.material;
-    if (!material) return null;
-    const factor = material.getBaseColorFactor();
-    const texture = material.getBaseColorTexture();
-    if (!texture || !source.uvs) return [factor[0], factor[1], factor[2]];
-    const pixels = await this.get(texture);
-    if (!pixels) return null;
-    const index = source.room.index;
-    let [u, v] = [0, 0];
-    for (let k = 0; k < 3; k++) {
-      u += source.uvs[2 * index[3 * t + k]] / 3;
-      v += source.uvs[2 * index[3 * t + k] + 1] / 3;
-    }
-    // glTF UVs start at the image's top-left corner.
-    const x = Math.min(pixels.width - 1, Math.floor((u - Math.floor(u)) * pixels.width));
-    const y = Math.min(pixels.height - 1, Math.floor((v - Math.floor(v)) * pixels.height));
-    const i = 4 * (y * pixels.width + x);
-    return [0, 1, 2].map((c) => srgbToLinear(pixels.data[i + c] / 255) * factor[c]) as Rgb;
-  }
-}
-
-const srgbToLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 
 /**
  * The per-channel factor that turns the Fill Capture's colors into the Main Capture's, from the
@@ -418,47 +262,8 @@ function addFill(
   room: Document, from: Document, resolve: ReturnType<typeof createDefaultPropertyResolver>, picked: Picked[], gain: Vec3,
   tag: { kind: 'patch' | 'completion'; originalId: string; capture: number }, transform?: YawTransform,
 ): number {
-  const scene = room.getRoot().getDefaultScene() ?? room.getRoot().listScenes()[0];
-  const buffer = room.getRoot().listBuffers()[0] ?? room.createBuffer();
-  const bySource = new Map<Source, number[]>();
-  for (const p of picked) {
-    if (!bySource.has(p.source)) bySource.set(p.source, []);
-    bySource.get(p.source)!.push(p.t);
-  }
-  let added = 0;
-  for (const [source, triangles] of bySource) {
-    // Only the vertices these triangles use, renumbered.
-    const remap = new Map<number, number>();
-    const index = new Uint32Array(triangles.length * 3);
-    triangles.forEach((t, i) => {
-      for (let k = 0; k < 3; k++) {
-        const v = source.room.index[3 * t + k];
-        if (!remap.has(v)) remap.set(v, remap.size);
-        index[3 * i + k] = remap.get(v)!;
-      }
-    });
-    const positions = new Float32Array(remap.size * 3);
-    const uvs = source.uvs && new Float32Array(remap.size * 2);
-    for (const [v, n] of remap) {
-      const p: Vec3 = [source.main[3 * v], source.main[3 * v + 1], source.main[3 * v + 2]];
-      positions.set(transform ? applyYaw(transform, p) : p, 3 * n);
-      if (uvs) uvs.set([source.uvs![2 * v], source.uvs![2 * v + 1]], 2 * n);
-    }
-    const name = `${tag.kind === 'patch' ? 'Patch' : 'Completion'} ${tag.originalId} (Fill Capture ${tag.capture + 1})`;
-    const primitive = room.createPrimitive()
-      .setAttribute('POSITION', room.createAccessor().setType('VEC3').setArray(positions).setBuffer(buffer))
-      .setIndices(room.createAccessor().setType('SCALAR').setArray(index).setBuffer(buffer));
-    if (uvs) primitive.setAttribute('TEXCOORD_0', room.createAccessor().setType('VEC2').setArray(uvs).setBuffer(buffer));
-    if (source.material) {
-      const copied = copyToDocument(room, from, [source.material], resolve).get(source.material) as Material;
-      const [r, g, b, a] = copied.getBaseColorFactor();
-      primitive.setMaterial(copied.clone().setName(name).setBaseColorFactor([r * gain[0], g * gain[1], b * gain[2], a]));
-    }
-    const mesh = room.createMesh(name).addPrimitive(primitive).setExtras({ mise: { fill: tag } });
-    scene.addChild(room.createNode(name).setMesh(mesh));
-    added += triangles.length;
-  }
-  return added;
+  const name = `${tag.kind === 'patch' ? 'Patch' : 'Completion'} ${tag.originalId} (Fill Capture ${tag.capture + 1})`;
+  return addPieces(room, from, resolve, picked, gain, name, { mise: { fill: tag } }, transform);
 }
 
 function countTriangles(document: Document) {

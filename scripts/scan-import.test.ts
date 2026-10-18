@@ -53,10 +53,10 @@ function openRoom([width, height]: [number, number] = [4, 2]): Document {
 }
 
 /** A bumpy n × n m floor of 2n² triangles, like a noisy scan that simplify can't flatten for free. */
-function bumpyFloor(n: number): Document {
+function bumpyFloor(n: number, bumps = 0.05): Document {
   const positions: number[] = [];
   for (let i = 0; i <= n; i++) {
-    for (let j = 0; j <= n; j++) positions.push(i, 0.05 * Math.sin(i * 12.9898 + j * 78.233) * Math.sin(j * 4.1 + i), j);
+    for (let j = 0; j <= n; j++) positions.push(i, bumps * Math.sin(i * 12.9898 + j * 78.233) * Math.sin(j * 4.1 + i), j);
   }
   const indices: number[] = [];
   for (let i = 0; i < n; i++) {
@@ -77,6 +77,46 @@ describe('optimizeScan', () => {
 
     expect(measureScan(document).triangles).toBeLessThanOrEqual(5_000);
     expect(measureScan(document).triangles).toBeGreaterThan(2_500);
+  });
+
+  it('keeps the edge two textured parts share in place, so the parts never crack apart', async () => {
+    // Two bumpy 20 × 40 m halves of a floor, each with its own texture, meeting along x = 20.
+    const document = new Document();
+    const buffer = document.createBuffer();
+    const scene = document.createScene();
+    for (const [x0, seed] of [[0, 1], [20, 2]]) {
+      const half = bumpyFloor(20);
+      const primitive = half.getRoot().listMeshes()[0].listPrimitives()[0];
+      const positions = primitive.getAttribute('POSITION')!.getArray()!.slice();
+      for (let i = 0; i < positions.length; i += 3) [positions[i], positions[i + 2]] = [positions[i] + x0, positions[i + 2] * 2];
+      const pixels = Buffer.from(Array.from({ length: 16 * 4 }, (_, i) => (i * 37 * seed) % 256));
+      const texture = document.createTexture().setMimeType('image/png')
+        .setImage(PNG.sync.write(Object.assign(new PNG({ width: 4, height: 4 }), { data: pixels })));
+      const uvs = new Float32Array((positions.length / 3) * 2).map((_, i) => (i % 2 === 0 ? positions[(i / 2) * 3] : positions[((i - 1) / 2) * 3 + 2]) / 40);
+      const part = document.createPrimitive()
+        .setAttribute('POSITION', document.createAccessor().setType('VEC3').setArray(positions).setBuffer(buffer))
+        .setAttribute('TEXCOORD_0', document.createAccessor().setType('VEC2').setArray(uvs).setBuffer(buffer))
+        .setIndices(document.createAccessor().setType('SCALAR').setArray(primitive.getIndices()!.getArray()!.slice()).setBuffer(buffer))
+        .setMaterial(document.createMaterial().setBaseColorTexture(texture));
+      scene.addChild(document.createNode().setMesh(document.createMesh().addPrimitive(part)));
+    }
+
+    await optimizeScan(document, 600);
+
+    // Where each part's vertices lie on the shared edge, in world space.
+    const onEdge = document.getRoot().listNodes().filter((node) => node.getMesh()).map((node) => {
+      const m = node.getWorldMatrix();
+      const position = node.getMesh()!.listPrimitives()[0].getAttribute('POSITION')!;
+      const zs: number[] = [];
+      for (let i = 0; i < position.getCount(); i++) {
+        const [x, y, z] = position.getElement(i, [] as number[]);
+        if (Math.abs(m[0] * x + m[4] * y + m[8] * z + m[12] - 20) < 0.01) zs.push(+(m[2] * x + m[6] * y + m[10] * z + m[14]).toFixed(2));
+      }
+      return zs.sort((a, b) => a - b);
+    });
+    expect(measureScan(document).triangles).toBeLessThan(1_600);
+    expect(onEdge).toHaveLength(2);
+    expect(onEdge[0]).toEqual(onEdge[1]);
   });
 
   it('converts textures to WebP no larger than 4096 px, keeping their aspect ratio', async () => {
@@ -137,6 +177,11 @@ describe('formatSummary', () => {
     expect(summary).toContain('min (-1.80, 0.00, -2.10) m');
   });
 
+  it("doesn't hold a Detail Capture, a close-up of a chair or table, to a room's height", () => {
+    const chair = { ...dorm, triangles: 80_000, bounds: { min: [-0.46, 0, -0.55], max: [0.44, 0.75, 0.36] } as ScanStats['bounds'] };
+    expect(formatSummary(chair, 'detail')).not.toContain('⚠');
+  });
+
   it('warns when simplify could not bring the mesh under 500k triangles', () => {
     expect(formatSummary({ ...dorm, triangles: 512_000 })).toContain('⚠ 512,000 triangles is over the limit of 500,000.');
   });
@@ -164,8 +209,12 @@ describe('findModel', () => {
     expect(findModel(['__MACOSX/._Room.GLB', '._Room.GLB', 'Room.GLB'])).toBe('Room.GLB');
   });
 
+  it("finds KIRI Engine's OBJ beside its MTL and texture", () => {
+    expect(findModel(['model.jpg', 'model.mtl', 'model.obj'])).toBe('model.obj');
+  });
+
   it('fails when the export has no model', () => {
-    expect(() => findModel(['scene.obj', 'texture.png'])).toThrow('No .gltf or .glb file in the export');
+    expect(() => findModel(['scene.mtl', 'texture.png'])).toThrow('No .gltf, .glb or .obj file in the export');
   });
 
   it('fails on the Raw Data export, which holds a raw.glb but belongs in --raw', () => {
@@ -202,6 +251,57 @@ describe('importScan', () => {
     await io.write(join(tmp, 'polycam-gltf/scene.gltf'), openRoom());
     return zip('polycam-gltf.zip', 'polycam-gltf');
   }
+
+  /**
+   * A KIRI Engine LiDAR export, zipped: model.obj, model.mtl and model.png. Its OBJ holds the room's
+   * 10 triangles plus a 2 m square of floor beyond the room (x 3–5 m), like the hallway KIRI also saw.
+   */
+  async function kiriExport() {
+    const room = openRoom();
+    const [primitive] = room.getRoot().listMeshes()[0].listPrimitives();
+    const matrix = room.getRoot().listNodes()[0].getWorldMatrix();
+    const position = primitive.getAttribute('POSITION')!;
+    const vertices = Array.from({ length: position.getCount() }, (_, i) => {
+      const [x, y, z] = position.getElement(i, [] as number[]);
+      return [0, 1, 2].map((k) => matrix[k] * x + matrix[4 + k] * y + matrix[8 + k] * z + matrix[12 + k]);
+    });
+    vertices.push([3, 0, -1], [3, 0, 1], [5, 0, 1], [5, 0, -1]);
+    const faces = [...primitive.getIndices()!.getArray()!, 20, 21, 22, 20, 22, 23];
+    const obj = [
+      'mtllib model.mtl',
+      ...vertices.map((v) => `v ${v.join(' ')}`),
+      ...vertices.map((_, i) => `vt ${(i % 4) / 4} ${(i % 3) / 3}`),
+      'usemtl material_0',
+      ...Array.from({ length: faces.length / 3 }, (_, f) => `f ${[0, 1, 2].map((k) => `${faces[3 * f + k] + 1}/${faces[3 * f + k] + 1}`).join(' ')}`),
+    ];
+    await mkdir(join(tmp, 'kiri'));
+    await writeFile(join(tmp, 'kiri/model.obj'), `${obj.join('\n')}\n`);
+    // KIRI writes "Tr 1" for its opaque material; the import must not turn the room transparent.
+    await writeFile(join(tmp, 'kiri/model.mtl'), 'newmtl material_0\nKd 1 1 1\nTr 1.000000\nillum 1\nmap_Kd model.png\n');
+    await writeFile(join(tmp, 'kiri/model.png'), Buffer.from(room.getRoot().listTextures()[0].getImage()!));
+    return zip('Scene 1_lidarDataSet.zip', 'kiri');
+  }
+
+  it("imports KIRI Engine's zipped OBJ export, with its MTL and texture, as an opaque textured mesh", async () => {
+    const { dir, stats } = await importScan({ input: await kiriExport(), scanId: 'kiri-room', scansDir: join(tmp, 'scans') });
+
+    expect(stats.triangles).toBe(12);
+    expect(stats.textures.map((texture) => texture.mimeType)).toEqual(['image/webp']);
+    expect(stats.bounds.min.map((v) => +v.toFixed(3) + 0)).toEqual([-1.8, 0, -2.1]);
+    expect(stats.bounds.max.map((v) => +v.toFixed(3) + 0)).toEqual([5, 2.6, 2.1]);
+    const [material] = (await io.read(join(dir, 'room.glb'))).getRoot().listMaterials();
+    expect(material.getAlphaMode()).toBe('OPAQUE');
+    expect(material.getAlpha()).toBe(1);
+  });
+
+  it("crops off what lies outside a floor rectangle in the Capture's own frame, such as the hallway KIRI saw", async () => {
+    const { stats } = await importScan({
+      input: await kiriExport(), scanId: 'kiri-room', scansDir: join(tmp, 'scans'), crop: [-2, -2.5, 2, 2.5],
+    });
+
+    expect(stats.triangles).toBe(10);
+    expect(stats.bounds.max.map((v) => +v.toFixed(3) + 0)).toEqual([1.8, 2.6, 2.1]);
+  });
 
   it('turns a zipped glTF export into a Scan folder with room.glb and manifest.json', async () => {
     const { dir, stats } = await importScan({
@@ -267,6 +367,26 @@ describe('importScan', () => {
     expect(await readFile(join(dir, 'captures/main.glb'))).toEqual(room);
     expect(await readFile(join(dir, 'room.glb'))).toEqual(room);
     expect(second.stats.triangles).toBe(10);
+  });
+
+  it('adds a Detail Capture, decimated to at most 80,000 triangles, to an existing Scan', async () => {
+    const options = { input: await zippedExport(), scanId: 'test-room', scansDir: join(tmp, 'scans') };
+    await importScan(options);
+    const dir = join(tmp, 'scans/test-room');
+    // 88,200 triangles, too rough for the import's near-lossless first pass to remove many.
+    await io.write(join(tmp, 'close-up.glb'), bumpyFloor(210, 5));
+
+    const { mesh, stats } = await importScan({ ...options, input: join(tmp, 'close-up.glb'), detail: true });
+
+    expect(mesh).toBe('captures/detail-1.glb');
+    expect(stats.triangles).toBeLessThanOrEqual(80_000);
+    expect(stats.triangles).toBeGreaterThan(60_000);
+    expect(JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8')).captures).toEqual({
+      main: 'captures/main.glb',
+      fills: [],
+      details: [{ mesh: 'captures/detail-1.glb', transform: { position: [0, 0, 0], rotationY: 0 }, originalIds: [] }],
+    });
+    expect(await readFile(join(dir, 'captures/main.glb'))).toEqual(await readFile(join(dir, 'room.glb')));
   });
 
   it('refuses a Fill Capture for a Scan that has no Main Capture yet', async () => {

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { Vec2, Vec3, YawTransform } from '@shared/types';
 import {
-  applyYaw, composeYaw, fitCorners, invertYaw, refineAlignment, registerMoved, surfaceSamples, transformMesh, triangleSamples,
+  type ScaledYaw, applyYaw, composeYaw, fitCorners, fitSimilar, invertYaw, refineAlignment, refineScaled, registerDetail,
+  registerMoved, surfaceSamples, transformMesh, triangleSamples,
 } from './align';
 import { mergeMeshes } from './mesh';
 import { box, degrees } from './testShapes';
@@ -21,6 +22,14 @@ describe('YawTransform algebra', () => {
 
   it('inverts', () => {
     close(point(composeYaw(invertYaw(a), a), p), p, 9);
+  });
+
+  it('composes and inverts with a scale, as a Detail Capture transform has, scaling first', () => {
+    const scaled: ScaledYaw = { ...b, scale: 1.3 };
+    close(point(scaled, p), point(b, p.map((v) => v * 1.3) as Vec3), 9);
+    close(point(composeYaw(a, scaled), p), point(a, point(scaled, p)), 9);
+    close(point(composeYaw(invertYaw(scaled), scaled), p), p, 9);
+    expect(composeYaw(a, b)).not.toHaveProperty('scale');
   });
 
   it('turns +Z toward +X for a positive angle, as three.js does', () => {
@@ -91,5 +100,76 @@ describe('registerMoved', () => {
     // The sofa's corner, carried from where the Fill Capture saw it to where it stands in the Main Capture.
     const corner: Vec3 = [1, 0.9, -0.45];
     close(applyYaw(transform, applyYaw(inFill, corner)), applyYaw(inMain, corner), 2);
+  });
+});
+
+// A chair in its own frame, its feet on the floor: a seat, a back along −Z, and four legs, so no
+// turn or size looks like another.
+const chair = mergeMeshes([
+  box([-0.24, 0.42, -0.22], [0.24, 0.47, 0.24], false, 6),
+  box([-0.24, 0.47, -0.25], [0.24, 0.85, -0.2], false, 6),
+  ...[[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2]].map(([x, z]) => box([x - 0.02, 0, z - 0.02], [x + 0.02, 0.42, z + 0.02], false, 3)),
+]);
+// Where the Main Capture's copy stands (the room frame), and how a Detail Capture's frame lines up
+// with the room: turned, moved, and scaled, because its app got the chair's size wrong.
+const inRoom: YawTransform = { position: [-0.47, 0, 2.18], rotationY: Math.PI };
+const detailToRoom: ScaledYaw = { position: [-0.6, 0, 1.9], rotationY: 2.4, scale: 1.3 };
+/** A room-frame point as the Detail Capture has it. */
+const toDetail = (p: Vec3) => applyYaw(invertYaw(detailToRoom), p);
+const detailChair = (() => {
+  const { positions, index } = transformMesh(chair, inRoom);
+  const moved = new Float32Array(positions.length);
+  for (let i = 0; i < positions.length; i += 3) moved.set(toDetail([positions[i], positions[i + 1], positions[i + 2]]), i);
+  return { positions: moved, index };
+})();
+
+describe('fitSimilar', () => {
+  it("finds the turn, floor position and size that carry points clicked on a Detail Capture onto the room's", () => {
+    const legs = ([[-0.2, 0, -0.2], [0.2, 0, -0.2], [0.2, 0, 0.2], [-0.2, 0, 0.2]] as Vec3[]).map((p) => applyYaw(inRoom, p));
+    const flat = (p: Vec3): Vec2 => [p[0], p[2]];
+
+    const { rotationY, offset, scale } = fitSimilar(legs.map((p) => flat(toDetail(p))), legs.map(flat));
+
+    expect(scale).toBeCloseTo(1.3, 6);
+    const found: ScaledYaw = { position: [offset[0], 0, offset[1]], rotationY, scale };
+    close(applyYaw(found, [0.3, 0, -0.1]), applyYaw(detailToRoom, [0.3, 0, -0.1]), 6);
+  });
+});
+
+describe('refineScaled', () => {
+  it("pulls a Detail Capture's copy that is a few centimeters, degrees and percent off onto the Main Capture's", () => {
+    const start: ScaledYaw = { ...composeYaw({ position: [0.04, 0, -0.03], rotationY: degrees(4) }, detailToRoom), scale: 1.3 * 1.05 };
+
+    const { transform, residual } = refineScaled(triangleSamples(detailChair), triangleSamples(transformMesh(chair, inRoom)), start);
+
+    expect(transform.scale).toBeCloseTo(1.3, 2);
+    // The top of the chair's back, carried from the Detail Capture to where the chair stands.
+    const corner = applyYaw(inRoom, [0.24, 0.85, -0.25]);
+    close(applyYaw(transform, toDetail(corner)), corner, 2);
+    expect(residual).toBeLessThan(0.005);
+  });
+});
+
+describe('registerDetail', () => {
+  it('never shrinks a copy to a speck that fits a Main copy too partial to tell its size: one leg tip', () => {
+    const tip = transformMesh(box([-0.22, 0, -0.22], [-0.18, 0.06, -0.18], false, 3), inRoom);
+    const [mx, , mz] = applyYaw(inRoom, [0, 0, 0]);
+    const [dx, , dz] = toDetail([mx, 0, mz]);
+
+    const { transform } = registerDetail(triangleSamples(detailChair), triangleSamples(tip), [dx, dz], [mx, mz], 1.3);
+
+    expect(transform.scale).toBeGreaterThan(1.3 / 1.1 - 1e-9);
+    expect(transform.scale).toBeLessThan(1.3 * 1.1 + 1e-9);
+  });
+
+  it("finds a Detail Capture's copy at any turn, from the two copies' middles and a rough size", () => {
+    const [mx, , mz] = applyYaw(inRoom, [0, 0, 0]);
+    const [dx, , dz] = toDetail([mx, 0, mz]);
+
+    const { transform } = registerDetail(triangleSamples(detailChair), triangleSamples(transformMesh(chair, inRoom)), [dx, dz], [mx, mz], 1.3 * 0.95);
+
+    expect(transform.scale).toBeCloseTo(1.3, 2);
+    const corner = applyYaw(inRoom, [0.24, 0.85, -0.25]);
+    close(applyYaw(transform, toDetail(corner)), corner, 2);
   });
 });

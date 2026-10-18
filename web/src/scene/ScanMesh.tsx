@@ -9,6 +9,7 @@ import { withMeshopt } from './gltf';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
 import { OriginalNode } from './OriginalNode';
 import { Patches } from './Patch';
+import { useScanLook } from './scanLook';
 import { setupRoomNodes } from './scanNodes';
 import { type SplitNodeData, disposeSplit, splitNodes, splitScan } from './splitScan';
 import { WallFader } from './WallFader';
@@ -55,6 +56,7 @@ export function ScanMesh() {
   // The split nodes are already in the room frame, so they go in the scene as they are.
   const nodes = useMemo(() => (gltf ? splitScan(gltf.scene, setup, manifest) : setupRoomNodes(setup)), [gltf, setup, manifest]);
   useEffect(() => () => disposeSplit(nodes), [nodes]);
+  useScanLook(nodes);
 
   // The Dollhouse looks in from above, so it clips everything near the ceiling (spec §10.2).
   const ceilingClip = useMemo(() => new Plane(new Vector3(0, -1, 0)), []);

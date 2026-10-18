@@ -27,6 +27,13 @@ export interface YawTransform { position: Vec3; rotationY: number }
 export interface ScanCaptures {
   main: string;                      // "captures/main.glb": the Main Capture as imported
   fills: FillCapture[];
+  details?: DetailCapture[];         // Phase 2 (ADR-0008): close-ups of some Originals, sharper than the Main Capture's
+}
+
+export interface DetailCapture {
+  mesh: string;                      // "captures/detail-1.glb"
+  transform: YawTransform & { scale?: number }; // this Capture's frame → the Main Capture's frame, so its copy lands on the Originals
+  originalIds: string[];             // the Originals it is a close-up of
 }
 
 export interface FillCapture {

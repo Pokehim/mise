@@ -1,6 +1,6 @@
 import { type Realism, useRealism, useRealismStore } from '../state/realism';
 
-const LEVELS: [Realism, string, string][] = [
+const LEVELS: [level: Realism, name: string, title: string][] = [
   ['quick', 'Quick', 'Pieces in preset lighting, with soft shadows under them'],
   ['real', 'Real', "Pieces lit by the Scan's own light"],
   ['max', 'Max', 'Real, plus the shadows Pieces cast from the window'],

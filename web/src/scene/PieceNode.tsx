@@ -35,8 +35,10 @@ const PieceModel = memo(function PieceModel({ item, partColors, selected }: Piec
       const mesh = object as Mesh;
       if (!mesh.isMesh) return;
       mesh.geometry = mesh.geometry.clone();
-      // Drawn only at the Max level, the one with a light that casts shadows (CastShadows).
+      // Shadows show only at the Max level (CastShadows). A rug casts none, and takes those of what
+      // stands on it, which the Floor under it can't show.
       mesh.castShadow = !liesFlat(item);
+      mesh.receiveShadow = liesFlat(item);
       found.push(mesh);
     });
     applyParts(copy, item.category, item.size, item.partParams);

@@ -8,7 +8,7 @@ import { ignoreRaycast } from './objects';
 import type { SplitNodeData } from './splitScan';
 import { windowLight } from './windowLight';
 
-/** How dark a full shadow is on the room: a little darker than a blob shadow's 35% (spec §10.6). */
+/** How dark a full shadow is on the Scan: a little darker than a blob shadow's 35% (spec §10.6). */
 const SHADOW_OPACITY = 0.45;
 
 interface Receiver {

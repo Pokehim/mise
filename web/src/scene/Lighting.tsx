@@ -2,14 +2,14 @@ import { useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import {
   AdditiveBlending, CubeCamera, Group, HalfFloatType, HemisphereLight, Mesh, MeshBasicMaterial, type Object3D,
-  PlaneGeometry, PMREMGenerator, type Scene, Vector3, WebGLCubeRenderTarget, type WebGLRenderer,
+  PlaneGeometry, PMREMGenerator, type Scene, WebGLCubeRenderTarget, type WebGLRenderer,
   type WebGLRenderTarget,
 } from 'three';
 import { useShallow } from 'zustand/react/shallow';
 import type { Edit, RoomSetup } from '@shared/types';
 import { useEditor } from '../state/store';
-import { openingCenter, roomBounds, wallRotationY } from './floorPlan';
-import { useMaterialLibrary } from './materials/triplanar';
+import { openingCenter, roomCenter, wallRotationY } from './floorPlan';
+import { useLoadedTextureCount } from './materials/triplanar';
 import { forEachMaterial } from './objects';
 import type { SplitNodeData } from './splitScan';
 
@@ -26,11 +26,14 @@ const REFRESH_MS = 300;
  */
 const DAYLIGHT = 10;
 
-/** The Quick level's soft fill light (spec §10.6): a HemisphereLight's sky color, ground color and intensity. */
+/**
+ * The soft fill light (spec §10.6), as a HemisphereLight's sky color, ground color and intensity: it
+ * lights Pieces at the Quick level, and a stand-in room for the CubeCamera.
+ */
 export const FILL_LIGHT: [sky: string, ground: string, intensity: number] = ['#ffffff', '#d9cfbf', 0.6];
 
 /** Whether an Edit changes how the Scan looks: a Finish, or anything done to an Original. */
-function changesScan(edit: Edit, setup: RoomSetup) {
+function changesScanLook(edit: Edit, setup: RoomSetup) {
   if (edit.type === 'finish' || edit.type === 'replace') return true;
   return 'targetId' in edit && setup.originals.some(({ id }) => id === edit.targetId);
 }
@@ -43,27 +46,30 @@ function changesScan(edit: Edit, setup: RoomSetup) {
 function cubeCameraExtras(setup: RoomSetup) {
   const extras = new Group();
   extras.add(new HemisphereLight(...FILL_LIGHT));
+  const geometry = new PlaneGeometry();
   const material = new MeshBasicMaterial({ blending: AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false });
   material.color.setScalar(DAYLIGHT);
   for (const opening of setup.openings) {
     const wall = setup.walls.find(({ id }) => id === opening.wallId);
     if (opening.kind !== 'window' || !wall) continue;
-    const panel = new Mesh(new PlaneGeometry(opening.width, opening.height), material);
-    panel.position.copy(openingCenter(opening, wall, 0.01));
+    const panel = new Mesh(geometry, material);
+    panel.scale.set(opening.width, opening.height, 1);
+    // Clear of the window's frame and the scanned wall's noise.
+    panel.position.copy(openingCenter(opening, wall, 0.05));
     panel.rotation.y = wallRotationY(wall);
     // After the Scan, which would otherwise draw over it where the window has a surface.
     panel.renderOrder = 1;
     extras.add(panel);
   }
-  return { extras, material };
+  return { extras, geometry, material };
 }
 
 /**
- * Draws the scene as the Scan alone, but all of it, plus `extras`: the Pieces and the editor's
- * helpers hidden, and the Ceiling and the walls the Dollhouse view hides shown, as they light the
- * room too.
+ * Renders the scene into the CubeCamera as the Scan alone, but all of it, plus `extras`: the Pieces
+ * and the editor's helpers hidden, and the Ceiling and the walls the Dollhouse view hides shown, as
+ * they light the room too.
  */
-function drawScanOnly(gl: WebGLRenderer, scene: Scene, extras: Object3D, draw: () => void) {
+function renderScanOnly(gl: WebGLRenderer, scene: Scene, extras: Object3D, camera: CubeCamera) {
   const restore: (() => void)[] = [];
   const set = <T extends object, K extends keyof T>(target: T, key: K, value: T[K]) => {
     const old = target[key];
@@ -85,7 +91,7 @@ function drawScanOnly(gl: WebGLRenderer, scene: Scene, extras: Object3D, draw: (
   scene.add(extras);
   restore.push(() => scene.remove(extras));
   try {
-    draw();
+    camera.update(gl, scene);
   } finally {
     restore.reverse().forEach((undo) => undo());
   }
@@ -95,14 +101,15 @@ function drawScanOnly(gl: WebGLRenderer, scene: Scene, extras: Object3D, draw: (
 function scanLight(gl: WebGLRenderer, setup: RoomSetup) {
   const cube = new WebGLCubeRenderTarget(CUBE_SIZE, { type: HalfFloatType });
   const camera = new CubeCamera(0.05, 100, cube);
-  camera.position.copy(roomBounds(setup).getCenter(new Vector3())).setY(VIEW_HEIGHT);
+  const [x, z] = roomCenter(setup);
+  camera.position.set(x, VIEW_HEIGHT, z);
   const pmrem = new PMREMGenerator(gl);
-  const { extras, material } = cubeCameraExtras(setup);
+  const { extras, geometry, material } = cubeCameraExtras(setup);
   let environment: WebGLRenderTarget | null = null;
   return {
     /** Renders the Scan as the scene shows it now, and returns it as a PMREM environment map. */
     update(scene: Scene) {
-      drawScanOnly(gl, scene, extras, () => camera.update(gl, scene));
+      renderScanOnly(gl, scene, extras, camera);
       environment = pmrem.fromCubemap(cube.texture, environment);
       return environment.texture;
     },
@@ -110,9 +117,7 @@ function scanLight(gl: WebGLRenderer, setup: RoomSetup) {
       cube.dispose();
       pmrem.dispose();
       environment?.dispose();
-      extras.traverse((object) => {
-        if (object instanceof Mesh) object.geometry.dispose();
-      });
+      geometry.dispose();
       material.dispose();
     },
   };
@@ -122,8 +127,8 @@ function scanLight(gl: WebGLRenderer, setup: RoomSetup) {
  * The Real and Max levels' light for Pieces (spec §12): the Scan itself, seen by a CubeCamera at the
  * room's center with the Pieces hidden, as the scene's environment. The Scan's nodes are unlit, so
  * only Pieces take it, and a stand-in room's lit surfaces. It is rendered again after every Edit
- * that changes the Scan's look, so a sage wall tints the Pieces near it, and once the Material
- * Library arrives, for material Finishes. Mount it after ScanMesh and ScanColors, in the same
+ * that changes the Scan's look, so a sage wall tints the side of each Piece that faces it, and
+ * when a material Finish's texture loads. Mount it after ScanMesh and ScanColors, in the same
  * Suspense boundary, so the Scan is there, in its colors, when it first renders.
  */
 export function RoomLighting() {
@@ -131,9 +136,9 @@ export function RoomLighting() {
   const scene = useThree((s) => s.scene);
   const setup = useEditor((s) => s.setup!);
   const manifest = useEditor((s) => s.manifest!);
-  const scanEdits = useEditor(useShallow((s) => s.design!.edits.filter((edit) => changesScan(edit, s.setup!))));
-  // ScanColors applies material Finishes only once it has the Material Library.
-  const library = useMaterialLibrary();
+  const scanEdits = useEditor(useShallow((s) => s.design!.edits.filter((edit) => changesScanLook(edit, s.setup!))));
+  // A material Finish shows once its texture loads, which can be after its Edit.
+  const texturesLoaded = useLoadedTextureCount();
 
   const light = useMemo(() => scanLight(gl, setup), [gl, setup]);
   useEffect(() => () => light.dispose(), [light]);
@@ -148,15 +153,15 @@ export function RoomLighting() {
   }, [scene, light, manifest]);
 
   // Then once changes to the Scan's look settle.
-  const shown = useRef({ scanEdits, library });
+  const shown = useRef({ scanEdits, texturesLoaded });
   useEffect(() => {
-    if (scanEdits === shown.current.scanEdits && library === shown.current.library) return;
-    shown.current = { scanEdits, library };
+    if (scanEdits === shown.current.scanEdits && texturesLoaded === shown.current.texturesLoaded) return;
+    shown.current = { scanEdits, texturesLoaded };
     const timer = setTimeout(() => {
       scene.environment = light.update(scene);
     }, REFRESH_MS);
     return () => clearTimeout(timer);
-  }, [scene, light, scanEdits, library]);
+  }, [scene, light, scanEdits, texturesLoaded]);
 
   return null;
 }

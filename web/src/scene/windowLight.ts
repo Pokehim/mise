@@ -1,10 +1,12 @@
 import { DirectionalLight, Vector3 } from 'three';
 import type { Opening, RoomSetup } from '@shared/types';
-import { openingCenter, roomBounds } from './floorPlan';
+import { openingCenter, roomBounds, roomCenter } from './floorPlan';
 
+/** The shadow map's size in pixels, along each side. Lower it if the Max level drops below 45 fps (#17). */
 const SHADOW_MAP_SIZE = 2048;
 /** How far a shadow's edge blurs, in shadow-map pixels. */
 const SHADOW_SOFTNESS = 4;
+/** The window light's strength, on top of the room light the Pieces already have at Real. */
 const WINDOW_LIGHT_INTENSITY = 1.5;
 
 const area = ({ width, height }: Opening) => width * height;
@@ -25,7 +27,8 @@ function largestWindowCenter(setup: RoomSetup): Vector3 | null {
  */
 export function windowLight(setup: RoomSetup): DirectionalLight {
   const bounds = roomBounds(setup);
-  const center = bounds.getCenter(new Vector3()).setY(0);
+  const [x, z] = roomCenter(setup);
+  const center = new Vector3(x, 0, z);
   const from = largestWindowCenter(setup) ?? center.clone().setY(setup.ceilingHeight);
   const light = new DirectionalLight('#ffffff', WINDOW_LIGHT_INTENSITY);
   light.target.position.copy(center);

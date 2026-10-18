@@ -1,8 +1,8 @@
 /*
- * The Realism level (spec §12, #17): how real the editor draws the room. It isn't part of the
- * Design, so it has its own store.
+ * The Realism level (spec §12, #17): how real the 3D view looks. It isn't part of the Design, so
+ * it has its own store.
  *
- *   quick  The mesh look, lit by drei's apartment Environment, with blob shadows.
+ *   quick  The mesh look, with Pieces lit by drei's apartment Environment, and blob shadows.
  *   real   Pieces lit by the Scan's own light, with blob shadows. The splat look too, when the
  *          Scan has a splat (ADR-0005): #16 draws it at Real and Max.
  *   max    Real, plus shadows cast from the largest window instead of blob shadows.

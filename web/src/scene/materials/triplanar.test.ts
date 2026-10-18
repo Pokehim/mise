@@ -4,7 +4,7 @@ import {
 } from 'three';
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import type { LibraryMaterial } from '@shared/types';
-import { applyFinish, finishTexel, textureSource, triplanarUvs, triplanarWeights } from './triplanar';
+import { applyFinish, finishTexel, loadedTextureCount, textureSource, triplanarUvs, triplanarWeights } from './triplanar';
 
 const oak: LibraryMaterial = { id: 'oak', name: 'Oak', kind: 'wood', maps: { color: '/data/materials/oak.jpg' }, tileSize: 1.83, source: 'Poly Haven oak_veneer_01 (CC0)' };
 const carpet: LibraryMaterial = { id: 'carpet-grey', name: 'Grey carpet', kind: 'carpet', maps: { color: '/data/materials/carpet-grey.jpg' }, tileSize: 1, source: 'ambientCG Carpet001 (CC0)' };
@@ -135,7 +135,7 @@ describe('applyFinish', () => {
     expect(uniforms.uMatTint.value).toEqual(new Color('#808080'));
   });
 
-  it('keeps the surface as scanned until the texture has loaded', () => {
+  it('keeps the surface as scanned until the texture has loaded, then counts it as loaded', () => {
     const loaded: (() => void)[] = [];
     load.mockImplementation((_, onLoad) => {
       loaded.push(() => onLoad(new Texture()));
@@ -145,8 +145,10 @@ describe('applyFinish', () => {
     applyFinish(material, { kind: 'material', materialId: 'leather' }, 0.4, library);
     const { uniforms } = compile(material, ShaderLib.basic);
     expect(uniforms.uMatEnabled.value).toBe(false);
+    const before = loadedTextureCount();
     loaded[0]();
     expect(uniforms.uMatEnabled.value).toBe(true);
+    expect(loadedTextureCount()).toBe(before + 1);
   });
 
   it('draws nothing of a material that is no longer chosen when its texture arrives', () => {

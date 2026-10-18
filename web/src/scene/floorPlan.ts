@@ -59,5 +59,14 @@ export function keepInside(point: Vec2, setup: RoomSetup, margin: number): Vec2 
   return p;
 }
 
+/**
+ * The middle of the room, on the floor: the center of its bounds, or, when that is off the floor
+ * (in an L-shaped room), the nearest floor point to it, half a meter from the walls.
+ */
+export function roomCenter(setup: RoomSetup): Vec2 {
+  const { x, z } = roomBounds(setup).getCenter(new Vector3());
+  return keepInside([x, z], setup, 0.5);
+}
+
 /** Whether a wall's inside faces a point, such as the camera: the walls the Dollhouse view shows. */
 export const faces = (wall: Wall, point: Vec2) => distanceToWall(point, wall) >= 0;

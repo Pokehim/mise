@@ -29,7 +29,7 @@ describe('catalogList', () => {
     expect(listed[0]).toContain('rug-0 ');
   });
 
-  it("says whether a lamp stands on the floor or on a table, and leaves out desk chairs and big tables", () => {
+  it("says whether a lamp stands on the floor or on a table, lists desk chairs apart, and leaves out big tables", () => {
     const catalog: Catalog = {
       version: 1,
       items: [
@@ -46,10 +46,35 @@ describe('catalogList', () => {
     expect(lines(text, 'lamp')).toEqual([
       expect.stringContaining('lamp-floor | Arc Floor Lamp (floor lamp)'), expect.stringContaining('lamp-table | Ceramic Table Lamp (table lamp)'),
     ]);
-    expect(text).not.toContain('chair-office');
-    expect(text).toContain('chair-accent');
+    expect(lines(text, 'chair')).toEqual([expect.stringContaining('chair-accent')]);
+    expect(lines(text, 'desk_chair')).toEqual([expect.stringContaining('chair-office')]);
     expect(text).not.toContain('table-dining');
     expect(text).toContain('table-side');
+  });
+
+  it('lists a few of each kind of furniture, to furnish an empty room with in one reply', () => {
+    const furniture: Catalog = {
+      version: 1,
+      items: [
+        item('bed-twin', 'bed', 'Twin XL Platform Bed', [0.99, 0.4, 2.03]),
+        item('desk-oak', 'desk', 'Oak Writing Desk', [1.07, 0.76, 0.6]),
+        item('dresser-oak', 'dresser', 'Oak Dresser', [0.8, 0.8, 0.45]),
+        item('wardrobe-white', 'wardrobe', 'White Wardrobe', [1, 1.8, 0.58]),
+        item('bookcase-tall', 'shelf', 'Tall Bookcase', [0.66, 1.89, 0.38]),
+        item('sofa-gray', 'sofa', 'Gray Loveseat', [1.4, 0.85, 0.85]),
+      ],
+    };
+    const text = catalogList(furniture);
+
+    for (const [category, id] of [['bed', 'bed-twin'], ['desk', 'desk-oak'], ['dresser', 'dresser-oak'], ['wardrobe', 'wardrobe-white'], ['shelf', 'bookcase-tall'], ['sofa', 'sofa-gray']]) {
+      expect(lines(text, category)).toEqual([expect.stringContaining(id)]);
+    }
+  });
+
+  it("never lists the Catalog's placeholder boxes", () => {
+    const placeholder = item('placeholder-rug', 'rug', 'Placeholder Rug', [1.5, 0.01, 2]);
+
+    expect(catalogList({ version: 1, items: [placeholder, rug('rug-navy', 'Navy', 80)] })).not.toContain('placeholder-rug');
   });
 
   it('shortens long titles at a word', () => {
@@ -62,7 +87,7 @@ describe('catalogList', () => {
     const catalog = catalogJson as Catalog;
     const doubled: CatalogItem[] = [...catalog.items, ...catalog.items.map((each) => ({ ...each, id: `${each.id}-2` }))];
 
-    expect(catalogList(catalog).length).toBeLessThan(9000);
-    expect(catalogList({ version: 1, items: doubled }).length).toBeLessThan(9000);
+    expect(catalogList(catalog).length).toBeLessThan(10000);
+    expect(catalogList({ version: 1, items: doubled }).length).toBeLessThan(10000);
   });
 });

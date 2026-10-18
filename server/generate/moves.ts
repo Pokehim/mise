@@ -154,7 +154,7 @@ export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { o
   return done();
 }
 
-/** A rug centered under a bed or a sofa, or failing that on the open floor nearest it. */
+/** A rug under a bed, a sofa or a table (centered, under a table), or failing that on the open floor nearest it. */
 export function layRug(draft: Draft, { catalog_id, under_id }: { catalog_id: string; under_id: string }): MoveReport {
   const { skip, attempt, done } = reporter('Laid');
   const target = draft.inRoom(under_id);

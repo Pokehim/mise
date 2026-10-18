@@ -31,8 +31,9 @@ const decorate: Turn[] = [
       // The bed takes 2.03 m of the 3 m West wall: a 2 m sofa against it can only overlap the bed.
       use('toolu_sofa', 'place_piece', { catalog_id: 'sofa-gray', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 'center' } }),
       use('toolu_paint', 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } }),
-      use('toolu_print', 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west' } }),
-      use('toolu_rug', 'place_piece', { catalog_id: 'rug-gray', anchor: { kind: 'open_floor' } }),
+      // Off the bed's middle by half the poster that hangs beside it next turn, so the two are centered over the bed.
+      use('toolu_print', 'place_piece', { catalog_id: 'print-fern', anchor: { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west', offset_m: -0.23 } }),
+      use('toolu_rug', 'place_piece', { catalog_id: 'rug-gray', anchor: { kind: 'centered_under', target_id: 'og_bed' } }),
       use('toolu_lamp', 'place_piece', { catalog_id: 'lamp-brass', anchor: { kind: 'on_top_of', target_id: 'og_desk' } }),
       use('toolu_pillow', 'place_piece', { catalog_id: 'pillow-navy', anchor: { kind: 'on_top_of', target_id: 'og_bed' } }),
       use('toolu_plant', 'place_piece', { catalog_id: 'plant-fig', anchor: { kind: 'on_top_of', target_id: 'og_desk' } }),
@@ -163,6 +164,26 @@ describe('generateDesigns', () => {
     expect(events.filter(({ type }) => type === 'failure').map((event) => 'direction' in event && event.direction)).toEqual(['bolder', 'budget']);
   });
 
+  it("streams Claude's plan for a take as it writes it, before the Edits it plans: its notes, which come as thinking blocks", async () => {
+    // On Claude Opus 5.5, notes before a tool call come back as thinking blocks, with their text under display "updates".
+    const notes = ['Concept: sage accent wall behind the bed, oat and oak.', 'Layout: the reading chair by the window, the way in clear.'];
+    const planned: Turn[] = [(request) => {
+      const reply = inOneReply()[0](request) as { content: unknown[] };
+      return { content: [...notes.map((thinking) => ({ type: 'thinking', thinking, signature: 'sig' })), ...reply.content] };
+    }];
+    const { client, requests } = fakeClaude({ literal: planned });
+    const events: GenerateEvent[] = [];
+
+    await generate(client, { brief: roomy, onEvent: (event) => events.push(event) }).result;
+
+    expect(requests[0].body.thinking).toEqual({ type: 'adaptive', display: 'updates' });
+    expect(requests[0].headers.get('anthropic-beta')).toContain('thinking-display-updates-2026-08-18');
+    const literal = events.filter((event) => 'direction' in event && event.direction === 'literal');
+    const plan = literal.filter((event) => event.type === 'plan').map((event) => event.type === 'plan' && event.text).join('');
+    expect(plan.trim()).toBe(notes.join('\n'));
+    expect(literal.filter(({ type }) => type !== 'plan').map(({ type }) => type)).toEqual([...Array(9).fill('edit'), 'design']);
+  });
+
   it('opens every request with the same tools, system prompt and cached room context: only the Brief message differs', async () => {
     const { client, requests } = fakeClaude({ literal: inOneReply(), bolder: inOneReply(), budget: inOneReply() });
     await generate(client).result;
@@ -174,7 +195,7 @@ describe('generateDesigns', () => {
       expect(other.body.system).toEqual(literal.body.system);
     }
     expect(literal.body.system).toEqual([
-      { type: 'text', text: expect.stringContaining('Design the whole room in ONE reply') },
+      { type: 'text', text: expect.stringContaining('Plan, then build, in ONE reply') },
       { type: 'text', text: expect.stringContaining('Room Summary'), cache_control: { type: 'ephemeral' } },
     ]);
     expect(literal.body.messages[0].content).toMatch(/^Brief: "cozy Japandi/);
@@ -194,6 +215,34 @@ describe('generateDesigns', () => {
     for (const take of ['literal', 'budget']) {
       expect(requests.filter(({ direction }) => direction === take).map(({ body }) => body.speed)).toEqual(['fast', undefined]);
     }
+  });
+
+  it('goes on at standard speed from where it was when fast mode refuses a later request, without waiting on retries', async () => {
+    // The first reply decorates but doesn't finish; fast mode refuses the next request, which goes on at standard speed.
+    const [first] = inOneReply();
+    const unfinished: Turn = (request) => {
+      const { content } = first(request) as { content: { name?: string }[] };
+      return { content: content.filter(({ name }) => name !== 'finish_design') };
+    };
+    const finishing: Turn = (request) => (request.body.speed === 'fast' ? 'rate-limited' : { content: [finish('Sage Nook')] });
+    const { client, requests } = fakeClaude({ literal: [unfinished, finishing] });
+
+    const { designs } = await generate(client, { brief: roomy, fast: true }).result;
+
+    expect(designs.map(({ name, edits }) => [name, edits.length])).toEqual([['Sage Nook', 9]]);
+    expect(requests.filter(({ direction }) => direction === 'literal').map(({ body }) => body.speed)).toEqual(['fast', 'fast', undefined]);
+  });
+
+  it('asks once to finish, though fast mode refuses the request that asks', async () => {
+    const stops: Turn = () => ({ content: [{ type: 'text', text: 'Done.' }], stop_reason: 'end_turn' });
+    const finishing: Turn = (request) => (request.body.speed === 'fast' ? 'rate-limited' : { content: [finish('Sage Nook', 'toolu_f1'), finish('Sage Nook', 'toolu_f2')] });
+    const { client, requests } = fakeClaude({ literal: [stops, finishing] });
+
+    const { designs } = await generate(client, { fast: true }).result;
+
+    expect(designs.map(({ name }) => name)).toEqual(['Sage Nook']);
+    const standard = requests.find(({ direction, body }) => direction === 'literal' && !body.speed)!;
+    expect(standard.body.messages.filter(({ content }) => content === 'Call finish_design now to finish this Design.')).toHaveLength(1);
   });
 
   it('returns the Designs that succeeded when a loop fails', async () => {

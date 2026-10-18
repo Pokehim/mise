@@ -44,15 +44,17 @@ export function fakeClaude(scripts: Partial<Record<Direction, Turn[]>>) {
 function reply(body: Anthropic.Beta.MessageCreateParams, { content, stop_reason = 'tool_use' }: { content: unknown[]; stop_reason?: string }, n: number) {
   const message = { id: `msg_${n}`, type: 'message', role: 'assistant', model: body.model, content, stop_reason, stop_sequence: null, usage: USAGE };
   if (!body.stream) return Response.json(message);
-  const blocks = content as ({ type: 'text'; text: string } | { type: 'tool_use'; id: string; name: string; input: unknown })[];
+  type Block = { type: 'text'; text: string } | { type: 'thinking'; thinking: string; signature: string } | { type: 'tool_use'; id: string; name: string; input: unknown };
+  const blocks = content as Block[];
+  const start = (block: Block) => (block.type === 'text' ? { type: 'text', text: '' } : block.type === 'thinking' ? { ...block, thinking: '' } : { ...block, input: {} });
+  const delta = (block: Block) => (block.type === 'text' ? { type: 'text_delta', text: block.text }
+    : block.type === 'thinking' ? { type: 'thinking_delta', thinking: block.thinking }
+    : { type: 'input_json_delta', partial_json: JSON.stringify(block.input) });
   const events = [
     { type: 'message_start', message: { ...message, content: [], stop_reason: null, usage: { ...USAGE, output_tokens: 0 } } },
     ...blocks.flatMap((block, index) => [
-      { type: 'content_block_start', index, content_block: block.type === 'text' ? { type: 'text', text: '' } : { ...block, input: {} } },
-      {
-        type: 'content_block_delta', index,
-        delta: block.type === 'text' ? { type: 'text_delta', text: block.text } : { type: 'input_json_delta', partial_json: JSON.stringify(block.input) },
-      },
+      { type: 'content_block_start', index, content_block: start(block) },
+      { type: 'content_block_delta', index, delta: delta(block) },
       { type: 'content_block_stop', index },
     ]),
     { type: 'message_delta', delta: { stop_reason, stop_sequence: null }, usage: { output_tokens: USAGE.output_tokens } },

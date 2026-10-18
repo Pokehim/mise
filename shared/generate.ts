@@ -32,6 +32,8 @@ export interface GenerateResult {
  * application/x-ndjson: each Edit as Claude makes it, each Design as it is finished or fails, then the result.
  */
 export type GenerateEvent =
+  /** Claude's plan for the take, a piece at a time as it writes it, before the Edits it plans. */
+  | { type: 'plan'; direction: Direction; text: string }
   | { type: 'edit'; direction: Direction; edit: Edit }
   | { type: 'design'; direction: Direction; design: Design; report: LoopReport }
   | { type: 'failure'; direction: Direction; error: string; report: LoopReport }

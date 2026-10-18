@@ -49,10 +49,11 @@ export function DesignCards({ onOpen, onBack }: { onOpen: () => void; onBack: ()
 }
 
 /**
- * One take: its plan as Claude draws it and the step it is on, then its Design, or why it didn't finish.
+ * One take: its plan from above as Claude draws it, with Claude's plan in words and the step it is on;
+ * then its Design, or why it didn't finish.
  * It is one button throughout, off until its Design is finished, so that the plan stays as it is drawn.
  */
-function TakeCard({ direction, take: { edits, design, report, error }, onOpen }: { direction: Direction; take: Take; onOpen: (design: Design) => void }) {
+function TakeCard({ direction, take: { plan, edits, design, report, error }, onOpen }: { direction: Direction; take: Take; onOpen: (design: Design) => void }) {
   const { setup, catalog, openId } = useEditor(useShallow(({ setup, catalog, design }) => ({ setup: setup!, catalog: catalog!, openId: design?.id })));
   const last = edits.at(-1);
   const isOpen = design !== undefined && design.id === openId;
@@ -70,7 +71,12 @@ function TakeCard({ direction, take: { edits, design, report, error }, onOpen }:
       <PlanSketch setup={setup} catalog={catalog} edits={edits} latest={!design && last && 'pieceId' in last ? last.pieceId : undefined} />
       {design ? <Summary setup={setup} catalog={catalog} design={design} seconds={report?.seconds} isOpen={isOpen} />
         : error ? <span className="error">This take didn't finish: {error}</span>
-        : <span className="step" aria-live="polite">{last ? describe(last, setup, catalog) : 'Reading the room…'}</span>}
+        : (
+          <>
+            {plan && <span className="plan">{plan.trim().split('\n').filter(Boolean).map((line, i) => <span key={i}>{line}</span>)}</span>}
+            <span className="step" aria-live="polite">{last ? describe(last, setup, catalog) : plan ? 'Planning…' : 'Reading the room…'}</span>
+          </>
+        )}
       {!design && <span className="counts">{count(edits.length, 'Edit')}</span>}
     </button>
   );

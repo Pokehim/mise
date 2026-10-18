@@ -42,6 +42,14 @@ describe('the Design tools', () => {
   });
 
   describe('search_catalog', () => {
+    it("never offers the Catalog's placeholder boxes", async () => {
+      const placeholder = item('placeholder-chair', 'chair', 'Placeholder Desk Chair', [0.6, 0.9, 0.6], { source: 'generated' });
+      const session = createSession({ setup, catalog: { ...decorCatalog, items: [...decorCatalog.items, placeholder] }, brief: { text: 'cozy' }, materials });
+
+      const { items } = await call(session, 'search_catalog', { category: 'chair' });
+      expect(items.map(({ id }: { id: string }) => id)).not.toContain('placeholder-chair');
+    });
+
     it('finds Catalog items of a category, with their size, colors, styles and estimated price', async () => {
       expect(await call(start(), 'search_catalog', { category: 'wall_art' })).toEqual({
         items: [
@@ -144,10 +152,12 @@ describe('the Design tools', () => {
       })).rejects.toThrow(`Fit violations: Hangs behind White Wardrobe (overlap, ${wardrobe.piece_id})`);
     });
 
-    it('allows at most 2 large furniture changes', async () => {
-      const session = start({ text: 'cozy' });
+    it('allows at most the large furniture changes it is given, not counting removed Originals', async () => {
+      // From #97: a remodel clears what doesn't belong before it furnishes.
+      const session = createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials, maxLargeChanges: 2 });
+      await call(session, 'remove', { target_ids: ['og_desk'] });
       await call(session, 'place_piece', { catalog_id: 'wardrobe-white', anchor: { kind: 'against_wall', wall_id: 'wl_south', along: 'right' } });
-      await call(session, 'replace_original', { original_id: 'og_desk', catalog_id: 'desk-walnut' });
+      await call(session, 'place_piece', { catalog_id: 'desk-walnut', anchor: { kind: 'against_wall', wall_id: 'wl_east', along: 'center' } });
 
       await expect(call(session, 'place_piece', { catalog_id: 'bookcase-tall', anchor: { kind: 'against_wall', wall_id: 'wl_east', along: 'right' } }))
         .rejects.toThrow('This Design already has 2 large furniture changes, the most it may have: decorate instead');
@@ -208,16 +218,28 @@ describe('the Design tools', () => {
   });
 
   describe('remove', () => {
-    it('removes a Piece, or an Original that is not Kept', async () => {
+    it('removes Pieces and Originals that are not Kept, several in one call', async () => {
       const session = start();
       const { piece_id } = await call(session, 'place_piece', { catalog_id: 'plant-fig', anchor: { kind: 'open_floor' } });
 
-      await call(session, 'remove', { target_id: piece_id });
-      await call(session, 'remove', { target_id: 'og_desk' });
+      expect(await call(session, 'remove', { target_ids: [piece_id, 'og_desk'] })).toMatchObject({ ok: true, removed: 2 });
 
       expect(session.state.pieces).toEqual({});
       expect(session.state.originals.og_desk.visible).toBe(false);
-      await expect(call(session, 'remove', { target_id: 'og_bed' })).rejects.toThrow('your bed is Kept');
+    });
+
+    it('removes a Piece named twice once', async () => {
+      const session = start();
+      const { piece_id } = await call(session, 'place_piece', { catalog_id: 'plant-fig', anchor: { kind: 'open_floor' } });
+
+      expect(await call(session, 'remove', { target_ids: [piece_id, piece_id] })).toMatchObject({ ok: true, removed: 1 });
+    });
+
+    it('removes nothing when one of them is Kept', async () => {
+      const session = start();
+
+      await expect(call(session, 'remove', { target_ids: ['og_desk', 'og_bed'] })).rejects.toThrow('your bed is Kept');
+      expect(session.state.originals.og_desk.visible).toBe(true);
     });
   });
 
@@ -227,9 +249,10 @@ describe('the Design tools', () => {
     it('ends the Design with its name, rationale and Palette, once it decorates enough', async () => {
       const session = start({ text: 'cozy', budgetUsd: 400 });
       const place = (catalog_id: string, anchor: unknown) => call(session, 'place_piece', { catalog_id, anchor });
-      const middle = await place('print-fern', { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west' });
+      // Off the bed's middle by half the poster beside it, so the two hang centered over the bed.
+      const middle = await place('print-fern', { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west', offset_m: -0.23 });
       await place('poster-city', { kind: 'on_wall_beside', target_id: middle.piece_id, side: 'right', gap_m: 0.06 });
-      await place(rugs[0].id, { kind: 'open_floor' });
+      await place(rugs[0].id, { kind: 'centered_under', target_id: 'og_bed' });
       await place('lamp-brass', { kind: 'on_top_of', target_id: 'og_desk' });
       await place('pillow-navy', { kind: 'on_top_of', target_id: 'og_bed' });
       await place('plant-fig', { kind: 'on_top_of', target_id: 'og_desk' });
@@ -242,12 +265,29 @@ describe('the Design tools', () => {
       await expect(call(session, 'recolor', { target_id: 'og_bed', part_id: 'frame', color: '#000000' })).rejects.toThrow('The Design is finished');
     });
 
+    it('sends Claude back once with what the review flags, as a designer would before handing it over', async () => {
+      const session = start({ text: 'cozy', budgetUsd: 400 });
+      const place = (catalog_id: string, anchor: unknown) => call(session, 'place_piece', { catalog_id, anchor });
+      const middle = await place('print-fern', { kind: 'on_wall_over', target_id: 'og_bed', wall_id: 'wl_west' });
+      await place('poster-city', { kind: 'on_wall_beside', target_id: middle.piece_id, side: 'right', gap_m: 0.06 });
+      await place(rugs[0].id, { kind: 'open_floor' });
+      await place('lamp-brass', { kind: 'on_top_of', target_id: 'og_desk' });
+      await place('pillow-navy', { kind: 'on_top_of', target_id: 'og_bed' });
+      await place('plant-fig', { kind: 'on_top_of', target_id: 'og_desk' });
+      await call(session, 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } });
+      await call(session, 'recolor', { target_id: 'og_bed', part_id: 'bedding', color: '#f4efe6' });
+
+      // The rug on the open floor has nothing standing on it.
+      await expect(call(session, 'finish_design', { name: 'Sage Nook', rationale: 'Sage.', palette })).rejects.toThrow(/Review: .* has no furniture on it, so it floats/);
+      expect(await call(session, 'finish_design', { name: 'Sage Nook', rationale: 'Sage.', palette })).toEqual({ ok: true });
+    });
+
     it('sends Claude back once to add what a decorated room lacks', async () => {
       const session = start();
       await call(session, 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } });
 
       await expect(call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette }))
-        .rejects.toThrow('Not finished: this Design has 1 Edit, and needs 8 to 15. It still needs wall art (2 to 4 frames), a rug, a lamp, decor on the bed or a furniture top');
+        .rejects.toThrow('Not finished: this Design has 1 Edit besides removals, and needs 8 to 24. It still needs wall art (2 to 4 frames), a rug, a lamp, decor on the bed or a furniture top');
       expect(await call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette })).toEqual({ ok: true });
     });
 

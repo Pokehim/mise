@@ -13,8 +13,8 @@ import { DIRECTIONS, type Direction, type GenerateEvent, type LoopReport } from 
 import type { Brief, Design, Edit } from '@shared/types';
 import { warmGenerate } from '../api';
 
-/** One take on the Brief: its Edits so far, then its Design, or why it failed. */
-export interface Take { edits: Edit[]; design?: Design; report?: LoopReport; error?: string }
+/** One take on the Brief: Claude's plan for it and its Edits so far, then its Design, or why it failed. */
+export interface Take { plan?: string; edits: Edit[]; design?: Design; report?: LoopReport; error?: string }
 
 interface Generating {
   status: 'brief' | 'designing' | 'done';
@@ -65,9 +65,14 @@ function receive(event: GenerateEvent) {
   if (event.type === 'done') return useGenerate.setState({ status: 'done', seconds: event.result.seconds });
   useGenerate.setState(({ takes }) => {
     const take = takes[event.direction];
-    const next: Take = event.type === 'edit' ? { ...take, edits: [...take.edits, event.edit] }
-      : event.type === 'design' ? { ...take, edits: event.design.edits, design: event.design, report: event.report }
-      : { ...take, error: event.error, report: event.report };
+    const next = ((): Take => {
+      switch (event.type) {
+        case 'plan': return { ...take, plan: (take.plan ?? '') + event.text };
+        case 'edit': return { ...take, edits: [...take.edits, event.edit] };
+        case 'design': return { ...take, edits: event.design.edits, design: event.design, report: event.report };
+        case 'failure': return { ...take, error: event.error, report: event.report };
+      }
+    })();
     return { takes: { ...takes, [event.direction]: next } };
   });
 }

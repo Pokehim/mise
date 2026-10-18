@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkFit } from './fit';
 import { replay } from './replay';
-import { catalog, edit, item, onFloor, place, setup, withLampAndMirror } from './test-room';
+import { catalog, edit, item, lShaped, onFloor, place, setup, withLampAndMirror } from './test-room';
 import type { Edit, Opening, Placement, Vec2 } from './types';
 
 // The room's floor is x −2 to 2, z −1.5 to 1.5. The bed covers x −2 to −1.01, z −1.5 to 0.53;
@@ -298,6 +298,30 @@ describe('checkFit', () => {
       ];
 
       expect(fitWithWalkway(dorm)).toEqual([]);
+    });
+
+    describe('in an L-shaped room, entered down a passage', () => {
+      const bed = item('bed-twin', 'bed', 'Twin Bed', [0.99, 0.6, 2.03]);
+      const lFurniture = { ...furniture, items: [...furniture.items, bed] };
+      const inL = (edits: Edit[]) => checkFit(lShaped, lFurniture, replay(lShaped, lFurniture, edits), undefined, { walkway: true });
+
+      it('reports a bed across the end of the passage, which shuts the whole main area off from the door', () => {
+        // Head to the North wall at the passage's mouth, x 0 to 0.99: its side is reached from the passage, its
+        // other side and the rest of the room aren't.
+        expect(inL([place('pc_bed', 'bed-twin', onFloor(0.495, -0.485))])).toEqual([
+          { rule: 'walkway', subjectId: 'pc_bed', otherId: 'op_door', message: 'Cuts off part of the room from the door' },
+        ]);
+      });
+
+      it('reports anything that shuts the passage, though there is no bed, desk or dresser to walk to', () => {
+        expect(inL([place('pc_cube', 'cube-storage', onFloor(2, -1))])).toEqual([
+          { rule: 'walkway', subjectId: 'pc_cube', otherId: 'op_door', message: 'Cuts off part of the room from the door' },
+        ]);
+      });
+
+      it('finds nothing wrong with the bed head to the West wall, in the main area', () => {
+        expect(inL([place('pc_bed', 'bed-twin', onFloor(-0.985, 0.4, Math.PI / 2))])).toEqual([]);
+      });
     });
 
     it('takes under 5 ms in the test room, even when it has to find what blocks the path', () => {

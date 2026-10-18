@@ -22,6 +22,8 @@ const LOOP_TIMEOUT_MS = 45_000;
 const MAX_REQUESTS = 6;
 const NUDGE = 'Call finish_design now to finish this Design.';
 const FAST_MODE_BETA = 'fast-mode-2026-02-01';
+/** The text a note stands in with for work a reply was cut off before finishing. */
+const INTERRUPTED = 'This part of the response was interrupted before it finished.';
 
 let client: Anthropic | undefined;
 /**
@@ -68,7 +70,8 @@ export async function generateDesigns(request: GenerateDesignsRequest): Promise<
 export async function warmCache(request: Pick<GenerateDesignsRequest, 'client' | 'setup' | 'catalog' | 'materials' | 'shelfLevels' | 'fast'>) {
   const shared = sharedRequest(request);
   const tools = createSession({ ...request, brief: { text: '' } }).tools.map(({ run, parse, ...definition }) => definition);
-  const response = await request.client.beta.messages.create({
+  // A warm-up is worth little late: it isn't retried.
+  const response = await request.client.withOptions({ maxRetries: 0 }).beta.messages.create({
     ...shared,
     tools: tools as Anthropic.Beta.BetaToolUnion[],
     max_tokens: 0,
@@ -88,14 +91,19 @@ function sharedRequest({ setup, catalog, fast = false }: { setup: RoomSetup; cat
       { type: 'text' as const, text: roomContext(summary, catalog), cache_control: { type: 'ephemeral' as const } },
     ],
     tool_choice: { type: 'auto' as const },
+    // The notes Claude writes before its tool calls, its plan for the take, come back as thinking blocks: shown, its reasoning not.
+    thinking: { type: 'adaptive' as const, display: 'updates' as const },
     output_config: { effort: 'low' as const },
     fallbacks: 'default' as const,
-    betas: ['server-side-fallback-2026-07-01', ...(fast ? [FAST_MODE_BETA] : [])],
+    betas: ['server-side-fallback-2026-07-01', 'thinking-display-updates-2026-08-18', ...(fast ? [FAST_MODE_BETA] : [])],
     ...(fast && { speed: 'fast' as const }),
   };
 }
 
 type SharedRequest = ReturnType<typeof sharedRequest>;
+
+/** Where a take's conversation stands: its messages so far, and how many Edits the Design had after the last reply's tools ran. */
+interface Conversation { messages: Anthropic.Beta.BetaMessageParam[]; edits: number }
 
 /** The same request at standard speed. */
 function standardSpeed({ speed, betas, ...params }: SharedRequest): SharedRequest {
@@ -123,15 +131,21 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
     let params = shared;
     // Claude sometimes ends its turn without finish_design: it gets asked once more.
     for (let attempt = 0; attempt < 2 && !session.finished && report.requests < MAX_REQUESTS; attempt++) {
-      if (attempt) messages = [...messages, { role: 'user', content: NUDGE }];
+      // Asked once: a take that goes on at standard speed after a refusal has the question already.
+      if (attempt && messages.at(-1)?.content !== NUDGE) messages = [...messages, { role: 'user', content: NUDGE }];
+      const conversation: Conversation = { messages, edits: session.edits.length };
       try {
-        messages = await run(client, params, session, messages, report, { started, signal: timeout });
+        messages = await run(client, params, session, conversation, report, {
+          started, signal: timeout, onText: (text) => onEvent?.({ type: 'plan', direction, text }),
+        });
       } catch (error) {
-        // Fast mode has its own rate limit: still refused after the SDK's retries, before the Design has begun, it goes on at standard speed.
+        // Fast mode has its own rate limit, and its requests aren't retried: refused, the take goes on at
+        // standard speed from where it was, as long as the refused request made no Edits.
         const refused = error instanceof Anthropic.RateLimitError || error instanceof Anthropic.InternalServerError;
-        if (!refused || params.speed !== 'fast' || session.edits.length) throw error;
+        if (!refused || params.speed !== 'fast' || session.edits.length !== conversation.edits) throw error;
         console.warn(`Generate (${direction}): fast mode refused (${error.message}), going on at standard speed`);
         params = standardSpeed(params);
+        messages = [...conversation.messages];
         attempt--;
       }
     }
@@ -161,28 +175,43 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
  * and returns the conversation so far. Replies stream, and each tool runs as soon as its call is complete.
  */
 async function run(
-  client: Anthropic, shared: SharedRequest, session: DesignSession, messages: Anthropic.Beta.BetaMessageParam[],
-  report: LoopReport, { started, signal }: { started: number; signal: AbortSignal },
+  client: Anthropic, shared: SharedRequest, session: DesignSession, conversation: Conversation,
+  report: LoopReport, { started, signal, onText }: { started: number; signal: AbortSignal; onText: (text: string) => void },
 ) {
-  const runner = client.beta.messages.toolRunner({
+  // A fast request isn't retried: refused, it goes on at standard speed at once (designLoop), which is.
+  const runner = (shared.speed === 'fast' ? client.withOptions({ maxRetries: 0 }) : client).beta.messages.toolRunner({
     ...shared,
     max_tokens: 16000,
     max_iterations: MAX_REQUESTS - report.requests,
-    messages,
+    messages: conversation.messages,
     tools: session.tools,
     stream: true,
     runToolsEagerly: true,
   }, { signal });
+  // The runner adds each reply and its tool results to these before it sends the next request.
+  conversation.messages = runner.params.messages;
   for await (const stream of runner) {
     report.requests++;
+    let wrote = false;
     for await (const event of stream) {
       if (event.type === 'content_block_start') report.firstTokenSeconds ??= seconds(started);
+      // What Claude writes before its tool calls is its plan for the take: its notes, each its own block, a line each.
+      if (event.type === 'content_block_delta') {
+        const text = event.delta.type === 'text_delta' ? event.delta.text : event.delta.type === 'thinking_delta' ? event.delta.thinking : '';
+        if (text && text !== INTERRUPTED) onText(text);
+        wrote ||= !!text;
+      }
+      if (event.type === 'content_block_stop' && wrote) {
+        onText('\n');
+        wrote = false;
+      }
     }
     const reply = await stream.finalMessage();
     for (const key of Object.keys(report.usage) as (keyof LoopReport['usage'])[]) report.usage[key] += reply.usage[key] ?? 0;
     if (reply.stop_reason === 'refusal') throw new Error('Claude declined to design this room');
     // Any call that hasn't run yet runs now, so that a finished Design ends the loop without one more request.
     await runner.generateToolResponse();
+    conversation.edits = session.edits.length;
     if (session.finished) break;
   }
   return runner.params.messages;

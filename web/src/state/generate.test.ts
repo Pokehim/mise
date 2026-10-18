@@ -57,6 +57,18 @@ describe('generate', () => {
     expect(takes.bolder).toMatchObject({ error: 'Overloaded', edits: [] });
   });
 
+  it("keeps Claude's plan for each take as it streams in", async () => {
+    fetch.mockResolvedValue(streamed([
+      { type: 'plan', direction: 'literal', text: 'Sage accent wall; ' },
+      { type: 'plan', direction: 'literal', text: 'prints over the bed.' },
+      { type: 'edit', direction: 'literal', edit: paint },
+    ]));
+
+    await generate('fixture', brief);
+
+    expect(useGenerate.getState().takes.literal).toMatchObject({ plan: 'Sage accent wall; prints over the bed.', edits: [paint] });
+  });
+
   it('goes back to the Brief with what the server said when it refuses the Brief', async () => {
     fetch.mockResolvedValue(Response.json({ error: 'Scan fixture has no Room Setup yet' }, { status: 400 }));
 

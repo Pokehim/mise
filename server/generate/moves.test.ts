@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkFit, roomItems } from '../../shared/fit';
 import { spanFromLeft } from '../../shared/geometry';
-import { catalog, item, setup } from '../../shared/test-room';
+import { catalog, item, lShaped, setup } from '../../shared/test-room';
 import type { Edit } from '../../shared/types';
 import { createSession, type DesignSession } from './tools';
 
@@ -21,7 +21,8 @@ const armchair = item('chair-reading', 'chair', 'Reading Chair', [0.75, 0.8, 0.7
 const floorLamp = item('lamp-floor', 'lamp', 'Linen Floor Lamp', [0.35, 1.55, 0.35], { priceEstimateUsd: 45 });
 const sideTable = item('table-side', 'table', 'Round Side Table', [0.45, 0.55, 0.45], { priceEstimateUsd: 60 });
 const smallRug = item('rug-small', 'rug', 'Small Rug', [1.2, 0.01, 1], { priceEstimateUsd: 50 });
-const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug] };
+const twinBed = item('bed-twin', 'bed', 'Twin Bed', [0.99, 0.6, 2.03], { priceEstimateUsd: 150 });
+const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug, twinBed] };
 
 const start = (onEdit?: (edit: Edit) => void) =>
   createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials: [], onEdit });
@@ -159,6 +160,42 @@ describe('the decorating moves', () => {
       const [x, , z] = session.state.pieces[placed[0].piece_id].placement.position;
       expect(Math.hypot(x - chairAt.position[0], z - chairAt.position[2])).toBeLessThan(0.75);
       expect(fit(session)).toEqual([]);
+    });
+  });
+
+  describe('in an empty room, furnished in the same reply', () => {
+    it('takes the Catalog id of a Piece placed earlier wherever a move takes a room id, as it has no Piece id yet', async () => {
+      const session = createSession({ setup: lShaped, catalog: decorCatalog, brief: { text: 'dorm' }, materials: [] });
+      await call(session, 'place_piece', { catalog_id: 'bed-twin', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 0.5 } });
+
+      const gallery = await call(session, 'hang_gallery', { over_id: 'bed-twin', wall_id: 'wl_west', catalog_ids: ['print-fern', 'poster-city'] });
+      const pillows = await call(session, 'dress_bed', { bed_id: 'bed-twin', catalog_ids: ['pillow-navy'] });
+      const rug = await call(session, 'lay_rug', { catalog_id: 'rug-small', under_id: 'bed-twin' });
+
+      expect([...gallery.placed, ...pillows.placed, ...rug.placed].map(({ as }: { as: string }) => as))
+        .toEqual(['over Twin Bed', 'over Twin Bed', 'on Twin Bed', 'centered under Twin Bed']);
+    });
+  });
+
+  describe('two of the same item, as the beds of a double room', () => {
+    it('names each by its place in the order placed', async () => {
+      const session = createSession({ setup: lShaped, catalog: decorCatalog, brief: { text: 'double' }, materials: [] });
+      await call(session, 'place_piece', { catalog_id: 'bed-twin', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 0.2 } });
+      await call(session, 'place_piece', { catalog_id: 'bed-twin', anchor: { kind: 'against_wall', wall_id: 'wl_west', along: 0.8 } });
+      const [first] = Object.keys(session.state.pieces);
+
+      const pillows = await call(session, 'dress_bed', { bed_id: 'bed-twin#1', catalog_ids: ['pillow-navy'] });
+
+      expect(session.state.pieces[pillows.placed[0].piece_id].placement.position[2]).toBeCloseTo(session.state.pieces[first].placement.position[2], 0);
+    });
+
+    it('takes a Catalog chair in make_corner as a chair to place, though one like it is in the room', async () => {
+      const session = start();
+      await call(session, 'place_piece', { catalog_id: 'chair-reading', anchor: { kind: 'open_floor', near_id: 'og_desk' } });
+
+      const { placed } = await call(session, 'make_corner', { chair_id: 'chair-reading', lamp_id: 'lamp-floor', side_id: '', near_id: 'op_window' });
+
+      expect(placed.map(({ catalog_id }: { catalog_id: string }) => catalog_id)).toEqual(['chair-reading', 'lamp-floor']);
     });
   });
 

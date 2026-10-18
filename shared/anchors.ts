@@ -296,6 +296,14 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       const target = targetOf(anchor.target_id);
       if (!target) return noTarget(anchor.target_id);
       const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
+      if (target.category === 'table') {
+        // Under a table it's centered, its long side along the table's, so the chairs around it stand
+        // on it too; it slides a little either way to clear a wall (from #97).
+        const turn = (width >= depth) === (targetWidth >= targetDepth) ? 0 : Math.PI / 2;
+        const placement: Placement = { position: [target.placement.position[0], 0, target.placement.position[2]], rotationY: wrapped(rotationY + turn), mount: 'floor' };
+        const shifts = sliding(placement, rightOf(rotationY), [-0.3, 0.3]);
+        return { ...shifts, placements: shifts.placements.flatMap((shifted) => sliding(shifted, frontOf(rotationY), [-0.3, 0.3]).placements) };
+      }
       // Its long side runs across the target, as a rug goes under a bed or a sofa. A third of
       // how far it reaches out goes under the target's front, so its center is a sixth past it.
       const [reach, across, turn] = width >= depth ? [depth, width, 0] : [width, depth, Math.PI / 2];

@@ -1,0 +1,6 @@
+/* Text-to-3D's offer where the Catalog has nothing to show (GenerateItem). It sits inside .editor (editor.css). */
+
+.generate { display: flex; flex-direction: column; gap: 8px; }
+.generate p { margin: 0; }
+.generate progress { width: 100%; accent-color: var(--wash); }
+.generate [role='alert'] { color: var(--red-pencil); }

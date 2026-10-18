@@ -5,11 +5,12 @@
   "scripts": {
     "dev": "concurrently -n web,api \"npm:dev:web\" \"npm:dev:api\"",
     "dev:web": "vite --port ${PORT:-5173} --strictPort",
-    "dev:api": "tsx watch server/index.ts",
+    "dev:api": "tsx watch --env-file-if-exists=.env server/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "@fal-ai/client": "^1.10.1",
     "@hono/node-server": "^2.1.5",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",

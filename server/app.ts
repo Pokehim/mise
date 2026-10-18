@@ -7,6 +7,7 @@ import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import { MergeInputError, mergeScan } from '../scripts/scan-merge';
+import { generateObjectRoutes } from './generate-object/routes';
 import { newId } from '../shared/ids';
 import type { Design, ScanManifest } from '../shared/types';
 
@@ -195,3 +196,6 @@ app.put('/api/designs/:id', async (c) => {
 
 // Phase 4: Brief → 3 Designs (spec §13).
 app.post('/api/generate', (c) => c.json({ error: 'Generate is not built yet (Phase 4)' }, 501));
+
+// Stretch: text-to-3D for categories the Catalog lacks (spec §13.3).
+app.route('/api', generateObjectRoutes(dataDir));

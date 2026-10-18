@@ -3,6 +3,7 @@ import type { CatalogItem, Category } from '@shared/types';
 import { search } from '../state/core';
 import { useEditor } from '../state/store';
 import { priceEstimate } from './format';
+import { GenerateItem } from './GenerateItem';
 import { Plus } from './icons';
 
 const CATEGORY_NAMES: Record<Category, string> = {
@@ -63,6 +64,7 @@ export function CatalogPanel({ onAdd }: { onAdd: (item: CatalogItem) => void }) 
         ))}
       </ul>
       {shown.length === 0 && <p className="muted empty"><b>Nothing matches.</b> Try another word, or another category.</p>}
+      {shown.length === 0 && <GenerateItem key={`${category}:${text}`} query={text} category={category} />}
     </aside>
   );
 }

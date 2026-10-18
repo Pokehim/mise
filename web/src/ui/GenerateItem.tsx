@@ -21,7 +21,7 @@ function addToCatalog(item: CatalogItem) {
 
 /**
  * The offer where the Catalog has nothing to show: under a search that found nothing, and in Resize when no item of the
- * category is left. It generates `query` with text-to-3D (spec §13.3, Stretch), in about 30 s, scaled into `targetSize`
+ * category is left. It generates `query` with text-to-3D (spec §13.3, Stretch), in a minute or two, scaled into `targetSize`
  * or else the category's typical size, so under All the Mover picks a category first. The new item joins the Catalog
  * and is placed like any other. A run keeps going if this unmounts, and still adds its item.
  */
@@ -63,7 +63,7 @@ export function GenerateItem({ query, category, targetSize }: { query: string; c
     <div className="generate">
       {run?.status === 'failed' && <p className="muted" role="alert">Couldn't generate it: {run.error}</p>}
       {category
-        ? <button onClick={() => generate(category)}>Can't find it? Generate “{text}” (~30 s)</button>
+        ? <button onClick={() => generate(category)}>Can't find it? Generate “{text}” (1–2 min)</button>
         : <p className="muted">Can't find it? Pick a category above to generate “{text}”.</p>}
     </div>
   );

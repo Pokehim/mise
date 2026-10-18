@@ -1,6 +1,7 @@
-// FAL_KEY=sandbox: text-to-3D without paying fal, to try it out. A run takes about as long as a real one, but its photo
-// and model are the example input and output in TRELLIS.2's docs, a leather satchel whatever the query. Everything
-// after fal runs for real, on a GLB that TRELLIS.2 made. Its items are kept apart from real ones.
+// FAL_KEY=sandbox: text-to-3D without paying fal, to try it out. A run goes through each of fal's steps in about 20 s
+// (a real one takes 1–2 min), and its photo and model are the example input and output in TRELLIS.2's docs, a leather
+// satchel whatever the query. Everything after fal runs for real, on a GLB that TRELLIS.2 made. Its items are kept apart
+// from real ones.
 import type { fal } from '@fal-ai/client';
 
 export const inSandbox = () => process.env.FAL_KEY === 'sandbox';

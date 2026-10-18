@@ -15,11 +15,14 @@ export type Job =
 /** A job as kept here: a running one keeps when its step began, for its progress. */
 type Entry = { status: 'running'; step: Step; since: number } | Exclude<Job, { status: 'running' }>;
 
-/** Each step's span of the progress bar, and its usual length: TRELLIS.2 is most of a run of about 30 s. */
+/**
+ * Each step's span of the progress bar, and its usual length: TRELLIS.2 is most of a run. A real run took 105 s: 9 s for
+ * the photo, under 1 s queued, 93 s for the model and 2 s fitting.
+ */
 const STEPS: Record<Step, { from: number; to: number; seconds: number }> = {
-  photo: { from: 0, to: 0.05, seconds: 2 },
+  photo: { from: 0, to: 0.05, seconds: 5 },
   queued: { from: 0.05, to: 0.15, seconds: 5 },
-  model: { from: 0.15, to: 0.9, seconds: 25 },
+  model: { from: 0.15, to: 0.9, seconds: 60 },
   fitting: { from: 0.9, to: 1, seconds: 3 },
 };
 

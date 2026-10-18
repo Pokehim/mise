@@ -157,10 +157,10 @@ describe('POST /api/generate-object', () => {
     const jobId = await start({ query: 'globe', category: 'decor', targetSize: [0.3, 0.4, 0.3] });
 
     await vi.waitFor(async () => expect(await getJson(`/api/jobs/${jobId}`)).toEqual({ status: 'running', step: 'model', progress: 0.15 }));
-    vi.setSystemTime(Date.now() + 25_000);   // TRELLIS.2's usual time
+    vi.setSystemTime(Date.now() + 90_000);   // about TRELLIS.2's 93 s in a real run
     const { progress } = await getJson(`/api/jobs/${jobId}`);
     expect(progress).toBeGreaterThan(0.5);
-    expect(progress).toBeLessThan(0.9);       // where fitting starts
+    expect(progress).toBeLessThan(0.8);       // short of where fitting starts (0.9), so it still has room to move
     finishModel();
     expect((await finished(jobId)).status).toBe('done');
   }, 30_000);
@@ -284,7 +284,7 @@ describe('the sandbox, FAL_KEY=sandbox', () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] });
 
     const jobId = await start({ query: 'canoe', category: 'decor', targetSize: [1, 1, 1] });
-    await vi.advanceTimersByTimeAsync(60_000);   // the sandbox's stand-in for fal's 30 s
+    await vi.advanceTimersByTimeAsync(60_000);   // the sandbox's stand-in for fal's wait
     vi.useRealTimers();
     const sandboxed = itemOf(await finished(jobId));
 

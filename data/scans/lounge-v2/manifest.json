@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "id": "lounge-v2",
+  "name": "Study lounge v2",
+  "mesh": "empty-room.glb",
+  "meshTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0
+  },
+  "splat": "empty-room.spz",
+  "splatTransform": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotationY": 0,
+    "scale": 1
+  }
+}

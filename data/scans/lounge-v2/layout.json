@@ -1,0 +1,776 @@
+{
+  "version": 1,
+  "source": "data/scans/real-scans/KIRI_ENGINE_ROOM_1/room.usdz",
+  "frame": "lounge-v1's room frame (see align.json)",
+  "note": "Boxes are bottom-center, [width, height, depth] in the box's own frame, as in shared/types.ts Box. `kiriKind` is KIRI's label; `kind` is what it really is.",
+  "walls": [
+    {
+      "kiriKind": "wall",
+      "wall": "South wall",
+      "start": [
+        1.689,
+        3.688
+      ],
+      "end": [
+        -1.707,
+        3.688
+      ],
+      "bottom": 0.0,
+      "height": 2.494
+    },
+    {
+      "kiriKind": "wall",
+      "wall": "East wall",
+      "start": [
+        1.589,
+        -3.66
+      ],
+      "end": [
+        1.589,
+        3.788
+      ],
+      "bottom": 0.0,
+      "height": 2.494
+    },
+    {
+      "kiriKind": "wall",
+      "wall": "West wall",
+      "start": [
+        -1.607,
+        3.788
+      ],
+      "end": [
+        -1.607,
+        -3.66
+      ],
+      "bottom": 0.0,
+      "height": 2.494
+    },
+    {
+      "kiriKind": "wall",
+      "wall": "North wall",
+      "start": [
+        -1.707,
+        -3.56
+      ],
+      "end": [
+        1.689,
+        -3.56
+      ],
+      "bottom": 0.0,
+      "height": 2.494
+    }
+  ],
+  "openings": [
+    {
+      "kind": "whiteboard",
+      "kiriKind": "window",
+      "wall": "East wall",
+      "start": [
+        1.589,
+        0.194
+      ],
+      "end": [
+        1.589,
+        -3.35
+      ],
+      "bottom": 0.944,
+      "height": 1.373
+    },
+    {
+      "kind": "window",
+      "kiriKind": "window",
+      "wall": "North wall",
+      "start": [
+        -0.924,
+        -3.56
+      ],
+      "end": [
+        0.608,
+        -3.56
+      ],
+      "bottom": 0.902,
+      "height": 1.47
+    },
+    {
+      "kind": "glass wall",
+      "kiriKind": "door",
+      "wall": "South wall",
+      "start": [
+        -1.594,
+        3.688
+      ],
+      "end": [
+        1.524,
+        3.688
+      ],
+      "bottom": 0.0,
+      "height": 2.257
+    },
+    {
+      "kind": "door",
+      "kiriKind": "door",
+      "wall": "West wall",
+      "start": [
+        -1.607,
+        3.572
+      ],
+      "end": [
+        -1.607,
+        1.78
+      ],
+      "bottom": 0.0,
+      "height": 2.353
+    }
+  ],
+  "items": [
+    {
+      "category": "table",
+      "box": {
+        "position": [
+          -0.786,
+          -0.0,
+          -1.57
+        ],
+        "size": [
+          1.477,
+          0.747,
+          0.857
+        ],
+        "rotationY": -3.1416
+      }
+    },
+    {
+      "category": "table",
+      "box": {
+        "position": [
+          -0.753,
+          -0.0,
+          -0.145
+        ],
+        "size": [
+          1.482,
+          0.771,
+          0.818
+        ],
+        "rotationY": -0.0
+      }
+    },
+    {
+      "category": "table",
+      "box": {
+        "position": [
+          -0.792,
+          -0.0,
+          1.86
+        ],
+        "size": [
+          1.631,
+          0.747,
+          0.98
+        ],
+        "rotationY": 0.0
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -1.155,
+          0.0,
+          -1.921
+        ],
+        "size": [
+          0.475,
+          0.839,
+          0.518
+        ],
+        "rotationY": -0.0
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -0.417,
+          0.0,
+          -1.921
+        ],
+        "size": [
+          0.475,
+          0.839,
+          0.518
+        ],
+        "rotationY": 0.0
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -1.155,
+          0.0,
+          -1.219
+        ],
+        "size": [
+          0.475,
+          0.839,
+          0.518
+        ],
+        "rotationY": -3.1416
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -0.417,
+          0.0,
+          -1.219
+        ],
+        "size": [
+          0.475,
+          0.839,
+          0.518
+        ],
+        "rotationY": -3.1416
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -1.124,
+          0.0,
+          -0.472
+        ],
+        "size": [
+          0.484,
+          0.834,
+          0.546
+        ],
+        "rotationY": -0.0
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -0.383,
+          0.0,
+          -0.472
+        ],
+        "size": [
+          0.484,
+          0.834,
+          0.546
+        ],
+        "rotationY": 0.0
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -1.124,
+          0.0,
+          0.183
+        ],
+        "size": [
+          0.484,
+          0.834,
+          0.546
+        ],
+        "rotationY": 3.1416
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -0.383,
+          0.0,
+          0.183
+        ],
+        "size": [
+          0.484,
+          0.834,
+          0.546
+        ],
+        "rotationY": 3.1416
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -1.2,
+          0.0,
+          1.45
+        ],
+        "size": [
+          0.471,
+          0.832,
+          0.531
+        ],
+        "rotationY": 0.0
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -0.384,
+          0.0,
+          1.45
+        ],
+        "size": [
+          0.471,
+          0.832,
+          0.531
+        ],
+        "rotationY": -0.0
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -1.2,
+          0.0,
+          2.27
+        ],
+        "size": [
+          0.471,
+          0.832,
+          0.532
+        ],
+        "rotationY": 3.1412
+      }
+    },
+    {
+      "category": "chair",
+      "box": {
+        "position": [
+          -0.384,
+          0.0,
+          2.27
+        ],
+        "size": [
+          0.471,
+          0.832,
+          0.531
+        ],
+        "rotationY": 3.1416
+      }
+    }
+  ],
+  "crossCheck": {
+    "source": "data/scans/real-scans/KIRI_ENGINE_ROOM_2/room.usdz",
+    "boxCenterDistanceM": {
+      "median": 0.055,
+      "max": 0.199
+    },
+    "walls": [
+      {
+        "kiriKind": "wall",
+        "wall": "East wall",
+        "start": [
+          1.59,
+          -3.622
+        ],
+        "end": [
+          1.59,
+          3.75
+        ],
+        "bottom": 0.0,
+        "height": 2.463
+      },
+      {
+        "kiriKind": "wall",
+        "wall": "West wall",
+        "start": [
+          -1.608,
+          3.75
+        ],
+        "end": [
+          -1.608,
+          -3.622
+        ],
+        "bottom": 0.0,
+        "height": 2.463
+      },
+      {
+        "kiriKind": "wall",
+        "wall": "North wall",
+        "start": [
+          -1.708,
+          -3.522
+        ],
+        "end": [
+          1.69,
+          -3.522
+        ],
+        "bottom": 0.0,
+        "height": 2.463
+      },
+      {
+        "kiriKind": "wall",
+        "wall": "South wall",
+        "start": [
+          1.69,
+          3.65
+        ],
+        "end": [
+          -1.708,
+          3.65
+        ],
+        "bottom": 0.0,
+        "height": 2.463
+      }
+    ],
+    "openings": [
+      {
+        "kind": "window",
+        "kiriKind": "window",
+        "wall": "North wall",
+        "start": [
+          -0.955,
+          -3.522
+        ],
+        "end": [
+          0.533,
+          -3.522
+        ],
+        "bottom": 0.902,
+        "height": 1.383
+      },
+      {
+        "kind": "glass wall",
+        "kiriKind": "door",
+        "wall": "South wall",
+        "start": [
+          -1.558,
+          3.65
+        ],
+        "end": [
+          1.522,
+          3.65
+        ],
+        "bottom": 0.0,
+        "height": 2.264
+      },
+      {
+        "kind": "door",
+        "kiriKind": "door",
+        "wall": "West wall",
+        "start": [
+          -1.608,
+          1.667
+        ],
+        "end": [
+          -1.608,
+          3.65
+        ],
+        "bottom": -0.0,
+        "height": 2.319
+      }
+    ],
+    "items": [
+      {
+        "category": "table",
+        "box": {
+          "position": [
+            -0.823,
+            -0.0,
+            -1.571
+          ],
+          "size": [
+            1.571,
+            0.759,
+            0.938
+          ],
+          "rotationY": -0.0
+        }
+      },
+      {
+        "category": "table",
+        "box": {
+          "position": [
+            -0.74,
+            -0.0,
+            -0.14
+          ],
+          "size": [
+            1.737,
+            0.755,
+            0.847
+          ],
+          "rotationY": -0.0
+        }
+      },
+      {
+        "category": "table",
+        "box": {
+          "position": [
+            -0.819,
+            -0.0,
+            1.751
+          ],
+          "size": [
+            1.579,
+            0.747,
+            0.805
+          ],
+          "rotationY": 3.1416
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -1.215,
+            0.0,
+            -1.962
+          ],
+          "size": [
+            0.47,
+            0.828,
+            0.523
+          ],
+          "rotationY": -0.0
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -0.43,
+            0.0,
+            -1.962
+          ],
+          "size": [
+            0.47,
+            0.828,
+            0.523
+          ],
+          "rotationY": -0.0
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -1.215,
+            0.0,
+            -1.181
+          ],
+          "size": [
+            0.471,
+            0.828,
+            0.524
+          ],
+          "rotationY": 3.1412
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -0.43,
+            0.0,
+            -1.181
+          ],
+          "size": [
+            0.47,
+            0.828,
+            0.523
+          ],
+          "rotationY": -3.1416
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -1.174,
+            0.0,
+            -0.485
+          ],
+          "size": [
+            0.472,
+            0.809,
+            0.52
+          ],
+          "rotationY": -0.0
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -0.305,
+            0.0,
+            -0.485
+          ],
+          "size": [
+            0.472,
+            0.809,
+            0.52
+          ],
+          "rotationY": 0.0
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -1.174,
+            0.0,
+            0.206
+          ],
+          "size": [
+            0.472,
+            0.809,
+            0.52
+          ],
+          "rotationY": 3.1416
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -0.305,
+            0.0,
+            0.206
+          ],
+          "size": [
+            0.472,
+            0.809,
+            0.52
+          ],
+          "rotationY": 3.1416
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -1.214,
+            0.0,
+            1.428
+          ],
+          "size": [
+            0.479,
+            0.807,
+            0.527
+          ],
+          "rotationY": -0.0
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -0.424,
+            0.0,
+            1.428
+          ],
+          "size": [
+            0.479,
+            0.807,
+            0.527
+          ],
+          "rotationY": -0.0
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -1.214,
+            0.0,
+            2.075
+          ],
+          "size": [
+            0.479,
+            0.807,
+            0.527
+          ],
+          "rotationY": 3.1412
+        }
+      },
+      {
+        "category": "chair",
+        "box": {
+          "position": [
+            -0.424,
+            0.0,
+            2.075
+          ],
+          "size": [
+            0.479,
+            0.807,
+            0.527
+          ],
+          "rotationY": 3.1413
+        }
+      }
+    ]
+  },
+  "sourceTransforms": {
+    "KIRI_ENGINE_ROOM_1/room.usdz": [
+      [
+        -1.0,
+        0.0,
+        0.0,
+        -0.009
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        1.247133
+      ],
+      [
+        -0.0,
+        0.0,
+        -1.0,
+        0.064
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "KIRI_ENGINE_ROOM_2/room.usdz": [
+      [
+        0.0,
+        0.0,
+        -1.0,
+        -0.009
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        1.23174
+      ],
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.064
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  }
+}

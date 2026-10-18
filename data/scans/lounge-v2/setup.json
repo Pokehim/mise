@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "scanId": "lounge-v2",
+  "ceilingHeight": 2.431,
+  "floor": {
+    "polygon": [
+      [
+        -1.568,
+        -3.545
+      ],
+      [
+        1.55,
+        -3.545
+      ],
+      [
+        1.55,
+        3.673
+      ],
+      [
+        -1.568,
+        3.673
+      ]
+    ]
+  },
+  "walls": [
+    {
+      "id": "wl_1",
+      "name": "North wall",
+      "start": [
+        -1.568,
+        -3.545
+      ],
+      "end": [
+        1.55,
+        -3.545
+      ],
+      "normal": [
+        0,
+        1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_2",
+      "name": "East wall",
+      "start": [
+        1.55,
+        -3.545
+      ],
+      "end": [
+        1.55,
+        3.673
+      ],
+      "normal": [
+        -1,
+        0
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_3",
+      "name": "South wall",
+      "start": [
+        1.55,
+        3.673
+      ],
+      "end": [
+        -1.568,
+        3.673
+      ],
+      "normal": [
+        0,
+        -1
+      ],
+      "height": 2.431
+    },
+    {
+      "id": "wl_4",
+      "name": "West wall",
+      "start": [
+        -1.568,
+        3.673
+      ],
+      "end": [
+        -1.568,
+        -3.545
+      ],
+      "normal": [
+        1,
+        0
+      ],
+      "height": 2.431
+    }
+  ],
+  "openings": [
+    {
+      "id": "op_1",
+      "kind": "window",
+      "wallId": "wl_1",
+      "offset": 0.65,
+      "width": 1.55,
+      "bottom": 0.87,
+      "height": 1.46
+    },
+    {
+      "id": "op_2",
+      "kind": "door",
+      "wallId": "wl_4",
+      "offset": 0.03,
+      "width": 1.79,
+      "bottom": 0,
+      "height": 2.25,
+      "swing": "none"
+    },
+    {
+      "id": "op_3",
+      "kind": "door",
+      "wallId": "wl_3",
+      "offset": 0.02,
+      "width": 0.94,
+      "bottom": 0,
+      "height": 2.27,
+      "swing": "none"
+    },
+    {
+      "id": "op_4",
+      "kind": "window",
+      "wallId": "wl_3",
+      "offset": 1.0,
+      "width": 2.113,
+      "bottom": 0,
+      "height": 2.26
+    }
+  ],
+  "originals": []
+}

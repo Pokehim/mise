@@ -13,14 +13,16 @@ SPZ_VERSION="${SPLAT_SPZ_VERSION:-3}"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/splat.sh <input.ply> [--scan <id>] [--box x,y,z,X,Y,Z]
+Usage: scripts/splat.sh <input.ply> [--scan <id>] [--box x,y,z,X,Y,Z] [--out <file.spz>]
 
 Crops, strips spherical-harmonic bands, decimates, and writes data/scans/<scan>/splat.spz.
+lounge-v1 and lounge-v2 are made upright and cropped to the room first, by scripts/lounge-v2/room/ (#77).
   <input.ply>  the splat after leveling, scaling, and floater removal in SuperSplat
   --scan       scan id (default: lounge-v1)
   --box        crop to min,max corners, in the frame SuperSplat shows (+Y up). The splat has its own
                origin until the Align step (#16), so this is NOT the room box from setup.json.
                Without it there is no crop.
+  --out        file name in the scan folder (default: splat.spz)
 
 Env overrides: SPLAT_MAX (default 1500000), SPLAT_SH_BANDS (default 0), SPLAT_SPZ_VERSION (default 3).
 EOF
@@ -29,12 +31,13 @@ EOF
 die() { echo "splat.sh: $*" >&2; exit 1; }
 usage_error() { echo "splat.sh: $*" >&2; echo >&2; usage >&2; exit 2; }
 
-input="" scan="lounge-v1" box=""
+input="" scan="lounge-v1" box="" out_name="splat.spz"
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help) usage; exit 0 ;;
     --scan) [ $# -ge 2 ] || usage_error "--scan needs a value"; scan="$2"; shift 2 ;;
     --box) [ $# -ge 2 ] || usage_error "--box needs a value"; box="$2"; shift 2 ;;
+    --out) [ $# -ge 2 ] || usage_error "--out needs a value"; out_name="$2"; shift 2 ;;
     -*) usage_error "unknown option $1" ;;
     *) [ -z "$input" ] || usage_error "more than one input given"; input="$1"; shift ;;
   esac
@@ -56,7 +59,7 @@ done
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 out_dir="$root/data/scans/$scan"
-out="$out_dir/splat.spz"
+out="$out_dir/$out_name"
 
 st() { npx --yes "$SPLAT_TRANSFORM" -q "$@"; }
 

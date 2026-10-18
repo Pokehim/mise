@@ -72,7 +72,7 @@ const inOneReply = (name?: string): Turn[] => [
   () => ({ content: [finish('Oat Corner', 'toolu_rename')] }),
 ];
 
-const generate = (client: Anthropic, options: { loopTimeoutMs?: number; fast?: boolean; current?: Design; onEvent?: (event: GenerateEvent) => void; brief?: Brief } = {}) => {
+const generate = (client: Anthropic, options: { loopTimeoutMs?: number; fast?: boolean; current?: Design; onEvent?: (event: GenerateEvent) => void; brief?: Brief; signal?: AbortSignal } = {}) => {
   const saved: Design[] = [];
   const result = generateDesigns({
     client, scanId: 'test-room', setup, catalog: decorCatalog, materials: [], brief, save: async (design) => { saved.push(design); }, ...options,
@@ -285,7 +285,8 @@ describe('generateDesigns', () => {
 
   it('asks once to finish, though fast mode refuses the request that asks', async () => {
     const stops: Turn = () => ({ content: [{ type: 'text', text: 'Done.' }], stop_reason: 'end_turn' });
-    const finishing: Turn = (request) => (request.body.speed === 'fast' ? 'rate-limited' : { content: [finish('Sage Nook', 'toolu_f1'), finish('Sage Nook', 'toolu_f2')] });
+    const paint = use('toolu_paint', 'apply_finish', { target: { kind: 'wall', wall_id: 'wl_west' }, finish: { kind: 'paint', color: '#9caf88' } });
+    const finishing: Turn = (request) => (request.body.speed === 'fast' ? 'rate-limited' : { content: [paint, finish('Sage Nook', 'toolu_f1'), finish('Sage Nook', 'toolu_f2')] });
     const { client, requests } = fakeClaude({ literal: [stops, finishing] });
 
     const { designs } = await generate(client, { fast: true }).result;
@@ -304,6 +305,31 @@ describe('generateDesigns', () => {
     expect(designs.map(({ name }) => name)).toEqual(['Sage Nook', 'Thrifty Corner']);
     expect(saved).toHaveLength(2);
     expect(failures).toEqual([{ direction: 'bolder', error: expect.stringContaining('Overloaded') }]);
+  });
+
+  it('fails a take that Claude finishes without making a change', async () => {
+    const empty: Turn = () => ({ content: [finish('Bare Room', 'toolu_f1'), finish('Bare Room', 'toolu_f2')] });
+    const { client } = fakeClaude({ literal: decorate, bolder: decorate, budget: [empty] });
+    const { result, saved } = generate(client);
+
+    const { designs, failures } = await result;
+
+    expect(designs).toHaveLength(2);
+    expect(saved).toHaveLength(2);
+    expect(failures).toEqual([{ direction: 'budget', error: 'The AI made no changes' }]);
+  });
+
+  it('saves nothing of the takes once the Mover has left', async () => {
+    const left = new AbortController();
+    const { client } = fakeClaude({ literal: [() => 'hang'], bolder: [() => 'hang'], budget: [() => 'hang'] });
+    const { result, saved } = generate(client, { signal: left.signal });
+    setTimeout(() => left.abort(), 50);
+
+    const { designs, failures } = await result;
+
+    expect(designs).toEqual([]);
+    expect(saved).toEqual([]);
+    expect(failures.map(({ error }) => error)).toEqual(Array(3).fill('The Mover left before the Design was done'));
   });
 
   it('fails a loop that runs out of time before its first Edit', async () => {

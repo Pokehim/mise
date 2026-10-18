@@ -1,8 +1,10 @@
 // The sidebar panel of each Room Setup step.
 import { useEffect, useMemo, useState } from 'react';
-import { MathUtils } from 'three';
+import { type Material, MathUtils, Mesh } from 'three';
 import type { Category, Opening, Original } from '@shared/types';
+import { scanFileUrl } from '../api';
 import { bakeFloorColors } from './bake';
+import { bakePatches } from './bakePatches';
 import {
   detectCeilingHeight, detectFloorHeight, detectYaw, type Histogram, heightHistogram, levelTransform, wrapAngle,
 } from './geometry/level';
@@ -12,7 +14,7 @@ import {
   CORNER_PAIRS, clearCorners, forgetMoved, isAligned, lineUp, openFill, refineLineUp, saveAndMerge, setFillLook, startMarking,
 } from './fills';
 import { CATEGORIES, CATEGORY_NAMES, UNBAKED_FLOOR_COLOR, defaultPartParams } from './originals';
-import { isLeveled, type StepId, scanTriangles, useSetup } from './store';
+import { isLeveled, loadScene, type StepId, scanTriangles, useSetup } from './store';
 
 export function StepPanel({ step }: { step: StepId }) {
   switch (step) {
@@ -360,35 +362,72 @@ function FillsPanel() {
   );
 }
 
-/** Step 7: each Original's floorColor. */
+/** "floor + 2 walls": the images a baked Patch holds. */
+function patchSummary({ floor, walls }: NonNullable<Original['patch']>) {
+  const count = Object.keys(walls ?? {}).length;
+  return [floor && 'floor', count > 0 && `${count} wall${count > 1 ? 's' : ''}`].filter(Boolean).join(' + ');
+}
+
+/** Step 7: each Original's floorColor, and the Patch images for the spots no Capture saw (spec §11.2). */
 function BakePanel() {
   const originals = useSetup((s) => s.setup!.originals);
   const [result, setResult] = useState<string>();
-  const bake = () => {
+  const [busy, setBusy] = useState(false);
+  const bake = async () => {
     const { renderer, scene, setup, manifest, updateSetup } = useSetup.getState();
     if (!renderer || !scene || !setup || !manifest) return;
     if (setup.floor.polygon.length < 3) {
       setResult('Mark the corners first (step 3).');
       return;
     }
-    const started = performance.now();
-    const colors = bakeFloorColors(renderer, scene, setup, manifest);
-    const ms = Math.round(performance.now() - started);
-    updateSetup((s) => ({ ...s, originals: s.originals.map((o) => ({ ...o, floorColor: colors[o.id] ?? o.floorColor })) }));
-    const missing = setup.originals.filter((o) => !colors[o.id]).length;
-    setResult(`Baked ${setup.originals.length - missing} floor colors in ${ms} ms.${missing ? ` No floor was seen around ${missing}.` : ''}`);
+    setBusy(true);
+    setResult(undefined);
+    // Patch v2 draws the Fill Captures' Patches, which only the merged room.glb holds. Without Fill Captures the loaded scene is it.
+    let merged = scene;
+    try {
+      const started = performance.now();
+      const colors = bakeFloorColors(renderer, scene, setup, manifest);
+      if (manifest.captures) merged = await loadScene(scanFileUrl(manifest.id, manifest.mesh));
+      const { patches, images } = await bakePatches(renderer, merged, setup, manifest);
+      updateSetup((s) => ({
+        ...s,
+        originals: s.originals.map((o) => ({ ...o, floorColor: colors[o.id] ?? o.floorColor, patch: patches[o.id] })),
+      }));
+      const ms = Math.round(performance.now() - started);
+      const missing = setup.originals.filter((o) => !colors[o.id]).length;
+      setResult(`Baked ${setup.originals.length - missing} floor colors and ${images} Patch images in ${ms} ms.${missing ? ` No floor was seen around ${missing}.` : ''} Save to keep them.`);
+    } catch (error) {
+      setResult(`Bake failed: ${(error as Error).message}`);
+    } finally {
+      if (merged !== scene) {
+        merged.traverse((object) => {
+          if (!(object instanceof Mesh)) return;
+          object.geometry.dispose();
+          const material = object.material as Material & { map?: { dispose(): void } | null };
+          material.map?.dispose();
+          material.dispose();
+        });
+      }
+      setBusy(false);
+    }
   };
   return (
     <>
-      <p>Bake measures the floor's color around each Original. A replaced Original's spot is patched with it.</p>
-      <div className="rs-row"><button type="button" className="rs-primary" onClick={bake}>Bake</button></div>
+      <p>
+        Bake measures the floor's color around each Original, so a replaced Original's spot is patched with it. It also fills,
+        for each Original that is not Kept, the floor and wall that no Capture saw (Patch v2), and saves them as images.
+      </p>
+      <div className="rs-row"><button type="button" className="rs-primary" disabled={busy} onClick={bake}>{busy ? 'Baking…' : 'Bake'}</button></div>
       {result && <p className="rs-note">{result}</p>}
       <ul className="rs-list">
         {originals.map((o) => (
           <li key={o.id}>
             <span className="rs-swatch" style={{ background: o.floorColor }} />
             {o.label}
-            <small>{o.floorColor === UNBAKED_FLOOR_COLOR ? 'not baked' : o.floorColor}</small>
+            <small>
+              {o.floorColor === UNBAKED_FLOOR_COLOR ? 'not baked' : o.floorColor}
+              {o.kept ? ', Kept' : o.patch ? `, Patch: ${patchSummary(o.patch)}` : ''}
+            </small>
           </li>
         ))}
       </ul>

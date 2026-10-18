@@ -295,57 +295,116 @@
       "attribution": "Courtesy NASA/JPL-Caltech"
     },
     {
-      "id": "poster-lunar-holiday",
-      "source": "generated",
-      "title": "Lunar Holiday",
+      "id": "poster-mars-explorers",
+      "source": "publicdomain",
+      "title": "Mars Explorers Wanted",
       "category": "wall_art",
       "mount": "wall",
       "size": [
-        0.457,
         0.61,
+        0.914,
         0.003
       ],
-      "model": "/data/catalog/posters/poster-lunar-holiday.glb",
-      "thumbnail": "/data/catalog/posters/poster-lunar-holiday.jpg",
+      "model": "/data/catalog/posters/poster-mars-explorers.glb",
+      "thumbnail": "/data/catalog/posters/poster-mars-explorers.jpg",
       "colors": [
-        "Blue",
-        "Gray",
+        "Red",
+        "Black",
         "Orange"
       ],
-      "colorHex": "#1b2d40",
+      "colorHex": "#8c1a0e",
       "materials": [
         "Paper"
       ],
       "styleTags": [
         "poster",
         "space",
-        "blue",
-        "gray",
+        "red",
+        "black",
         "orange"
       ],
-      "priceEstimateUsd": 25,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
+      "priceEstimateUsd": 30,
+      "url": "https://science.nasa.gov/resource/explorers-wanted-on-the-journey-to-mars/",
+      "attribution": "Courtesy NASA/KSC"
     },
     {
-      "id": "poster-ring-station",
-      "source": "generated",
-      "title": "Ring Station One",
+      "id": "poster-valles-marineris",
+      "source": "publicdomain",
+      "title": "Discover Valles Marineris",
       "category": "wall_art",
       "mount": "wall",
       "size": [
+        0.61,
+        0.914,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-valles-marineris.glb",
+      "thumbnail": "/data/catalog/posters/poster-valles-marineris.jpg",
+      "colors": [
+        "Red",
+        "Green"
+      ],
+      "colorHex": "#78261a",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "red",
+        "green"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://commons.wikimedia.org/wiki/File:SpaceX_Mars_tourism_poster_for_Valles_Marineris.jpg",
+      "attribution": "SpaceX (CC0)"
+    },
+    {
+      "id": "poster-artemis-ii",
+      "source": "publicdomain",
+      "title": "Artemis II: For All Humanity",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-artemis-ii.glb",
+      "thumbnail": "/data/catalog/posters/poster-artemis-ii.jpg",
+      "colors": [
+        "Black"
+      ],
+      "colorHex": "#07060b",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "space",
+        "black"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://images.nasa.gov/details/ArtemisII_Poster_11x17_300ppi_CMYK",
+      "attribution": "Courtesy NASA"
+    },
+    {
+      "id": "poster-trouvelot-saturn",
+      "source": "publicdomain",
+      "title": "The Planet Saturn",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
         0.65,
-        0.954,
         0.025
       ],
-      "model": "/data/catalog/posters/poster-ring-station.glb",
-      "thumbnail": "/data/catalog/posters/poster-ring-station.jpg",
+      "model": "/data/catalog/posters/poster-trouvelot-saturn.glb",
+      "thumbnail": "/data/catalog/posters/poster-trouvelot-saturn.jpg",
       "colors": [
-        "Blue",
-        "Orange",
-        "Gray"
+        "Gray",
+        "Orange"
       ],
-      "colorHex": "#7293b3",
+      "colorHex": "#484843",
       "materials": [
         "Paper",
         "Metal"
@@ -353,44 +412,12 @@
       "styleTags": [
         "poster",
         "space",
-        "blue",
-        "orange",
-        "gray"
-      ],
-      "priceEstimateUsd": 40,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
-    },
-    {
-      "id": "poster-saturn-line",
-      "source": "generated",
-      "title": "See the Rings",
-      "category": "wall_art",
-      "mount": "wall",
-      "size": [
-        0.457,
-        0.61,
-        0.003
-      ],
-      "model": "/data/catalog/posters/poster-saturn-line.glb",
-      "thumbnail": "/data/catalog/posters/poster-saturn-line.jpg",
-      "colors": [
-        "Blue",
-        "Orange"
-      ],
-      "colorHex": "#203248",
-      "materials": [
-        "Paper"
-      ],
-      "styleTags": [
-        "poster",
-        "space",
-        "blue",
+        "gray",
         "orange"
       ],
-      "priceEstimateUsd": 25,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
+      "priceEstimateUsd": 35,
+      "url": "https://www.loc.gov/item/2018694886/",
+      "attribution": "Library of Congress. Public domain"
     },
     {
       "id": "poster-away-message",
@@ -968,40 +995,9 @@
       "attribution": "Generated with FLUX on fal"
     },
     {
-      "id": "poster-glass-orchard",
-      "source": "generated",
-      "title": "Glass Orchard, Live",
-      "category": "wall_art",
-      "mount": "wall",
-      "size": [
-        0.457,
-        0.61,
-        0.003
-      ],
-      "model": "/data/catalog/posters/poster-glass-orchard.glb",
-      "thumbnail": "/data/catalog/posters/poster-glass-orchard.jpg",
-      "colors": [
-        "Beige",
-        "Pink"
-      ],
-      "colorHex": "#f5ece3",
-      "materials": [
-        "Paper"
-      ],
-      "styleTags": [
-        "poster",
-        "gig posters",
-        "beige",
-        "pink"
-      ],
-      "priceEstimateUsd": 25,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
-    },
-    {
-      "id": "poster-moth-and-kettle",
-      "source": "generated",
-      "title": "Moth & Kettle, Live",
+      "id": "poster-divan-japonais",
+      "source": "publicdomain",
+      "title": "Divan Japonais",
       "category": "wall_art",
       "mount": "wall",
       "size": [
@@ -1009,14 +1005,14 @@
         0.65,
         0.025
       ],
-      "model": "/data/catalog/posters/poster-moth-and-kettle.glb",
-      "thumbnail": "/data/catalog/posters/poster-moth-and-kettle.jpg",
+      "model": "/data/catalog/posters/poster-divan-japonais.glb",
+      "thumbnail": "/data/catalog/posters/poster-divan-japonais.jpg",
       "colors": [
         "Orange",
-        "Beige",
-        "Gray"
+        "Gray",
+        "Brown"
       ],
-      "colorHex": "#efdecb",
+      "colorHex": "#ad935c",
       "materials": [
         "Paper",
         "Metal"
@@ -1025,48 +1021,82 @@
         "poster",
         "gig posters",
         "orange",
-        "beige",
-        "gray"
+        "gray",
+        "brown"
       ],
       "priceEstimateUsd": 35,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
+      "url": "https://www.metmuseum.org/art/collection/search/334197",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
     },
     {
-      "id": "poster-saturday-ghosts",
-      "source": "generated",
-      "title": "The Saturday Ghosts, Live",
+      "id": "poster-aristide-bruant",
+      "source": "publicdomain",
+      "title": "Aristide Bruant in His Cabaret",
       "category": "wall_art",
       "mount": "wall",
       "size": [
-        0.279,
-        0.432,
+        0.61,
+        0.914,
         0.003
       ],
-      "model": "/data/catalog/posters/poster-saturday-ghosts.glb",
-      "thumbnail": "/data/catalog/posters/poster-saturday-ghosts.jpg",
+      "model": "/data/catalog/posters/poster-aristide-bruant.glb",
+      "thumbnail": "/data/catalog/posters/poster-aristide-bruant.jpg",
       "colors": [
-        "Yellow",
-        "Blue"
+        "Orange",
+        "Black",
+        "Brown"
       ],
-      "colorHex": "#f2e8a9",
+      "colorHex": "#c18f5c",
       "materials": [
         "Paper"
       ],
       "styleTags": [
         "poster",
         "gig posters",
-        "yellow",
-        "blue"
+        "orange",
+        "black",
+        "brown"
       ],
-      "priceEstimateUsd": 15,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
+      "priceEstimateUsd": 30,
+      "url": "https://www.metmuseum.org/art/collection/search/333995",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
     },
     {
-      "id": "poster-kite-weather",
-      "source": "generated",
-      "title": "Kite Weather Fest",
+      "id": "poster-jane-avril",
+      "source": "publicdomain",
+      "title": "Jane Avril",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-jane-avril.glb",
+      "thumbnail": "/data/catalog/posters/poster-jane-avril.jpg",
+      "colors": [
+        "Orange",
+        "Yellow"
+      ],
+      "colorHex": "#c9a86b",
+      "materials": [
+        "Paper",
+        "Wood"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "orange",
+        "yellow"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.artic.edu/artworks/67170",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "poster-sing-for-your-supper",
+      "source": "publicdomain",
+      "title": "Sing for Your Supper",
       "category": "wall_art",
       "mount": "wall",
       "size": [
@@ -1074,90 +1104,89 @@
         0.61,
         0.003
       ],
-      "model": "/data/catalog/posters/poster-kite-weather.glb",
-      "thumbnail": "/data/catalog/posters/poster-kite-weather.jpg",
+      "model": "/data/catalog/posters/poster-sing-for-your-supper.glb",
+      "thumbnail": "/data/catalog/posters/poster-sing-for-your-supper.jpg",
       "colors": [
-        "White",
+        "Gray",
+        "Beige"
+      ],
+      "colorHex": "#959a95",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "gig posters",
+        "gray",
+        "beige"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/item/98516611/",
+      "attribution": "Library of Congress. Public domain"
+    },
+    {
+      "id": "poster-salut-au-monde",
+      "source": "publicdomain",
+      "title": "Salut au Monde",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.279,
+        0.432,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-salut-au-monde.glb",
+      "thumbnail": "/data/catalog/posters/poster-salut-au-monde.jpg",
+      "colors": [
+        "Gray",
         "Red"
       ],
-      "colorHex": "#f7f4f3",
+      "colorHex": "#959590",
       "materials": [
         "Paper"
       ],
       "styleTags": [
         "poster",
         "gig posters",
-        "white",
+        "gray",
         "red"
       ],
-      "priceEstimateUsd": 25,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
+      "priceEstimateUsd": 15,
+      "url": "https://www.loc.gov/item/97502883/",
+      "attribution": "Library of Congress. Public domain"
     },
     {
-      "id": "poster-soft-arcade",
-      "source": "generated",
-      "title": "Soft Arcade, Live",
+      "id": "poster-symphony-concerts",
+      "source": "publicdomain",
+      "title": "Symphony Concerts",
       "category": "wall_art",
       "mount": "wall",
       "size": [
-        0.497,
-        0.65,
-        0.025
-      ],
-      "model": "/data/catalog/posters/poster-soft-arcade.glb",
-      "thumbnail": "/data/catalog/posters/poster-soft-arcade.jpg",
-      "colors": [
-        "Orange",
-        "Pink",
-        "Purple"
-      ],
-      "colorHex": "#f9ebd9",
-      "materials": [
-        "Paper",
-        "Metal"
-      ],
-      "styleTags": [
-        "poster",
-        "gig posters",
-        "orange",
-        "pink",
-        "purple"
-      ],
-      "priceEstimateUsd": 35,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
-    },
-    {
-      "id": "poster-paper-satellites",
-      "source": "generated",
-      "title": "Paper Satellites, Live",
-      "category": "wall_art",
-      "mount": "wall",
-      "size": [
-        0.279,
-        0.432,
+        0.457,
+        0.61,
         0.003
       ],
-      "model": "/data/catalog/posters/poster-paper-satellites.glb",
-      "thumbnail": "/data/catalog/posters/poster-paper-satellites.jpg",
+      "model": "/data/catalog/posters/poster-symphony-concerts.glb",
+      "thumbnail": "/data/catalog/posters/poster-symphony-concerts.jpg",
       "colors": [
-        "Beige",
-        "Orange"
+        "Red",
+        "Orange",
+        "Beige"
       ],
-      "colorHex": "#ede7da",
+      "colorHex": "#b85544",
       "materials": [
         "Paper"
       ],
       "styleTags": [
         "poster",
         "gig posters",
-        "beige",
-        "orange"
+        "red",
+        "orange",
+        "beige"
       ],
-      "priceEstimateUsd": 15,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
+      "priceEstimateUsd": 25,
+      "url": "https://www.loc.gov/item/98515065/",
+      "attribution": "Library of Congress. Public domain"
     },
     {
       "id": "poster-see-america-arches",
@@ -1258,76 +1287,9 @@
       "attribution": "Library of Congress. Public domain"
     },
     {
-      "id": "poster-pine-hollow",
-      "source": "generated",
-      "title": "Pine Hollow State Park",
-      "category": "wall_art",
-      "mount": "wall",
-      "size": [
-        0.457,
-        0.61,
-        0.003
-      ],
-      "model": "/data/catalog/posters/poster-pine-hollow.glb",
-      "thumbnail": "/data/catalog/posters/poster-pine-hollow.jpg",
-      "colors": [
-        "Teal",
-        "Orange",
-        "Green"
-      ],
-      "colorHex": "#2a5b59",
-      "materials": [
-        "Paper"
-      ],
-      "styleTags": [
-        "poster",
-        "parks & travel",
-        "teal",
-        "orange",
-        "green"
-      ],
-      "priceEstimateUsd": 25,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
-    },
-    {
-      "id": "poster-red-mesa",
-      "source": "generated",
-      "title": "Red Mesa",
-      "category": "wall_art",
-      "mount": "wall",
-      "size": [
-        0.65,
-        0.954,
-        0.025
-      ],
-      "model": "/data/catalog/posters/poster-red-mesa.glb",
-      "thumbnail": "/data/catalog/posters/poster-red-mesa.jpg",
-      "colors": [
-        "Red",
-        "Orange",
-        "Pink"
-      ],
-      "colorHex": "#7e3c34",
-      "materials": [
-        "Paper",
-        "Wood"
-      ],
-      "styleTags": [
-        "poster",
-        "parks & travel",
-        "red",
-        "orange",
-        "pink"
-      ],
-      "priceEstimateUsd": 40,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
-    },
-    {
-      "id": "poster-coastal-route",
-      "source": "generated",
-      "title": "Coastal Route",
+      "id": "poster-red-fuji",
+      "source": "publicdomain",
+      "title": "Red Fuji",
       "category": "wall_art",
       "mount": "wall",
       "size": [
@@ -1335,13 +1297,47 @@
         0.65,
         0.025
       ],
-      "model": "/data/catalog/posters/poster-coastal-route.glb",
-      "thumbnail": "/data/catalog/posters/poster-coastal-route.jpg",
+      "model": "/data/catalog/posters/poster-red-fuji.glb",
+      "thumbnail": "/data/catalog/posters/poster-red-fuji.jpg",
+      "colors": [
+        "Gray",
+        "Blue",
+        "Red"
+      ],
+      "colorHex": "#8f938e",
+      "materials": [
+        "Paper",
+        "Metal"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "gray",
+        "blue",
+        "red"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://www.metmuseum.org/art/collection/search/55736",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-kambara-night-snow",
+      "source": "publicdomain",
+      "title": "Kambara: Night Snow",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.497,
+        0.65,
+        0.025
+      ],
+      "model": "/data/catalog/posters/poster-kambara-night-snow.glb",
+      "thumbnail": "/data/catalog/posters/poster-kambara-night-snow.jpg",
       "colors": [
         "Orange",
-        "Teal"
+        "Gray"
       ],
-      "colorHex": "#e6caa3",
+      "colorHex": "#d0bba1",
       "materials": [
         "Paper",
         "Metal"
@@ -1350,11 +1346,44 @@
         "poster",
         "parks & travel",
         "orange",
-        "teal"
+        "gray"
       ],
       "priceEstimateUsd": 35,
-      "url": "",
-      "attribution": "Generated with FLUX on fal"
+      "url": "https://www.metmuseum.org/art/collection/search/36937",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "poster-life-at-its-best",
+      "source": "publicdomain",
+      "title": "Life at Its Best: National Parks",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.457,
+        0.61,
+        0.003
+      ],
+      "model": "/data/catalog/posters/poster-life-at-its-best.glb",
+      "thumbnail": "/data/catalog/posters/poster-life-at-its-best.jpg",
+      "colors": [
+        "Gray",
+        "Blue",
+        "Beige"
+      ],
+      "colorHex": "#584a4e",
+      "materials": [
+        "Paper"
+      ],
+      "styleTags": [
+        "poster",
+        "parks & travel",
+        "gray",
+        "blue",
+        "beige"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.nps.gov/articles/000/50-nifty-finds-7-the-waugh-factor.htm",
+      "attribution": "National Park Service. Public domain"
     }
   ]
 }

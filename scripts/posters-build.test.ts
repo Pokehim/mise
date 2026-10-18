@@ -3,7 +3,7 @@ import { getBounds } from '@gltf-transform/functions';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import {
-  COLLECTIONS, colorName, credits, pixelText, posterColors, posterDocument, posterSize, type PosterSpec, printPixels,
+  COLLECTIONS, colorName, composePoster, credits, pixelText, posterColors, posterDocument, posterSize, type PosterSpec, printPixels,
   textSvg, toCatalogItem, withoutColor,
 } from './posters-build';
 
@@ -111,6 +111,33 @@ describe('text', () => {
     expect(svg).toContain('MOTH &amp; KETTLE');
     expect(svg).toContain('THE &lt;COPPER&gt; HALL');
     await expect(sharp(Buffer.from(svg)).png().toBuffer()).resolves.toBeInstanceOf(Buffer);
+  });
+});
+
+describe('panel posters', () => {
+  const PANEL: PosterSpec = {
+    ...GREAT_WAVE,
+    id: 'poster-red-fuji',
+    collection: 'parks & travel',
+    text: { kind: 'panel', kicker: '富士山', title: 'Fuji', caption: ['Katsushika Hokusai', 'Fine Wind, Clear Morning'], paper: '#efeadf', ink: '#1b1b1b' },
+  };
+
+  it('sets the kicker, the title in capitals, and the caption around a bordered panel', async () => {
+    const svg = await textSvg(PANEL.text!, ...printPixels(PANEL));
+    expect(svg).toContain('富士山');
+    expect(svg).toContain('>FUJI<');
+    expect(svg).toContain('FINE WIND, CLEAR MORNING');
+    expect(svg).toMatch(/<rect [^>]*fill="none" stroke="#1b1b1b"/);
+  });
+
+  it('crops the art into the panel, on the paper', async () => {
+    const art = await sharp({ create: { width: 400, height: 300, channels: 3, background: '#d02020' } }).png().toBuffer();
+    const poster = await composePoster(art, PANEL);
+    const [w, h] = printPixels(PANEL);
+    const pixel = async (x: number, y: number) =>
+      [...(await sharp(poster).extract({ left: x, top: y, width: 1, height: 1 }).raw().toBuffer())].slice(0, 3);
+    expect(await pixel(Math.round(w / 2), Math.round(h / 2))).toEqual([208, 32, 32]);   // the art, mid-panel
+    expect(await pixel(4, 4)).toEqual([239, 234, 223]);                                 // the paper, in the corner
   });
 });
 

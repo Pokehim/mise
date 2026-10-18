@@ -190,60 +190,93 @@
     }
   },
   {
-    "id": "poster-lunar-holiday",
-    "title": "Lunar Holiday",
-    "collection": "space",
-    "size": "18x24",
-    "frame": "none",
-    "source": {
-      "kind": "generated",
-      "prompt": "A 1960s retro-futurist travel poster illustration: a glass-domed holiday resort on the Moon with a sleek silver rocket on a launch pad, the blue Earth rising over grey lunar mountains, flat gouache shapes, limited palette of navy, teal, cream and coral, mid-century airline poster style, clean composition with an empty dark sky in the top quarter."
-    },
-    "text": {
-      "kind": "travel",
-      "title": "Lunar Holiday",
-      "subtitle": "Weekend shuttles from Earth orbit",
-      "ink": "#f6ead2",
-      "band": "#14284b",
-      "at": "top"
-    }
-  },
-  {
-    "id": "poster-ring-station",
-    "title": "Ring Station One",
+    "id": "poster-mars-explorers",
+    "title": "Mars Explorers Wanted",
     "collection": "space",
     "size": "24x36",
-    "frame": "black",
+    "frame": "none",
+    "fit": "contain",
     "source": {
-      "kind": "generated",
-      "prompt": "1970s space colony concept painting: the inside of a giant rotating ring habitat, green parkland and white terraced houses curving upward on both sides into the sky, a lake and tiny trees, sunlight streaming through huge window panels, airbrushed acrylic painting, warm optimistic light, highly detailed, no people."
-    },
-    "text": {
-      "kind": "travel",
-      "title": "Ring Station One",
-      "subtitle": "Now accepting residents",
-      "ink": "#1d2a3a",
-      "band": "#efe2c4",
-      "at": "bottom"
+      "kind": "publicdomain",
+      "image": "https://assets.science.nasa.gov/content/dam/science/psd/mars/downloadable_items/4/4/44717_P01-Explorers-Wanted-NASA-Recruitment-Poster.jpg",
+      "page": "https://science.nasa.gov/resource/explorers-wanted-on-the-journey-to-mars/",
+      "institution": "NASA Kennedy Space Center",
+      "work": "NASA/KSC, Mars Explorers Wanted, 2009 (posted online 2016)",
+      "why": "Released by NASA with no copyright notice: \"Credit: NASA/KSC. Images are free for reprint and re-use.\" NASA says it commissioned the poster in 2009, so an outside artist may have painted it and it may not strictly be a US government work. It shows no NASA logo.",
+      "attribution": "Courtesy NASA/KSC"
     }
   },
   {
-    "id": "poster-saturn-line",
-    "title": "See the Rings",
+    "id": "poster-valles-marineris",
+    "title": "Discover Valles Marineris",
     "collection": "space",
-    "size": "18x24",
+    "size": "24x36",
     "frame": "none",
     "source": {
-      "kind": "generated",
-      "prompt": "Art deco retro-futurist poster illustration: a streamlined cream and red passenger spaceliner gliding past the rings of Saturn, the huge banded planet filling the background, stars, bold geometric shapes, screen-print texture, palette of gold, burnt orange, deep indigo and cream, empty space in the lower quarter."
+      "kind": "publicdomain",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/SpaceX_Mars_tourism_poster_for_Valles_Marineris.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:SpaceX_Mars_tourism_poster_for_Valles_Marineris.jpg",
+      "institution": "Wikimedia Commons",
+      "work": "SpaceX, Discover Valles Marineris (Mars tourism poster), 2015",
+      "why": "SpaceX dedicated it to the public domain under CC0 1.0 (Wikimedia permission ticket #2015032410033985). It shows no SpaceX name or logo.",
+      "attribution": "SpaceX (CC0)",
+      "crop": {
+        "left": 0.042,
+        "top": 0.028,
+        "width": 0.916,
+        "height": 0.944
+      }
+    }
+  },
+  {
+    "id": "poster-artemis-ii",
+    "title": "Artemis II: For All Humanity",
+    "collection": "space",
+    "size": "11x17",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images-assets.nasa.gov/image/ArtemisII_Poster_11x17_300ppi_CMYK/ArtemisII_Poster_11x17_300ppi_CMYK~orig.png",
+      "page": "https://images.nasa.gov/details/ArtemisII_Poster_11x17_300ppi_CMYK",
+      "institution": "NASA",
+      "work": "NASA, Artemis II poster, 2023",
+      "why": "A NASA poster with no outside creator credited, so a US government work. Its NASA insignia and Artemis logo, which NASA does not allow others to use, are cropped off.",
+      "attribution": "Courtesy NASA",
+      "crop": {
+        "left": 0,
+        "top": 0.065,
+        "width": 1,
+        "height": 0.934
+      }
+    }
+  },
+  {
+    "id": "poster-trouvelot-saturn",
+    "title": "The Planet Saturn",
+    "collection": "space",
+    "size": "18x24",
+    "frame": "white",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:44200:44224u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/2018694886/",
+      "institution": "Library of Congress",
+      "work": "É. L. Trouvelot, The Planet Saturn, observed 1874, published 1881",
+      "why": "Published in 1881 (\"Copyright 1881 by Charles Scribner's Sons\"), so public domain in the US. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.084,
+        "top": 0.082,
+        "width": 0.826,
+        "height": 0.798
+      }
     },
     "text": {
-      "kind": "travel",
-      "title": "See the Rings",
-      "subtitle": "Saturn line · departures nightly",
-      "ink": "#f3d9a4",
-      "band": "#231a3d",
-      "at": "bottom"
+      "kind": "museum",
+      "artist": "É. L. Trouvelot",
+      "work": "The Planet Saturn",
+      "date": "1881",
+      "paper": "#f1ece1",
+      "ink": "#22252e"
     }
   },
   {
@@ -541,127 +574,135 @@
     }
   },
   {
-    "id": "poster-glass-orchard",
-    "title": "Glass Orchard, Live",
-    "collection": "gig posters",
-    "size": "18x24",
-    "frame": "none",
-    "source": {
-      "kind": "generated",
-      "prompt": "Two-color risograph print illustration in fluorescent pink and teal on off-white paper: a stylized orchard of round trees with glass-like fruit, overlapping translucent ink layers, visible grain and slight misregistration, halftone texture, bold simple shapes, the top 40 percent of the paper left blank off-white."
-    },
-    "text": {
-      "kind": "gig",
-      "band": "Glass Orchard",
-      "support": "Low Tide Choir",
-      "venue": "The Lantern Room",
-      "date": "Fri Oct 14",
-      "ink": "#e8327c",
-      "shadow": "#1aa7a1",
-      "at": "top"
-    }
-  },
-  {
-    "id": "poster-moth-and-kettle",
-    "title": "Moth & Kettle, Live",
+    "id": "poster-divan-japonais",
+    "title": "Divan Japonais",
     "collection": "gig posters",
     "size": "18x24",
     "frame": "black",
+    "fit": "contain",
     "source": {
-      "kind": "generated",
-      "prompt": "Three-color screen print illustration in black, burnt orange and mustard on cream paper: a large detailed moth with patterned wings circling a glowing vintage oil lamp, woodcut-like linework, grainy ink texture, the bottom 35 percent of the paper left blank cream."
-    },
-    "text": {
-      "kind": "gig",
-      "band": "Moth & Kettle",
-      "venue": "The Copper Hall",
-      "date": "Sat Nov 5",
-      "ink": "#1d1a17",
-      "shadow": "#e0702b",
-      "at": "bottom"
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/dp/original/DT224360.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/334197",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Henri de Toulouse-Lautrec, Divan Japonais, 1892–93",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.03,
+        "top": 0.02,
+        "width": 0.95,
+        "height": 0.965
+      }
     }
   },
   {
-    "id": "poster-saturday-ghosts",
-    "title": "The Saturday Ghosts, Live",
+    "id": "poster-aristide-bruant",
+    "title": "Aristide Bruant in His Cabaret",
     "collection": "gig posters",
-    "size": "11x17",
+    "size": "24x36",
     "frame": "none",
+    "fit": "contain",
     "source": {
-      "kind": "generated",
-      "prompt": "Risograph print illustration in blue and fluorescent orange on pale yellow paper: three friendly cartoon sheet ghosts riding skateboards down a ramp under the moon, playful hand-drawn shapes, grainy riso texture, slight misregistration, the top 40 percent of the paper left blank."
-    },
-    "text": {
-      "kind": "gig",
-      "band": "The Saturday Ghosts",
-      "support": "Night Bus",
-      "venue": "Basement 12",
-      "date": "Sat Mar 3",
-      "ink": "#2b4fd8",
-      "shadow": "#ff6a3d",
-      "at": "top"
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/dp/original/DP371473.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/333995",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Henri de Toulouse-Lautrec, Aristide Bruant, dans son cabaret, 1893",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.036,
+        "top": 0.026,
+        "width": 0.928,
+        "height": 0.948
+      }
     }
   },
   {
-    "id": "poster-kite-weather",
-    "title": "Kite Weather Fest",
+    "id": "poster-jane-avril",
+    "title": "Jane Avril",
+    "collection": "gig posters",
+    "size": "18x24",
+    "frame": "oak",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.artic.edu/iiif/2/4d57383a-0f32-20d0-b09a-afb9c81357d3/full/,4000/0/default.jpg",
+      "page": "https://www.artic.edu/artworks/67170",
+      "institution": "The Art Institute of Chicago",
+      "work": "Henri de Toulouse-Lautrec, Jane Avril, 1893",
+      "why": "Made before 1931. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0.",
+      "crop": {
+        "left": 0.022,
+        "top": 0.016,
+        "width": 0.95,
+        "height": 0.966
+      }
+    }
+  },
+  {
+    "id": "poster-sing-for-your-supper",
+    "title": "Sing for Your Supper",
     "collection": "gig posters",
     "size": "18x24",
     "frame": "none",
+    "fit": "contain",
     "source": {
-      "kind": "generated",
-      "prompt": "Three-color risograph festival poster illustration in sky blue, sunflower yellow and red on white paper: colorful diamond kites flying over rolling hills with a tiny outdoor stage and tents, bold flat shapes, halftone grain, slight misregistration, the bottom 35 percent of the paper left blank."
-    },
-    "text": {
-      "kind": "gig",
-      "band": "Kite Weather",
-      "support": "Paper Satellites",
-      "venue": "Hillside Field",
-      "date": "Aug 9–10",
-      "ink": "#d7263d",
-      "shadow": "#1e88e5",
-      "at": "bottom"
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:31100:31186u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/98516611/",
+      "institution": "Library of Congress",
+      "work": "Aida McKenzie, Sing for Your Supper, WPA Federal Art Project, between 1936 and 1939",
+      "why": "Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.014,
+        "top": 0.01,
+        "width": 0.97,
+        "height": 0.98
+      }
     }
   },
   {
-    "id": "poster-soft-arcade",
-    "title": "Soft Arcade, Live",
-    "collection": "gig posters",
-    "size": "18x24",
-    "frame": "white",
-    "source": {
-      "kind": "generated",
-      "prompt": "Two-color risograph print in fluorescent pink and purple on cream paper: a setting striped sun over a grid horizon with two palm trees and a cassette-shaped cloud, synthwave mood, grainy riso texture, slight misregistration, the top 40 percent of the paper left blank cream."
-    },
-    "text": {
-      "kind": "gig",
-      "band": "Soft Arcade",
-      "support": "Velvet Hour",
-      "venue": "Room 9",
-      "date": "Thu Jun 22",
-      "ink": "#7b2fbe",
-      "shadow": "#ff4fa3",
-      "at": "top"
-    }
-  },
-  {
-    "id": "poster-paper-satellites",
-    "title": "Paper Satellites, Live",
+    "id": "poster-salut-au-monde",
+    "title": "Salut au Monde",
     "collection": "gig posters",
     "size": "11x17",
     "frame": "none",
+    "fit": "contain",
     "source": {
-      "kind": "generated",
-      "prompt": "Screen print illustration in navy and fluorescent orange on off-white paper: a folded paper-craft satellite orbiting a crescent moon among dotted stars, origami folds, halftone shading, grainy ink texture, the bottom 35 percent of the paper left blank."
-    },
-    "text": {
-      "kind": "gig",
-      "band": "Paper Satellites",
-      "venue": "The Observatory Bar",
-      "date": "Wed Feb 8",
-      "ink": "#16255c",
-      "shadow": "#ff7a1a",
-      "at": "bottom"
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:07100:07144u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/97502883/",
+      "institution": "Library of Congress",
+      "work": "Richard Halls, Salut au Monde, WPA Federal Art Project, 1936 or 1937",
+      "why": "Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.016,
+        "top": 0.012,
+        "width": 0.966,
+        "height": 0.976
+      }
+    }
+  },
+  {
+    "id": "poster-symphony-concerts",
+    "title": "Symphony Concerts",
+    "collection": "gig posters",
+    "size": "18x24",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:cph:3f00000:3f05000:3f05300:3f05361u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/98515065/",
+      "institution": "Library of Congress",
+      "work": "WPA Federal Music Project of New York City, Symphony Concerts, Theatre of Music, between 1936 and 1940",
+      "why": "Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.052,
+        "top": 0.036,
+        "width": 0.886,
+        "height": 0.92
+      }
     }
   },
   {
@@ -731,60 +772,83 @@
     }
   },
   {
-    "id": "poster-pine-hollow",
-    "title": "Pine Hollow State Park",
+    "id": "poster-red-fuji",
+    "title": "Red Fuji",
     "collection": "parks & travel",
     "size": "18x24",
-    "frame": "none",
+    "frame": "black",
     "source": {
-      "kind": "generated",
-      "prompt": "1930s WPA national park silkscreen poster illustration: a calm mountain lake at dawn with a loon swimming, dark pine trees framing the scene, layered blue-green mountains, flat color shapes, limited palette of teal, forest green, cream and soft orange, screen-print texture, the top quarter is plain pale sky."
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/as/original/DP141053.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/55736",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Katsushika Hokusai, South Wind, Clear Sky (Gaifū kaisei), also known as Red Fuji, ca. 1830–32",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.014,
+        "top": 0.024,
+        "width": 0.966,
+        "height": 0.952
+      }
     },
     "text": {
-      "kind": "travel",
-      "title": "Pine Hollow",
-      "subtitle": "State park · camping · canoes",
-      "ink": "#f4e8cc",
-      "band": "#1f4a45",
-      "at": "top"
+      "kind": "panel",
+      "kicker": "富士山",
+      "title": "Fuji",
+      "caption": [
+        "Katsushika Hokusai",
+        "South Wind, Clear Sky, c. 1831"
+      ],
+      "paper": "#efeadf",
+      "ink": "#1b1b1b"
     }
   },
   {
-    "id": "poster-red-mesa",
-    "title": "Red Mesa",
-    "collection": "parks & travel",
-    "size": "24x36",
-    "frame": "oak",
-    "source": {
-      "kind": "generated",
-      "prompt": "1930s WPA silkscreen poster illustration of a desert canyon park at sunset: a huge red sandstone arch, layered mesas, a winding dirt road, saguaro cacti, a night sky with the first stars, flat color shapes, limited palette of terracotta, burnt orange, deep plum and cream, screen-print texture, the bottom fifth is plain dark ground."
-    },
-    "text": {
-      "kind": "travel",
-      "title": "Red Mesa",
-      "subtitle": "Camp under a billion stars",
-      "ink": "#f6e2c0",
-      "band": "#5a1f2b",
-      "at": "bottom"
-    }
-  },
-  {
-    "id": "poster-coastal-route",
-    "title": "Coastal Route",
+    "id": "poster-kambara-night-snow",
+    "title": "Kambara: Night Snow",
     "collection": "parks & travel",
     "size": "18x24",
     "frame": "white",
     "source": {
-      "kind": "generated",
-      "prompt": "Vintage 1930s travel poster illustration: a winding coastal highway on green cliffs above a turquoise sea, a white lighthouse on a point, a small vintage car on the road, sailboats, gulls, flat color art deco shapes, limited palette, lithograph texture, the top quarter is plain pale sky."
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/as/original/DP122189.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/36937",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Utagawa Hiroshige, A Snowy Evening at Kanbara Station (Kambara: Night Snow), ca. 1833–34",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.012,
+        "top": 0.05,
+        "width": 0.97,
+        "height": 0.865
+      }
     },
     "text": {
-      "kind": "travel",
-      "title": "Coastal Route",
-      "subtitle": "Drive the cliffs this summer",
-      "ink": "#123f5c",
-      "band": "#f1e6cc",
-      "at": "top"
+      "kind": "panel",
+      "kicker": "東海道 蒲原",
+      "title": "Kambara",
+      "caption": [
+        "Utagawa Hiroshige",
+        "Night Snow, c. 1833"
+      ],
+      "paper": "#e9ecee",
+      "ink": "#1d2733"
+    }
+  },
+  {
+    "id": "poster-life-at-its-best",
+    "title": "Life at Its Best: National Parks",
+    "collection": "parks & travel",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.nps.gov/articles/000/images/Life-at-its-Best.jpg",
+      "page": "https://www.nps.gov/articles/000/50-nifty-finds-7-the-waugh-factor.htm",
+      "institution": "National Park Service",
+      "work": "Dorothy Waugh, Life at Its Best: National Parks, ca. 1934",
+      "why": "Made by Dorothy Waugh as a National Park Service employee (NPS: \"Not only was Waugh an NPS employee…\"), so a work of the US government. It shows no logo.",
+      "attribution": "National Park Service. Public domain"
     }
   }
 ]

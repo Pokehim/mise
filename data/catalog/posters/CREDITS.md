@@ -1,10 +1,10 @@
 # Poster credits
 
-Written by `scripts/posters-build.ts` from `scripts/posters.json`. Every poster is a public-domain work, a NASA/JPL
-poster free to use under JPL's Image Use Policy, or an original generated for Mise. The type on every poster that has
-any of its own was set by the build script, not by an image model.
+Written by `scripts/posters-build.ts` from `scripts/posters.json`. Every poster is a real work that is free to use
+(public domain, a US government work, CC0, or a NASA/JPL poster under JPL's Image Use Policy), or an original
+generated for Mise where no free real poster exists. Type that the build adds was set by the script, not an image model.
 
-## Public domain and NASA/JPL
+## Real posters
 
 ### The Great Wave (`poster-great-wave`)
 
@@ -72,6 +72,79 @@ any of its own was set by the build script, not by an image model.
 - **Why we may use it:** Not public domain: JPL, which Caltech runs for NASA, lets its web images "be used for any purpose without prior permission" under its Image Use Policy (https://www.jpl.nasa.gov/jpl-image-use-policy), with the credit "Courtesy NASA/JPL-Caltech", no implied endorsement, and no NASA or JPL logos. This poster shows no logo.
 - **Credit:** Courtesy NASA/JPL-Caltech
 
+### Mars Explorers Wanted (`poster-mars-explorers`)
+
+- **Work:** NASA/KSC, Mars Explorers Wanted, 2009 (posted online 2016)
+- **Source:** NASA Kennedy Space Center, https://science.nasa.gov/resource/explorers-wanted-on-the-journey-to-mars/
+- **Image:** https://assets.science.nasa.gov/content/dam/science/psd/mars/downloadable_items/4/4/44717_P01-Explorers-Wanted-NASA-Recruitment-Poster.jpg
+- **Why we may use it:** Released by NASA with no copyright notice: "Credit: NASA/KSC. Images are free for reprint and re-use." NASA says it commissioned the poster in 2009, so an outside artist may have painted it and it may not strictly be a US government work. It shows no NASA logo.
+- **Credit:** Courtesy NASA/KSC
+
+### Discover Valles Marineris (`poster-valles-marineris`)
+
+- **Work:** SpaceX, Discover Valles Marineris (Mars tourism poster), 2015
+- **Source:** Wikimedia Commons, https://commons.wikimedia.org/wiki/File:SpaceX_Mars_tourism_poster_for_Valles_Marineris.jpg
+- **Image:** https://upload.wikimedia.org/wikipedia/commons/5/5d/SpaceX_Mars_tourism_poster_for_Valles_Marineris.jpg
+- **Why we may use it:** SpaceX dedicated it to the public domain under CC0 1.0 (Wikimedia permission ticket #2015032410033985). It shows no SpaceX name or logo.
+- **Credit:** SpaceX (CC0)
+
+### Artemis II: For All Humanity (`poster-artemis-ii`)
+
+- **Work:** NASA, Artemis II poster, 2023
+- **Source:** NASA, https://images.nasa.gov/details/ArtemisII_Poster_11x17_300ppi_CMYK
+- **Image:** https://images-assets.nasa.gov/image/ArtemisII_Poster_11x17_300ppi_CMYK/ArtemisII_Poster_11x17_300ppi_CMYK~orig.png
+- **Why we may use it:** A NASA poster with no outside creator credited, so a US government work. Its NASA insignia and Artemis logo, which NASA does not allow others to use, are cropped off.
+- **Credit:** Courtesy NASA
+
+### The Planet Saturn (`poster-trouvelot-saturn`)
+
+- **Work:** É. L. Trouvelot, The Planet Saturn, observed 1874, published 1881
+- **Source:** Library of Congress, https://www.loc.gov/item/2018694886/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:44200:44224u/full/full/0/default.jpg
+- **Why we may use it:** Published in 1881 ("Copyright 1881 by Charles Scribner's Sons"), so public domain in the US. The Library of Congress lists "No known restrictions on publication."
+
+### Divan Japonais (`poster-divan-japonais`)
+
+- **Work:** Henri de Toulouse-Lautrec, Divan Japonais, 1892–93
+- **Source:** The Metropolitan Museum of Art, https://www.metmuseum.org/art/collection/search/334197
+- **Image:** https://images.metmuseum.org/CRDImages/dp/original/DT224360.jpg
+- **Why we may use it:** Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).
+
+### Aristide Bruant in His Cabaret (`poster-aristide-bruant`)
+
+- **Work:** Henri de Toulouse-Lautrec, Aristide Bruant, dans son cabaret, 1893
+- **Source:** The Metropolitan Museum of Art, https://www.metmuseum.org/art/collection/search/333995
+- **Image:** https://images.metmuseum.org/CRDImages/dp/original/DP371473.jpg
+- **Why we may use it:** Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).
+
+### Jane Avril (`poster-jane-avril`)
+
+- **Work:** Henri de Toulouse-Lautrec, Jane Avril, 1893
+- **Source:** The Art Institute of Chicago, https://www.artic.edu/artworks/67170
+- **Image:** https://www.artic.edu/iiif/2/4d57383a-0f32-20d0-b09a-afb9c81357d3/full/,4000/0/default.jpg
+- **Why we may use it:** Made before 1931. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0.
+
+### Sing for Your Supper (`poster-sing-for-your-supper`)
+
+- **Work:** Aida McKenzie, Sing for Your Supper, WPA Federal Art Project, between 1936 and 1939
+- **Source:** Library of Congress, https://www.loc.gov/item/98516611/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:31100:31186u/full/full/0/default.jpg
+- **Why we may use it:** Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists "No known restrictions on publication."
+
+### Salut au Monde (`poster-salut-au-monde`)
+
+- **Work:** Richard Halls, Salut au Monde, WPA Federal Art Project, 1936 or 1937
+- **Source:** Library of Congress, https://www.loc.gov/item/97502883/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:07100:07144u/full/full/0/default.jpg
+- **Why we may use it:** Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists "No known restrictions on publication."
+
+### Symphony Concerts (`poster-symphony-concerts`)
+
+- **Work:** WPA Federal Music Project of New York City, Symphony Concerts, Theatre of Music, between 1936 and 1940
+- **Source:** Library of Congress, https://www.loc.gov/item/98515065/
+- **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:cph:3f00000:3f05000:3f05300:3f05361u/full/full/0/default.jpg
+- **Why we may use it:** Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists "No known restrictions on publication."
+
 ### See America: Arches (`poster-see-america-arches`)
 
 - **Work:** Frank S. Nicholson, See America, Works Progress Administration Federal Art Project, between 1936 and 1939
@@ -93,14 +166,33 @@ any of its own was set by the build script, not by an image model.
 - **Image:** https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:23000:23061u/full/full/0/default.jpg
 - **Why we may use it:** Made between 1936 and 1939 by the Works Progress Administration's Federal Art Project, a US government program, so a work of the US government. The Library of Congress lists "No known restrictions on publication."
 
+### Red Fuji (`poster-red-fuji`)
+
+- **Work:** Katsushika Hokusai, South Wind, Clear Sky (Gaifū kaisei), also known as Red Fuji, ca. 1830–32
+- **Source:** The Metropolitan Museum of Art, https://www.metmuseum.org/art/collection/search/55736
+- **Image:** https://images.metmuseum.org/CRDImages/as/original/DP141053.jpg
+- **Why we may use it:** Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).
+
+### Kambara: Night Snow (`poster-kambara-night-snow`)
+
+- **Work:** Utagawa Hiroshige, A Snowy Evening at Kanbara Station (Kambara: Night Snow), ca. 1833–34
+- **Source:** The Metropolitan Museum of Art, https://www.metmuseum.org/art/collection/search/36937
+- **Image:** https://images.metmuseum.org/CRDImages/as/original/DP122189.jpg
+- **Why we may use it:** Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).
+
+### Life at Its Best: National Parks (`poster-life-at-its-best`)
+
+- **Work:** Dorothy Waugh, Life at Its Best: National Parks, ca. 1934
+- **Source:** National Park Service, https://www.nps.gov/articles/000/50-nifty-finds-7-the-waugh-factor.htm
+- **Image:** https://www.nps.gov/articles/000/images/Life-at-its-Best.jpg
+- **Why we may use it:** Made by Dorothy Waugh as a National Park Service employee (NPS: "Not only was Waugh an NPS employee…"), so a work of the US government. It shows no logo.
+- **Credit:** National Park Service. Public domain
+
 ## Generated
 
 Generated with FLUX 3 Image on fal from the prompts in `scripts/posters.json`. They show no real characters, logos,
 brands, bands, movies, or people; their band, venue, game, and place names are made up.
 
-- Lunar Holiday (`poster-lunar-holiday`)
-- Ring Station One (`poster-ring-station`)
-- See the Rings (`poster-saturn-line`)
 - Away Message (`poster-away-message`)
 - Call Me Later (`poster-call-me-later`)
 - Dial-Up Dreams (`poster-dial-up-dreams`)
@@ -119,12 +211,3 @@ brands, bands, movies, or people; their band, venue, game, and place names are m
 - Corner Store (`poster-corner-store`)
 - After School (`poster-after-school`)
 - Seaside Town (`poster-seaside-town`)
-- Glass Orchard, Live (`poster-glass-orchard`)
-- Moth & Kettle, Live (`poster-moth-and-kettle`)
-- The Saturday Ghosts, Live (`poster-saturday-ghosts`)
-- Kite Weather Fest (`poster-kite-weather`)
-- Soft Arcade, Live (`poster-soft-arcade`)
-- Paper Satellites, Live (`poster-paper-satellites`)
-- Pine Hollow State Park (`poster-pine-hollow`)
-- Red Mesa (`poster-red-mesa`)
-- Coastal Route (`poster-coastal-route`)

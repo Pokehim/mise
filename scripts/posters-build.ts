@@ -57,7 +57,9 @@ export type PosterText =
   | { kind: 'pixel'; title: string; subtitle?: string; color: Hex; at: 'top' | 'bottom' }
   | { kind: 'gig'; band: string; support?: string; venue: string; date: string; ink: Hex; shadow: Hex; at: 'top' | 'bottom' }
   | { kind: 'travel'; title: string; subtitle: string; ink: Hex; band: Hex; at: 'top' | 'bottom' }
-  | { kind: 'caption'; text: string; ink: Hex; at: 'top' | 'bottom' };
+  | { kind: 'caption'; text: string; ink: Hex; at: 'top' | 'bottom' }
+  /** A travel poster: the art cropped into a bordered panel, a small kicker line and a big title above, a caption below. */
+  | { kind: 'panel'; kicker?: string; title: string; caption: [string] | [string, string]; paper: Hex; ink: Hex };
 
 /** One entry of scripts/posters.json. */
 export interface PosterSpec {
@@ -359,6 +361,23 @@ export async function textSvg(text: PosterText, w: number, h: number): Promise<s
       body.push(`<text x="${w / 2}" y="${bandTop + pad + titleSize * 0.72 + subSize * 1.8}" text-anchor="middle" fill="${text.ink}" ${textAttributes(sub, subSize)}>${escapeXml(text.subtitle.toUpperCase())}</text>`);
       break;
     }
+    case 'panel': {
+      const layout = panelLayout(text, w, h);
+      const kicker: Type = { family: 'Hiragino Sans', weight: 700, spacing: 0.08 };
+      const title: Type = { family: 'Futura', weight: 800, spacing: 0.01 };
+      const caption: Type = { family: 'Futura', weight: 700, spacing: 0.04 };
+      const line = (y: number, words: string, type: Type, size: number) =>
+        `<text x="${w / 2}" y="${y}" text-anchor="middle" fill="${text.ink}" ${textAttributes(type, size)}>${escapeXml(words)}</text>`;
+      if (text.kicker) body.push(line(layout.kickerBase, text.kicker, kicker, await fit(text.kicker, kicker, layout.kickerSize, inner)));
+      body.push(line(layout.titleBase, text.title.toUpperCase(), title, await fit(text.title.toUpperCase(), title, layout.titleSize, inner)));
+      for (const [i, words] of text.caption.entries()) {
+        body.push(line(layout.captionBase + i * layout.captionSize * 1.3, words.toUpperCase(), caption, await fit(words.toUpperCase(), caption, layout.captionSize, inner)));
+      }
+      const { left, top, width, height } = layout.panel;
+      const border = 0.3 * cm;
+      body.push(`<rect x="${left + border / 2}" y="${top + border / 2}" width="${width - border}" height="${height - border}" fill="none" stroke="${text.ink}" stroke-width="${border}"/>`);
+      break;
+    }
     case 'caption': {
       const type: Type = { family: 'Avenir Next', weight: 600, spacing: 0.3 };
       const size = await fit(text.text.toUpperCase(), type, 2.2 * cm, inner);
@@ -390,12 +409,39 @@ function museumLayout(w: number, h: number) {
   return { left: margin, top: margin, width: w - 2 * margin, height: h - 2 * margin - typeBand };
 }
 
+/**
+ * Where a panel poster's type and art go: the kicker and title above the panel, the caption below. The type sizes are
+ * cap heights in cm, as in textSvg; a line too wide for the margins only gets smaller, so the layout stays put.
+ */
+function panelLayout(text: Extract<PosterText, { kind: 'panel' }>, w: number, h: number) {
+  const cm = h / heightCm(w, h);
+  const margin = Math.round(Math.min(w, h) * 0.07);
+  const [kickerSize, titleSize, captionSize] = [2.4 * cm, 7 * cm, 1.9 * cm];
+  const kickerBase = margin + kickerSize * 0.85;
+  const titleBase = (text.kicker ? kickerBase + kickerSize * 0.45 : margin) + titleSize * 0.74;
+  const panelTop = Math.round(titleBase + titleSize * 0.2);
+  const captionBase = h - margin - (text.caption.length - 1) * captionSize * 1.3;
+  const panelBottom = Math.round(captionBase - captionSize * 1.2);
+  return {
+    kickerSize, titleSize, captionSize, kickerBase, titleBase, captionBase,
+    panel: { left: margin, top: panelTop, width: w - 2 * margin, height: panelBottom - panelTop },
+  };
+}
+
 /** The margin around art that is fitted whole ('contain'). */
 const MAT = '#f1ebde';
 
+/** A raster copy of art that comes as SVG, 2800 px on its long side; other art as it is. */
+async function rasterized(art: Buffer): Promise<Buffer> {
+  const { format, width = 0, height = 0 } = await sharp(art).metadata();
+  if (format !== 'svg') return art;
+  return sharp(art, { density: (72 * 2800) / Math.max(width, height) }).flatten({ background: '#ffffff' }).png().toBuffer();
+}
+
 /** The poster at its print's pixel size, as sRGB PNG: its art cropped to fit, and its text set over it. */
-export async function composePoster(art: Buffer, spec: PosterSpec): Promise<Buffer> {
+export async function composePoster(original: Buffer, spec: PosterSpec): Promise<Buffer> {
   const [w, h] = printPixels(spec);
+  const art = await rasterized(original);
   let image = sharp(art).rotate().toColourspace('srgb');
   const { crop } = spec.source as PublicDomainSource;
   if (crop) {
@@ -417,6 +463,12 @@ export async function composePoster(art: Buffer, spec: PosterSpec): Promise<Buff
       left: area.left + Math.round((area.width - fitted.info.width) / 2),
       top: area.top + Math.round((area.height - fitted.info.height) / 2),
     }]);
+  } else if (text?.kind === 'panel') {
+    // The art fills its panel, cropped to the panel's shape.
+    const { panel } = panelLayout(text, w, h);
+    const fitted = await image.resize(panel.width, panel.height, { fit: 'cover', kernel: 'lanczos3' }).png().toBuffer();
+    canvas = sharp({ create: { width: w, height: h, channels: 3, background: text.paper } })
+      .composite([{ input: fitted, left: panel.left, top: panel.top }]);
   } else if (spec.fit === 'contain') {
     canvas = sharp(await image.resize(w, h, { fit: 'contain', background: MAT, kernel: 'lanczos3' }).png().toBuffer());
   } else {
@@ -562,11 +614,17 @@ const MAX_GLB_BYTES = 2_000_000;     // §2.3: each Piece ≤ 2 MB
 const FLUX = 'blackforestlabs/flux-3/text-to-image';
 const NO_TEXT = 'No text, no letters, no words, no numbers, no logos, no signatures, no watermark, no people, no characters.';
 
+/** A file's bytes. The Library of Congress sometimes ends a JPEG early with a 200, so a cut-off JPEG is tried again. */
 async function download(url: string): Promise<Buffer> {
-  // The Art Institute of Chicago turns away Node's default User-Agent, and one with an address in it.
-  const res = await fetch(url, { headers: { 'User-Agent': 'mise-posters-build/1.0' } });
-  if (!res.ok) throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
-  return Buffer.from(await res.arrayBuffer());
+  for (let attempt = 1; ; attempt++) {
+    // The Art Institute of Chicago turns away Node's default User-Agent, and one with an address in it.
+    const res = await fetch(url, { headers: { 'User-Agent': 'mise-posters-build/1.0' } });
+    if (!res.ok) throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
+    const data = Buffer.from(await res.arrayBuffer());
+    const isJpeg = data[0] === 0xff && data[1] === 0xd8;
+    if (!isJpeg || (data.at(-2) === 0xff && data.at(-1) === 0xd9)) return data;
+    if (attempt === 3) throw new Error(`GET ${url}: the JPEG was cut off three times`);
+  }
 }
 
 /** The aspect ratio to ask FLUX 3 for. It has no 11:17, so those come at 2:3 and lose 3% of their width to the crop. */
@@ -615,7 +673,8 @@ async function thumbnail(spec: PosterSpec, poster: Buffer): Promise<Buffer> {
 async function buildPoster(spec: PosterSpec, io: NodeIO): Promise<{ item: CatalogItem; bytes: number; poster: Buffer }> {
   const poster = await composePoster(await art(spec), spec);
   const { data: rgb } = await sharp(poster).resize(96, 96, { fit: 'fill' }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  const item = toCatalogItem(spec, posterColors(spec.text?.kind === 'museum' ? withoutColor(rgb, spec.text.paper) : rgb));
+  const paper = spec.text && 'paper' in spec.text ? spec.text.paper : undefined;   // museum and panel posters
+  const item = toCatalogItem(spec, posterColors(paper ? withoutColor(rgb, paper) : rgb));
   const webp = await sharp(poster).webp({ quality: 84 }).toBuffer();
   const glb = await io.writeBinary(await posterDocument(spec, webp));
   if (glb.byteLength > MAX_GLB_BYTES) throw new Error(`${(glb.byteLength / 1e6).toFixed(2)} MB is over the 2 MB budget`);
@@ -625,8 +684,8 @@ async function buildPoster(spec: PosterSpec, io: NodeIO): Promise<{ item: Catalo
 }
 
 /**
- * CREDITS.md: where each poster that isn't an original comes from and why it may be used (public domain, or the
- * NASA/JPL posters' image use policy), and which are generated.
+ * CREDITS.md: where each real poster comes from and why it may be used (public domain, CC0, or the NASA/JPL posters'
+ * image use policy), and which are generated.
  */
 export function credits(specs: PosterSpec[]): string {
   const sourced = specs.filter((spec) => spec.source.kind === 'publicdomain');
@@ -634,11 +693,11 @@ export function credits(specs: PosterSpec[]): string {
   const lines = [
     '# Poster credits',
     '',
-    'Written by `scripts/posters-build.ts` from `scripts/posters.json`. Every poster is a public-domain work, a NASA/JPL',
-    'poster free to use under JPL\'s Image Use Policy, or an original generated for Mise. The type on every poster that has',
-    'any of its own was set by the build script, not by an image model.',
+    'Written by `scripts/posters-build.ts` from `scripts/posters.json`. Every poster is a real work that is free to use',
+    '(public domain, a US government work, CC0, or a NASA/JPL poster under JPL\'s Image Use Policy), or an original',
+    'generated for Mise where no free real poster exists. Type that the build adds was set by the script, not an image model.',
     '',
-    '## Public domain and NASA/JPL',
+    '## Real posters',
     '',
     ...sourced.flatMap((spec) => {
       const source = spec.source as PublicDomainSource;

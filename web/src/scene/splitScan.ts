@@ -2,13 +2,15 @@
 // one per Wall and per Original, so walls can be painted and Originals hidden or moved.
 import {
   Box3, BufferAttribute, BufferGeometry, Group, type Material, Matrix3, Matrix4, Mesh, MeshBasicMaterial,
-  type MeshStandardMaterial, type Object3D, Sphere, type Texture, Vector2, Vector3,
+  type MeshStandardMaterial, type Object3D, Sphere, Vector3,
 } from 'three';
 import type { RoomSetup, ScanManifest } from '@shared/types';
 import { type SplitGroup, triangleClassifier } from '../setup/geometry/classify';
-import { type Pixels, luminance, luminanceAt } from '../setup/geometry/color';
 import { type TriangleMesh, newTriangleInfo, triangleInfo } from '../setup/geometry/mesh';
 import { meshTriangles, toFrame } from '../setup/sceneTriangles';
+import { applyParts } from './applyParts';
+import { averageLuminance, mulberry32 } from './materials/luminance';
+import { forEachMaterial } from './objects';
 
 export interface SplitScan {
   shell: Object3D;
@@ -28,11 +30,6 @@ export interface SplitNodeData {
   avgLuminance: number;
 }
 
-/** Spec §9.4: sample the texture at the UV centroids of up to this many random triangles per node. */
-const LUMINANCE_SAMPLES = 2000;
-/** Spec §16 risk 4: the luminance to use when a texture can't be read back. */
-const FALLBACK_LUMINANCE = 0.5;
-
 /**
  * Splits a loaded Scan mesh by the rules of spec §9.4.
  *
@@ -42,7 +39,8 @@ const FALLBACK_LUMINANCE = 0.5;
  * - Each node is a Group with one unlit mesh per source primitive, reusing that primitive's texture.
  *   Every Wall and Original gets a node, even when no triangles matched it.
  * - An Original's node has its origin at the box's bottom-center and its rotationY, so a Placement
- *   can be applied to its position and rotation directly to move it.
+ *   can be applied to its position and rotation directly to move it. Its meshes are split into the
+ *   Original's Parts by applyParts, one material per Part (spec §7).
  * - Each node's userData is a SplitNodeData.
  * - Rule 0 (ADR-0007): primitives that scan-merge tagged as fill skip the other rules. A Patch's go to
  *   `patches[originalId]`, hidden and drawn over the floor and wall they lie on; a completion's go to
@@ -92,15 +90,21 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
   }
 
   const random = mulberry32(1);
+  const luminanceOf = (nodeSlices: Slice[]) => averageLuminance(nodeSlices.map(({ primitive, index }) =>
+    ({ material: primitive.material, uv: primitive.attributes.uv, index })), random);
   const nodes = groups.map((group, g) => {
     const { node, content } = emptyNode(group, setup);
     for (const slice of slices[g]) content.add(sliceMesh(slice));
     const data: SplitNodeData = {
       kind: group.kind,
       ...('id' in group && { id: group.id }),
-      avgLuminance: averageLuminance(slices[g], random),
+      avgLuminance: luminanceOf(slices[g]),
     };
     node.userData = data;
+    if (group.kind === 'original') {
+      const { category, box, partParams } = setup.originals.find((o) => o.id === group.id)!;
+      applyParts(node, category, box.size, partParams);
+    }
     return node;
   });
 
@@ -108,7 +112,7 @@ export function splitScan(gltfScene: Object3D, setup: RoomSetup, manifest: ScanM
     const node = new Group();
     node.name = `Patch: ${setup.originals.find((o) => o.id === id)?.label ?? id}`;
     for (const slice of patchSlice) node.add(sliceMesh(slice, true));
-    const data: SplitNodeData = { kind: 'patch', id, avgLuminance: averageLuminance(patchSlice, random) };
+    const data: SplitNodeData = { kind: 'patch', id, avgLuminance: luminanceOf(patchSlice) };
     node.userData = data;
     node.visible = false;
     return [id, node];
@@ -129,15 +133,13 @@ export const splitNodes = (split: SplitScan): Object3D[] => [
   ...Object.values(split.patches),
 ];
 
-/** Frees the split's geometries and materials. The textures belong to the glTF and are kept. */
+/** Frees the split's geometries and materials, including each Part's. The textures belong to the glTF and are kept. */
 export function disposeSplit(split: SplitScan) {
   for (const node of splitNodes(split)) {
     node.traverse((child) => {
-      if (child instanceof Mesh) {
-        child.geometry.dispose();
-        (child.material as Material).dispose();
-      }
+      if (child instanceof Mesh) child.geometry.dispose();
     });
+    forEachMaterial(node, (material) => material.dispose());
   }
 }
 
@@ -260,78 +262,4 @@ export function unlit(source: Material, vertexColors = source.vertexColors): Mes
   });
   if (s.color) material.color.copy(s.color);
   return material;
-}
-
-/** The mean luminance at the UV centroids of up to LUMINANCE_SAMPLES random triangles of a node. */
-function averageLuminance(slices: Slice[], random: () => number): number {
-  // Each slice's texture pixels, and the luminance of its material's color, which multiplies the texture.
-  const sources = slices.map(({ primitive }) => {
-    const { map, color } = primitive.material as Partial<MeshStandardMaterial>;
-    map?.updateMatrix();
-    return { map, colorLuminance: color ? luminance(color.r, color.g, color.b) : 1, pixels: map ? texturePixels(map) : null };
-  });
-  if (sources.some((source) => source.map && !source.pixels)) return FALLBACK_LUMINANCE;
-  const counts = slices.map((slice) => slice.index.length / 3);
-  const total = counts.reduce((a, b) => a + b, 0);
-  let sum = 0;
-  let samples = 0;
-  const uv = new Vector2();
-  for (let k = 0; k < Math.min(LUMINANCE_SAMPLES, total); k++) {
-    let t = Math.floor(random() * total);
-    let p = 0;
-    while (t >= counts[p]) t -= counts[p++];
-    const { map, colorLuminance, pixels } = sources[p];
-    const uvs = slices[p].primitive.attributes.uv;
-    let sample = colorLuminance;
-    if (map && pixels && uvs) {
-      const { index } = slices[p];
-      const [a, b, c] = [index[3 * t], index[3 * t + 1], index[3 * t + 2]];
-      uv.set((uvs.getX(a) + uvs.getX(b) + uvs.getX(c)) / 3, (uvs.getY(a) + uvs.getY(b) + uvs.getY(c)) / 3);
-      map.transformUv(uv);   // texture transform, wrapping, and flipY → image space, row 0 at the top
-      sample *= luminanceAt(pixels, uv.x, uv.y);
-    }
-    sum += sample;
-    samples++;
-  }
-  return samples > 0 ? sum / samples : FALLBACK_LUMINANCE;
-}
-
-const pixelCache = new WeakMap<Texture, Pixels | null>();
-
-/**
- * A texture's RGBA pixels, read once per texture: drawn into an OffscreenCanvas of at most 512 px
- * (the average barely changes, and a 2K readback would cost more than the split) and read with
- * getImageData. A DataTexture's own data is used as it is. Null when it can't be read, such as a
- * compressed texture.
- */
-function texturePixels(texture: Texture): Pixels | null {
-  if (pixelCache.has(texture)) return pixelCache.get(texture)!;
-  let pixels: Pixels | null = null;
-  const image = texture.image as { width: number; height: number; data?: ArrayLike<number> } | undefined;
-  try {
-    if (image?.data && image.data.length === image.width * image.height * 4) {
-      pixels = { width: image.width, height: image.height, data: image.data };
-    } else if (image && image.width > 0 && typeof OffscreenCanvas !== 'undefined') {
-      const scale = Math.min(1, 512 / Math.max(image.width, image.height));
-      const width = Math.max(1, Math.round(image.width * scale));
-      const height = Math.max(1, Math.round(image.height * scale));
-      const context = new OffscreenCanvas(width, height).getContext('2d', { willReadFrequently: true })!;
-      context.drawImage(image as CanvasImageSource, 0, 0, width, height);
-      pixels = context.getImageData(0, 0, width, height);
-    }
-  } catch (error) {
-    console.warn('splitScan: could not read a texture for avgLuminance', error);
-  }
-  pixelCache.set(texture, pixels);
-  return pixels;
-}
-
-/** A small seeded random generator, so each load samples the same triangles. */
-function mulberry32(seed: number) {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }

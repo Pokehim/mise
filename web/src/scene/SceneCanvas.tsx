@@ -7,6 +7,7 @@ import { useEditor } from '../state/store';
 import { CATALOG_ITEM_TYPE } from '../ui/CatalogPanel';
 import { DollhouseCamera } from './DollhouseCamera';
 import { FitHighlights } from './FitHighlights';
+import { ScanColors } from './materials/ScanColors';
 import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
 import { ResizeHandles } from './ResizeHandles';
@@ -86,6 +87,7 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
         </Optional>
         <Suspense fallback={null}>
           <ScanMesh />
+          <ScanColors />
         </Suspense>
         <Pieces />
         <SelectionOutline />

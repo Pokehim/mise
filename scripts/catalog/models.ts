@@ -1,5 +1,6 @@
-// scripts/catalog/models.ts — glTF Document edits for the Catalog's non-ABO items: keeping one variant of a Poly Haven
-// asset, turning a scan to face +Z, and setting a plant in a pot. catalog-build centers and optimizes the result.
+// scripts/catalog/models.ts — glTF Document edits for the Catalog's items: keeping one variant of a Poly Haven asset,
+// turning a scan to face +Z, setting a plant in a pot, and making up an ABO bed frame. catalog-build centers and
+// optimizes the result.
 
 import { type Document, NodeIO, type TypedArray, type vec3 } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
@@ -114,4 +115,57 @@ function soilDisc(doc: Document, radius: number, [x, y, z]: vec3) {
     .setIndices(accessor(new Uint16Array(indices), 'SCALAR'))
     .setMaterial(material);
   return doc.createNode('soil').setTranslation([x, y, z]).setMesh(doc.createMesh('soil').addPrimitive(primitive));
+}
+
+/** A mattress made up with bedding, in inches as a listing gives it: width × length × height. */
+export interface MadeUp { mattress: [width: number, length: number, height: number] }
+
+/**
+ * The bed frame made up: a mattress of the listed size on top of it, centered, with a duvet over its foot two thirds,
+ * a throw folded across its foot, and a pillow at its head. The frame's front is +Z, so its head is at −Z.
+ */
+export function madeUp(frame: Document, { mattress: [widthIn, lengthIn, heightIn] }: MadeUp): Document {
+  const inch = 0.0254;
+  const [width, length, height] = [widthIn * inch, lengthIn * inch, heightIn * inch];
+  const { min, max } = boundsOf(frame);
+  const [cx, cz] = [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2];
+  const [head, foot] = [cz - length / 2, cz + length / 2];
+  const top = max[1] + height;
+  const scene = sceneOf(frame);
+  scene.addChild(box(frame, 'mattress', [cx - width / 2, max[1], head], [cx + width / 2, top, foot], [0.92, 0.91, 0.88]));
+  scene.addChild(box(frame, 'duvet', [cx - width / 2 - 0.04, top - 0.1, head + length * 0.3], [cx + width / 2 + 0.04, top + 0.05, foot + 0.04], [0.8, 0.72, 0.6]));
+  scene.addChild(box(frame, 'throw', [cx - width / 2 - 0.05, top + 0.05, foot - 0.45], [cx + width / 2 + 0.05, top + 0.08, foot - 0.1], [0.62, 0.36, 0.22]));
+  scene.addChild(box(frame, 'pillow', [cx - width / 2 + 0.12, top, head + 0.08], [cx + width / 2 - 0.12, top + 0.13, head + 0.5], [0.96, 0.94, 0.9]));
+  return frame;
+}
+
+/** A soft, matte box from `min` to `max`, its faces pointing out. */
+function box(doc: Document, name: string, [x0, y0, z0]: vec3, [x1, y1, z1]: vec3, [r, g, b]: [number, number, number]) {
+  // Each face: its normal, then its 4 corners counterclockwise seen from outside.
+  const faces: [vec3, vec3[]][] = [
+    [[0, 1, 0], [[x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0]]],
+    [[0, -1, 0], [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]]],
+    [[0, 0, 1], [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]]],
+    [[0, 0, -1], [[x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]]],
+    [[1, 0, 0], [[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]]],
+    [[-1, 0, 0], [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]]],
+  ];
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const indices: number[] = [];
+  faces.forEach(([normal, corners], face) => {
+    for (const corner of corners) { positions.push(...corner); normals.push(...normal); }
+    const at = face * 4;
+    indices.push(at, at + 1, at + 2, at, at + 2, at + 3);
+  });
+  const buffer = doc.getRoot().listBuffers()[0] ?? doc.createBuffer();
+  const accessor = (array: TypedArray, type: 'VEC3' | 'SCALAR') =>
+    doc.createAccessor().setArray(array).setType(type).setBuffer(buffer);
+  const material = doc.createMaterial(name).setBaseColorFactor([r, g, b, 1]).setRoughnessFactor(0.95).setMetallicFactor(0);
+  const primitive = doc.createPrimitive()
+    .setAttribute('POSITION', accessor(new Float32Array(positions), 'VEC3'))
+    .setAttribute('NORMAL', accessor(new Float32Array(normals), 'VEC3'))
+    .setIndices(accessor(new Uint16Array(indices), 'SCALAR'))
+    .setMaterial(material);
+  return doc.createNode(name).setMesh(doc.createMesh(name).addPrimitive(primitive));
 }

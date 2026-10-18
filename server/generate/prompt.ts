@@ -58,12 +58,11 @@ A Design the Mover would want to photograph, not a page from a catalog:
 
 ## Rooms
 - A dorm bedroom:
-  - The bed: a twin or twin XL goes in a corner, its long side along the wall (in_corner), which gives a small room back its floor: the corner farthest from the door, with the window beside the bed rather than over it. A full or larger bed goes head to the middle of a wall, with room on both sides.
+  - The bed: a twin XL, as most dorms have, unless the Brief names another size; the Catalog's made-up twin XL bed comes with its mattress and bedding. It goes in a corner, its long side along the wall (in_corner), which gives a small room back its floor: the corner farthest from the door, with the window beside the bed rather than over it. A full or larger bed goes head to the middle of a wall, with room on both sides.
   - The desk by the window, lit from the side, with about 0.9 m behind it for the chair; a lamp on it, and a memo board or art over it.
   - A nightstand or a small shelf at the bed's head with a lamp; a dresser or wardrobe on a free wall near the door, never in front of a window or in the way in.
   - A rug where feet land: beside the bed, or under its lower two thirds.
   - A seat that isn't the desk chair, if there is room: a pouf, a beanbag or an armchair by the window, with a floor lamp.
-  - If the Brief names a size, choose it: a twin XL is about 0.99 by 2.03 m.
 - A double room: two halves that mirror each other: a bed in each of two corners (in_corner), a desk each, each side its own nightstand and lamp; the rug and the art shared in the middle.
 - A lounge: seating in a group that faces itself, around a rug and a table, not lined up along the walls; a lamp at each seat.
 - A study library: tall bookshelves along a long wall, side by side, keeping windows and the door clear; a reading area with armchairs or a loveseat, each with a lamp beside it; warm rugs under the seating.

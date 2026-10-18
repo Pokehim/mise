@@ -110,7 +110,9 @@
         "Polyester"
       ],
       "styleTags": [
-        "Transitional"
+        "Transitional",
+        "Cozy",
+        "Reading"
       ],
       "priceEstimateUsd": 120,
       "url": "https://www.amazon.com/dp/B07DBHCKJ5",
@@ -276,7 +278,9 @@
         "Engineered Wood"
       ],
       "styleTags": [
-        "Mid-century modern"
+        "Mid-Century Modern",
+        "Study",
+        "Cozy"
       ],
       "priceEstimateUsd": 180,
       "url": "https://www.amazon.com/dp/B07QGFS4JC",
@@ -1056,7 +1060,7 @@
     {
       "id": "B07B4VGZ9B",
       "source": "abo",
-      "title": "Rivet Mid-Century Modern Curved Task Desk Table Lamp With USB Port And Light Bulb - 26 Inches, Matte Black & Brushed Steel",
+      "title": "Rivet Mid-Century Modern Curved Study Task Desk Lamp, Matte Black and Brass",
       "brand": "Adesso",
       "category": "lamp",
       "mount": "floor",
@@ -1072,7 +1076,8 @@
       ],
       "materials": [],
       "styleTags": [
-        "Desk Lamp"
+        "Mid-Century Modern",
+        "Study"
       ],
       "priceEstimateUsd": 45,
       "url": "https://www.amazon.com/dp/B07B4VGZ9B",
@@ -2492,7 +2497,10 @@
         "Wood"
       ],
       "styleTags": [
-        "2-Door Wardrobe"
+        "Modern",
+        "Cozy",
+        "Bedroom",
+        "Japandi"
       ],
       "priceEstimateUsd": 220,
       "url": "https://www.amazon.com/dp/B07H8V7P3H",
@@ -2752,7 +2760,12 @@
       "materials": [
         "Jute"
       ],
-      "styleTags": [],
+      "styleTags": [
+        "Japanese",
+        "Japandi",
+        "Natural",
+        "Warm"
+      ],
       "priceEstimateUsd": 80,
       "url": "https://www.amazon.com/dp/B071LQHW1P",
       "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
@@ -3156,7 +3169,9 @@
         "Wool"
       ],
       "styleTags": [
-        "Contemporary"
+        "Contemporary",
+        "Warm",
+        "Cozy"
       ],
       "priceEstimateUsd": 200,
       "url": "https://www.amazon.com/dp/B001DA0KVK",
@@ -3193,7 +3208,7 @@
     {
       "id": "B07MF1RNW1",
       "source": "abo",
-      "title": "Ravenna Home Classic Straight Banker's Task Desk Lamp with LED Light Bulb, 16\"H, Brushed Nickel",
+      "title": "Ravenna Home Classic Banker's Study Desk Lamp with LED Light Bulb, Brushed Nickel",
       "brand": "Ravenna Home",
       "category": "lamp",
       "mount": "floor",
@@ -3209,7 +3224,8 @@
       ],
       "materials": [],
       "styleTags": [
-        "Classic"
+        "Classic",
+        "Study"
       ],
       "priceEstimateUsd": 45,
       "url": "https://www.amazon.com/dp/B07MF1RNW1",
@@ -3405,7 +3421,7 @@
     {
       "id": "B07MHMSDJL",
       "source": "abo",
-      "title": "Ravenna Home Elegant Banker's Lamp with LED Light Bulb, 16\"H, Dark Bronze / Antique Brass",
+      "title": "Ravenna Home Elegant Banker's Study Desk Lamp with LED Light Bulb, 16\"H, Dark Bronze and Antique Brass",
       "brand": "Ravenna Home",
       "category": "lamp",
       "mount": "floor",
@@ -3423,7 +3439,9 @@
         "Glass"
       ],
       "styleTags": [
-        "Traditional"
+        "Traditional",
+        "Classic",
+        "Study"
       ],
       "priceEstimateUsd": 40,
       "url": "https://www.amazon.com/dp/B07MHMSDJL",
@@ -3450,7 +3468,10 @@
         "Wood"
       ],
       "styleTags": [
-        "Stick"
+        "Scandinavian",
+        "Japanese",
+        "Japandi",
+        "Minimal"
       ],
       "priceEstimateUsd": 40,
       "url": "https://www.amazon.com/dp/B0825CP3NS",
@@ -3556,7 +3577,12 @@
       "materials": [
         "Wood"
       ],
-      "styleTags": [],
+      "styleTags": [
+        "Japanese",
+        "Japandi",
+        "Library",
+        "Natural"
+      ],
       "priceEstimateUsd": 70,
       "url": "https://www.amazon.com/dp/B07GP6DMDF",
       "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
@@ -3669,7 +3695,10 @@
         "Metal"
       ],
       "styleTags": [
-        "Contemporary"
+        "Contemporary",
+        "Japanese",
+        "Japandi",
+        "Library"
       ],
       "priceEstimateUsd": 200,
       "url": "https://www.amazon.com/dp/B07QC876WJ",
@@ -5207,6 +5236,138 @@
       "priceEstimateUsd": 15,
       "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Now_Designs_Bowl_Akita_Black",
       "attribution": "Google Scanned Objects (CC BY 4.0), Google LLC: Now_Designs_Bowl_Akita_Black"
+    },
+    {
+      "id": "B073WQ8JLT",
+      "source": "abo",
+      "title": "Twin XL Bed: AmazonBasics 14\" Metal Platform Bed Frame with a 10\" Twin XL Mattress and Oat Bedding",
+      "brand": "AmazonBasics",
+      "category": "bed",
+      "mount": "floor",
+      "size": [
+        1.091,
+        0.741,
+        2.072
+      ],
+      "model": "/data/catalog/models/B073WQ8JLT.glb",
+      "thumbnail": "/data/catalog/thumbs/B073WQ8JLT.jpg",
+      "colors": [
+        "Oatmeal",
+        "Rust",
+        "White",
+        "Black"
+      ],
+      "materials": [
+        "Metal",
+        "Cotton",
+        "Memory Foam"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Dorm",
+        "Bedroom",
+        "Modern",
+        "Japandi"
+      ],
+      "partParams": {
+        "beddingRange": [
+          0.36,
+          0.66
+        ]
+      },
+      "priceEstimateUsd": 300,
+      "url": "https://www.amazon.com/dp/B073WQ8JLT",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QTB45S5",
+      "source": "abo",
+      "title": "An Amazon Brand - Movian Martin - Oak Effect Bookcase - 35cm L x 77cm W x 185cm H",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.77,
+        1.85,
+        0.35
+      ],
+      "model": "/data/catalog/models/B07QTB45S5.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QTB45S5.jpg",
+      "colors": [
+        "Oak"
+      ],
+      "colorHex": "#484646",
+      "materials": [],
+      "styleTags": [
+        "Japanese",
+        "Japandi",
+        "Library",
+        "Modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07QTB45S5",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07B7J2VCD",
+      "source": "abo",
+      "title": "Stone & Beam Casual Wood Bookcase, 34\"W, Natural Rattan",
+      "brand": "Stone & Beam",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.863,
+        1.93,
+        0.453
+      ],
+      "model": "/data/catalog/models/B07B7J2VCD.glb",
+      "thumbnail": "/data/catalog/thumbs/B07B7J2VCD.jpg",
+      "colors": [
+        "Natural Rattan"
+      ],
+      "colorHex": "#8e694a",
+      "materials": [
+        "Rattan",
+        "Wood"
+      ],
+      "styleTags": [
+        "Japanese",
+        "Boho",
+        "Library",
+        "Casual"
+      ],
+      "priceEstimateUsd": 250,
+      "url": "https://www.amazon.com/dp/B07B7J2VCD",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B074KKXLK1",
+      "source": "abo",
+      "title": "Stone & Beam Glenwood Bookcase, 72\"H, Oak",
+      "brand": "Stone & Beam",
+      "category": "shelf",
+      "mount": "floor",
+      "size": [
+        0.539,
+        1.732,
+        0.395
+      ],
+      "model": "/data/catalog/models/B074KKXLK1.glb",
+      "thumbnail": "/data/catalog/thumbs/B074KKXLK1.jpg",
+      "colors": [
+        "Oak"
+      ],
+      "colorHex": "#432c1e",
+      "materials": [
+        "Oak /metal"
+      ],
+      "styleTags": [
+        "Japanese",
+        "Library",
+        "Traditional"
+      ],
+      "priceEstimateUsd": 200,
+      "url": "https://www.amazon.com/dp/B074KKXLK1",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
     },
     {
       "id": "placeholder-chair",

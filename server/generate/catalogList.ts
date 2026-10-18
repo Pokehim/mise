@@ -48,7 +48,7 @@ const SECTIONS: { name: string; count: number; includes: (item: CatalogItem) => 
   { name: 'desk', count: 4, includes: of('desk') },
   { name: 'dresser', count: 3, includes: of('dresser') },
   { name: 'wardrobe', count: 3, includes: of('wardrobe') },
-  { name: 'shelf', count: 4, includes: of('shelf') },
+  { name: 'shelf', count: 14, includes: of('shelf') },
   { name: 'sofa', count: 3, includes: of('sofa') },
 ];
 

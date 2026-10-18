@@ -1,6 +1,7 @@
 import { type Camera, MathUtils, Plane, type Ray, Raycaster, Vector2, Vector3 } from 'three';
+import { wallPoint } from '@shared/geometry';
 import type { CatalogItem, Placement, Vec2, Vec3, Wall } from '@shared/types';
-import { wallCoordinates, wallLength, wallPoint, wallRotationY } from './floorPlan';
+import { wallCoordinates, wallLength, wallRotationY } from './floorPlan';
 
 /** Rugs lie flat: they stay on the floor, nothing rests on them, and they cast no blob shadow. */
 export const liesFlat = (item: CatalogItem) => item.category === 'rug';

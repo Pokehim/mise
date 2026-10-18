@@ -1,4 +1,5 @@
 import { Bvh } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
 import { Suspense, use, useEffect, useLayoutEffect, useMemo } from 'react';
 import { type Material, Mesh, type Object3D } from 'three';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -7,7 +8,7 @@ import { scanFileUrl } from '../api';
 import { useEditor } from '../state/store';
 import { recolorParts } from './applyParts';
 import { withMeshopt } from './gltf';
-import { SHADOW_NODE, masterCopyParts, useMasterCopyParts } from './masterCopy';
+import { SHADOW_NODE, masterCopyParts, sharpen, useMasterCopyParts } from './masterCopy';
 import { averageLuminance } from './materials/luminance';
 import { useMaterialLibrary } from './materials/triplanar';
 import { forEachMaterial, ignoreRaycast } from './objects';
@@ -35,7 +36,7 @@ function loadMasterCopy(url: string) {
 interface Prepared { scene: Object3D; luminance: Record<string, number> }
 const prepared = new WeakMap<GLTF, Prepared>();
 
-function prepare(gltf: GLTF): Prepared {
+function prepare(gltf: GLTF, anisotropy: number): Prepared {
   let ready = prepared.get(gltf);
   if (ready) return ready;
   const luminance: Record<string, number> = {};
@@ -47,11 +48,14 @@ function prepare(gltf: GLTF): Prepared {
       if (!mesh.isMesh) return;
       // Its images carry the room's real light, as the Empty Room's do (lounge-v2 spec §3).
       mesh.material = unlit(mesh.material as Material);
+      sharpen(mesh.material, anisotropy);
       const { index, attributes } = mesh.geometry;
       slices.push({ material: mesh.material, uv: attributes.uv, index: index?.array ?? Array.from({ length: attributes.position.count }, (_, i) => i) });
       if (!isShadow) return;
       // The soft shadow lies on the floor or the wall behind: drawn over it and over the splat, and never clicked.
-      Object.assign(mesh.material, { transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      // A constant offset only: one that grows with the depth slope (a factor) would lift a shadow seen at a low
+      // angle in front of the chairs nearer the camera. The Empty Room is already pushed back by its own.
+      Object.assign(mesh.material, { transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -2 });
       mesh.renderOrder = 1;
     });
     if (!isShadow) luminance[node.name] = averageLuminance(slices);
@@ -101,7 +105,8 @@ function MasterCopy({ model }: { model: string }) {
   const scanId = useEditor((s) => s.manifest!.id);
   const ids = useEditor(useShallow((s) => s.setup!.originals.filter((original) => original.model === model).map(({ id }) => id)));
   const gltf = use(loadMasterCopy(scanFileUrl(scanId, model)));
-  const ready = useMemo(() => gltf && prepare(gltf), [gltf]);
+  const anisotropy = useThree((s) => s.gl.capabilities.getMaxAnisotropy());
+  const ready = useMemo(() => gltf && prepare(gltf, anisotropy), [gltf, anisotropy]);
   useEffect(() => {
     if (gltf) useMasterCopyParts.setState({ [model]: masterCopyParts(gltf.scene) });
   }, [model, gltf]);

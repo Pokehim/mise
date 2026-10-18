@@ -1,5 +1,5 @@
 import { Bvh } from '@react-three/drei';
-import type { ThreeEvent } from '@react-three/fiber';
+import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { use, useEffect, useLayoutEffect, useMemo } from 'react';
 import { type Mesh, type Object3D, Plane, Vector3 } from 'three';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -8,6 +8,7 @@ import { scanFileUrl } from '../api';
 import { type Selection, useEditor } from '../state/store';
 import { withMeshopt } from './gltf';
 import { MasterCopies } from './MasterCopies';
+import { sharpen } from './masterCopy';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
 import { OriginalNode } from './OriginalNode';
 import { hasNoCapture } from './room/buildRoom';
@@ -74,6 +75,7 @@ export function ScanMesh() {
   // Originals lifted or removed: their Patch, from a Fill Capture, shows (ADR-0007).
   const patched = useEditor((s) => s.roomState!.patches);
   const view = useEditor((s) => s.view);
+  const anisotropy = useThree((s) => s.gl.capabilities.getMaxAnisotropy());
   // A room with no Capture has no mesh file to fetch (ADR-0010, ADR-0011).
   const gltf = use(hasNoCapture(manifest, setup) ? NO_MESH : loadScanMesh(scanFileUrl(manifest.id, manifest.mesh)));
 
@@ -102,9 +104,10 @@ export function ScanMesh() {
       });
       forEachMaterial(node, (material) => {
         Object.assign(material, EMPTY_ROOM_OFFSET);
+        sharpen(material, anisotropy);
       });
     }
-  }, [nodes, masterCopies]);
+  }, [nodes, masterCopies, anisotropy]);
 
   const onClick = (event: ThreeEvent<MouseEvent>) => {
     if (event.delta > CLICK_TOLERANCE_PX) return;   // the end of a drag that moved the camera

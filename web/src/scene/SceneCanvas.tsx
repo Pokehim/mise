@@ -1,6 +1,6 @@
 import { Environment, Stats } from '@react-three/drei';
 import { Canvas, events } from '@react-three/fiber';
-import { Component, type DragEvent, type ReactNode, type RefObject, Suspense, useRef } from 'react';
+import { Component, type DragEvent, type ReactNode, type RefObject, Suspense, useRef, useState } from 'react';
 import { type Camera, NeutralToneMapping, Vector2 } from 'three';
 import { useShallow } from 'zustand/react/shallow';
 import { useRealism } from '../state/realism';
@@ -16,8 +16,12 @@ import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
 import { ResizeHandles } from './ResizeHandles';
 import { ScanMesh } from './ScanMesh';
-import { SelectionOutline } from './SelectionOutline';
 import { SplatLook } from './SplatLook';
+import { ReadyFlag } from './sketch/ReadyFlag';
+import { SketchLinesToggle } from './sketch/SketchLines';
+import { SketchSelection } from './sketch/SketchSelection';
+import { token } from './sketch/tokens';
+import './sketch/sketch.css';
 import { WalkControls } from './WalkControls';
 
 /**
@@ -62,6 +66,7 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
   const realism = useRealism();
   const splat = useEditor((s) => Boolean(s.manifest?.splat)) && realism !== 'quick';
   const container = useRef<HTMLDivElement>(null!);
+  const [scanDrawn, setScanDrawn] = useState(false);
   const onDrop = (event: DragEvent) => {
     const itemId = event.dataTransfer.getData(CATALOG_ITEM_TYPE);
     if (!itemId) return;
@@ -90,7 +95,8 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
           cameraRef.current = camera;
         }}
       >
-        <color attach="background" args={['#f4f1ea']} />
+        {/* The desk under the sketchbook's sheets; the room itself is drawn exactly as scanned. */}
+        <color attach="background" args={[token('--desk')]} />
         {realism === 'quick' && (
           <>
             <hemisphereLight args={FILL_LIGHT} />
@@ -105,16 +111,19 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
           {/* After the Scan nodes: they light Pieces from them, and shadow them (spec §12). */}
           {realism !== 'quick' && <RoomLighting />}
           {realism === 'max' && <CastShadows />}
+          <ReadyFlag onReady={() => setScanDrawn(true)} />
         </Suspense>
         {splat && <Optional what="The splat"><SplatLook /></Optional>}
         <Pieces />
-        <SelectionOutline />
+        <SketchSelection />
         <FitHighlights />
         <ResizeHandles />
         {view === 'dollhouse' ? <DollhouseCamera /> : <WalkControls />}
         {debug && <Stats parent={container} className="stats" />}
       </Canvas>
       {debug && splat && <AlignPanel />}
+      {!scanDrawn && <p className="view-loading" role="status">Loading the Scan…</p>}
+      <SketchLinesToggle />
     </div>
   );
 }

@@ -54,8 +54,23 @@ export function EditorPage({ params: { designId } }: { params: { designId: strin
     void useEditor.getState().load(designId);
   }, [designId]);
 
-  if (error) return <main>Could not open Design {designId}: {error} <Link href="/">← Scans</Link></main>;
-  if (!ready) return <main>Loading…</main>;
+  if (error) {
+    return (
+      <main className="app-status">
+        <h1>This Design didn't open</h1>
+        <p>Could not open Design {designId}: {error}</p>
+        <Link href="/">Back to your Scans</Link>
+      </main>
+    );
+  }
+  if (!ready) {
+    return (
+      <main className="app-status" aria-busy="true">
+        <h1>Opening the Design…</h1>
+        <p>Loading the Scan, its Room Setup and the Catalog.</p>
+      </main>
+    );
+  }
   return (
     <div className="editor">
       <TopBar />

@@ -63,6 +63,11 @@
   .editor .brief-dialog .chips button:not([aria-pressed='true']):hover { border-color: transparent; background: var(--ink-wash); color: var(--ink); }
 }
 
+/* Start from and Speed side by side, each with its hint under it; one above the other on a narrow screen. */
+.brief-dialog .field-row { display: flex; flex-wrap: wrap; gap: 0 var(--s-5); }
+.brief-dialog .field-row > .start-from { flex: 3 1 260px; }
+.brief-dialog .field-row > .speed { flex: 2 1 200px; }
+
 .brief-dialog .budget { justify-items: start; }
 .brief-dialog .money { display: inline-flex; align-items: center; gap: 2px; padding-left: var(--s-2); color: var(--graphite); font-family: var(--font-mono); }
 .editor .brief-dialog .money input { width: 12ch; padding-left: 2px; border: 0; background: transparent; font-family: var(--font-mono); }

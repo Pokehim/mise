@@ -48,6 +48,9 @@ const decorate: Turn[] = [
   }),
 ];
 
+/** The requests of the takes, without the warm-ups (max_tokens 0) that write their shared prefix to the cache. */
+const takes = (requests: FakeRequest[]) => requests.filter(({ direction }) => direction);
+
 /** A budget the moves' Designs fit in: the test Catalog's own items are $100 each. */
 const roomy: Brief = { ...brief, budgetUsd: 600 };
 
@@ -69,7 +72,7 @@ const inOneReply = (name?: string): Turn[] => [
   () => ({ content: [finish('Oat Corner', 'toolu_rename')] }),
 ];
 
-const generate = (client: Anthropic, options: { loopTimeoutMs?: number; fast?: boolean; onEvent?: (event: GenerateEvent) => void; brief?: Brief } = {}) => {
+const generate = (client: Anthropic, options: { loopTimeoutMs?: number; fast?: boolean; current?: Design; onEvent?: (event: GenerateEvent) => void; brief?: Brief } = {}) => {
   const saved: Design[] = [];
   const result = generateDesigns({
     client, scanId: 'test-room', setup, catalog: decorCatalog, materials: [], brief, save: async (design) => { saved.push(design); }, ...options,
@@ -110,22 +113,22 @@ describe('generateDesigns', () => {
     });
   });
 
-  it('asks Claude Opus 5.5 at low effort, with strict tools (but place_piece), auto tool choice and the default refusal fallback', async () => {
+  it('asks Claude Sonnet 5.5 at low effort, with strict tools (but stock_shelves and place_piece), auto tool choice and the default refusal fallback', async () => {
     const { client, requests } = fakeClaude({ literal: decorate });
     await generate(client).result;
 
-    const [{ body, headers }] = requests;
-    expect(body).toMatchObject({ model: 'claude-opus-5-5', output_config: { effort: 'low' }, tool_choice: { type: 'auto' }, fallbacks: 'default' });
+    const [{ body, headers }] = takes(requests);
+    expect(body).toMatchObject({ model: 'claude-sonnet-5-5', output_config: { effort: 'low' }, tool_choice: { type: 'auto' }, fallbacks: 'default' });
     expect(body.tools!.filter((tool) => !('strict' in tool && tool.strict)).map((tool) => 'name' in tool && tool.name)).toEqual(['stock_shelves', 'place_piece']);
     expect(headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
   });
 
-  it('turns on fast mode when asked: speed fast, with its beta', async () => {
+  it('runs on Claude Opus 5.5 in fast mode when asked: speed fast, with its beta', async () => {
     const { client, requests } = fakeClaude({ literal: decorate });
-    await generateDesigns({ client, scanId: 'test-room', setup, catalog: decorCatalog, materials: [], brief, save: async () => {}, fast: true });
+    await generate(client, { fast: true }).result;
 
-    const [{ body, headers }] = requests;
-    expect(body).toMatchObject({ speed: 'fast' });
+    const [{ body, headers }] = takes(requests);
+    expect(body).toMatchObject({ model: 'claude-opus-5-5', speed: 'fast' });
     expect(headers.get('anthropic-beta')).toContain('fast-mode-2026-02-01');
   });
 
@@ -143,7 +146,7 @@ describe('generateDesigns', () => {
 
     const { designs, loops } = await generate(client, { brief: roomy }).result;
 
-    expect(requests).toHaveLength(3);
+    expect(takes(requests)).toHaveLength(3);
     expect(loops.map(({ requests: count }) => count)).toEqual([1, 1, 1]);
     // Paint; 2 frames, the rug, the chair and its lamp, a pillow and a plant; the bedding.
     expect(designs[0].edits.map(({ type }) => type)).toEqual(['finish', ...Array(7).fill('place'), 'recolor']);
@@ -176,8 +179,9 @@ describe('generateDesigns', () => {
 
     await generate(client, { brief: roomy, onEvent: (event) => events.push(event) }).result;
 
-    expect(requests[0].body.thinking).toEqual({ type: 'adaptive', display: 'updates' });
-    expect(requests[0].headers.get('anthropic-beta')).toContain('thinking-display-updates-2026-08-18');
+    const [first] = takes(requests);
+    expect(first.body.thinking).toEqual({ type: 'adaptive', display: 'updates' });
+    expect(first.headers.get('anthropic-beta')).toContain('thinking-display-updates-2026-08-18');
     const literal = events.filter((event) => 'direction' in event && event.direction === 'literal');
     const plan = literal.filter((event) => event.type === 'plan').map((event) => event.type === 'plan' && event.text).join('');
     expect(plan.trim()).toBe(notes.join('\n'));
@@ -189,7 +193,8 @@ describe('generateDesigns', () => {
     await generate(client).result;
     await warmCache({ client, setup, catalog: decorCatalog, materials: [] });
 
-    const [literal, bolder, budget, warm] = requests;
+    const [literal, bolder, budget] = takes(requests);
+    const warm = requests.at(-1)!;
     for (const other of [bolder, budget, warm]) {
       expect(JSON.stringify(other.body.tools)).toBe(JSON.stringify(literal.body.tools));
       expect(other.body.system).toEqual(literal.body.system);
@@ -204,6 +209,48 @@ describe('generateDesigns', () => {
     expect(warm.body.stream).toBeUndefined();
   });
 
+  it('writes the shared prefix to the cache once, before the takes start, unless it was written or read in the last 4 minutes', async () => {
+    const { client, requests } = fakeClaude({ literal: inOneReply(), bolder: inOneReply(), budget: inOneReply() });
+    const sent = () => requests.map(({ direction, body }) => direction ?? (body.max_tokens === 0 ? 'warm-up' : '?'));
+
+    await generate(client, { brief: roomy }).result;
+    expect(sent()).toEqual(['warm-up', 'literal', 'bolder', 'budget']);
+    // The takes read it, so it is still there for the next Brief.
+    await generate(client, { brief: roomy }).result;
+    expect(sent().filter((each) => each === 'warm-up')).toHaveLength(1);
+
+    // A warm-up from the Brief dialog still under way is waited for, not sent again.
+    const { client: other, requests: otherRequests } = fakeClaude({ literal: inOneReply() });
+    void warmCache({ client: other, setup, catalog: decorCatalog, materials: [] });
+    await generate(other, { brief: roomy }).result;
+    expect(otherRequests.filter(({ body }) => body.max_tokens === 0)).toHaveLength(1);
+    expect(otherRequests[0].body.max_tokens).toBe(0);
+  });
+
+  it('warms a prefix for each model and speed: a fast Brief after a standard one writes its own', async () => {
+    const { client, requests } = fakeClaude({ literal: inOneReply() });
+
+    await generate(client, { brief: roomy }).result;
+    await generate(client, { brief: roomy, fast: true }).result;
+    await generate(client, { brief: roomy, fast: true }).result;
+
+    expect(requests.filter(({ body }) => body.max_tokens === 0).map(({ body }) => [body.model, body.speed])).toEqual([
+      ['claude-sonnet-5-5', undefined], ['claude-opus-5-5', 'fast'],
+    ]);
+  });
+
+  it("caches each take's conversation as it grows, past the shared prefix: automatic caching on its requests, not on the warm-up", async () => {
+    const { client, requests } = fakeClaude({ literal: decorate });
+    await generate(client).result;
+    await warmCache({ client, setup, catalog: decorCatalog, materials: [] });
+
+    const literal = requests.filter(({ direction }) => direction === 'literal');
+    expect(literal.length).toBeGreaterThan(1);
+    expect(literal.map(({ body }) => body.cache_control)).toEqual(literal.map(() => ({ type: 'ephemeral' })));
+    expect(requests.at(-1)!.body).toMatchObject({ max_tokens: 0 });
+    expect(requests.at(-1)!.body.cache_control).toBeUndefined();
+  });
+
   it('goes on at standard speed when fast mode is rate limited or fails before the Design has begun', async () => {
     // Refused in fast mode, each take's first reply comes at standard speed.
     const refusedFast = (refusal: 'rate-limited' | 'error'): Turn[] => [(request) => (request.body.speed === 'fast' ? refusal : inOneReply()[0](request))];
@@ -213,7 +260,10 @@ describe('generateDesigns', () => {
 
     expect(designs.map(({ name }) => name)).toEqual(['Sage Nook', 'Thrifty Nook']);
     for (const take of ['literal', 'budget']) {
-      expect(requests.filter(({ direction }) => direction === take).map(({ body }) => body.speed)).toEqual(['fast', undefined]);
+      // On the same model: Claude reads back only its own model's thinking.
+      expect(requests.filter(({ direction }) => direction === take).map(({ body }) => [body.model, body.speed])).toEqual([
+        ['claude-opus-5-5', 'fast'], ['claude-opus-5-5', undefined],
+      ]);
     }
   });
 
@@ -256,13 +306,62 @@ describe('generateDesigns', () => {
     expect(failures).toEqual([{ direction: 'bolder', error: expect.stringContaining('Overloaded') }]);
   });
 
-  it('fails a loop that runs out of time', async () => {
+  it('fails a loop that runs out of time before its first Edit', async () => {
     const { client } = fakeClaude({ literal: decorate, bolder: decorate, budget: [() => 'hang'] });
 
     const { designs, failures } = await generate(client, { loopTimeoutMs: 200 }).result;
 
     expect(designs).toHaveLength(2);
     expect(failures).toEqual([{ direction: 'budget', error: 'The AI took longer than 0.2 s' }]);
+  });
+
+  it('saves what a loop made when it runs out of time: a Design of its Edits so far, which says it was cut short', async () => {
+    // The first reply decorates; the request after it never answers.
+    const { client } = fakeClaude({ literal: decorate, bolder: decorate, budget: [decorate[0], () => 'hang'] });
+    const { result, saved } = generate(client, { loopTimeoutMs: 300 });
+
+    const { designs, failures } = await result;
+
+    expect(failures).toEqual([]);
+    const cut = designs.find(({ name }) => name === 'Unfinished budget take')!;
+    expect(cut).toMatchObject({ origin: 'claude', brief, rationale: 'Out of time after 0.3 s: these are the 7 Edits the AI made until then.' });
+    // The first reply's Edits: every call but the sofa's.
+    expect(cut.edits.map(({ type }) => type)).toEqual(['finish', ...Array(5).fill('place'), 'recolor']);
+    expect(saved).toContainEqual(cut);
+  });
+
+  it("counts only a take's own Edits when it is cut short: one that starts from the current Design and makes none fails", async () => {
+    const current: Design = {
+      version: 1, id: 'ds_current', scanId: 'test-room', name: 'Move-in', createdAt: '', updatedAt: '', origin: 'mover',
+      edits: [{ id: 'ed_mover', at: '2026-10-18T12:00:00.000Z', by: 'mover', type: 'finish', target: { kind: 'wall', wallId: 'wl_east' }, finish: { kind: 'paint', color: '#c46a3a' } }],
+    };
+    // The literal take decorates, then hangs; the others stop at once, having made nothing.
+    const { client } = fakeClaude({ literal: [decorate[0], () => 'hang'] });
+
+    const { designs, failures } = await generate(client, { loopTimeoutMs: 300, current }).result;
+
+    expect(designs.map(({ name, rationale, edits }) => [name, rationale, edits.length])).toEqual([
+      ['Unfinished literal take', 'Out of time after 0.3 s: these are the 7 Edits the AI made until then.', 8],
+    ]);
+    expect(failures).toEqual([
+      { direction: 'bolder', error: 'The AI stopped without finishing the Design' },
+      { direction: 'budget', error: 'The AI stopped without finishing the Design' },
+    ]);
+  });
+
+  it('saves what a loop made when Claude stops without finishing, or an error cuts it short', async () => {
+    const stops: Turn = () => ({ content: [{ type: 'text', text: 'All set!' }], stop_reason: 'end_turn' });
+    const { client } = fakeClaude({ literal: [decorate[0], stops, stops], bolder: [decorate[0], () => 'error'] });
+    const events: GenerateEvent[] = [];
+
+    const { designs, failures } = await generate(client, { onEvent: (event) => events.push(event) }).result;
+
+    expect(designs.map(({ name, rationale, edits }) => [name, rationale, edits.length])).toEqual([
+      ['Unfinished literal take', 'Stopped before finishing: these are the 7 Edits the AI made until then.', 7],
+      ['Unfinished bolder take', 'Cut short by an error: these are the 7 Edits the AI made until then.', 7],
+    ]);
+    expect(failures.map(({ direction }) => direction)).toEqual(['budget']);
+    expect(events.filter(({ type }) => type === 'design').map((event) => 'direction' in event && event.direction).toSorted()).toEqual(['bolder', 'literal']);
   });
 
   it('asks once more when Claude stops without calling finish_design', async () => {

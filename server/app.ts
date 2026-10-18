@@ -259,7 +259,7 @@ function limitGenerate(c: Context) {
 }
 
 /** What generating Designs for a Scan reads: its Room Setup, the Catalog, the Material Library and the shelf levels. */
-async function generateInputs(scanId: string, fast: boolean | undefined) {
+async function generateInputs(scanId: string, fast: unknown) {
   const scanDir = requireScan(scanId);
   // The posters, textiles and modeled objects are built apart, by scripts/posters-build.ts, textiles-build.ts and objects-build.ts.
   const [setup, materials, catalogs] = await Promise.all([
@@ -276,9 +276,8 @@ async function generateInputs(scanId: string, fast: boolean | undefined) {
     catalog: items,
     materials: materials ?? [],
     shelfLevels: await shelfLevels(items, dataDir()),
-    // Fast mode (spec §13.3) unless GENERATE_FAST_MODE=0 in .env: with Designs made in one reply, it costs about
-    // what the earlier multi-turn Designs did at standard speed, and takes a third of the time.
-    fast: fast ?? process.env.GENERATE_FAST_MODE !== '0',
+    // The Mover's pick in the Brief dialog: fast mode is quicker, and costs several times the standard.
+    fast: fast === true,
   };
 }
 

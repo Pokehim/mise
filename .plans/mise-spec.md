@@ -818,12 +818,12 @@ If the resolved Placement violates a Fit rule, the resolver **slides it along th
 
 | Setting | Value |
 |---|---|
-| Model | **`claude-opus-5-5`** (Claude Opus 5.5) |
+| Model | **Standard:** `claude-sonnet-5-5` (Claude Sonnet 5.5), $2 / $10 per MTok: about $0.15 a Brief in a furnished room and $0.20 in an empty one, in about 14 s and 23 s. **Fast**, when the Mover picks it under Speed in the Brief dialog (Refine follows the pick): `claude-opus-5-5` with `speed: "fast"` (beta `fast-mode-2026-02-01`, Claude API only), $8 / $40: about twice as quick (7 s in a furnished room) for about 3 times the credit. A fast request refused by its rate limit goes on at standard speed on Opus, since Claude reads back only its own model's thinking. |
 | Effort | `output_config: { effort: "low" }`, for speed. Raise it to `"medium"` if Designs look sloppy. Thinking stays adaptive, which is the default. |
 | Tool choice | `tool_choice: { type: "auto" }`. Forced tool choice returns a 400 on this model; the system prompt tells Claude to act only through tools and to finish with `finish_design`. |
 | Refusal fallback | `fallbacks: "default"` with the beta `server-side-fallback-2026-07-01`, as the claude-api skill recommends by default |
-| Limits | At most 14 tool calls per Design, and a 45 s timeout per loop |
-| If it's too slow (over 30 s for 3 Designs) | Fast mode (`speed: "fast"`, beta `fast-mode-2026-02-01`, Claude API only): up to 2.5× faster output at 2× the price |
+| Limits | At most 40 tool calls and 6 requests per Design, and 120 s per loop. A loop cut short, by time or an error, keeps the Edits it made as an unfinished Design whose rationale says so |
+| Prompt caching | The tools, system prompt and room context are written to the cache once per Brief, before the three takes start, unless a warm-up wrote them in the last 4 minutes; each take reads them, and caches its own conversation as it grows |
 
 **System prompt outline:**
 

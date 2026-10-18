@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GenerateEvent, LoopReport } from '@shared/generate';
 import type { Design, Edit } from '@shared/types';
-import { generate, useGenerate, warm } from './generate';
+import { chooseSpeed, generate, useGenerate, warm } from './generate';
 
 const paint: Edit = { id: 'ed_1', at: '2026-10-18T09:00:00Z', by: 'claude', type: 'finish', target: { kind: 'wall', wallId: 'wl_1' }, finish: { kind: 'paint', color: '#9caf88' } };
 const rug: Edit = { id: 'ed_2', at: '2026-10-18T09:00:01Z', by: 'claude', type: 'place', pieceId: 'pc_1', catalogId: 'rug-jute', placement: { position: [0, 0, 0], rotationY: 0, mount: 'floor' } };
@@ -102,7 +102,7 @@ describe('warm', () => {
     warm('lounge-v1');
 
     expect(fetch.mock.calls.map(([url, init]) => [url, JSON.parse(init.body)])).toEqual([
-      ['/api/generate/warm', { scanId: 'dorm-v1' }], ['/api/generate/warm', { scanId: 'lounge-v1' }],
+      ['/api/generate/warm', { scanId: 'dorm-v1', fast: false }], ['/api/generate/warm', { scanId: 'lounge-v1', fast: false }],
     ]);
   });
 
@@ -114,5 +114,41 @@ describe('warm', () => {
     warm('synthetic');
 
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('the speed', () => {
+  const done = () => streamed([{ type: 'done', result: { designs: [], failures: [], loops: [], seconds: 1 } }]);
+  const bodies = () => fetch.mock.calls.map(([, init]) => JSON.parse(init.body));
+
+  it('goes with the Brief: standard unless the Mover picks fast mode', async () => {
+    fetch.mockImplementation(async () => done());
+
+    await generate('fixture', brief);
+    chooseSpeed(true);
+    await generate('fixture', brief);
+
+    expect(bodies().map(({ fast }) => fast)).toEqual([false, true]);
+  });
+
+  it("warms the cache again for the other speed: each has a cache of its own", () => {
+    fetch.mockResolvedValue(Response.json({ cachedTokens: 20000 }));
+
+    warm('mit-v1');
+    chooseSpeed(true);
+    warm('mit-v1');
+    warm('mit-v1');
+
+    expect(bodies()).toEqual([{ scanId: 'mit-v1', fast: false }, { scanId: 'mit-v1', fast: true }]);
+  });
+
+  it('is remembered in this browser', () => {
+    const stored = new Map<string, string>();
+    vi.stubGlobal('localStorage', { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value) });
+
+    chooseSpeed(true);
+
+    expect(stored.get('mise.generate.speed')).toBe('fast');
+    expect(useGenerate.getState().fast).toBe(true);
   });
 });

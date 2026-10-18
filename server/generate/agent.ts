@@ -1,11 +1,11 @@
 // Brief → 3 Designs (spec §13): three agent loops in parallel, one per direction, each designing in
 // its own in-memory Design through the tools, with the SDK's Tool Runner driving the loop.
 //
-// Built for speed. Claude designs a whole room in one reply of decorating moves (moves.ts), so a
+// Built for speed and cost. Claude designs a whole room in one reply of decorating moves (moves.ts), so a
 // Design usually takes one request instead of several. The reply streams, and each tool runs as soon
 // as its call is complete, while Claude writes the next one; every Edit goes out to the Mover as it
 // is made (onEvent). The request opens with what the three takes share (tools, system prompt, room
-// context), which is cached, and can be written to the cache before the Brief arrives (warmCache).
+// context), which is written to the cache once, before the takes start, and read by each (warmCache).
 import Anthropic from '@anthropic-ai/sdk';
 import { DIRECTIONS, type Direction, type GenerateEvent, type GenerateResult, type LoopReport } from '../../shared/generate';
 import { newId } from '../../shared/ids';
@@ -15,15 +15,20 @@ import { briefMessage, currentRoom, roomContext, SYSTEM_PROMPT } from './prompt'
 import { roomSummary } from './roomSummary';
 import { createSession, type DesignContext, type DesignSession } from './tools';
 
-const MODEL = 'claude-opus-5-5';
-/** How long one loop may take before it fails (spec §13.3). */
-const LOOP_TIMEOUT_MS = 45_000;
+/** Claude Sonnet 5.5, the standard: half the price of Opus 5.5 per token, and a quarter of Opus in fast mode, for Designs about as good, if slower. */
+const MODEL = 'claude-sonnet-5-5';
+/** Fast mode, when the Mover picks it: Claude Opus 5.5, which has it, at about twice the speed of a Brief on Sonnet and 3 to 4 times its cost. */
+const FAST_MODEL = 'claude-opus-5-5';
+const FAST_MODE_BETA = 'fast-mode-2026-02-01';
+/** How long one loop may take: past it, the Design keeps the Edits Claude made until then. */
+export const LOOP_TIMEOUT_MS = 120_000;
 /** The most requests one loop makes: one reply of moves, a turn of fixes, and room to spare. */
 const MAX_REQUESTS = 6;
 const NUDGE = 'Call finish_design now to finish this Design.';
-const FAST_MODE_BETA = 'fast-mode-2026-02-01';
 /** The text a note stands in with for work a reply was cut off before finishing. */
 const INTERRUPTED = 'This part of the response was interrupted before it finished.';
+/** Claude's prompt cache keeps a prefix 5 minutes after its last use: one used more recently than this is still there. */
+const CACHED_FOR_MS = 4 * 60_000;
 
 let client: Anthropic | undefined;
 /**
@@ -42,7 +47,7 @@ export interface GenerateDesignsRequest extends Omit<DesignContext, 'edits' | 's
   current?: Design;
   /** Saves a Design as soon as its loop finishes it. */
   save: (design: Design) => Promise<unknown>;
-  /** Fast mode (spec §13.3): faster output at twice the price. */
+  /** Fast mode: quicker Designs from Claude Opus 5.5 at its fast speed, for several times the cost of the standard, Sonnet 5.5. */
   fast?: boolean;
   loopTimeoutMs?: number;
   /** Called with each step as it happens: each Edit, and each Design finished or failed. */
@@ -53,6 +58,7 @@ export interface GenerateDesignsRequest extends Omit<DesignContext, 'edits' | 's
 export async function generateDesigns(request: GenerateDesignsRequest): Promise<GenerateResult> {
   const started = performance.now();
   const shared = sharedRequest(request);
+  await inCache(request, shared);
   // The takes run side by side, and each needs a name of its own.
   const takenNames = new Set<string>();
   const current = request.current && currentRoom(request.setup, request.catalog, request.current);
@@ -65,34 +71,68 @@ export async function generateDesigns(request: GenerateDesignsRequest): Promise<
   };
 }
 
+type WarmRequest = Pick<GenerateDesignsRequest, 'client' | 'setup' | 'catalog' | 'materials' | 'shelfLevels' | 'fast'>;
+
+/** For each client, the shared prefixes it has had cached, by model, speed and room context: when each was last used, and the warm-up that wrote it. */
+const cached = new WeakMap<Anthropic, Map<string, { usedAt: number; written: Promise<unknown> }>>();
+const prefixesOf = (client: Anthropic) => cached.get(client) ?? cached.set(client, new Map()).get(client)!;
+/** Each model, and each speed, caches a prefix of its own. */
+const prefixKey = ({ model, speed, system }: SharedRequest) => `${model} ${speed ?? 'standard'}\n${system[1].text}`;
+
 /**
  * Writes what every take of a Scan's Brief reads first (tools, system prompt, room context) to the
  * prompt cache, so that the Designs start sooner: a request with max_tokens 0 runs no generation. Send
  * it when the Mover starts writing a Brief.
  */
-export async function warmCache(request: Pick<GenerateDesignsRequest, 'client' | 'setup' | 'catalog' | 'materials' | 'shelfLevels' | 'fast'>) {
-  const shared = sharedRequest(request);
+export async function warmCache(request: WarmRequest, shared = sharedRequest(request)) {
+  // The conversation isn't cached: there is none.
+  const { cache_control, ...prefix } = shared;
   const tools = createSession({ ...request, brief: { text: '' } }).tools.map(({ run, parse, ...definition }) => definition);
   // A warm-up is worth little late: it isn't retried.
-  const response = await request.client.withOptions({ maxRetries: 0 }).beta.messages.create({
-    ...shared,
+  const written = request.client.withOptions({ maxRetries: 0 }).beta.messages.create({
+    ...prefix,
     tools: tools as Anthropic.Beta.BetaToolUnion[],
     max_tokens: 0,
     messages: [{ role: 'user', content: 'warm up' }],
   });
-  return response.usage;
+  const [prefixes, key] = [prefixesOf(request.client), prefixKey(shared)];
+  const entry = { usedAt: Date.now(), written };
+  prefixes.set(key, entry);
+  try {
+    return (await written).usage;
+  } catch (error) {
+    if (prefixes.get(key) === entry) prefixes.delete(key);
+    throw error;
+  }
+}
+
+/**
+ * Has the shared prefix in the cache before the takes start. They start together, so none would find
+ * it there from another: unless a warm-up wrote it or a Brief read it a few minutes ago, it is written
+ * once first, instead of by each take.
+ */
+async function inCache(request: WarmRequest, shared: SharedRequest) {
+  const [prefixes, key] = [prefixesOf(request.client), prefixKey(shared)];
+  const entry = prefixes.get(key);
+  // Without it, the takes still run: each writes the prefix itself.
+  await (entry && Date.now() - entry.usedAt < CACHED_FOR_MS ? entry.written : warmCache(request, shared)).catch(() => {});
+  // The takes read it now, which keeps it cached as long again.
+  const used = prefixes.get(key);
+  if (used) used.usedAt = Date.now();
 }
 
 /** The parts of a request every take of a Brief shares, in the order the cache reads them. */
 export function sharedRequest({ setup, catalog, fast = false }: { setup: RoomSetup; catalog: Catalog; fast?: boolean }) {
   const summary = roomSummary(setup, catalog, replay(setup, catalog, []));
   return {
-    model: MODEL,
+    model: fast ? FAST_MODEL : MODEL,
     system: [
       { type: 'text' as const, text: SYSTEM_PROMPT },
       // The cache breakpoint: everything up to here is the same for the three takes, and for a warm-up.
       { type: 'text' as const, text: roomContext(summary, catalog), cache_control: { type: 'ephemeral' as const } },
     ],
+    // Past it, each request caches the conversation so far, which the next one reads.
+    cache_control: { type: 'ephemeral' as const },
     tool_choice: { type: 'auto' as const },
     // The notes Claude writes before its tool calls, its plan for the take, come back as thinking blocks: shown, its reasoning not.
     thinking: { type: 'adaptive' as const, display: 'updates' as const },
@@ -103,18 +143,23 @@ export function sharedRequest({ setup, catalog, fast = false }: { setup: RoomSet
   };
 }
 
-type SharedRequest = ReturnType<typeof sharedRequest>;
+export type SharedRequest = ReturnType<typeof sharedRequest>;
 
 /** Where a take's conversation stands: its messages so far, and how many Edits the Design had after the last reply's tools ran. */
 interface Conversation { messages: Anthropic.Beta.BetaMessageParam[]; edits: number }
 
-/** The same request at standard speed. */
-function standardSpeed({ speed, betas, ...params }: SharedRequest): SharedRequest {
+/** The same request at standard speed, on the same model: Claude reads back only its own model's thinking. */
+export function standardSpeed({ speed, betas, ...params }: SharedRequest): SharedRequest {
   return { ...params, betas: betas.filter((beta) => beta !== FAST_MODE_BETA) };
 }
 
-/** One agent loop: Claude designs in its own session until it calls finish_design, runs out of requests, or of time. */
-async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest, direction: Direction, current?: string) {
+/**
+ * One agent loop: Claude designs in its own session until it calls finish_design, runs out of requests,
+ * or of time. A loop cut short keeps the Edits it made: each passed the Fit rules when it was made.
+ */
+async function designLoop(
+  request: GenerateDesignsRequest, shared: SharedRequest, direction: Direction, current?: string,
+): Promise<{ direction: Direction; report: LoopReport; design?: Design; error?: string }> {
   const { client, brief, loopTimeoutMs = LOOP_TIMEOUT_MS, onEvent } = request;
   const started = performance.now();
   const report: LoopReport = {
@@ -129,7 +174,14 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
       onEvent?.({ type: 'edit', direction, edit });
     },
   });
+  const fail = (why: string) => {
+    console.error(`Generate (${direction}) failed: ${why}`);
+    finishReport(report, started, session);
+    onEvent?.({ type: 'failure', direction, error: why, report });
+    return { direction, error: why, report };
+  };
   const timeout = AbortSignal.timeout(loopTimeoutMs);
+  let stopped: Error | undefined;
   try {
     let messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: briefMessage(brief, direction, current) }];
     let params = shared;
@@ -153,9 +205,22 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
         attempt--;
       }
     }
-    if (!session.finished) throw new Error('The AI stopped without finishing the Design');
+  } catch (error) {
+    stopped = error as Error;
+  }
+  let finished: Pick<Design, 'name' | 'rationale' | 'palette'> | undefined = session.finished;
+  if (!finished) {
+    const why = timeout.aborted ? `The AI took longer than ${loopTimeoutMs / 1000} s` : stopped?.message ?? 'The AI stopped without finishing the Design';
+    // The take's own Edits, after those of the Design it starts from.
+    const made = session.edits.length - (request.current?.edits.length ?? 0);
+    if (!made) return fail(why);
+    console.warn(`Generate (${direction}): ${why}, so its Design keeps the ${made} Edits made until then`);
+    const cause = timeout.aborted ? `Out of time after ${loopTimeoutMs / 1000} s` : stopped ? 'Cut short by an error' : 'Stopped before finishing';
+    finished = unfinished(direction, made, cause);
+  }
+  try {
     const now = new Date().toISOString();
-    const { name, rationale, palette } = session.finished;
+    const { name, rationale, palette } = finished;
     const design: Design = {
       version: 1, id: newId('ds'), scanId: request.scanId, name, createdAt: now, updatedAt: now,
       origin: 'claude', brief, rationale, palette, edits: session.edits,
@@ -167,12 +232,13 @@ async function designLoop(request: GenerateDesignsRequest, shared: SharedRequest
     onEvent?.({ type: 'design', direction, design, report });
     return { direction, design, report };
   } catch (error) {
-    const why = timeout.aborted ? `The AI took longer than ${loopTimeoutMs / 1000} s` : (error as Error).message;
-    console.error(`Generate (${direction}) failed: ${why}`);
-    finishReport(report, started, session);
-    onEvent?.({ type: 'failure', direction, error: why, report });
-    return { direction, error: why, report };
+    return fail((error as Error).message);
   }
+}
+
+/** What a Design Claude didn't finish goes by: a name for its take, and a rationale that says how far it got. */
+function unfinished(direction: Direction, edits: number, cause: string): Pick<Design, 'name' | 'rationale' | 'palette'> {
+  return { name: `Unfinished ${direction} take`, rationale: `${cause}: these are the ${edits} Edit${edits === 1 ? '' : 's'} the AI made until then.` };
 }
 
 /**

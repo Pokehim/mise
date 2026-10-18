@@ -139,15 +139,13 @@ describe('POST /api/generate', () => {
     expect((await generate({ scanId: 'fixture', brief, fromDesignId: other.id })).status).toBe(400);
   });
 
-  it('uses fast mode unless the request or GENERATE_FAST_MODE=0 turns it off', async () => {
+  it('runs in fast mode, on Claude Opus 5.5, only when the request asks for it', async () => {
     claude = fakeClaude({ literal: paintAndFinish('Sage Nook') });
     await generate({ scanId: 'fixture', brief });
-    await generate({ scanId: 'fixture', brief, fast: false });
-    vi.stubEnv('GENERATE_FAST_MODE', '0');
-    await generate({ scanId: 'fixture', brief });
+    await generate({ scanId: 'fixture', brief, fast: true });
 
-    const speeds = claude.requests.filter(({ direction }) => direction === 'literal').map(({ body }) => body.speed);
-    expect(speeds).toEqual(['fast', undefined, undefined]);
+    const models = claude.requests.filter(({ direction }) => direction === 'literal').map(({ body }) => [body.model, body.speed]);
+    expect(models).toEqual([['claude-sonnet-5-5', undefined], ['claude-opus-5-5', 'fast']]);
   });
 });
 

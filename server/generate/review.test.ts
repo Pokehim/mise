@@ -45,13 +45,18 @@ describe('reviewFlags', () => {
     expect(flagsOf(vases)).toContain('your desk holds 4 things: keep a top to 3 or fewer, grouped, with bare space around them');
   });
 
-  it('flags more than 3 accent colors', () => {
-    const colorful = { ...reviewCatalog, items: [...reviewCatalog.items, vase(6, ['Red']), vase(7, ['Teal']), vase(8, ['Mustard'])] };
+  it("flags more than 3 accent colors among the furnishings' main colors, but not the colors of art or plants", () => {
+    const poster = item('poster-wave', 'wall_art', 'The Great Wave', [0.46, 0.61, 0.003], { mount: 'wall', colors: ['Orange', 'Gray', 'Blue'] });
+    const fern = item('plant-fern', 'plant', 'Fern', [0.3, 0.6, 0.3], { colors: ['Green'] });
+    const colorful = {
+      ...reviewCatalog,
+      items: [...reviewCatalog.items, poster, fern, vase(6, ['Red', 'Purple']), vase(7, ['Teal']), vase(8, ['Mustard']), vase(9, ['Navy'])],
+    };
+    const vases = [6, 7, 8].map((n, i) => place(`pc_v${n}`, `vase-${n}`, onDesk(-0.3 + i * 0.3)));
+    const accents = (edits: Edit[]) => flagsOf(edits, colorful).filter((flag) => flag.includes('accent colors'));
 
-    expect(flagsOf([
-      place('pc_print', 'print-fern', onEastWall(1.2)),
-      place('pc_v6', 'vase-6', onDesk(-0.3)), place('pc_v7', 'vase-7', onDesk(0)), place('pc_v8', 'vase-8', onDesk(0.3)),
-    ], colorful).join('\n')).toContain('The Pieces bring 4 accent colors (green, red, teal, mustard)');
+    expect(accents([...vases, place('pc_wave', 'poster-wave', onEastWall(1.2)), place('pc_fern', 'plant-fern', onFloor(0.3, 0.8))])).toEqual([]);
+    expect(accents([...vases, place('pc_v9', 'vase-9', onFloor(0.3, 0.8))]).join('\n')).toContain('The Pieces bring 4 accent colors (red, teal, mustard, navy)');
   });
 
   it('counts accent colors by family, and earthy names as neutrals', () => {

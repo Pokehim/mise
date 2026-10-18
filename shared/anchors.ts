@@ -38,6 +38,8 @@ export type Along = 'left' | 'center' | 'right' | number;
 /** A placement described by its relationship to the room instead of by coordinates (spec §13.2). */
 export type Anchor =
   | { kind: 'against_wall'; wall_id: string; along: Along }
+  /** Snug in the corner at a wall's end: a bed along the wall, long side flush and head in the corner; anything else back to the wall there. */
+  | { kind: 'in_corner'; wall_id: string; end: 'left' | 'right' }
   | { kind: 'beside'; target_id: string; side: 'left' | 'right' | 'front' }
   | { kind: 'under_window'; opening_id: string }
   | { kind: 'on_wall'; wall_id: string; along: Along; center_height_m?: number }
@@ -203,6 +205,21 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       const centerHeight = anchor.kind === 'on_wall' ? anchor.center_height_m ?? CENTER_HEIGHT : undefined;
       return flushTo(wall, fromStart(wall, width, along), { centerHeight });
     }
+    case 'in_corner': {
+      const wall = wallOf(anchor.wall_id);
+      if (!wall) return noWall(anchor.wall_id);
+      // Only a bed lies along a wall: its long side flush to it and its head in the corner, as a dorm bed goes,
+      // which leaves a small room its floor. Anything else stands back to the wall at that end.
+      if (item.category !== 'bed' || depth <= width) return flushTo(wall, fromStart(wall, width, anchor.end));
+      const length = wallLength(wall);
+      if (depth > length + EPSILON) return { error: `${item.title} is longer than the ${wall.name}` };
+      // Its foot points along the wall away from the corner; out of the corner, it slides that way.
+      const atStart = (anchor.end === 'left') === startIsLeft(wall);
+      const [dx, dz] = direction(wall);
+      const away: Vec2 = atStart ? [dx, dz] : [-dx, -dz];
+      const [x, z] = wallPoint(wall, atStart ? depth / 2 : length - depth / 2, width / 2);
+      return sliding({ position: [x, 0, z], rotationY: facing(away), mount: 'floor' }, away, [0, MAX_SLIDE]);
+    }
     case 'under_window': {
       const opening = setup.openings.find(({ id }) => id === anchor.opening_id);
       if (!opening) return { error: `The room has no window "${anchor.opening_id}"` };
@@ -245,25 +262,31 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
       // Beside it, backs in line; in front of it, facing it. It slides along the side it is at, but
       // its center never past that side's ends, so that it stays next to the target.
-      const { across, out, turn, axis, min, max } = anchor.side === 'front'
-        ? {
-          across: 0,
-          out: targetDepth / 2 + depth / 2,
-          turn: Math.PI,
-          axis: rightOf(rotationY),
-          min: -targetWidth / 2,
-          max: targetWidth / 2,
-        }
-        : {
-          across: (anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2),
-          out: depth / 2 - targetDepth / 2,
-          turn: 0,
-          axis: frontOf(rotationY),
-          min: -depth / 2,
-          max: targetDepth - depth / 2,
-        };
-      const [x, z] = inFrameOf(target.placement, [across, out]);
-      return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, [min, max]);
+      const at = (side: 'left' | 'right' | 'front') => {
+        const { across, out, turn, axis, min, max } = side === 'front'
+          ? {
+            across: 0,
+            out: targetDepth / 2 + depth / 2,
+            turn: Math.PI,
+            axis: rightOf(rotationY),
+            min: -targetWidth / 2,
+            max: targetWidth / 2,
+          }
+          : {
+            across: (side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2),
+            out: depth / 2 - targetDepth / 2,
+            turn: 0,
+            axis: frontOf(rotationY),
+            min: -depth / 2,
+            max: targetDepth - depth / 2,
+          };
+        const [x, z] = inFrameOf(target.placement, [across, out]);
+        return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, [min, max]);
+      };
+      if (anchor.side === 'front') return at('front');
+      // The side asked for first; when nothing fits there, as when it's the wall a bed in a corner stands against, the other.
+      const asked = at(anchor.side);
+      return { ...asked, placements: [...asked.placements, ...at(anchor.side === 'right' ? 'left' : 'right').placements] };
     }
     case 'on_top_of': {
       const target = targetOf(anchor.target_id);

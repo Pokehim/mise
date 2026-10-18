@@ -131,9 +131,15 @@ function rugFlags(rugs: Item[], furniture: Item[]): string[] {
   });
 }
 
-/** A few accent colors, beyond the neutrals and woods, make one Palette. */
+/**
+ * A few accent colors, beyond the neutrals and woods, make one Palette: counted by each furnishing's main color.
+ * Art holds a painting's many colors and plants are green, so neither counts.
+ */
 function colorFlags(pieces: Piece[]): string[] {
-  const names = pieces.flatMap(({ item }) => item.colors.map((name) => name.trim().toLowerCase())).filter(Boolean);
+  const names = pieces
+    .filter(({ item: { category } }) => category !== 'wall_art' && category !== 'plant')
+    .map(({ item }) => item.colors[0]?.trim().toLowerCase() ?? '')
+    .filter(Boolean);
   const accents = [...new Set(names.filter((name) => !NEUTRAL.test(name)).map(family).filter((name) => !NEUTRAL.test(name)))];
   if (accents.length <= MAX_ACCENTS) return [];
   return [`The Pieces bring ${accents.length} accent colors (${accents.join(', ')}): use ${MAX_ACCENTS} or fewer, each repeated at least twice, so the room reads as one Palette`];

@@ -90,6 +90,9 @@ const color = z.string().describe('A hex color, "#rrggbb"');
 const anchorSchema = z.union([
   z.object({ kind: z.literal('against_wall'), wall_id: z.string(), along })
     .describe('Back flush to a wall, at that spot along it'),
+  z.object({ kind: z.literal('in_corner'), wall_id: z.string(), end: z.enum(['left', 'right']) })
+    .describe("Snug in the corner at a wall's left or right end: a bed lies along the wall, long side flush and head in the corner, "
+      + "which opens up a small room's floor; anything else stands back to the wall there"),
   z.object({ kind: z.literal('beside'), target_id: z.string(), side: z.enum(['left', 'right', 'front']) })
     .describe("Next to an Original or Piece, backs in line; left and right as seen facing the target's front. 'front' faces it, like a chair at a desk"),
   z.object({ kind: z.literal('under_window'), opening_id: z.string() }).describe('Centered below a window'),

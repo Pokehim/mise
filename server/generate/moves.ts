@@ -37,6 +37,11 @@ const SIDE_TABLES: Category[] = ['table', 'nightstand', 'storage', 'shelf', 'dre
 /** What a table lamp can stand on anywhere in the room, when it has no side table: the tops decor rests on, but a bed. */
 const LAMP_TOPS: Category[] = TOP_CATEGORIES.filter((category) => category !== 'bed');
 
+/** Wall pieces that do a job, as a clock or a memo board does: not art, so never in a gallery. */
+const USEFUL_ON_WALL = /\b(clock|memo|message board|dry.?erase|cork.?board|pegboard|chalkboard|whiteboard|calendar)\b/i;
+/** Whether a wall piece does a job rather than being looked at. */
+export const isUsefulOnWall = ({ title }: CatalogItem) => USEFUL_ON_WALL.test(title);
+
 /** Whether a lamp stands on the floor, rather than on a table. */
 export const isFloorLamp = ({ size: [, height] }: CatalogItem) => height >= FLOOR_LAMP;
 
@@ -113,8 +118,11 @@ function middleOut(frames: CatalogItem[]): CatalogItem[] {
 export function hangGallery(draft: Draft, { over_id, wall_id, catalog_ids }: { over_id: string; wall_id: string; catalog_ids: string[] }): MoveReport {
   const { placed, skip, attempt, done } = reporter('Hung');
   const target = draft.inRoom(over_id);
-  const frames = lookUp(draft, catalog_ids, skip, (frame) =>
-    (frame.category === 'wall_art' || frame.category === 'mirror' ? undefined : `${frame.title} is not wall art or a mirror`));
+  const frames = lookUp(draft, catalog_ids, skip, (frame) => {
+    if (frame.category !== 'wall_art' && frame.category !== 'mirror') return `${frame.title} is not wall art or a mirror`;
+    if (isUsefulOnWall(frame)) return `${frame.title} isn't art: hang it on its own with place_piece (on_wall), by the desk or the door`;
+    return undefined;
+  });
   if (!frames.length) return done();
   const row = middleOut(frames);
   const walls = [wall_id, ...draft.setup.walls.filter((wall) => wall.id !== wall_id && isBy(wall, target, BY_WALL)).map(({ id }) => id)];

@@ -22,7 +22,9 @@ const floorLamp = item('lamp-floor', 'lamp', 'Linen Floor Lamp', [0.35, 1.55, 0.
 const sideTable = item('table-side', 'table', 'Round Side Table', [0.45, 0.55, 0.45], { priceEstimateUsd: 60 });
 const smallRug = item('rug-small', 'rug', 'Small Rug', [1.2, 0.01, 1], { priceEstimateUsd: 50 });
 const twinBed = item('bed-twin', 'bed', 'Twin Bed', [0.99, 0.6, 2.03], { priceEstimateUsd: 150 });
-const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug, twinBed] };
+const clock = item('clock-wall', 'wall_art', 'Vintage Decorative Wall Clock', [0.6, 0.6, 0.03], { mount: 'wall', priceEstimateUsd: 40 });
+const memoBoard = item('board-memo', 'wall_art', 'Dry Erase Memo Board', [0.56, 0.46, 0.03], { mount: 'wall', priceEstimateUsd: 40 });
+const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug, twinBed, clock, memoBoard] };
 
 const start = (onEdit?: (edit: Edit) => void) =>
   createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials: [], onEdit });
@@ -67,6 +69,16 @@ describe('the decorating moves', () => {
       const [deskFrom, deskTo] = spanFromLeft(eastWall, room.find(({ id }) => id === 'og_desk')!.corners);
       expect((Math.min(...spans.map(([from]) => from)) + Math.max(...spans.map(([, to]) => to))) / 2).toBeCloseTo((deskFrom + deskTo) / 2);
       expect(fit(session)).toEqual([]);
+    });
+
+    it("hangs no clock or memo board in a gallery: they aren't art, and hang on their own", async () => {
+      const report = await call(start(), 'hang_gallery', { over_id: 'og_bed', wall_id: 'wl_west', catalog_ids: ['print-fern', 'clock-wall', 'board-memo'] });
+
+      expect(report.placed.map(({ catalog_id }: { catalog_id: string }) => catalog_id)).toEqual(['print-fern']);
+      expect(report.skipped).toEqual([
+        { catalog_id: 'clock-wall', why: "Vintage Decorative Wall Clock isn't art: hang it on its own with place_piece (on_wall), by the desk or the door" },
+        { catalog_id: 'board-memo', why: "Dry Erase Memo Board isn't art: hang it on its own with place_piece (on_wall), by the desk or the door" },
+      ]);
     });
 
     it('skips what it can not hang, saying why, and fails only when it hangs nothing', async () => {

@@ -1,0 +1,854 @@
+[
+  {
+    "id": "poster-great-wave",
+    "title": "The Great Wave",
+    "collection": "museum",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/as/original/DP130155.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/45434",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Katsushika Hokusai, Under the Wave off Kanagawa (Kanagawa oki nami ura), from the series Thirty-six Views of Mount Fuji, ca. 1830–32",
+      "why": "Made before 1929. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0)."
+    },
+    "text": {
+      "kind": "museum",
+      "artist": "Katsushika Hokusai",
+      "work": "Under the Wave off Kanagawa",
+      "date": "c. 1831",
+      "paper": "#f3eee3",
+      "ink": "#1f2a44"
+    }
+  },
+  {
+    "id": "poster-the-bedroom",
+    "title": "The Bedroom",
+    "collection": "museum",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.artic.edu/iiif/2/6644829f-f292-c5c4-a73c-0356a6fdbf0d/full/3000,/0/default.jpg",
+      "page": "https://www.artic.edu/artworks/28560",
+      "institution": "The Art Institute of Chicago",
+      "work": "Vincent van Gogh, The Bedroom, 1889",
+      "why": "Made before 1929. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0."
+    },
+    "text": {
+      "kind": "museum",
+      "artist": "Vincent van Gogh",
+      "work": "The Bedroom",
+      "date": "1889",
+      "paper": "#f5efe2",
+      "ink": "#2b3a67"
+    }
+  },
+  {
+    "id": "poster-water-lilies",
+    "title": "Water Lilies",
+    "collection": "museum",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.artic.edu/iiif/2/3c27b499-af56-f0d5-93b5-a7f2f1ad5813/full/3000,/0/default.jpg",
+      "page": "https://www.artic.edu/artworks/16568",
+      "institution": "The Art Institute of Chicago",
+      "work": "Claude Monet, Water Lilies, 1906",
+      "why": "Made before 1929. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0."
+    },
+    "text": {
+      "kind": "museum",
+      "artist": "Claude Monet",
+      "work": "Water Lilies",
+      "date": "1906",
+      "paper": "#eef1ea",
+      "ink": "#2f4a3a"
+    }
+  },
+  {
+    "id": "poster-grande-jatte",
+    "title": "A Sunday on La Grande Jatte",
+    "collection": "museum",
+    "size": "24x36",
+    "landscape": true,
+    "frame": "black",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.artic.edu/iiif/2/2d484387-2509-5e8e-2c43-22f9981972eb/full/3000,/0/default.jpg",
+      "page": "https://www.artic.edu/artworks/27992",
+      "institution": "The Art Institute of Chicago",
+      "work": "Georges Seurat, A Sunday on La Grande Jatte — 1884, 1884–86",
+      "why": "Made before 1929. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0."
+    },
+    "text": {
+      "kind": "museum",
+      "artist": "Georges Seurat",
+      "work": "A Sunday on La Grande Jatte",
+      "date": "1884–86",
+      "paper": "#f4f0e6",
+      "ink": "#2a2a2a"
+    }
+  },
+  {
+    "id": "poster-mada-primavesi",
+    "title": "Mäda Primavesi",
+    "collection": "museum",
+    "size": "18x24",
+    "frame": "white",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/ep/original/DP243354.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/436819",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Gustav Klimt, Mäda Primavesi (1903–2000), 1912–13",
+      "why": "Made before 1929. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0)."
+    },
+    "text": {
+      "kind": "museum",
+      "artist": "Gustav Klimt",
+      "work": "Mäda Primavesi",
+      "date": "1912–13",
+      "paper": "#f3ede6",
+      "ink": "#5a3d5c"
+    }
+  },
+  {
+    "id": "poster-sudden-shower",
+    "title": "Sudden Shower",
+    "collection": "museum",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.artic.edu/iiif/2/7e3923a9-e254-8d3f-b377-68d86f6083df/full/,3000/0/default.jpg",
+      "page": "https://www.artic.edu/artworks/64447",
+      "institution": "The Art Institute of Chicago",
+      "work": "Utagawa Hiroshige, Sudden Shower over Shin Ohashi Bridge and Atake, from the series One Hundred Famous Views of Edo, 1857",
+      "why": "Made before 1929. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0."
+    },
+    "text": {
+      "kind": "museum",
+      "artist": "Utagawa Hiroshige",
+      "work": "Sudden Shower over Shin-Ōhashi",
+      "date": "1857",
+      "paper": "#f1ece0",
+      "ink": "#2c3b3f"
+    }
+  },
+  {
+    "id": "poster-grand-tour",
+    "title": "The Grand Tour",
+    "collection": "space",
+    "size": "24x36",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://d2pn8kiwq2w21t.cloudfront.net/original_images/grand_tour.jpg",
+      "page": "https://www.jpl.nasa.gov/galleries/visions-of-the-future",
+      "institution": "NASA/JPL-Caltech",
+      "work": "NASA/JPL-Caltech, The Grand Tour, from Visions of the Future",
+      "why": "Not public domain: JPL, which Caltech runs for NASA, lets its web images \"be used for any purpose without prior permission\" under its Image Use Policy (https://www.jpl.nasa.gov/jpl-image-use-policy), with the credit \"Courtesy NASA/JPL-Caltech\", no implied endorsement, and no NASA or JPL logos. This poster shows no logo.",
+      "attribution": "Courtesy NASA/JPL-Caltech"
+    }
+  },
+  {
+    "id": "poster-visit-mars",
+    "title": "Visit Historic Mars",
+    "collection": "space",
+    "size": "24x36",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://d2pn8kiwq2w21t.cloudfront.net/original_images/mars.jpg",
+      "page": "https://www.jpl.nasa.gov/galleries/visions-of-the-future",
+      "institution": "NASA/JPL-Caltech",
+      "work": "NASA/JPL-Caltech, Mars, from Visions of the Future",
+      "why": "Not public domain: JPL, which Caltech runs for NASA, lets its web images \"be used for any purpose without prior permission\" under its Image Use Policy (https://www.jpl.nasa.gov/jpl-image-use-policy), with the credit \"Courtesy NASA/JPL-Caltech\", no implied endorsement, and no NASA or JPL logos. This poster shows no logo.",
+      "attribution": "Courtesy NASA/JPL-Caltech"
+    }
+  },
+  {
+    "id": "poster-enceladus",
+    "title": "Visit Enceladus",
+    "collection": "space",
+    "size": "11x17",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://d2pn8kiwq2w21t.cloudfront.net/original_images/enceladus.jpg",
+      "page": "https://www.jpl.nasa.gov/galleries/visions-of-the-future",
+      "institution": "NASA/JPL-Caltech",
+      "work": "NASA/JPL-Caltech, Enceladus, from Visions of the Future",
+      "why": "Not public domain: JPL, which Caltech runs for NASA, lets its web images \"be used for any purpose without prior permission\" under its Image Use Policy (https://www.jpl.nasa.gov/jpl-image-use-policy), with the credit \"Courtesy NASA/JPL-Caltech\", no implied endorsement, and no NASA or JPL logos. This poster shows no logo.",
+      "attribution": "Courtesy NASA/JPL-Caltech"
+    }
+  },
+  {
+    "id": "poster-mars-explorers",
+    "title": "Mars Explorers Wanted",
+    "collection": "space",
+    "size": "24x36",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://assets.science.nasa.gov/content/dam/science/psd/mars/downloadable_items/4/4/44717_P01-Explorers-Wanted-NASA-Recruitment-Poster.jpg",
+      "page": "https://science.nasa.gov/resource/explorers-wanted-on-the-journey-to-mars/",
+      "institution": "NASA Kennedy Space Center",
+      "work": "NASA/KSC, Mars Explorers Wanted, 2009 (posted online 2016)",
+      "why": "Released by NASA with no copyright notice: \"Credit: NASA/KSC. Images are free for reprint and re-use.\" NASA says it commissioned the poster in 2009, so an outside artist may have painted it and it may not strictly be a US government work. It shows no NASA logo.",
+      "attribution": "Courtesy NASA/KSC"
+    }
+  },
+  {
+    "id": "poster-valles-marineris",
+    "title": "Discover Valles Marineris",
+    "collection": "space",
+    "size": "24x36",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/SpaceX_Mars_tourism_poster_for_Valles_Marineris.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:SpaceX_Mars_tourism_poster_for_Valles_Marineris.jpg",
+      "institution": "Wikimedia Commons",
+      "work": "SpaceX, Discover Valles Marineris (Mars tourism poster), 2015",
+      "why": "SpaceX dedicated it to the public domain under CC0 1.0 (Wikimedia permission ticket #2015032410033985). It shows no SpaceX name or logo.",
+      "attribution": "SpaceX (CC0)",
+      "crop": {
+        "left": 0.042,
+        "top": 0.028,
+        "width": 0.916,
+        "height": 0.944
+      }
+    }
+  },
+  {
+    "id": "poster-artemis-ii",
+    "title": "Artemis II: For All Humanity",
+    "collection": "space",
+    "size": "11x17",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images-assets.nasa.gov/image/ArtemisII_Poster_11x17_300ppi_CMYK/ArtemisII_Poster_11x17_300ppi_CMYK~orig.png",
+      "page": "https://images.nasa.gov/details/ArtemisII_Poster_11x17_300ppi_CMYK",
+      "institution": "NASA",
+      "work": "NASA, Artemis II poster, 2023",
+      "why": "A NASA poster with no outside creator credited, so a US government work. Its NASA insignia and Artemis logo, which NASA does not allow others to use, are cropped off.",
+      "attribution": "Courtesy NASA",
+      "crop": {
+        "left": 0,
+        "top": 0.065,
+        "width": 1,
+        "height": 0.934
+      }
+    }
+  },
+  {
+    "id": "poster-trouvelot-saturn",
+    "title": "The Planet Saturn",
+    "collection": "space",
+    "size": "18x24",
+    "frame": "white",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:44200:44224u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/2018694886/",
+      "institution": "Library of Congress",
+      "work": "É. L. Trouvelot, The Planet Saturn, observed 1874, published 1881",
+      "why": "Published in 1881 (\"Copyright 1881 by Charles Scribner's Sons\"), so public domain in the US. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.084,
+        "top": 0.082,
+        "width": 0.826,
+        "height": 0.798
+      }
+    },
+    "text": {
+      "kind": "museum",
+      "artist": "É. L. Trouvelot",
+      "work": "The Planet Saturn",
+      "date": "1881",
+      "paper": "#f1ece1",
+      "ink": "#22252e"
+    }
+  },
+  {
+    "id": "poster-away-message",
+    "title": "Away Message",
+    "collection": "y2k",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "Early 2000s Y2K aesthetic background art: an iridescent holographic pastel gradient of baby pink, lilac and baby blue, glossy 3D translucent butterflies, sparkles, lens flares, shiny chrome stars and soap bubbles floating, dreamy glitter, clean empty area across the middle of the image."
+    },
+    "text": {
+      "kind": "chrome",
+      "title": "Away Message",
+      "subtitle": "brb, back in 5 min :)",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-call-me-later",
+    "title": "Call Me Later",
+    "collection": "y2k",
+    "size": "11x17",
+    "frame": "white",
+    "source": {
+      "kind": "generated",
+      "prompt": "Y2K product-style render of a generic unbranded translucent bubblegum pink flip phone, open, its blank glowing screen, decorated with rhinestone stickers and a beaded charm strap, floating on a glossy hot pink and silver background with chrome stars and sparkles, early 2000s magazine aesthetic, the phone in the lower two thirds."
+    },
+    "text": {
+      "kind": "chrome",
+      "title": "Call Me Later",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-dial-up-dreams",
+    "title": "Dial-Up Dreams",
+    "collection": "y2k",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "Dreamy early 2000s computer desktop wallpaper aesthetic: glossy aqua blue liquid swooshes and translucent glass bubbles, soft cyan and white light rays, a chunky translucent blue CRT computer monitor with a blank glowing screen floating among clouds, frutiger aero style, clean and optimistic, empty area at the bottom."
+    },
+    "text": {
+      "kind": "chrome",
+      "title": "Dial-Up Dreams",
+      "subtitle": "connecting at 56k…",
+      "at": "bottom"
+    }
+  },
+  {
+    "id": "poster-butterfly-club",
+    "title": "Butterfly Club",
+    "collection": "y2k",
+    "size": "18x24",
+    "frame": "white",
+    "source": {
+      "kind": "generated",
+      "prompt": "Y2K glamour poster art: a large shiny liquid-chrome butterfly with rhinestone wings on a hot pink and purple glitter background, smaller pink butterflies, star-shaped sparkles, glossy hearts, early 2000s pop aesthetic, butterfly centered in the lower two thirds, empty top."
+    },
+    "text": {
+      "kind": "chrome",
+      "title": "Butterfly Club",
+      "subtitle": "members only ♡",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-cyber-angel",
+    "title": "Cyber Angel",
+    "collection": "y2k",
+    "size": "11x17",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "Y2K cyber aesthetic poster art: a glossy liquid-chrome heart with feathered chrome angel wings, surrounded by sharp tribal-style chrome swirls and star shapes, on a deep black and electric blue gradient background with digital grid lines, reflective metallic render, centered, empty top area."
+    },
+    "text": {
+      "kind": "chrome",
+      "title": "Cyber Angel",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-mix-vol-2",
+    "title": "Mix Vol. 2",
+    "collection": "y2k",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "Flat lay photo from the early 2000s: a blank iridescent recordable CD disc, a closed clear purple translucent portable CD player with its lid shut and plain headphones, glitter gel pens, holographic star stickers and a beaded bracelet scattered on a fuzzy lilac surface, soft flash photography, nostalgic, the disc large in the center."
+    },
+    "text": {
+      "kind": "chrome",
+      "title": "Mix Vol. 2",
+      "subtitle": "songs for the bus ride",
+      "at": "bottom"
+    }
+  },
+  {
+    "id": "poster-starfruit-racer",
+    "title": "Starfruit Racer",
+    "collection": "retro gaming",
+    "size": "18x24",
+    "frame": "black",
+    "source": {
+      "kind": "generated",
+      "prompt": "16-bit pixel art in the style of a 1990s console racing game box art: a small boxy turquoise hatchback with round headlights bouncing along a winding desert canyon road at dusk, giant glowing starfruit-shaped yellow stars in a magenta and orange sky, mesas, cacti, chunky visible pixels, limited palette, dithering, the bottom third of the image is darker road."
+    },
+    "text": {
+      "kind": "pixel",
+      "title": "Starfruit Racer",
+      "subtitle": "1-2 players",
+      "color": "#ffd23f",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-lantern-keep",
+    "title": "Lantern Keep",
+    "collection": "retro gaming",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "8-bit NES-era pixel art: a fantasy stone castle on a hill at night, glowing lantern windows, a winding path, a big full moon, starry navy sky, pine trees, chunky visible square pixels, very limited palette, crisp edges, the top third of the image is empty night sky."
+    },
+    "text": {
+      "kind": "pixel",
+      "title": "Lantern Keep",
+      "subtitle": "Press start",
+      "color": "#ffb347",
+      "at": "bottom"
+    }
+  },
+  {
+    "id": "poster-comet-courier",
+    "title": "Comet Courier",
+    "collection": "retro gaming",
+    "size": "11x17",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "16-bit pixel art of an arcade space shooter: a small chunky orange and white delivery spaceship flying upward through a field of tumbling asteroids and glowing comets, a ringed planet below, deep purple starfield, visible pixels, limited palette, dithering, vertical arcade game style."
+    },
+    "text": {
+      "kind": "pixel",
+      "title": "Comet Courier",
+      "subtitle": "Insert coin",
+      "color": "#7cf5ff",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-mossback-island",
+    "title": "Mossback Island",
+    "collection": "retro gaming",
+    "size": "24x36",
+    "landscape": true,
+    "frame": "oak",
+    "source": {
+      "kind": "generated",
+      "prompt": "16-bit RPG overworld map pixel art seen from above: a lush green island shaped like a sleeping turtle in a turquoise sea, tiny villages, a forest, a volcano, a winding river, a small sailing ship, a lighthouse, chunky visible pixels, limited 1990s console palette, the top band of the image is open sea."
+    },
+    "text": {
+      "kind": "pixel",
+      "title": "Mossback Island",
+      "subtitle": "A 16-bit adventure",
+      "color": "#b6ff6b",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-insert-coin",
+    "title": "Insert Coin",
+    "collection": "retro gaming",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "Pixel art interior of a 1980s arcade at night: rows of generic unbranded arcade cabinets with glowing blank colorful screens, a checkered carpet, neon light strips in pink and cyan, deep shadows, chunky visible pixels, limited palette, the bottom quarter is dark carpet."
+    },
+    "text": {
+      "kind": "pixel",
+      "title": "Insert Coin",
+      "subtitle": "High score: you",
+      "color": "#ff5fa2",
+      "at": "bottom"
+    }
+  },
+  {
+    "id": "poster-neon-kite",
+    "title": "Neon Kite",
+    "collection": "retro gaming",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "16-bit platformer game pixel art: floating grassy sky islands and fluffy clouds at sunset, a glowing kite drifting between them, golden coins in arcs, a pastel orange and pink sky, parallax hills far below, chunky visible pixels, limited palette, the top third is open sky."
+    },
+    "text": {
+      "kind": "pixel",
+      "title": "Neon Kite",
+      "subtitle": "Stage 1",
+      "color": "#ffffff",
+      "at": "top"
+    }
+  },
+  {
+    "id": "poster-rooftop-sunset",
+    "title": "Rooftop Sunset",
+    "collection": "anime sunsets",
+    "size": "24x36",
+    "frame": "oak",
+    "source": {
+      "kind": "generated",
+      "prompt": "2000s Japanese anime background art, cel-shaded and hand-painted: city rooftops at golden hour with water tanks, antennas and tangled power lines silhouetted against a huge orange and violet sunset sky with towering cumulus clouds, a flock of birds, no people, painterly, nostalgic, highly detailed."
+    },
+    "text": {
+      "kind": "caption",
+      "text": "Summer evening, 2004",
+      "ink": "#fff4e2",
+      "at": "bottom"
+    }
+  },
+  {
+    "id": "poster-railroad-crossing",
+    "title": "Railroad Crossing",
+    "collection": "anime sunsets",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "2000s anime background art, cel-shaded: an empty countryside railroad crossing with its warning lights and striped barrier, rice fields and green hills, telephone poles, a vast blue summer sky with tall white cumulus clouds turning pink at sunset, no people, nostalgic, painterly, high detail."
+    }
+  },
+  {
+    "id": "poster-riverbank",
+    "title": "Riverbank",
+    "collection": "anime sunsets",
+    "size": "24x36",
+    "landscape": true,
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "2000s anime background art, cel-shaded and hand-painted, wide view: a grassy riverbank at sunset with a bicycle leaning against a railing, a long bridge, a city skyline in the distance, the river reflecting a peach and lavender sky, dragonflies, no people, nostalgic, painterly."
+    },
+    "text": {
+      "kind": "caption",
+      "text": "On the way home",
+      "ink": "#fff4e2",
+      "at": "bottom"
+    }
+  },
+  {
+    "id": "poster-corner-store",
+    "title": "Corner Store",
+    "collection": "anime sunsets",
+    "size": "18x24",
+    "frame": "black",
+    "source": {
+      "kind": "generated",
+      "prompt": "2000s anime background art, cel-shaded: a small corner convenience store glowing warmly at dusk on a quiet street, unbranded blank signs, a row of vending machines with glowing blank panels, a bicycle parked outside, power lines, a deep purple and orange twilight sky, no people, nostalgic, painterly."
+    }
+  },
+  {
+    "id": "poster-after-school",
+    "title": "After School",
+    "collection": "anime sunsets",
+    "size": "11x17",
+    "frame": "none",
+    "source": {
+      "kind": "generated",
+      "prompt": "2000s anime background art, cel-shaded: an empty school classroom at sunset, rows of wooden desks and chairs, golden light pouring through tall windows and long shadows, curtains moving in the breeze, a blank chalkboard, dust in the light, no people, nostalgic, painterly."
+    },
+    "text": {
+      "kind": "caption",
+      "text": "After school",
+      "ink": "#fff4e2",
+      "at": "bottom"
+    }
+  },
+  {
+    "id": "poster-seaside-town",
+    "title": "Seaside Town",
+    "collection": "anime sunsets",
+    "size": "18x24",
+    "frame": "white",
+    "source": {
+      "kind": "generated",
+      "prompt": "2000s anime background art, cel-shaded: a hilly seaside town with stone steps winding down between houses with tiled roofs, overhead power lines, a calm ocean at sunset below, warm pink and gold sky, a small harbor, no people, nostalgic, painterly, high detail."
+    }
+  },
+  {
+    "id": "poster-divan-japonais",
+    "title": "Divan Japonais",
+    "collection": "gig posters",
+    "size": "18x24",
+    "frame": "black",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/dp/original/DT224360.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/334197",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Henri de Toulouse-Lautrec, Divan Japonais, 1892–93",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.03,
+        "top": 0.02,
+        "width": 0.95,
+        "height": 0.965
+      }
+    }
+  },
+  {
+    "id": "poster-aristide-bruant",
+    "title": "Aristide Bruant in His Cabaret",
+    "collection": "gig posters",
+    "size": "24x36",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/dp/original/DP371473.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/333995",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Henri de Toulouse-Lautrec, Aristide Bruant, dans son cabaret, 1893",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.036,
+        "top": 0.026,
+        "width": 0.928,
+        "height": 0.948
+      }
+    }
+  },
+  {
+    "id": "poster-jane-avril",
+    "title": "Jane Avril",
+    "collection": "gig posters",
+    "size": "18x24",
+    "frame": "oak",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.artic.edu/iiif/2/4d57383a-0f32-20d0-b09a-afb9c81357d3/full/,4000/0/default.jpg",
+      "page": "https://www.artic.edu/artworks/67170",
+      "institution": "The Art Institute of Chicago",
+      "work": "Henri de Toulouse-Lautrec, Jane Avril, 1893",
+      "why": "Made before 1931. The Art Institute of Chicago marks it public domain (is_public_domain: true) and releases its image under CC0.",
+      "crop": {
+        "left": 0.022,
+        "top": 0.016,
+        "width": 0.95,
+        "height": 0.966
+      }
+    }
+  },
+  {
+    "id": "poster-sing-for-your-supper",
+    "title": "Sing for Your Supper",
+    "collection": "gig posters",
+    "size": "18x24",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:31100:31186u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/98516611/",
+      "institution": "Library of Congress",
+      "work": "Aida McKenzie, Sing for Your Supper, WPA Federal Art Project, between 1936 and 1939",
+      "why": "Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.014,
+        "top": 0.01,
+        "width": 0.97,
+        "height": 0.98
+      }
+    }
+  },
+  {
+    "id": "poster-salut-au-monde",
+    "title": "Salut au Monde",
+    "collection": "gig posters",
+    "size": "11x17",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:07100:07144u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/97502883/",
+      "institution": "Library of Congress",
+      "work": "Richard Halls, Salut au Monde, WPA Federal Art Project, 1936 or 1937",
+      "why": "Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.016,
+        "top": 0.012,
+        "width": 0.966,
+        "height": 0.976
+      }
+    }
+  },
+  {
+    "id": "poster-symphony-concerts",
+    "title": "Symphony Concerts",
+    "collection": "gig posters",
+    "size": "18x24",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:cph:3f00000:3f05000:3f05300:3f05361u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/98515065/",
+      "institution": "Library of Congress",
+      "work": "WPA Federal Music Project of New York City, Symphony Concerts, Theatre of Music, between 1936 and 1940",
+      "why": "Made between 1936 and 1940 by the Works Progress Administration, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.052,
+        "top": 0.036,
+        "width": 0.886,
+        "height": 0.92
+      }
+    }
+  },
+  {
+    "id": "poster-see-america-arches",
+    "title": "See America: Arches",
+    "collection": "parks & travel",
+    "size": "18x24",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmscd:03700:03760u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/93505613/",
+      "institution": "Library of Congress",
+      "work": "Frank S. Nicholson, See America, Works Progress Administration Federal Art Project, between 1936 and 1939",
+      "why": "Made between 1936 and 1939 by the Works Progress Administration's Federal Art Project, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.025,
+        "top": 0.024,
+        "width": 0.95,
+        "height": 0.952
+      }
+    }
+  },
+  {
+    "id": "poster-welcome-to-montana",
+    "title": "See America: Welcome to Montana",
+    "collection": "parks & travel",
+    "size": "18x24",
+    "frame": "oak",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ds:08200:08249u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/96503136/",
+      "institution": "Library of Congress",
+      "work": "Martin Weitzman, See America. Welcome to Montana, Works Progress Administration Federal Art Project, between 1936 and 1939",
+      "why": "Made between 1936 and 1939 by the Works Progress Administration's Federal Art Project, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.025,
+        "top": 0.024,
+        "width": 0.95,
+        "height": 0.952
+      }
+    }
+  },
+  {
+    "id": "poster-parks-wild-life",
+    "title": "The National Parks Preserve Wild Life",
+    "collection": "parks & travel",
+    "size": "18x24",
+    "frame": "none",
+    "fit": "contain",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://tile.loc.gov/image-services/iiif/master:pnp:ppmsca:23000:23061u/full/full/0/default.jpg",
+      "page": "https://www.loc.gov/item/98518597/",
+      "institution": "Library of Congress",
+      "work": "J. Hirt, The National Parks Preserve Wild Life, Works Progress Administration Federal Art Project, between 1936 and 1939",
+      "why": "Made between 1936 and 1939 by the Works Progress Administration's Federal Art Project, a US government program, so a work of the US government. The Library of Congress lists \"No known restrictions on publication.\"",
+      "crop": {
+        "left": 0.025,
+        "top": 0.024,
+        "width": 0.95,
+        "height": 0.952
+      }
+    }
+  },
+  {
+    "id": "poster-red-fuji",
+    "title": "Red Fuji",
+    "collection": "parks & travel",
+    "size": "18x24",
+    "frame": "black",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/as/original/DP141053.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/55736",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Katsushika Hokusai, South Wind, Clear Sky (Gaifū kaisei), also known as Red Fuji, ca. 1830–32",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.014,
+        "top": 0.024,
+        "width": 0.966,
+        "height": 0.952
+      }
+    },
+    "text": {
+      "kind": "panel",
+      "kicker": "富士山",
+      "title": "Fuji",
+      "caption": [
+        "Katsushika Hokusai",
+        "South Wind, Clear Sky, c. 1831"
+      ],
+      "paper": "#efeadf",
+      "ink": "#1b1b1b"
+    }
+  },
+  {
+    "id": "poster-kambara-night-snow",
+    "title": "Kambara: Night Snow",
+    "collection": "parks & travel",
+    "size": "18x24",
+    "frame": "white",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://images.metmuseum.org/CRDImages/as/original/DP122189.jpg",
+      "page": "https://www.metmuseum.org/art/collection/search/36937",
+      "institution": "The Metropolitan Museum of Art",
+      "work": "Utagawa Hiroshige, A Snowy Evening at Kanbara Station (Kambara: Night Snow), ca. 1833–34",
+      "why": "Made before 1931. The Met marks it public domain (isPublicDomain: true) and releases its image under Open Access (CC0).",
+      "crop": {
+        "left": 0.012,
+        "top": 0.05,
+        "width": 0.97,
+        "height": 0.865
+      }
+    },
+    "text": {
+      "kind": "panel",
+      "kicker": "東海道 蒲原",
+      "title": "Kambara",
+      "caption": [
+        "Utagawa Hiroshige",
+        "Night Snow, c. 1833"
+      ],
+      "paper": "#e9ecee",
+      "ink": "#1d2733"
+    }
+  },
+  {
+    "id": "poster-life-at-its-best",
+    "title": "Life at Its Best: National Parks",
+    "collection": "parks & travel",
+    "size": "18x24",
+    "frame": "none",
+    "source": {
+      "kind": "publicdomain",
+      "image": "https://www.nps.gov/articles/000/images/Life-at-its-Best.jpg",
+      "page": "https://www.nps.gov/articles/000/50-nifty-finds-7-the-waugh-factor.htm",
+      "institution": "National Park Service",
+      "work": "Dorothy Waugh, Life at Its Best: National Parks, ca. 1934",
+      "why": "Made by Dorothy Waugh as a National Park Service employee (NPS: \"Not only was Waugh an NPS employee…\"), so a work of the US government. It shows no logo.",
+      "attribution": "National Park Service. Public domain"
+    }
+  }
+]

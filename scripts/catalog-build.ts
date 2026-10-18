@@ -233,8 +233,11 @@ export function toSourcedItem(pick: CatalogPick, size: Vec3): CatalogItem {
   };
 }
 
-/** Each source the Catalog draws on, with its license, as data/catalog/CREDITS.md states them. */
-const SOURCES: Record<Exclude<CatalogItem['source'], 'generated'>, { name: string; url: string; license: string; terms: string }> = {
+/**
+ * Each source the Catalog draws on, with its license, as data/catalog/CREDITS.md states them. The posters are built
+ * apart, by scripts/posters-build.ts, and credited in data/catalog/posters/CREDITS.md.
+ */
+const SOURCES: Record<Exclude<CatalogItem['source'], 'generated' | 'publicdomain'>, { name: string; url: string; license: string; terms: string }> = {
   abo: {
     name: 'Amazon Berkeley Objects',
     url: 'https://amazon-berkeley-objects.s3.amazonaws.com/index.html',

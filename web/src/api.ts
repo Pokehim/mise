@@ -49,12 +49,13 @@ export async function savePatchImage(scanId: string, name: string, png: Blob): P
 /** Rebuilds a Scan's room.glb from its Main Capture and its lined-up Fill Captures (ADR-0007). */
 export const mergeScan = (scanId: string) => request<MergeSummary>('POST', `/api/scans/${scanId}/merge`);
 
-// The Catalog with the items text-to-3D made on this machine. That's a stretch feature, so failing to get them never
-// stops a load.
+// The Catalog with its posters (built apart, by scripts/posters-build.ts) and the items text-to-3D made on this machine.
+// That's a stretch feature, so failing to get them never stops a load.
 export const loadCatalog = () => Promise.all([
   request<Catalog>('GET', '/data/catalog/catalog.json'),
+  request<Catalog>('GET', '/data/catalog/posters.json'),
   request<Catalog>('GET', '/api/catalog/generated').catch(() => ({ items: [] })),
-]).then(([catalog, generated]) => ({ ...catalog, items: [...catalog.items, ...generated.items] }));
+]).then(([catalog, posters, generated]) => ({ ...catalog, items: [...catalog.items, ...posters.items, ...generated.items] }));
 /** Starts generating a Catalog item for a search that found nothing (spec §13.3, Stretch). Poll the job with getJob. */
 export const generateObject = (body: GenerateRequest) => request<{ jobId: string }>('POST', '/api/generate-object', body);
 export const getJob = (jobId: string) => request<Job>('GET', `/api/jobs/${jobId}`);

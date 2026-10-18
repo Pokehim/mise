@@ -129,3 +129,8 @@
 @media (prefers-reduced-motion: reduce) {
   .bone { animation: none; }
 }
+
+/* The Scans' heading, with the way to start one from a Floor Plan (ADR-0011) beside it. */
+.home-heading-row { display: flex; align-items: center; gap: var(--s-4); }
+.home-heading-row .home-heading { flex: 1; }
+.scan-tag { color: var(--wash); }

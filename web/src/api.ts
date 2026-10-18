@@ -1,3 +1,4 @@
+import type { FloorPlanDraft, PlanReading } from '@shared/floor-plan';
 import type { Catalog, Design, RoomSetup, ScanManifest } from '@shared/types';
 import type { MergeSummary } from '../../scripts/scan-merge';
 import type { GenerateRequest } from '../../server/generate-object/pipeline';
@@ -17,6 +18,24 @@ async function request<T>(method: string, url: string, body?: unknown, init?: Re
 export const scanFileUrl = (scanId: string, file: string) => `/data/scans/${scanId}/${file}`;
 
 export const listScans = () => request<ScanManifest[]>('GET', '/api/scans');
+export const loadManifest = (scanId: string) => request<ScanManifest>('GET', scanFileUrl(scanId, 'manifest.json'));
+
+/* Floor Plans (ADR-0011): a plan image becomes a Scan, read by Claude, and corrected in Room Setup. */
+export type PlanUpload = PlanReading & { scanId: string };
+/** Uploads a plan image to become a new Scan; answers once Claude has read it (or been skipped). */
+export async function uploadFloorPlan(file: Blob, name: string): Promise<PlanUpload> {
+  const form = new FormData();
+  form.set('file', file, 'plan');
+  form.set('name', name);
+  const res = await fetch('/api/floor-plans', { method: 'POST', body: form });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error ?? `The server answered ${res.status}`);
+  return body;
+}
+export const readFloorPlanAgain = (scanId: string) => request<PlanUpload>('POST', `/api/floor-plans/${scanId}/read`);
+export const loadFloorPlanDraft = ({ id, floorPlan }: ScanManifest) => request<FloorPlanDraft>('GET', scanFileUrl(id, floorPlan!.draft));
+export const saveFloorPlanDraft = (scanId: string, draft: FloorPlanDraft) =>
+  request<FloorPlanDraft>('PUT', `/api/floor-plans/${scanId}/draft`, draft);
 export const saveManifest = (manifest: ScanManifest) =>
   request<ScanManifest>('PUT', `/api/scans/${manifest.id}/manifest`, manifest);
 export const loadSetup = (scanId: string) => request<RoomSetup>('GET', scanFileUrl(scanId, 'setup.json'));

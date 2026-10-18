@@ -1,0 +1,122 @@
+/* Room Setup for a Floor Plan (ADR-0011), in the sketch style (docs/design/sketch-style.md): the plan
+   on a sheet, Claude's reading drawn over it in wash blue, and the room's settings beside it. */
+
+.fp-setup {
+  box-sizing: border-box;
+  display: grid;
+  grid-template: 'top top' auto 'plan side' minmax(0, 1fr) / minmax(0, 1fr) 340px;
+  height: 100%;
+  background: var(--grain), var(--paper);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.fp-header {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-5);
+  border-bottom: var(--line) solid var(--pencil);
+  background: var(--paper-raised);
+}
+.fp-header h1 { margin: 0; font: 400 22px/1.2 var(--font-hand); }
+.fp-header h1 span { color: var(--graphite); }
+.fp-status { flex: 1; color: var(--graphite); text-align: right; }
+
+/* ───────────── The plan ───────────── */
+
+.fp-plan { grid-area: plan; overflow: auto; padding: var(--s-5); }
+.fp-sheet {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  border: var(--line) solid var(--pencil);
+  border-radius: var(--r-3);
+  background: #fff;
+  box-shadow: var(--lift);
+}
+.fp-sheet img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+.fp-overlay { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.fp-overlay * { vector-effect: non-scaling-stroke; }
+.fp-tool-trace, .fp-tool-scale { cursor: crosshair; }
+
+.fp-room { fill: rgb(45 100 137 / 0.1); stroke: var(--wash); stroke-width: 2.5; stroke-linejoin: round; }
+.fp-room-open { fill: none; }
+.fp-opening { stroke-width: 6; stroke-linecap: round; }
+.fp-window { stroke: #4b9ad1; }
+.fp-door { stroke: #d17a3a; }
+.fp-furniture rect { fill: rgb(39 35 31 / 0.06); stroke: var(--graphite); stroke-width: 1.5; stroke-dasharray: 5 3; }
+
+.fp-corner { fill: var(--paper-raised); stroke: var(--wash); stroke-width: 2.5; cursor: grab; }
+.fp-corner-on { fill: var(--wash); }
+.fp-tool-trace .fp-corner, .fp-tool-scale .fp-corner { pointer-events: none; }
+.fp-insert { cursor: copy; opacity: 0.55; transition: opacity var(--press) var(--ease-out); }
+.fp-insert circle { fill: var(--paper-raised); stroke: var(--wash); stroke-width: 1.5; }
+.fp-insert path { stroke: var(--wash); stroke-width: 1.5; }
+@media (hover: hover) {
+  .fp-insert:hover { opacity: 1; }
+}
+.fp-scale-point { fill: var(--red-pencil); }
+.fp-scale-line { stroke: var(--red-pencil); stroke-width: 2; stroke-dasharray: 6 4; }
+
+/* ───────────── The settings ───────────── */
+
+.fp-sidebar {
+  grid-area: side;
+  overflow-y: auto;
+  padding: var(--s-4) var(--s-5) var(--s-6);
+  border-left: var(--line) solid var(--pencil);
+  background: var(--paper-raised);
+}
+.fp-sidebar section { padding: var(--s-4) 0; border-bottom: var(--line) solid var(--pencil); }
+.fp-sidebar section:last-child { border-bottom: 0; }
+.fp-sidebar h2 { margin: 0 0 var(--s-2); font: 400 19px/1.2 var(--font-hand); }
+.fp-sidebar p { margin: 0 0 var(--s-3); }
+.fp-sidebar .muted { color: var(--graphite); }
+.fp-sidebar .error { color: var(--red-pencil); }
+.fp-note { padding: var(--s-2) var(--s-3); border-radius: var(--r-2); background: var(--wash-tint); }
+.fp-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.fp-row input { flex: 1; min-width: 120px; }
+.fp-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+.fp-field { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: var(--s-2); margin-bottom: var(--s-2); }
+.fp-field > span:first-child { font-weight: 600; }
+.fp-field input[type='color'] { width: 36px; height: 30px; padding: 2px; border: var(--line) solid var(--pencil-strong); border-radius: var(--r-2); background: var(--paper-raised); }
+.fp-furniture-list { display: grid; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
+.fp-furniture-list li { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-2); }
+.fp-furniture-list label { display: flex; align-items: center; gap: 4px; color: var(--graphite); white-space: nowrap; }
+.fp-furniture-list .muted { font-size: 12px; }
+
+/* ───────────── The upload dialog, on Home ───────────── */
+
+.fp-dialog {
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 32px));
+  padding: var(--s-4) var(--s-5) var(--s-5);
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-3);
+  background: var(--grain), var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--lift);
+  font: 14px/1.5 var(--font-sans);
+}
+.fp-dialog::backdrop { background: transparent; }
+.fp-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-2); }
+.fp-dialog h2 { margin: 0; font: 400 24px/1.2 var(--font-hand); }
+.fp-dialog form > p { margin: 0 0 var(--s-4); color: var(--graphite); }
+.fp-dialog-field { display: grid; gap: var(--s-1); margin-bottom: var(--s-4); }
+.fp-dialog-field > span:first-child { font-weight: 600; }
+.fp-dialog-field .muted { color: var(--graphite); font-size: 13px; }
+.fp-dialog input:not([type='file']) {
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: var(--line) solid var(--pencil-strong);
+  border-radius: var(--r-2);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font: inherit;
+}
+.fp-dialog footer { display: flex; justify-content: flex-end; gap: var(--s-2); }
+.fp-dialog .error { color: var(--red-pencil); }
+.fp-reading { margin: 0; }
+.fp-reading .muted { color: var(--graphite); }

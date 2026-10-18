@@ -12,13 +12,16 @@ import { budgetInText } from '../shared/generate';
 import { newId } from '../shared/ids';
 import type { Brief, Catalog, Design, LibraryMaterial, RoomSetup, ScanManifest } from '../shared/types';
 import { anthropic, generateDesigns } from './generate/agent';
+import { readFloorPlan } from './floor-plan/read';
+import { draftScale, FloorPlanDraftSchema } from '../shared/floor-plan';
+import sharp from 'sharp';
 import { shelfLevels } from './generate/shelves';
 
 // Read per request, so tests can point DATA_DIR at a temporary folder.
 const dataDir = () => process.env.DATA_DIR ?? './data';
 
 /** Ends the request with an error status; app.onError sends it as { error }. */
-function fail(status: 400 | 404, message: string): never {
+function fail(status: 400 | 403 | 404, message: string): never {
   throw new HTTPException(status, { message });
 }
 
@@ -231,6 +234,87 @@ app.post('/api/generate', async (c) => {
     return c.json({ error: `Claude made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
   }
   return c.json(result);
+});
+
+// ADR-0011: a Floor Plan becomes a new Scan. The plan is stored as a PNG at most MAX_PLAN_SIDE
+// across, the most Claude reads at full detail, so the draft's pixels are this image's, and Claude
+// reads it. With no API key, the draft is empty and the Mover traces the plan in Room Setup.
+const MAX_PLAN_BYTES = 20 * 1024 * 1024;
+const MAX_PLAN_SIDE = 2576;
+const PLAN_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+/** Floor Plans create Scans and call Claude, which the public demo doesn't allow (#42). */
+const refuseInDemo = () => process.env.MISE_DEMO === '1' && fail(403, 'Floor Plans are turned off in the demo');
+/** Claude reads plans when the server has an API key; otherwise Room Setup starts from an empty draft. */
+const planReader = () => (process.env.ANTHROPIC_API_KEY ? anthropic() : null);
+
+/** A Scan id from a name, "Maple Hall 412" → "maple-hall-412", with "-2", "-3"… if it's taken. */
+function newScanId(name: string) {
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'floor-plan';
+  let id = base;
+  for (let n = 2; existsSync(join(dataDir(), 'scans', id)); n++) id = `${base}-${n}`;
+  return id;
+}
+
+app.post(
+  '/api/floor-plans',
+  bodyLimit({ maxSize: MAX_PLAN_BYTES, onError: (c) => c.json({ error: 'A floor plan can be at most 20 MB' }, 413) }),
+  async (c) => {
+    refuseInDemo();
+    const body = await c.req.parseBody().catch(() => fail(400, 'Send the plan as a form: file and name'));
+    const { file } = body;
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    if (!(file instanceof File) || !PLAN_TYPES.includes(file.type)) fail(400, 'Send the plan as a PNG, JPEG or WebP image in "file"');
+    if (!name) fail(400, 'Name the room in "name"');
+    const { data: png, info } = await sharp(Buffer.from(await file.arrayBuffer()))
+      .rotate()
+      .resize({ width: MAX_PLAN_SIDE, height: MAX_PLAN_SIDE, fit: 'inside', withoutEnlargement: true })
+      .flatten({ background: '#ffffff' })
+      .png()
+      .toBuffer({ resolveWithObject: true })
+      .catch(() => fail(400, "That file isn't an image we can read"));
+    const id = newScanId(name);
+    const dir = join(dataDir(), 'scans', id);
+    await mkdir(join(dir, 'plan'), { recursive: true });
+    await saveFile(join(dir, 'plan/floor-plan.png'), png);
+    const reading = await readFloorPlan(planReader(), png, info);
+    await writeJson(join(dir, 'plan/draft.json'), reading.draft);
+    const manifest: ScanManifest = {
+      version: 1, id, name, mesh: 'room.glb', meshTransform: { position: [0, 0, 0], rotationY: 0 },
+      // 0 until a printed dimension, or the Mover, gives the plan its scale.
+      floorPlan: { image: 'plan/floor-plan.png', draft: 'plan/draft.json', metersPerPixel: draftScale(reading.draft, reading.draft.rooms[0]) ?? 0 },
+    };
+    await writeJson(join(dir, 'manifest.json'), manifest);
+    return c.json({ scanId: id, ...reading });
+  },
+);
+
+// Reads a Floor Plan Scan's plan again ("Read again" in Room Setup), replacing its draft when the reading works.
+app.post('/api/floor-plans/:id/read', async (c) => {
+  refuseInDemo();
+  const dir = requireScan(c.req.param('id'));
+  const manifest = await readJson<ScanManifest>(join(dir, 'manifest.json'));
+  if (!manifest?.floorPlan) fail(400, `Scan ${manifest?.id ?? c.req.param('id')} isn't from a floor plan`);
+  const png = await readFile(join(dir, manifest.floorPlan.image));
+  const { width = 0, height = 0 } = await sharp(png).metadata();
+  const reading = await readFloorPlan(planReader(), png, { width, height });
+  if (reading.read === 'ok') {
+    await writeJson(join(dir, manifest.floorPlan.draft), reading.draft);
+    const metersPerPixel = draftScale(reading.draft, reading.draft.rooms[0]) ?? manifest.floorPlan.metersPerPixel;
+    await writeJson(join(dir, 'manifest.json'), { ...manifest, floorPlan: { ...manifest.floorPlan, metersPerPixel } });
+  }
+  return c.json({ scanId: manifest.id, ...reading });
+});
+
+// Room Setup saves the Mover's corrections to a Floor Plan's draft, so the plan reopens as they left it.
+app.put('/api/floor-plans/:id/draft', async (c) => {
+  refuseInDemo();
+  const dir = requireScan(c.req.param('id'));
+  const manifest = await readJson<ScanManifest>(join(dir, 'manifest.json'));
+  if (!manifest?.floorPlan) fail(400, `Scan ${c.req.param('id')} isn't from a floor plan`);
+  const checked = FloorPlanDraftSchema.safeParse(await readBody(c));
+  if (!checked.success) fail(400, `Not a floor plan draft: ${checked.error.issues[0]?.message}`);
+  await writeJson(join(dir, manifest.floorPlan.draft), checked.data);
+  return c.json(checked.data);
 });
 
 // Stretch: text-to-3D for categories the Catalog lacks (spec §13.3).

@@ -40,7 +40,8 @@ export function setupRoomNodes(setup: RoomSetup): SplitScan {
     mesh.rotation.y = box.rotationY;
     return [id, withNodeData(mesh, { kind: 'original', id })];
   }));
-  return { shell: withNodeData(new Group(), { kind: 'shell' }), floor, ceiling, walls, originals };
+  // No mesh, so no Fill Capture to take Patches from.
+  return { shell: withNodeData(new Group(), { kind: 'shell' }), floor, ceiling, walls, originals, patches: {} };
 }
 
 /** A Wall as a flat panel with its Openings cut out. Double-sided, so WallFader has something to fade. */

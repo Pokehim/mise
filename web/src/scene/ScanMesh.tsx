@@ -46,6 +46,8 @@ export function ScanMesh() {
   const manifest = useEditor((s) => s.manifest!);
   const setup = useEditor((s) => s.setup!);
   const originals = useEditor((s) => s.roomState!.originals);
+  // Originals lifted or removed: their Patch, from a Fill Capture, shows (ADR-0007).
+  const patched = useEditor((s) => s.roomState!.patches);
   const view = useEditor((s) => s.view);
   const gltf = use(loadScanMesh(scanFileUrl(manifest.id, manifest.mesh)));
 
@@ -87,6 +89,9 @@ export function ScanMesh() {
         {Object.values(nodes.walls).map((node) => <primitive key={node.uuid} object={node} />)}
         {Object.entries(nodes.originals).map(([id, node]) => (
           <primitive key={node.uuid} object={node} visible={originals[id]?.visible !== false} />
+        ))}
+        {Object.entries(nodes.patches).map(([id, node]) => (
+          <primitive key={node.uuid} object={node} visible={patched.includes(id)} />
         ))}
       </Bvh>
       <WallFader walls={setup.walls} nodes={nodes.walls} />

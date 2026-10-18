@@ -1,0 +1,16 @@
+Table 1: legs at (-0.083, -1.942) and (-0.067, -1.241), 0.701 apart; yaw 1.23 deg; Layout box center moved 2.8 cm
+Table 2: legs at (-0.057, -0.532) and (-0.073, 0.167), 0.699 apart; yaw -1.30 deg; Layout box center moved 7.4 cm
+Table 3: legs at (-0.061, 1.447) and (-0.076, 2.149), 0.702 apart; yaw -1.23 deg; Layout box center moved 8.0 cm
+Chair 1: (-1.170, -1.878) yaw 4.6 deg; splat points 3914, median distance 9.8 mm, within 3 cm 46%; free-scale fit: scale 1.0267 (median 9.7 mm); Layout box center moved 4.6 cm
+Chair 2: (-0.464, -1.854) yaw 1.6 deg; splat points 8683, median distance 9.0 mm, within 3 cm 72%; free-scale fit: scale 1.0125 (median 9.2 mm); Layout box center moved 8.2 cm
+Chair 3: (-1.122, -1.310) yaw -176.3 deg; splat points 4038, median distance 9.4 mm, within 3 cm 59%; free-scale fit: scale 0.9940 (median 9.2 mm); Layout box center moved 9.7 cm
+Chair 4: (-0.477, -1.300) yaw -178.4 deg; splat points 9257, median distance 8.2 mm, within 3 cm 82%; free-scale fit: scale 0.9967 (median 8.3 mm); Layout box center moved 10.1 cm
+Chair 5: (-1.156, -0.537) yaw 0.3 deg; splat points 5160, median distance 8.5 mm, within 3 cm 61%; free-scale fit: scale 0.9852 (median 8.6 mm); Layout box center moved 7.3 cm
+Chair 6: (-0.498, -0.499) yaw 1.6 deg; splat points 9096, median distance 7.7 mm, within 3 cm 79%; free-scale fit: scale 0.9969 (median 7.7 mm); Layout box center moved 11.8 cm
+Chair 7: (-1.214, 0.082) yaw 172.5 deg; splat points 4312, median distance 9.0 mm, within 3 cm 64%; free-scale fit: scale 0.9766 (median 9.4 mm); Layout box center moved 13.5 cm
+Chair 8: (-0.434, 0.080) yaw 179.8 deg; splat points 7795, median distance 8.5 mm, within 3 cm 96%; free-scale fit: scale 0.9904 (median 8.5 mm); Layout box center moved 11.5 cm
+Chair 9: (-1.117, 1.505) yaw 2.1 deg; splat points 5183, median distance 8.8 mm, within 3 cm 56%; free-scale fit: scale 0.9837 (median 8.6 mm); Layout box center moved 10.0 cm
+Chair 10: (-0.415, 1.498) yaw -2.6 deg; splat points 9113, median distance 8.6 mm, within 3 cm 87%; free-scale fit: scale 0.9890 (median 8.5 mm); Layout box center moved 5.7 cm
+Chair 11: (-1.174, 2.060) yaw 177.1 deg; splat points 3097, median distance 9.4 mm, within 3 cm 69%; free-scale fit: scale 0.9841 (median 9.5 mm); Layout box center moved 21.1 cm
+Chair 12: (-0.442, 2.068) yaw 172.4 deg; splat points 5715, median distance 12.2 mm, within 3 cm 79%; free-scale fit: scale 0.9830 (median 9.2 mm); Layout box center moved 21.0 cm
+Whiteboard: back on the East wall at x = 1.55, z -3.565..2.522, y 0.845..2.330

@@ -79,7 +79,7 @@ const OPENING_MARGIN = 0.1;
 /** The narrowest wall span worth listing: about one small frame. */
 const MIN_SPAN = 0.4;
 /** What decor rests on top of. */
-const TOP_CATEGORIES: Category[] = ['bed', 'desk', 'table', 'nightstand', 'dresser', 'shelf', 'storage'];
+export const TOP_CATEGORIES: Category[] = ['bed', 'desk', 'table', 'nightstand', 'dresser', 'shelf', 'storage'];
 
 /** The Room Summary of a Scan in the state a Design has it (spec §13.1), for Claude's first message. */
 export function roomSummary(setup: RoomSetup, catalog: Catalog, state: RoomState): RoomSummary {

@@ -59,6 +59,8 @@ export const loadCatalog = () => Promise.all([
 /** Starts generating a Catalog item for a search that found nothing (spec §13.3, Stretch). Poll the job with getJob. */
 export const generateObject = (body: GenerateRequest) => request<{ jobId: string }>('POST', '/api/generate-object', body);
 export const getJob = (jobId: string) => request<Job>('GET', `/api/jobs/${jobId}`);
+/** Has the server write what a Scan's Designs read first to Claude's prompt cache (spec §13.1): how many tokens it holds. */
+export const warmGenerate = (scanId: string) => request<{ cachedTokens: number }>('POST', '/api/generate/warm', { scanId });
 
 export const listDesigns = (scanId?: string) =>
   request<Design[]>('GET', scanId ? `/api/designs?scanId=${encodeURIComponent(scanId)}` : '/api/designs');

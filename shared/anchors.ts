@@ -309,8 +309,13 @@ function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, 
       return { ...shifts, placements: shifts.placements.flatMap((shifted) => sliding(shifted, frontOf(rotationY), [-Infinity, reach / 6]).placements) };
     }
     case 'open_floor': {
-      const near = anchor.near_id === undefined ? undefined : targetOf(anchor.near_id);
-      if (anchor.near_id !== undefined && !near) return noTarget(anchor.near_id);
+      // Near an Original or a Piece, or near an Opening: by the window is where a reading chair goes.
+      const opening = setup.openings.find(({ id }) => id === anchor.near_id);
+      const openingWall = opening && wallOf(opening.wallId);
+      const near = openingWall
+        ? { rect: { center: wallPoint(openingWall, opening.offset + opening.width / 2), size: [opening.width, 0] as Vec2, rotationY: facing(openingWall.normal) } }
+        : anchor.near_id === undefined ? undefined : targetOf(anchor.near_id);
+      if (anchor.near_id !== undefined && !near) return { error: `The room has no Original, Piece or Opening "${anchor.near_id}"` };
       return { placements: openFloor(setup, inRoom, item, near), noFit: `No open floor fits ${item.title}` };
     }
   }
@@ -352,7 +357,7 @@ const SNAP_ANGLE = Math.PI / 9;
  * walls and furniture, or the nearest to `near`. Open floor is floor no furniture stands on, and
  * for a rug, no other rug lies on. The Fit rules, the walkway among them, then pick among them.
  */
-function openFloor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, near?: RoomItem): Placement[] {
+function openFloor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, near?: Pick<RoomItem, 'rect'>): Placement[] {
   const { polygon } = setup.floor;
   const obstacles = inRoom.filter(({ category, placement }) =>
     placement.mount === 'floor' && (category !== 'rug' || item.category === 'rug'));

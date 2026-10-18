@@ -6,12 +6,13 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
+import { stream } from 'hono/streaming';
 import { MergeInputError, mergeScan } from '../scripts/scan-merge';
 import { generateObjectRoutes } from './generate-object/routes';
-import { budgetInText } from '../shared/generate';
+import { budgetInText, type GenerateEvent } from '../shared/generate';
 import { newId } from '../shared/ids';
 import type { Brief, Catalog, Design, LibraryMaterial, RoomSetup, ScanManifest } from '../shared/types';
-import { anthropic, generateDesigns } from './generate/agent';
+import { anthropic, generateDesigns, warmCache } from './generate/agent';
 import { readFloorPlan } from './floor-plan/read';
 import { draftScale, FloorPlanDraftSchema } from '../shared/floor-plan';
 import sharp from 'sharp';
@@ -200,15 +201,8 @@ app.put('/api/designs/:id', async (c) => {
   return c.json(saved);
 });
 
-// Phase 4: Brief → 3 Designs (spec §13). Each Design is saved as soon as Claude finishes it; the
-// response has every Design that was finished, and why the others weren't.
-app.post('/api/generate', async (c) => {
-  const { scanId, brief, fast } = await readBody<{ scanId?: string; brief?: Partial<Brief>; fast?: boolean }>(c);
-  const { text, styles } = brief ?? {};
-  if (!scanId || typeof text !== 'string' || !text.trim()) fail(400, 'Send {scanId, brief: {text, styles?, budgetUsd?}}');
-  // A budget the Brief only names in its words ("under $400") is still its budget.
-  const budgetUsd = brief?.budgetUsd ?? budgetInText(text);
-  if (budgetUsd !== undefined && !(typeof budgetUsd === 'number' && budgetUsd > 0)) fail(400, 'budgetUsd must be a positive number');
+/** What generating Designs for a Scan reads: its Room Setup, the Catalog, the Material Library and the shelf levels. */
+async function generateInputs(scanId: string, fast: boolean | undefined) {
   const scanDir = requireScan(scanId);
   const [setup, catalog, posters, materials] = await Promise.all([
     readJson<RoomSetup>(join(scanDir, 'setup.json')),
@@ -219,22 +213,56 @@ app.post('/api/generate', async (c) => {
   ]);
   if (!setup) fail(400, `Scan ${scanId} has no Room Setup yet`);
   const items: Catalog = { version: 1, items: [...(catalog?.items ?? []), ...(posters?.items ?? [])] };
-  const result = await generateDesigns({
+  return {
     client: anthropic(),
-    scanId,
     setup,
     catalog: items,
     materials: materials ?? [],
     shelfLevels: await shelfLevels(items, dataDir()),
+    // Fast mode (spec §13.3) unless GENERATE_FAST_MODE=0 in .env: with Designs made in one reply, it costs about
+    // what the earlier multi-turn Designs did at standard speed, and takes a third of the time.
+    fast: fast ?? process.env.GENERATE_FAST_MODE !== '0',
+  };
+}
+
+// Phase 4: Brief → 3 Designs (spec §13). Each Design is saved as soon as Claude finishes it. Asked for
+// application/x-ndjson, it streams each step as one JSON line (GenerateEvent): every Edit as Claude makes
+// it, every Design as it is finished or fails, then the result. Otherwise it answers once, with the result.
+app.post('/api/generate', async (c) => {
+  const { scanId, brief, fast } = await readBody<{ scanId?: string; brief?: Partial<Brief>; fast?: boolean }>(c);
+  const { text, styles } = brief ?? {};
+  if (!scanId || typeof text !== 'string' || !text.trim()) fail(400, 'Send {scanId, brief: {text, styles?, budgetUsd?}}');
+  // A budget the Brief only names in its words ("under $400") is still its budget.
+  const budgetUsd = brief?.budgetUsd ?? budgetInText(text);
+  if (budgetUsd !== undefined && !(typeof budgetUsd === 'number' && budgetUsd > 0)) fail(400, 'budgetUsd must be a positive number');
+  const request = {
+    ...(await generateInputs(scanId, fast)),
+    scanId,
     brief: { text: text.trim(), ...(styles?.length && { styles }), ...(budgetUsd !== undefined && { budgetUsd }) },
-    // Fast mode (spec §13.3) for this request, or for every request with GENERATE_FAST_MODE=1 in .env.
-    fast: fast ?? process.env.GENERATE_FAST_MODE === '1',
-    save: (design) => writeJson(designPath(design.id), design),
-  });
+    save: (design: Design) => writeJson(designPath(design.id), design),
+  };
+  if (c.req.header('Accept')?.includes('application/x-ndjson')) {
+    c.header('Content-Type', 'application/x-ndjson');
+    return stream(c, async (out) => {
+      const send = (event: GenerateEvent) => out.write(`${JSON.stringify(event)}\n`);
+      const result = await generateDesigns({ ...request, onEvent: (event) => void send(event) });
+      await send({ type: 'done', result });
+    });
+  }
+  const result = await generateDesigns(request);
   if (!result.designs.length) {
     return c.json({ error: `Claude made no Designs: ${result.failures.map(({ error }) => error).join('; ')}`, ...result }, 502);
   }
   return c.json(result);
+});
+
+// Writes what generating Designs for this Scan reads first to Claude's prompt cache, so that they start
+// sooner. The Brief dialog asks for it when it opens.
+app.post('/api/generate/warm', async (c) => {
+  const { scanId, fast } = await readBody<{ scanId?: string; fast?: boolean }>(c);
+  if (!scanId) fail(400, 'Send {scanId}');
+  const usage = await warmCache(await generateInputs(scanId, fast));
+  return c.json({ cachedTokens: (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0) });
 });
 
 // ADR-0011: a Floor Plan becomes a new Scan. The plan is stored as a PNG at most MAX_PLAN_SIDE

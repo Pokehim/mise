@@ -485,6 +485,14 @@ describe('resolveAnchor', () => {
       expect(gap(position, 0.4, [-2, -1.5, -1.01, 0.53])).toBeLessThan(0.1);
     });
 
+    it('puts the item in the free spot nearest to a window, given its id: a reading corner by the window', () => {
+      // The window is x −0.6 to 0.6 on the North wall, z = −1.5. The 0.95 m chair keeps the 0.4 m in front
+      // of the 0.9 m sill clear, so the nearest free spot is beside the window, its edge within 10 cm of it.
+      const { position } = placementOf(resolve(chair, { kind: 'open_floor', near_id: 'op_window' }, [], empty));
+
+      expect(gap(position, 0.6, [-0.6, -1.5, 0.6, -1.5])).toBeLessThan(0.1);
+    });
+
     it('passes over free spots that would block the walkway', () => {
       // A 2 m sofa in the largest free spots, mid-room, would be in the door's swing or close off the desk from the door.
       const placement = placementOf(resolve(sofa, { kind: 'open_floor' }));

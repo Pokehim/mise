@@ -33,8 +33,9 @@ async function call(session: DesignSession, name: string, input: unknown) {
 }
 
 describe('the Design tools', () => {
-  it('are the 7 tools of spec §13.2, each with a strict schema but place_piece, whose grammar is too large', () => {
+  it('are the 5 decorating moves and the 7 tools of spec §13.2, each strict but place_piece, whose grammar is too large', () => {
     expect(start().tools.map(({ name, strict }) => [name, strict])).toEqual([
+      ['hang_gallery', true], ['lay_rug', true], ['make_corner', true], ['dress_bed', true], ['style_tops', true],
       ['search_catalog', true], ['place_piece', undefined], ['replace_original', true], ['recolor', true],
       ['apply_finish', true], ['remove', true], ['finish_design', true],
     ]);
@@ -248,6 +249,17 @@ describe('the Design tools', () => {
       await expect(call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette }))
         .rejects.toThrow('Not finished: this Design has 1 Edit, and needs 8 to 15. It still needs wall art (2 to 4 frames), a rug, a lamp, decor on the bed or a furniture top');
       expect(await call(session, 'finish_design', { name: 'Sage', rationale: 'Sage walls.', palette })).toEqual({ ok: true });
+    });
+
+    it("sends Claude back once for a name another take on the Brief already has", async () => {
+      const names = new Set<string>();
+      const [first, second] = [0, 1].map(() => createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials, names }));
+      const finish = (session: DesignSession, name: string) => call(session, 'finish_design', { name, rationale: 'Oat walls.', palette });
+      for (const session of [first, second]) await expect(finish(session, 'Quiet Oat Nook')).rejects.toThrow('Not finished');
+
+      expect(await finish(first, 'Quiet Oat Nook')).toEqual({ ok: true });
+      await expect(finish(second, 'quiet oat nook')).rejects.toThrow('Another take on this Brief is called "Quiet Oat Nook": give this one a name of its own');
+      expect(await finish(second, 'Thrifty Oat Nook')).toEqual({ ok: true });
     });
 
     it('fails for a name longer than 3 words', async () => {

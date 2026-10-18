@@ -6,7 +6,7 @@ import type { BetaRunnableTool } from '@anthropic-ai/sdk/lib/tools/BetaRunnableT
 import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError';
 import { z } from 'zod';
 import {
-  type AnchorOptions, CENTER_HEIGHT, GALLERY_GAP, inPlaceOf, MAX_SLIDE, placementViolations, type Resolution, resolveAnchor,
+  type Anchor, type AnchorOptions, CENTER_HEIGHT, GALLERY_GAP, inPlaceOf, MAX_SLIDE, placementViolations, type Resolution, resolveAnchor,
 } from '../../shared/anchors';
 import { search } from '../../shared/catalog-search';
 import { roomItems } from '../../shared/fit';
@@ -15,6 +15,7 @@ import { partsFor } from '../../shared/parts';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, CatalogItem, Category, Edit, FitViolation, Hex, LibraryMaterial, Palette, Placement, RoomSetup, RoomState } from '../../shared/types';
 import { catalogEntry, m } from './forClaude';
+import { type Draft, dressBed, hangGallery, layRug, makeCorner, styleTops } from './moves';
 
 export interface DesignContext extends AnchorOptions {
   setup: RoomSetup;
@@ -24,6 +25,10 @@ export interface DesignContext extends AnchorOptions {
   materials: LibraryMaterial[];
   /** The most tool calls Claude gets for this Design; finish_design always runs. */
   maxToolCalls?: number;
+  /** Called with each Edit as soon as it is applied, so the Mover can watch the Design take shape. */
+  onEdit?: (edit: Edit) => void;
+  /** The names of the Brief's finished takes, shared by its sessions, so that each take has a name of its own. */
+  names?: Set<string>;
 }
 
 /** One Design being made: its Edits, the room they make, and the tools that change it. */
@@ -111,14 +116,17 @@ const finishTarget = z.union([
 ]);
 
 /** A new Design session, with the 7 tools of spec §13.2 that change it. */
-export function createSession({ setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS }: DesignContext): DesignSession {
+export function createSession({ setup, catalog, brief, materials, shelfLevels = {}, maxToolCalls = MAX_TOOL_CALLS, onEdit, names }: DesignContext): DesignSession {
   let edits: Edit[] = [];
   let state = replay(setup, catalog, edits);
   let finished: DesignSession['finished'];
   let toolCalls = 0;
+  // finish_design sends Claude back at most once for what the Design lacks, and once for a name another take has.
   let sentBack = false;
+  let renamed = false;
 
-  const catalogItem = (id: string) => catalog.items.find((candidate) => candidate.id === id);
+  const catalogItems = new Map(catalog.items.map((item) => [item.id, item]));
+  const catalogItem = (id: string) => catalogItems.get(id);
   const pieces = () => Object.values(state.pieces).map((piece) => ({ ...piece, item: catalogItem(piece.catalogId)! }));
   const totalUsd = () => pieces().reduce((total, { item }) => total + item.priceEstimateUsd, 0);
   /** Each Original replaced, removed or moved (Kept ones can't be), and each large Piece placed new. */
@@ -137,7 +145,18 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
     if (skipped) fail(SKIPPED[skipped.reason]);
     edits = [...edits, edit];
     state = next;
+    onEdit?.(edit);
   }
+
+  /** Places a Piece of `item` where the Anchor says, with every check: its id, or a ToolError saying why not. */
+  function place(item: CatalogItem, anchor: Anchor): string {
+    checkRoomFor(item, isLarge(item));
+    const placement = resolved(resolveAnchor(setup, catalog, state, item, anchor, { shelfLevels }));
+    const pieceId = newId('pc');
+    apply({ type: 'place', pieceId, catalogId: item.id, placement });
+    return pieceId;
+  }
+  const draft: Draft = { setup, item: catalogItem, inRoom, items: () => roomItems(setup, catalog, state), place };
 
   /** Fails unless the Design can take one more large furniture change. */
   function checkLargeChange() {
@@ -174,7 +193,16 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
           if (finished) fail('The Design is finished');
           if (name !== 'finish_design' && toolCalls >= maxToolCalls) fail('No tool calls are left: call finish_design now');
           toolCalls++;
-          return JSON.stringify(run(input));
+          try {
+            const result = run(input);
+            const { skipped } = result as { skipped?: unknown[] };
+            if (skipped?.length) console.warn(`[generate] ${name} skipped ${JSON.stringify(skipped)}`);
+            return JSON.stringify(result);
+          } catch (error) {
+            // Every failure goes back to Claude, and costs it a turn: worth seeing on the server too.
+            console.warn(`[generate] ${name} failed: ${(error as Error).message}`);
+            throw error;
+          }
         },
       }),
       ...(strict && { strict: true }),
@@ -182,6 +210,49 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
   }
 
   const tools = [
+    tool(
+      'hang_gallery',
+      `A gallery wall in one call: 1 to 4 frames or mirrors in a row over a bed, sofa or desk, the widest in the middle, `
+        + `${GALLERY_GAP} m apart, centered over it at ${CENTER_HEIGHT} m or higher to clear it. If the wall can't take them, it tries `
+        + 'another wall the target stands against. Reports what it hung, and what it skipped and why.',
+      z.object({
+        over_id: z.string().describe('The bed, sofa or desk to hang over'),
+        wall_id: z.string().describe('The wall behind it, from decor.wall_spans'),
+        catalog_ids: z.array(z.string()).describe('The frames, each a different Catalog item'),
+      }),
+      (input) => hangGallery(draft, input),
+    ),
+    tool(
+      'lay_rug',
+      'A rug centered under a bed or sofa, about a third of it under; or on the open floor nearest it when it can\'t be centered.',
+      z.object({ catalog_id: z.string(), under_id: z.string() }),
+      (input) => layRug(draft, input),
+    ),
+    tool(
+      'make_corner',
+      'A reading corner, or any spot to sit, in one call: the chair on the open floor nearest near_id (a window\'s Opening id, '
+        + 'an Original or a Piece), the lamp beside it, and the side item on its other side. A table lamp goes on the side item '
+        + 'when that is a table; a floor lamp stands beside the chair. The chair can be one already in the room: it stays where it is.',
+      z.object({
+        chair_id: z.string().describe('A Catalog chair, or the id of a chair already in the room'),
+        lamp_id: z.string().describe('A lamp, or "" for none'),
+        side_id: z.string().describe('A side table, plant or decor, or "" for none'),
+        near_id: z.string().describe('A window\'s Opening id, or an Original or Piece'),
+      }),
+      (input) => makeCorner(draft, input),
+    ),
+    tool(
+      'dress_bed',
+      'Pillows and throws resting on a bed\'s bedding, against the headboard first.',
+      z.object({ bed_id: z.string(), catalog_ids: z.array(z.string()) }),
+      (input) => dressBed(draft, input),
+    ),
+    tool(
+      'style_tops',
+      'Decor, plants and table lamps resting on furniture tops from decor.tops: desks, dressers, nightstands and shelves.',
+      z.object({ items: z.array(z.object({ catalog_id: z.string(), on_id: z.string() })) }),
+      (input) => styleTops(draft, input),
+    ),
     tool(
       'search_catalog',
       'Search the Catalog of real items. Returns items with their id, title, size [width, height, depth] in meters, colors, '
@@ -210,10 +281,8 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
       z.object({ catalog_id: z.string(), anchor: anchorSchema }),
       ({ catalog_id, anchor }) => {
         const item = requireItem(catalog_id);
-        checkRoomFor(item, isLarge(item));
-        const placement = resolved(resolveAnchor(setup, catalog, state, item, anchor, { shelfLevels }));
-        const pieceId = newId('pc');
-        apply({ type: 'place', pieceId, catalogId: item.id, placement });
+        const pieceId = place(item, anchor);
+        const { placement } = state.pieces[pieceId];
         const levels = shelfLevels[item.id]?.map(({ height, clearance }, level) => ({
           level, height_m: m(height), ...(Number.isFinite(clearance) && { room_above_m: m(clearance) }),
         }));
@@ -322,11 +391,17 @@ export function createSession({ setup, catalog, brief, materials, shelfLevels = 
           sentBack = true;
           fail(`Not finished: ${lacking.join('. ')}. Add them, then call finish_design again`);
         }
+        const taken = [...(names ?? [])].find((other) => other.toLowerCase() === name.trim().toLowerCase());
+        if (taken && !renamed) {
+          renamed = true;
+          fail(`Another take on this Brief is called "${taken}": give this one a name of its own`);
+        }
         finished = {
           name: name.trim(),
           rationale: rationale.trim().split('\n')[0],
           palette: { wall: checkHex(palette.wall), accents: palette.accents.map(checkHex), materials: palette.materials },
         };
+        names?.add(finished.name);
         return { ok: true };
       },
     ),

@@ -2,6 +2,7 @@ import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { GenerateEvent, LoopReport } from '../../shared/generate';
 import type { Design } from '../../shared/types';
 import { app } from '../app';
 import { fakeClaude, type Turn, use } from './fakeClaude';
@@ -33,7 +34,9 @@ const paintAndFinish = (name: string): Turn[] => [() => ({
   ],
 })];
 
-const generate = (body: unknown) => app.request('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const post = (path: string, body: unknown, headers: Record<string, string> = {}) =>
+  app.request(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
+const generate = (body: unknown) => post('/api/generate', body);
 const brief = { text: 'cozy Japandi, under $400, I need a reading corner', styles: ['Japandi', 'Cozy'], budgetUsd: 400 };
 
 describe('POST /api/generate', () => {
@@ -46,7 +49,8 @@ describe('POST /api/generate', () => {
     const { designs, failures, loops } = await res.json();
     expect(designs.map(({ name }: Design) => name)).toEqual(['Sage Nook', 'Bold Sage', 'Thrifty Sage']);
     expect(failures).toEqual([]);
-    expect(loops).toHaveLength(3);
+    // Each loop's report is filled in, with or without a stream to send it on.
+    expect(loops.map(({ toolCalls }: LoopReport) => toolCalls)).toEqual([3, 3, 3]);
     const listed: Design[] = await (await app.request('/api/designs?scanId=fixture')).json();
     expect(listed.map(({ name, origin, brief: saved }) => ({ name, origin, brief: saved }))).toEqual(expect.arrayContaining([
       { name: 'Sage Nook', origin: 'claude', brief }, { name: 'Bold Sage', origin: 'claude', brief }, { name: 'Thrifty Sage', origin: 'claude', brief },
@@ -84,5 +88,49 @@ describe('POST /api/generate', () => {
     expect((await generate({ scanId: 'fixture', brief: { text: '  ' } })).status).toBe(400);
     expect((await generate({ scanId: 'fixture', brief: { text: 'cozy', budgetUsd: -5 } })).status).toBe(400);
     expect((await generate({ scanId: 'nope', brief })).status).toBe(404);
+  });
+
+  it('streams each step as a line of JSON when asked for NDJSON: each Edit, each Design or failure, then the result', async () => {
+    claude = fakeClaude({ literal: paintAndFinish('Sage Nook'), bolder: [() => 'error'], budget: paintAndFinish('Thrifty Sage') });
+
+    const res = await post('/api/generate', { scanId: 'fixture', brief }, { Accept: 'application/x-ndjson' });
+
+    expect(res.headers.get('Content-Type')).toBe('application/x-ndjson');
+    const events: GenerateEvent[] = (await res.text()).trim().split('\n').map((line) => JSON.parse(line));
+    const of = (direction: string) => events.filter((event) => 'direction' in event && event.direction === direction).map(({ type }) => type);
+    expect(of('literal')).toEqual(['edit', 'design']);
+    expect(of('bolder')).toEqual(['failure']);
+    expect(of('budget')).toEqual(['edit', 'design']);
+    const done = events.at(-1)!;
+    expect(done.type === 'done' && done.result.designs.map(({ name }) => name)).toEqual(['Sage Nook', 'Thrifty Sage']);
+  });
+
+  it('uses fast mode unless the request or GENERATE_FAST_MODE=0 turns it off', async () => {
+    claude = fakeClaude({ literal: paintAndFinish('Sage Nook') });
+    await generate({ scanId: 'fixture', brief });
+    await generate({ scanId: 'fixture', brief, fast: false });
+    vi.stubEnv('GENERATE_FAST_MODE', '0');
+    await generate({ scanId: 'fixture', brief });
+
+    const speeds = claude.requests.filter(({ direction }) => direction === 'literal').map(({ body }) => body.speed);
+    expect(speeds).toEqual(['fast', undefined, undefined]);
+  });
+});
+
+describe('POST /api/generate/warm', () => {
+  it("writes the Scan's shared prefix to the prompt cache without generating, and says how many tokens it holds", async () => {
+    claude = fakeClaude({});
+
+    const res = await post('/api/generate/warm', { scanId: 'fixture' });
+
+    expect(await res.json()).toEqual({ cachedTokens: 500 });
+    expect(claude.requests.map(({ body }) => body.max_tokens)).toEqual([0]);
+  });
+
+  it('answers 400 without a Scan, and 404 for an unknown one', async () => {
+    claude = fakeClaude({});
+
+    expect((await post('/api/generate/warm', {})).status).toBe(400);
+    expect((await post('/api/generate/warm', { scanId: 'nope' })).status).toBe(404);
   });
 });

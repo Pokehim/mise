@@ -116,5 +116,32 @@ V[:, 1] = np.maximum(V[:, 1], FLOOR_Y + 0.006)
 print('smoothed the lower walls: %d vertices, moved up to %.1f mm' % ((w > 0).sum(), 1000 * np.abs(V - out_m.vertices).max()))
 out_m = trimesh.Trimesh(V, out_m.faces, process=False)
 out_m.fix_normals()
+# Last, over the whole shell: folds (neighbouring faces turned more than 100 degrees, along the seat's rim, the
+# backrest posts and the back's corners), the seat's crinkled lower edge, and spikes (a vertex more than 0.8 edge lengths off its neighbours'
+# average) are relaxed with a few rings around them, so no sliver or point sticks out of the surface. No vertex moves
+# more than 3 mm (the spikes are at most ~4 mm), 6 mm on the seat's lower edge: the backrest's thin rims are sharp
+# too, and must keep their outline
+V0 = out_m.vertices.copy()
+for _ in range(3):
+    fa = out_m.face_adjacency_angles
+    bad = np.zeros(len(out_m.vertices), bool)
+    bad[out_m.face_adjacency_edges[fa > np.radians(100)].ravel()] = True
+    V = out_m.vertices.copy()
+    el = out_m.edges_unique_length; e = out_m.edges_unique
+    ml = np.bincount(e.ravel(), weights=np.r_[el, el], minlength=len(V)) / np.maximum(np.bincount(e.ravel(), minlength=len(V)), 1)
+    bad |= np.linalg.norm(A @ V - V, axis=1) > 0.8 * ml
+    bad |= V0[:, 1] < 0.445          # the seat's lower edge, all round: the captures left it crinkled (2-3 mm)
+    sel = bad.astype(float)
+    for _ in range(2):
+        sel = np.maximum(sel, (A @ sel > 0) * 1.0)
+    for _ in range(20):
+        V += 0.6 * sel[:, None] * (A @ V - V)
+    d = V - V0; n = np.linalg.norm(d, axis=1, keepdims=True)
+    cap = np.where(V0[:, 1] < 0.445, 0.006, 0.003)[:, None]
+    V = V0 + d * np.minimum(1, cap / np.maximum(n, 1e-12))
+    print('relaxed %d folds/spikes (%d vertices with their rings), moved up to %.1f mm'
+          % (bad.sum(), (sel > 0).sum(), 1000 * np.linalg.norm(V - V0, axis=1).max()))
+    out_m = trimesh.Trimesh(V, out_m.faces, process=False)
+    out_m.fix_normals()
 print('watertight', out_m.is_watertight, 'faces', len(out_m.faces), 'y min', out_m.bounds[0][1].round(3))
 out_m.export(out)

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { replay } from './replay';
 import { catalog, edit, onFloor, place, setup, withLampAndMirror } from './test-room';
+import type { Finish, Hex, RoomState } from './types';
 
 describe('replay', () => {
   it('starts from the Scan: every Original visible at its Room Setup box, no Pieces, no Finishes', () => {
@@ -383,6 +384,71 @@ describe('replay', () => {
         { editId: 'ed_2', reason: 'unknown-part' },
       ]);
       expect(state.originals.og_desk.partFinishes).toEqual({});
+    });
+  });
+
+  describe('one look per Part of an Original', () => {
+    const navy: Hex = '#1f2a44';
+    const oak = { kind: 'material', materialId: 'oak' } as const;
+    const walnut = { kind: 'material', materialId: 'walnut' } as const;
+    const recolorDesk = (id: string, partId: string, color: Hex | null) =>
+      edit(id, { type: 'recolor', targetId: 'og_desk', partId, color });
+    const finishDesk = (id: string, partId: string, finish: Finish) =>
+      edit(id, { type: 'finish', target: { kind: 'original', originalId: 'og_desk', partId }, finish });
+    // Both looks of the desk, each compared whole: a look left behind on a Part fails the test.
+    const deskLooks = ({ originals: { og_desk: { partColors, partFinishes } } }: RoomState) => ({ partColors, partFinishes });
+
+    it('a recolor after a material Finish replaces it on that Part', () => {
+      const state = replay(setup, catalog, [
+        finishDesk('ed_1', 'top', oak),
+        finishDesk('ed_2', 'legs', walnut),
+        recolorDesk('ed_3', 'top', navy),
+        recolorDesk('ed_4', 'cushions', '#1a1a1a'),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: { top: navy }, partFinishes: { legs: walnut } });
+      expect(state.skipped).toEqual([{ editId: 'ed_4', reason: 'unknown-part' }]);
+    });
+
+    it('a Finish after a recolor replaces it on that Part', () => {
+      const state = replay(setup, catalog, [
+        recolorDesk('ed_1', 'top', navy),
+        recolorDesk('ed_2', 'legs', '#1a1a1a'),
+        finishDesk('ed_3', 'top', oak),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: { legs: '#1a1a1a' }, partFinishes: { top: oak } });
+      expect(state.skipped).toEqual([]);
+    });
+
+    it("Reset color keeps a Part's material", () => {
+      const state = replay(setup, catalog, [
+        finishDesk('ed_1', 'top', oak),
+        recolorDesk('ed_2', 'legs', navy),
+        recolorDesk('ed_3', '*', null),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: {}, partFinishes: { top: oak } });
+    });
+
+    it("finish none clears a Part's paint too", () => {
+      const state = replay(setup, catalog, [
+        recolorDesk('ed_1', 'top', navy),
+        recolorDesk('ed_2', 'legs', navy),
+        finishDesk('ed_3', 'top', { kind: 'none' }),
+      ]);
+
+      expect(deskLooks(state)).toEqual({ partColors: { legs: navy }, partFinishes: {} });
+    });
+
+    it("'*' clears the other look on every Part", () => {
+      const finishAll = finishDesk('ed_1', '*', oak);
+      const recolorAll = recolorDesk('ed_2', '*', navy);
+
+      expect(deskLooks(replay(setup, catalog, [finishAll, recolorAll])))
+        .toEqual({ partColors: { top: navy, legs: navy }, partFinishes: {} });
+      expect(deskLooks(replay(setup, catalog, [recolorAll, finishAll])))
+        .toEqual({ partColors: {}, partFinishes: { top: oak, legs: oak } });
     });
   });
 

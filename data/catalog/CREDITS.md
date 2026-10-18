@@ -214,9 +214,6 @@ differs from object to object.
 | B07QTB45S5 | [An Amazon Brand - Movian Martin - Oak Effect Bookcase - 35cm L x 77cm W x 185cm H](https://www.amazon.com/dp/B07QTB45S5) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B07B7J2VCD | [Stone & Beam Casual Wood Bookcase, 34"W, Natural Rattan](https://www.amazon.com/dp/B07B7J2VCD) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
 | B074KKXLK1 | [Stone & Beam Glenwood Bookcase, 72"H, Oak](https://www.amazon.com/dp/B074KKXLK1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
-| placeholder-chair | [Placeholder Desk Chair](https://www.amazon.com/s?k=desk+chair) | Mise placeholder box model |
-| placeholder-desk | [Placeholder Writing Desk](https://www.amazon.com/s?k=writing+desk) | Mise placeholder box model |
-| placeholder-rug | [Placeholder 5×7 Rug](https://www.amazon.com/s?k=5x7+rug) | Mise placeholder box model |
 | ph-wall-clock | [Modern Station Wall Clock, 12", Silver and White](https://polyhaven.com/a/wall_clock) | Poly Haven (CC0): wall_clock |
 | ph-telephone-clock | [Vintage Telephone Wall Clock, Red](https://polyhaven.com/a/vintage_telephone_wall_clock) | Poly Haven (CC0): vintage_telephone_wall_clock |
 | ph-mantel-clock | [Tambour Mantel Clock, Mahogany](https://polyhaven.com/a/mantel_clock_01) | Poly Haven (CC0): mantel_clock_01 |
@@ -610,3 +607,6 @@ differs from object to object.
 | ph-calathea-ebony | [Small Calathea in Ebony Square Pot](https://polyhaven.com/a/calathea_orbifolia_01) | Poly Haven (CC0): calathea_orbifolia_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Planter_Pot_QP6Ebony |
 | ph-anthurium-goo | [Anthurium in Glossy Ceramic Pot](https://polyhaven.com/a/anthurium_botany_01) | Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Central_Garden_Flower_Pot_Goo_425 |
 | ph-anthurium-mini | [Mini Anthurium in Harvest Cup](https://polyhaven.com/a/anthurium_botany_01) | Poly Haven (CC0): anthurium_botany_01; pot: Google Scanned Objects (CC BY 4.0), Google LLC: Ecoforms_Plant_Container_B4_Har |
+| placeholder-chair | [Placeholder Desk Chair](https://www.amazon.com/s?k=desk+chair) | Mise placeholder box model |
+| placeholder-desk | [Placeholder Writing Desk](https://www.amazon.com/s?k=writing+desk) | Mise placeholder box model |
+| placeholder-rug | [Placeholder 5×7 Rug](https://www.amazon.com/s?k=5x7+rug) | Mise placeholder box model |

@@ -31,7 +31,6 @@ const reading: FloorPlanDraft = {
     label: 'Bedroom',
     corners: [{ x: 100, y: 100 }, { x: 500, y: 100 }, { x: 500, y: 400 }, { x: 100, y: 400 }],
     openings: [{ kind: 'door', from: { x: 200, y: 400 }, to: { x: 290, y: 400 }, swing: 'in-right' }],
-    furniture: [{ label: 'Bed', category: 'bed', center: { x: 150, y: 200 }, width: 100, depth: 200, rotation: 0, builtIn: false }],
   }],
   scaleHints: [{ text: "13'-1 1/2\"", meters: 4, from: { x: 100, y: 60 }, to: { x: 500, y: 60 } }],
   ceilingHeight: null,
@@ -40,19 +39,20 @@ const reading: FloorPlanDraft = {
 const planPng = () => sharp({ create: { width: 600, height: 500, channels: 3, background: '#ffffff' } }).png().toBuffer();
 
 describe('cleanDraft', () => {
-  it('drops what is off the image, rooms of fewer than 3 corners, sizeless furniture, and an unlikely ceiling', () => {
+  it('drops what is off the image, rooms of fewer than 3 corners, and an unlikely ceiling', () => {
+    const offImage = { kind: 'window' as const, from: { x: 650, y: 100 }, to: { x: 700, y: 100 }, swing: null };
     const messy: FloorPlanDraft = {
       ...reading,
       rooms: [
-        { ...reading.rooms[0], furniture: [...reading.rooms[0].furniture, { ...reading.rooms[0].furniture[0], width: 0 }] },
-        { label: 'Sliver', corners: [{ x: 1, y: 1 }, { x: 2, y: 2 }], openings: [], furniture: [] },
+        { ...reading.rooms[0], openings: [...reading.rooms[0].openings, offImage] },
+        { label: 'Sliver', corners: [{ x: 1, y: 1 }, { x: 2, y: 2 }], openings: [] },
       ],
       scaleHints: [...reading.scaleHints, { text: 'x', meters: 1, from: { x: 0, y: 0 }, to: { x: 9000, y: 0 } }],
       ceilingHeight: 40,
     };
     const clean = cleanDraft(messy, { width: 600, height: 500 });
     expect(clean.rooms).toHaveLength(1);
-    expect(clean.rooms[0].furniture).toHaveLength(1);
+    expect(clean.rooms[0].openings).toHaveLength(1);
     expect(clean.scaleHints).toHaveLength(1);
     expect(clean.ceilingHeight).toBeNull();
   });

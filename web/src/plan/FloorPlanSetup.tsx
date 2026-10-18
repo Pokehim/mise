@@ -1,14 +1,12 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { type DraftPoint, type DraftRoom, draftScale, emptyDraft, type FloorPlanDraft, formatFeet, parseLength } from '@shared/floor-plan';
-import { standInFor } from '@shared/stand-ins';
 import type { RoomSurfaces, ScanManifest } from '@shared/types';
 import {
-  createDesign, loadCatalog, loadFloorPlanDraft, loadSetup, readFloorPlanAgain, saveFloorPlanDraft, saveManifest, saveSetup,
-  scanFileUrl,
+  createDesign, loadFloorPlanDraft, loadSetup, readFloorPlanAgain, saveFloorPlanDraft, saveManifest, saveSetup, scanFileUrl,
 } from '../api';
 import { DEFAULT_SURFACES } from '../scene/room/buildRoom';
-import { DEFAULT_CEILING, type PieceChoice, planToSetup } from './planToSetup';
+import { DEFAULT_CEILING, planToSetup } from './planToSetup';
 import './plan.css';
 
 /** What a click on the plan does: move corners, trace a room's corners one by one, or mark a length to scale by. */
@@ -23,7 +21,8 @@ const distance = (a: DraftPoint, b: DraftPoint) => Math.hypot(b.x - a.x, b.y - a
 
 /**
  * Room Setup for a Floor Plan Scan (ADR-0011): Claude's reading of the plan, drawn over it, for the
- * Mover to correct, then built as the Scan's Room Setup. With no reading, the Mover traces the room.
+ * Mover to correct, then built as the Scan's Room Setup, an empty room to furnish. With no reading,
+ * the Mover traces the room.
  */
 export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest }) {
   const [, navigate] = useLocation();
@@ -34,14 +33,13 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
   const [ceiling, setCeiling] = useState(DEFAULT_CEILING);
   const [ceilingText, setCeilingText] = useState(formatFeet(DEFAULT_CEILING));
   const [surfaces, setSurfaces] = useState<RoomSurfaces>(DEFAULT_SURFACES);
-  const [choices, setChoices] = useState<PieceChoice[]>([]);
   const [tool, setTool] = useState<Tool>({ kind: 'edit' });
   const [selected, setSelected] = useState<number | null>(null);
   const [lengthText, setLengthText] = useState('');
   const [status, setStatus] = useState<{ busy?: 'reading' | 'building'; error?: string; note?: string }>({});
   const [size, setSize] = useState<{ width: number; height: number }>();
 
-  // The draft, and what an earlier Build chose: the ceiling, the surfaces, and each piece's Kept and Stand-in.
+  // The draft, and what an earlier Build chose: the ceiling and the surfaces.
   useEffect(() => {
     loadFloorPlanDraft(loaded).then((read) => {
       setDraft(read);
@@ -55,7 +53,6 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
       setCeiling(setup.ceilingHeight);
       setCeilingText(formatFeet(setup.ceilingHeight));
       if (setup.surfaces) setSurfaces(setup.surfaces);
-      setChoices(setup.originals.map(({ kept, standInId, box }) => ({ kept, standInId, height: standInId ? box.size[1] : undefined })));
     }, () => {});
   }, [loaded]);
 
@@ -107,7 +104,7 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
         return;
       }
       if (!room) {
-        setDraft((d) => ({ ...(d ?? emptyDraft()), rooms: [...(d?.rooms ?? []), { label: 'Room', corners: [at], openings: [], furniture: [] }] }));
+        setDraft((d) => ({ ...(d ?? emptyDraft()), rooms: [...(d?.rooms ?? []), { label: 'Room', corners: [at], openings: [] }] }));
         setRoomIndex(draft?.rooms.length ?? 0);
       } else {
         setCorners((c) => [...c, at]);
@@ -164,7 +161,6 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
         setDraft(result.draft);
         setRoomIndex(0);
         setScale(draftScale(result.draft, result.draft.rooms[0]));
-        setChoices([]);
       }
       setStatus({
         note: result.read === 'ok' ? `Read in ${result.seconds} s.` : result.read === 'skipped'
@@ -180,17 +176,7 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
     if (!draft || !room || !scale) return;
     setStatus({ busy: 'building' });
     try {
-      const catalog = await loadCatalog();
-      const base = { metersPerPixel: scale, ceilingHeight: ceiling, surfaces };
-      // Built once to learn each piece's footprint as it faces, then with a Stand-in that fits each.
-      const plain = planToSetup(manifest.id, room, { ...base, pieces: choices });
-      const pieces = plain.originals.map(({ label, category, box }, i): PieceChoice => {
-        const choice = choices[i] ?? {};
-        if (choice.standInId) return choice;
-        const item = standInFor(catalog, { label, category, size: box.size });
-        return item ? { ...choice, standInId: item.id, height: item.size[1] } : choice;
-      });
-      const setup = planToSetup(manifest.id, room, { ...base, pieces });
+      const setup = planToSetup(manifest.id, room, { metersPerPixel: scale, ceilingHeight: ceiling, surfaces });
       const saved = { ...manifest, floorPlan: { ...manifest.floorPlan!, metersPerPixel: scale } };
       await saveFloorPlanDraft(manifest.id, draft);
       await saveSetup(setup);
@@ -206,7 +192,6 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
 
   const image = scanFileUrl(manifest.id, manifest.floorPlan!.image);
   const corners = room?.corners ?? [];
-  const feet = (pixels: number) => (scale ? formatFeet(pixels * scale) : `${Math.round(pixels)} px`);
   return (
     <div className="fp-setup">
       <header className="fp-header">
@@ -230,11 +215,6 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
               onPointerMove={onPlanPointerMove}
               onPointerUp={() => (dragging.current = null)}
             >
-              {room?.furniture.map((piece, i) => (
-                <g key={`f${i}`} className="fp-furniture" transform={`translate(${piece.center.x} ${piece.center.y}) rotate(${piece.rotation})`}>
-                  <rect x={-piece.width / 2} y={-piece.depth / 2} width={piece.width} height={piece.depth} />
-                </g>
-              ))}
               {corners.length >= 2 && (
                 <polygon className={tool.kind === 'trace' ? 'fp-room fp-room-open' : 'fp-room'} points={corners.map(({ x, y }) => `${x},${y}`).join(' ')} />
               )}
@@ -283,7 +263,7 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
             <h2>Room</h2>
             <div className="fp-chips">
               {draft!.rooms.map((r, i) => (
-                <button key={i} type="button" aria-pressed={i === roomIndex} onClick={() => { setRoomIndex(i); setChoices([]); }}>{r.label}</button>
+                <button key={i} type="button" aria-pressed={i === roomIndex} onClick={() => setRoomIndex(i)}>{r.label}</button>
               ))}
             </div>
           </section>
@@ -354,29 +334,6 @@ export function FloorPlanSetup({ manifest: loaded }: { manifest: ScanManifest })
           </label>
         </section>
 
-        {room && room.furniture.length > 0 && (
-          <section>
-            <h2>Furniture</h2>
-            <ul className="fp-furniture-list">
-              {room.furniture.map((piece, i) => {
-                const kept = choices[i]?.kept ?? piece.builtIn;
-                return (
-                  <li key={i}>
-                    <span><b>{piece.label}</b> <span className="muted">{feet(piece.width)} × {feet(piece.depth)}</span></span>
-                    <label title="Kept: it stays in the room, so it can't be moved or replaced">
-                      <input type="checkbox" checked={kept} onChange={(e) => setChoices((c) => {
-                        const next = [...c];
-                        next[i] = { ...next[i], kept: e.target.checked };
-                        return next;
-                      })} />
-                      Kept
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
       </aside>
     </div>
   );

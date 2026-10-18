@@ -54,7 +54,8 @@ export function FloorPlanDialog() {
         <form onSubmit={submit}>
           <p>
             Haven't moved in yet? Upload your room's floor plan, from your housing office or the building's website. Claude
-            reads its walls, doors, windows and furniture, you check them over the plan, and your room is built in 3D.
+            reads its walls, doors and windows, you check them over the plan, and your room is built in 3D, empty and ready
+            to furnish.
           </p>
           <label className="fp-dialog-field">
             <span>The plan</span>

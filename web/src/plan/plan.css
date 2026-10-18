@@ -46,7 +46,6 @@
 .fp-opening { stroke-width: 6; stroke-linecap: round; }
 .fp-window { stroke: #4b9ad1; }
 .fp-door { stroke: #d17a3a; }
-.fp-furniture rect { fill: rgb(39 35 31 / 0.06); stroke: var(--graphite); stroke-width: 1.5; stroke-dasharray: 5 3; }
 
 .fp-corner { fill: var(--paper-raised); stroke: var(--wash); stroke-width: 2.5; cursor: grab; }
 .fp-corner-on { fill: var(--wash); }
@@ -82,10 +81,6 @@
 .fp-field { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: var(--s-2); margin-bottom: var(--s-2); }
 .fp-field > span:first-child { font-weight: 600; }
 .fp-field input[type='color'] { width: 36px; height: 30px; padding: 2px; border: var(--line) solid var(--pencil-strong); border-radius: var(--r-2); background: var(--paper-raised); }
-.fp-furniture-list { display: grid; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
-.fp-furniture-list li { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-2); }
-.fp-furniture-list label { display: flex; align-items: center; gap: 4px; color: var(--graphite); white-space: nowrap; }
-.fp-furniture-list .muted { font-size: 12px; }
 
 /* ───────────── The upload dialog, on Home ───────────── */
 

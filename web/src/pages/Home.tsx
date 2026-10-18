@@ -5,6 +5,7 @@ import { listDesigns, listScans } from '../api';
 import { moveInLayoutId } from '../plan/library';
 import { count } from '../ui/format';
 import { ArrowRight, Plus } from '../ui/icons';
+import { useServerConfig } from '../ui/useServerConfig';
 import { useStartDesign } from '../ui/useStartDesign';
 import { ImportDialog } from './ImportDialog';
 import { ScanPlan } from './ScanPlan';
@@ -15,6 +16,7 @@ const edited = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric'
 /** One Scan, with its Designs and a button to start another. */
 function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] }) {
   const { start, starting, error } = useStartDesign();
+  const demo = useServerConfig()?.demo;
 
   return (
     <section className="scan" aria-labelledby={`scan-${scan.id}`}>
@@ -23,7 +25,8 @@ function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] 
         <div>
           <h3 id={`scan-${scan.id}`}>{scan.name}</h3>
           <p className="muted">
-            {count(designs.length, 'Design')} · <Link href={`/setup/${scan.id}`}>Room Setup</Link>
+            {count(designs.length, 'Design')}
+            {!demo && <> · <Link href={`/setup/${scan.id}`}>Room Setup</Link></>}
             {scan.floorPlan && <> · <span className="scan-tag">From a floor plan</span></>}
           </p>
         </div>

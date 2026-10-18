@@ -25,9 +25,12 @@ import { shelfLevels } from './generate/shelves';
 
 // Read per request, so tests can point DATA_DIR at a temporary folder.
 const dataDir = () => process.env.DATA_DIR ?? './data';
+// The public demo (#42) keeps Designs apart from the deployed data, on storage that outlives a redeploy.
+const designsDir = () => process.env.DESIGNS_DIR ?? join(dataDir(), 'designs');
+const inDemo = () => process.env.MISE_DEMO === '1';
 
 /** Ends the request with an error status; app.onError sends it as { error }. */
-function fail(status: 400 | 403 | 404, message: string): never {
+function fail(status: 400 | 403 | 404 | 429, message: string): never {
   throw new HTTPException(status, { message });
 }
 
@@ -45,13 +48,13 @@ async function readJson<T>(path: string): Promise<T | undefined> {
  * Every file in the data folder that matches the glob pattern, parsed. Files named "_*" aren't records, so they are
  * skipped; so is a file that doesn't parse, with a warning, so one bad file can't break the whole list.
  */
-async function readAll<T>(pattern: string): Promise<T[]> {
-  const files = globSync(pattern, { cwd: dataDir() }).filter((file) => !basename(file).startsWith('_'));
+async function readAll<T>(pattern: string, dir = dataDir()): Promise<T[]> {
+  const files = globSync(pattern, { cwd: dir }).filter((file) => !basename(file).startsWith('_'));
   const parsed = await Promise.all(files.map(async (file): Promise<T[]> => {
     try {
-      return [JSON.parse(await readFile(join(dataDir(), file), 'utf8'))];
+      return [JSON.parse(await readFile(join(dir, file), 'utf8'))];
     } catch (error) {
-      console.warn(`Skipping ${join(dataDir(), file)}: ${(error as Error).message}`);
+      console.warn(`Skipping ${join(dir, file)}: ${(error as Error).message}`);
       return [];
     }
   }));
@@ -107,7 +110,10 @@ function requireScan(id: string) {
   return existsSync(dir) ? dir : fail(404, `No Scan ${id}`);
 }
 
-const designPath = (id: string) => join(dataDir(), 'designs', `${checkId(id)}.json`);
+const designPath = (id: string) => join(designsDir(), `${checkId(id)}.json`);
+
+/** The demo's seed Designs, listed in _seed.json (#42). They are read-only there, so each visitor edits a copy. */
+const seedIds = async () => (inDemo() ? (await readJson<string[]>(join(designsDir(), '_seed.json'))) ?? [] : []);
 const readDesign = async (id: string) => (await readJson<Design>(designPath(id))) ?? fail(404, `No Design ${id}`);
 
 export const app = new Hono();
@@ -120,15 +126,30 @@ app.onError((err, c) => {
 
 app.use(
   '/data/*',
-  // Saves change these files, so browsers must check back instead of reusing a cached copy.
+  // Saves change these files, so browsers must check back instead of reusing a cached copy. The demo
+  // saves none of them, so there they keep for an hour.
   async (c, next) => {
-    c.header('Cache-Control', 'no-cache');
+    c.header('Cache-Control', inDemo() ? 'public, max-age=3600' : 'no-cache');
     await next();
   },
   serveStatic({ rewriteRequestPath: (path) => join(dataDir(), path.slice('/data'.length)) }),
 );
 
+/** What this server offers, so the web app can hide what it can't do (#42). */
+app.get('/api/config', async (c) => c.json({
+  demo: inDemo(),
+  seeds: await seedIds(),
+  generate: !!process.env.ANTHROPIC_API_KEY,
+  textTo3d: !!process.env.FAL_KEY,
+}));
+
 app.get('/api/scans', async (c) => c.json(await readAll<ScanManifest>('scans/*/manifest.json')));
+
+// Room Setup changes a Scan for every visitor, so the public demo doesn't allow it.
+app.use('/api/scans/*', async (c, next) => {
+  if (inDemo() && c.req.method !== 'GET') fail(403, 'Room Setup is turned off in the demo');
+  await next();
+});
 
 /** Saves the request body as one JSON file in an existing Scan's folder. */
 const saveScanFile = (file: string) => async (c: Context) => {
@@ -170,7 +191,7 @@ app.post('/api/scans/:id/merge', async (c) => {
 
 app.get('/api/designs', async (c) => {
   const scanId = c.req.query('scanId');
-  const designs = await readAll<Design>('designs/*.json');
+  const designs = await readAll<Design>('*.json', designsDir());
   return c.json(designs
     .filter((design) => !scanId || design.scanId === scanId)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
@@ -184,7 +205,9 @@ app.post('/api/designs', async (c) => {
   let start: Pick<Design, 'scanId' | 'name' | 'edits'>;
   if (duplicateOf) {
     const source = await readDesign(duplicateOf);
-    start = { scanId: source.scanId, name: `${source.name} (copy)`, edits: source.edits };
+    // A visitor's copy of a demo seed stands in for the seed, so it keeps the seed's name.
+    const name = (await seedIds()).includes(duplicateOf) ? source.name : `${source.name} (copy)`;
+    start = { scanId: source.scanId, name, edits: source.edits };
   } else if (scanId) {
     requireScan(scanId);
     start = { scanId, name: 'New Design', edits: [] };
@@ -201,10 +224,38 @@ app.put('/api/designs/:id', async (c) => {
   const id = c.req.param('id');
   const design = await readBody<Design>(c);
   if (design.id !== id) fail(400, `The body is Design ${design.id}, not ${id}`);
+  if ((await seedIds()).includes(id)) fail(403, 'This Design is read-only in the demo; edit a copy');
   const saved = { ...design, updatedAt: new Date().toISOString() };
   await writeJson(designPath(id), saved);
   return c.json(saved);
 });
+
+// Generate spends API credit, so the public demo allows 5 a minute from one visitor and 200 a day in all (#42).
+const GENERATE_PER_MINUTE = 5;
+const GENERATE_PER_DAY = 200;
+const generateTimes = new Map<string, number[]>();
+let generateDay = { day: '', count: 0 };
+
+/** The visitor's IP, from Azure's X-Forwarded-For ("203.0.113.5:54321" or "[2001:db8::1]:54321"). */
+function visitor(c: Context) {
+  const first = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
+  if (first.startsWith('[')) return first.slice(1, first.indexOf(']'));
+  return first.split(':').length === 2 ? first.split(':')[0] : first || 'local';
+}
+
+/** Counts one Generate request in the demo, or refuses it when the visitor or the day is over its limit. */
+function limitGenerate(c: Context) {
+  if (!inDemo()) return;
+  const now = Date.now();
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (generateDay.day !== day) generateDay = { day, count: 0 };
+  if (generateDay.count >= GENERATE_PER_DAY) fail(429, 'Generate has reached its limit for today. Try again tomorrow');
+  const ip = visitor(c);
+  const recent = (generateTimes.get(ip) ?? []).filter((time) => now - time < 60_000);
+  if (recent.length >= GENERATE_PER_MINUTE) fail(429, 'Too many Briefs at once. Wait a minute and try again');
+  generateTimes.set(ip, [...recent, now]);
+  generateDay.count++;
+}
 
 /** What generating Designs for a Scan reads: its Room Setup, the Catalog, the Material Library and the shelf levels. */
 async function generateInputs(scanId: string, fast: boolean | undefined) {
@@ -214,7 +265,7 @@ async function generateInputs(scanId: string, fast: boolean | undefined) {
     readJson<Catalog>(join(dataDir(), 'catalog/catalog.json')),
     readJson<Catalog>(join(dataDir(), 'catalog/posters.json')),   // built apart, by scripts/posters-build.ts (#85)
     readJson<LibraryMaterial[]>(join(dataDir(), 'materials/materials.json')),
-    mkdir(join(dataDir(), 'designs'), { recursive: true }),
+    mkdir(designsDir(), { recursive: true }),
   ]);
   if (!setup) fail(400, `Scan ${scanId} has no Room Setup yet`);
   const items: Catalog = { version: 1, items: [...(catalog?.items ?? []), ...(posters?.items ?? [])] };
@@ -234,6 +285,7 @@ async function generateInputs(scanId: string, fast: boolean | undefined) {
 // application/x-ndjson, it streams each step as one JSON line (GenerateEvent): every Edit as Claude makes
 // it, every Design as it is finished or fails, then the result. Otherwise it answers once, with the result.
 app.post('/api/generate', async (c) => {
+  limitGenerate(c);
   const { scanId, brief, fast } = await readBody<{ scanId?: string; brief?: Partial<Brief>; fast?: boolean }>(c);
   const { text, styles } = brief ?? {};
   if (!scanId || typeof text !== 'string' || !text.trim()) fail(400, 'Send {scanId, brief: {text, styles?, budgetUsd?}}');

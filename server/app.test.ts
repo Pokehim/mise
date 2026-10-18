@@ -481,3 +481,49 @@ describe('ids', () => {
     expect((await send('POST', '/api/designs', { duplicateOf: '../designs/ds_fixture1' })).status).toBe(400);
   });
 });
+
+describe('the public demo (MISE_DEMO=1, #42)', () => {
+  let designsDir: string;
+
+  // As npm start leaves it: the shipped Designs copied into DESIGNS_DIR, and listed as its seeds.
+  beforeEach(async () => {
+    designsDir = join(dataDir, 'saved-designs');
+    await cp(join(dataDir, 'designs'), designsDir, { recursive: true });
+    await writeFile(join(designsDir, '_seed.json'), JSON.stringify(['ds_fixture1']));
+    vi.stubEnv('DESIGNS_DIR', designsDir);
+    vi.stubEnv('MISE_DEMO', '1');
+  });
+
+  it('says it is the demo, and which Designs are its seeds', async () => {
+    expect(await getJson('/api/config')).toMatchObject({ demo: true, seeds: ['ds_fixture1'] });
+  });
+
+  it('refuses to change a seed, but a copy of it keeps its name and saves', async () => {
+    expect((await send('PUT', '/api/designs/ds_fixture1', fixtureDesign)).status).toBe(403);
+
+    const res = await send('POST', '/api/designs', { duplicateOf: 'ds_fixture1' });
+    const copy: Design = await res.json();
+    expect(copy.name).toBe(fixtureDesign.name);
+    expect((await send('PUT', `/api/designs/${copy.id}`, { ...copy, name: 'Mine' })).status).toBe(200);
+    expect(existsSync(join(designsDir, `${copy.id}.json`))).toBe(true);
+  });
+
+  it('turns Room Setup off but still lists the Scans', async () => {
+    expect((await send('PUT', '/api/scans/fixture/setup', fixtureSetup)).status).toBe(403);
+    expect((await app.request('/api/scans')).status).toBe(200);
+  });
+
+  it('allows one visitor 5 Briefs a minute', async () => {
+    const brief = () => app.request('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.5:54321' }, body: '{}' });
+    // Each counts, even though its body is refused.
+    for (let n = 0; n < 5; n++) expect((await brief()).status).toBe(400);
+    expect((await brief()).status).toBe(429);
+  });
+});
+
+describe('outside the demo', () => {
+  it('has no seeds, so every Design can be changed', async () => {
+    expect(await getJson('/api/config')).toMatchObject({ demo: false, seeds: [] });
+    expect((await send('PUT', '/api/designs/ds_fixture1', fixtureDesign)).status).toBe(200);
+  });
+});

@@ -11,7 +11,7 @@
 import { create } from 'zustand';
 import { DIRECTIONS, type Direction, type GenerateEvent, type LoopReport } from '@shared/generate';
 import type { Brief, Design, Edit } from '@shared/types';
-import { warmGenerate } from '../api';
+import { rememberDesigns, warmGenerate } from '../api';
 
 /** One take on the Brief: Claude's plan for it and its Edits so far, then its Design, or why it failed. */
 export interface Take { plan?: string; edits: Edit[]; design?: Design; report?: LoopReport; error?: string }
@@ -62,6 +62,8 @@ export async function generate(scanId: string, brief: Brief): Promise<void> {
 
 /** One event of the stream, into the take it belongs to. */
 function receive(event: GenerateEvent) {
+  // The public demo lists each visitor's own Designs (#42), and Claude's takes are theirs.
+  if (event.type === 'design') rememberDesigns([event.design.id]);
   if (event.type === 'done') return useGenerate.setState({ status: 'done', seconds: event.result.seconds });
   useGenerate.setState(({ takes }) => {
     const take = takes[event.direction];

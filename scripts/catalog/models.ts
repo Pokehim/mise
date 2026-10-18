@@ -30,6 +30,19 @@ export async function keepNodes(doc: Document, names: string[]) {
   await doc.transform(prune());
 }
 
+/**
+ * Makes Poly Haven's glass clear. Its glass is BLEND, but colored by the body's JPEG texture, which has no alpha, so it
+ * draws opaque and hides what is behind it: a clock's dial, a frame's picture. Returns the document.
+ */
+export function clearGlass(doc: Document) {
+  for (const material of doc.getRoot().listMaterials()) {
+    if (material.getAlphaMode() !== 'BLEND' || !/glass/i.test(material.getName())) continue;
+    material.setBaseColorTexture(null).setMetallicRoughnessTexture(null)
+      .setBaseColorFactor([1, 1, 1, 0.12]).setMetallicFactor(0).setRoughnessFactor(0.05);
+  }
+  return doc;
+}
+
 /** Moves the scene's top-level nodes under one new node with this translation, rotation and scale. */
 function wrap(doc: Document, name: string, transform: { translation?: vec3; rotation?: [number, number, number, number] }) {
   const scene = sceneOf(doc);

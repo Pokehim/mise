@@ -419,8 +419,9 @@ const megabytes = (bytes: number) => (bytes / 1e6).toFixed(2);
  */
 export async function optimizeModel(centered: string, glb: string): Promise<{ size: Vec3; bytes: number; triangles: number }> {
   for (const error of SIMPLIFY_ERRORS) {
+    // No instancing: inspect reports an instanced model's bounds as its quantized ±1, such as a chess set's pieces.
     await gltfTransform('optimize', centered, glb, '--texture-compress', 'webp', '--texture-size', '1024',
-      '--simplify-error', String(error));
+      '--simplify-error', String(error), '--instance', 'false');
     const inspect = await gltfTransform('inspect', glb, '--format', 'csv');
     const triangles = trianglesFromInspect(inspect);
     if (triangles > MAX_TRIANGLES) continue;
@@ -541,7 +542,9 @@ async function build(only?: Set<string>) {
   const picks: CatalogPick[] = JSON.parse(await readFile(PICKS, 'utf8'));
   const file = join(CATALOG_DIR, 'catalog.json');
   const previous: Catalog = JSON.parse(await readFile(file, 'utf8'));
-  const [listings, imagePaths] = await Promise.all([loadListings(), loadImagePaths()]);
+  // ABO's metadata is a large download: load it only when an ABO pick is being built.
+  const needsAbo = picks.some((pick) => !pick.source && (!only || only.has(pick.id)));
+  const [listings, imagePaths] = needsAbo ? await Promise.all([loadListings(), loadImagePaths()]) : [new Map<string, Listing>(), new Map<string, string>()];
   await mkdir(join(CACHE, 'build'), { recursive: true });
 
   // Four picks at a time, since each gltf-transform run keeps about one core busy. Items keep the picks' order.

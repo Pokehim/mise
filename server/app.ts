@@ -260,15 +260,15 @@ function limitGenerate(c: Context) {
 /** What generating Designs for a Scan reads: its Room Setup, the Catalog, the Material Library and the shelf levels. */
 async function generateInputs(scanId: string, fast: boolean | undefined) {
   const scanDir = requireScan(scanId);
-  const [setup, catalog, posters, materials] = await Promise.all([
+  // The posters, textiles and modeled objects are built apart, by scripts/posters-build.ts, textiles-build.ts and objects-build.ts.
+  const [setup, materials, catalogs] = await Promise.all([
     readJson<RoomSetup>(join(scanDir, 'setup.json')),
-    readJson<Catalog>(join(dataDir(), 'catalog/catalog.json')),
-    readJson<Catalog>(join(dataDir(), 'catalog/posters.json')),   // built apart, by scripts/posters-build.ts (#85)
     readJson<LibraryMaterial[]>(join(dataDir(), 'materials/materials.json')),
+    Promise.all(['catalog', 'posters', 'textiles', 'objects'].map((part) => readJson<Catalog>(join(dataDir(), `catalog/${part}.json`)))),
     mkdir(designsDir(), { recursive: true }),
   ]);
   if (!setup) fail(400, `Scan ${scanId} has no Room Setup yet`);
-  const items: Catalog = { version: 1, items: [...(catalog?.items ?? []), ...(posters?.items ?? [])] };
+  const items: Catalog = { version: 1, items: catalogs.flatMap((part) => part?.items ?? []) };
   return {
     client: anthropic(),
     setup,

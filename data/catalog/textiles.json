@@ -1,0 +1,1496 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "rug-checker-sage",
+      "source": "generated",
+      "title": "Hand-Tufted Checkered Rug, Sage and Cream, 5 x 7 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.5,
+        0.01,
+        2.1
+      ],
+      "model": "/data/catalog/textiles/rug-checker-sage.glb",
+      "thumbnail": "/data/catalog/textiles/rug-checker-sage.jpg",
+      "colors": [
+        "Green",
+        "Beige"
+      ],
+      "colorHex": "#a5b58c",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern",
+        "Eclectic",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-checker-pink",
+      "source": "generated",
+      "title": "Checkered Rug, Pink and Cherry Red, 4 x 6 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.01,
+        1.8
+      ],
+      "model": "/data/catalog/textiles/rug-checker-pink.glb",
+      "thumbnail": "/data/catalog/textiles/rug-checker-pink.jpg",
+      "colors": [
+        "Pink",
+        "Red"
+      ],
+      "colorHex": "#f5c9cf",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Eclectic",
+        "Playful",
+        "Modern"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-checker-runner",
+      "source": "generated",
+      "title": "Checkerboard Runner Rug, Black and Cream, 2' 6\" x 8'",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.75,
+        0.01,
+        2.4
+      ],
+      "model": "/data/catalog/textiles/rug-checker-runner.glb",
+      "thumbnail": "/data/catalog/textiles/rug-checker-runner.jpg",
+      "colors": [
+        "Beige",
+        "Black"
+      ],
+      "colorHex": "#efe8d7",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern",
+        "Eclectic",
+        "Retro"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-waves-retro",
+      "source": "generated",
+      "title": "Retro Wavy Stripe Rug, Orange, Brown and Mustard, 5 x 8 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.6,
+        0.01,
+        2.3
+      ],
+      "model": "/data/catalog/textiles/rug-waves-retro.glb",
+      "thumbnail": "/data/catalog/textiles/rug-waves-retro.jpg",
+      "colors": [
+        "Orange",
+        "Brown"
+      ],
+      "colorHex": "#ecbb73",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Retro",
+        "Mid-Century Modern",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 130,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-waves-lilac",
+      "source": "generated",
+      "title": "Wavy Stripe Rug, Periwinkle and Lilac, 5 x 7 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.5,
+        0.01,
+        2.1
+      ],
+      "model": "/data/catalog/textiles/rug-waves-lilac.glb",
+      "thumbnail": "/data/catalog/textiles/rug-waves-lilac.jpg",
+      "colors": [
+        "Blue",
+        "White",
+        "Purple"
+      ],
+      "colorHex": "#6e86c0",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern",
+        "Playful",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-daisies-butter",
+      "source": "generated",
+      "title": "Daisy Rug, Butter Yellow, 5 x 7 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.5,
+        0.01,
+        2.1
+      ],
+      "model": "/data/catalog/textiles/rug-daisies-butter.glb",
+      "thumbnail": "/data/catalog/textiles/rug-daisies-butter.jpg",
+      "colors": [
+        "Yellow",
+        "White"
+      ],
+      "colorHex": "#f6e5a4",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Cottagecore",
+        "Playful",
+        "Retro"
+      ],
+      "priceEstimateUsd": 115,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-daisies-green",
+      "source": "generated",
+      "title": "Daisy Field Rug, Moss Green, 4 x 6 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.01,
+        1.8
+      ],
+      "model": "/data/catalog/textiles/rug-daisies-green.glb",
+      "thumbnail": "/data/catalog/textiles/rug-daisies-green.jpg",
+      "colors": [
+        "Green"
+      ],
+      "colorHex": "#84a169",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Cottagecore",
+        "Bohemian",
+        "Retro"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-arches-terracotta",
+      "source": "generated",
+      "title": "Rainbow Arch Rug, Terracotta and Olive, 5 x 8 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.6,
+        0.01,
+        2.3
+      ],
+      "model": "/data/catalog/textiles/rug-arches-terracotta.glb",
+      "thumbnail": "/data/catalog/textiles/rug-arches-terracotta.jpg",
+      "colors": [
+        "Orange",
+        "Beige"
+      ],
+      "colorHex": "#d48f69",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Mid-Century Modern",
+        "Modern"
+      ],
+      "priceEstimateUsd": 130,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-blobs-pastel",
+      "source": "generated",
+      "title": "Abstract Cut-Out Shapes Rug, Pastel, 5 x 8 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.6,
+        0.01,
+        2.3
+      ],
+      "model": "/data/catalog/textiles/rug-blobs-pastel.glb",
+      "thumbnail": "/data/catalog/textiles/rug-blobs-pastel.jpg",
+      "colors": [
+        "Beige"
+      ],
+      "colorHex": "#f4eee4",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern",
+        "Eclectic",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 125,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-stripes-rainbow",
+      "source": "generated",
+      "title": "Rainbow Stripe Rug, 4 x 6 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.01,
+        1.8
+      ],
+      "model": "/data/catalog/textiles/rug-stripes-rainbow.glb",
+      "thumbnail": "/data/catalog/textiles/rug-stripes-rainbow.jpg",
+      "colors": [
+        "Red",
+        "Orange",
+        "Yellow"
+      ],
+      "colorHex": "#e4584c",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Playful",
+        "Eclectic",
+        "Retro"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-sheepskin-ivory",
+      "source": "generated",
+      "title": "Faux Sheepskin Rug, Ivory, 2 x 3 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.6,
+        0.035,
+        0.9
+      ],
+      "model": "/data/catalog/textiles/rug-sheepskin-ivory.glb",
+      "thumbnail": "/data/catalog/textiles/rug-sheepskin-ivory.jpg",
+      "colors": [
+        "Beige"
+      ],
+      "colorHex": "#f3eee4",
+      "materials": [
+        "Faux fur"
+      ],
+      "styleTags": [
+        "Scandinavian",
+        "Cozy",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-sheepskin-blush",
+      "source": "generated",
+      "title": "Faux Sheepskin Rug, Blush Pink, 2 x 3 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.6,
+        0.035,
+        0.9
+      ],
+      "model": "/data/catalog/textiles/rug-sheepskin-blush.glb",
+      "thumbnail": "/data/catalog/textiles/rug-sheepskin-blush.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "colorHex": "#f1cbc8",
+      "materials": [
+        "Faux fur"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Glam",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-shag-cream",
+      "source": "generated",
+      "title": "Fluffy Faux Fur Area Rug, Cream, 5 x 7 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.5,
+        0.035,
+        2.1
+      ],
+      "model": "/data/catalog/textiles/rug-shag-cream.glb",
+      "thumbnail": "/data/catalog/textiles/rug-shag-cream.jpg",
+      "colors": [
+        "Beige"
+      ],
+      "colorHex": "#eee5d4",
+      "materials": [
+        "Faux fur"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Scandinavian",
+        "Glam"
+      ],
+      "priceEstimateUsd": 110,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-shag-round-sage",
+      "source": "generated",
+      "title": "Round Fluffy Shag Rug, Sage Green, 5 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.5,
+        0.035,
+        1.5
+      ],
+      "model": "/data/catalog/textiles/rug-shag-round-sage.glb",
+      "thumbnail": "/data/catalog/textiles/rug-shag-round-sage.jpg",
+      "colors": [
+        "Green"
+      ],
+      "colorHex": "#a5b693",
+      "materials": [
+        "Faux fur"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Modern",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 85,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-shag-round-lilac",
+      "source": "generated",
+      "title": "Round Fluffy Shag Rug, Lilac, 4 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.035,
+        1.2
+      ],
+      "model": "/data/catalog/textiles/rug-shag-round-lilac.glb",
+      "thumbnail": "/data/catalog/textiles/rug-shag-round-lilac.jpg",
+      "colors": [
+        "Purple"
+      ],
+      "colorHex": "#c8b7e2",
+      "materials": [
+        "Faux fur"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Playful",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-shag-cloud",
+      "source": "generated",
+      "title": "Fluffy Cloud-Shaped Rug, White, 3 x 4 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.035,
+        0.9
+      ],
+      "model": "/data/catalog/textiles/rug-shag-cloud.glb",
+      "thumbnail": "/data/catalog/textiles/rug-shag-cloud.jpg",
+      "colors": [
+        "White"
+      ],
+      "colorHex": "#f6f4f0",
+      "materials": [
+        "Faux fur"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Playful",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-shag-heart",
+      "source": "generated",
+      "title": "Fluffy Heart-Shaped Rug, Pink",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1,
+        0.035,
+        0.9
+      ],
+      "model": "/data/catalog/textiles/rug-shag-heart.glb",
+      "thumbnail": "/data/catalog/textiles/rug-shag-heart.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "colorHex": "#f0a6bb",
+      "materials": [
+        "Faux fur"
+      ],
+      "styleTags": [
+        "Cozy",
+        "Playful",
+        "Glam"
+      ],
+      "priceEstimateUsd": 50,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-daisy-white",
+      "source": "generated",
+      "title": "Daisy-Shaped Tufted Rug, White and Yellow, 4 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.01,
+        1.2
+      ],
+      "model": "/data/catalog/textiles/rug-daisy-white.glb",
+      "thumbnail": "/data/catalog/textiles/rug-daisy-white.jpg",
+      "colors": [
+        "White",
+        "Orange"
+      ],
+      "colorHex": "#fbf6ea",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Playful",
+        "Cottagecore",
+        "Retro"
+      ],
+      "priceEstimateUsd": 85,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-daisy-pink",
+      "source": "generated",
+      "title": "Daisy-Shaped Tufted Rug, Pink, 3 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1,
+        0.01,
+        1
+      ],
+      "model": "/data/catalog/textiles/rug-daisy-pink.glb",
+      "thumbnail": "/data/catalog/textiles/rug-daisy-pink.jpg",
+      "colors": [
+        "Pink",
+        "Yellow"
+      ],
+      "colorHex": "#f3b3c0",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Playful",
+        "Danish Pastel",
+        "Cottagecore"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-mushroom",
+      "source": "generated",
+      "title": "Mushroom-Shaped Tufted Rug, Red and Cream",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.95,
+        0.01,
+        1
+      ],
+      "model": "/data/catalog/textiles/rug-mushroom.glb",
+      "thumbnail": "/data/catalog/textiles/rug-mushroom.jpg",
+      "colors": [
+        "Red",
+        "Beige"
+      ],
+      "colorHex": "#d44330",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Playful",
+        "Cottagecore",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 75,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-heart-checker",
+      "source": "generated",
+      "title": "Checkered Heart-Shaped Rug, Pink and Red",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.1,
+        0.01,
+        1
+      ],
+      "model": "/data/catalog/textiles/rug-heart-checker.glb",
+      "thumbnail": "/data/catalog/textiles/rug-heart-checker.jpg",
+      "colors": [
+        "Pink",
+        "Red"
+      ],
+      "colorHex": "#f5cad1",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Playful",
+        "Eclectic",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-wavy-checker",
+      "source": "generated",
+      "title": "Round Wavy-Edge Checkered Rug, Green and Cream, 5 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.5,
+        0.01,
+        1.5
+      ],
+      "model": "/data/catalog/textiles/rug-wavy-checker.glb",
+      "thumbnail": "/data/catalog/textiles/rug-wavy-checker.jpg",
+      "colors": [
+        "Green",
+        "Beige"
+      ],
+      "colorHex": "#698763",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern",
+        "Eclectic",
+        "Retro"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-cloud-blue",
+      "source": "generated",
+      "title": "Cloud-Shaped Tufted Rug, Sky Blue",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.01,
+        0.85
+      ],
+      "model": "/data/catalog/textiles/rug-cloud-blue.glb",
+      "thumbnail": "/data/catalog/textiles/rug-cloud-blue.jpg",
+      "colors": [
+        "Blue"
+      ],
+      "colorHex": "#a8c6ea",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Playful",
+        "Minimalist",
+        "Danish Pastel"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-round-waves",
+      "source": "generated",
+      "title": "Round Retro Wave Rug, Orange and Brown, 5 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.5,
+        0.01,
+        1.5
+      ],
+      "model": "/data/catalog/textiles/rug-round-waves.glb",
+      "thumbnail": "/data/catalog/textiles/rug-round-waves.jpg",
+      "colors": [
+        "Orange",
+        "Brown"
+      ],
+      "colorHex": "#ebb56f",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Retro",
+        "Mid-Century Modern",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "",
+      "attribution": "Pattern drawn for Mise"
+    },
+    {
+      "id": "rug-navajo-chief",
+      "source": "publicdomain",
+      "title": "Navajo Chief Blanket Rug, Black, White and Red, 5 x 6 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.51,
+        0.01,
+        1.78
+      ],
+      "model": "/data/catalog/textiles/rug-navajo-chief.glb",
+      "thumbnail": "/data/catalog/textiles/rug-navajo-chief.jpg",
+      "colors": [
+        "Red",
+        "Black",
+        "Gray"
+      ],
+      "colorHex": "#701d27",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Southwestern",
+        "Bohemian",
+        "Modern"
+      ],
+      "priceEstimateUsd": 160,
+      "url": "https://clevelandart.org/art/1937.903",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-navajo-eye-dazzler",
+      "source": "publicdomain",
+      "title": "Navajo Eye Dazzler Rug, Red and Orange, 4' 6\" x 6' 8\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.37,
+        0.01,
+        2.03
+      ],
+      "model": "/data/catalog/textiles/rug-navajo-eye-dazzler.glb",
+      "thumbnail": "/data/catalog/textiles/rug-navajo-eye-dazzler.jpg",
+      "colors": [
+        "Red",
+        "Brown"
+      ],
+      "colorHex": "#8a251f",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Southwestern",
+        "Bohemian",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 170,
+      "url": "https://www.artic.edu/artworks/122876",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "rug-navajo-stripe",
+      "source": "publicdomain",
+      "title": "Navajo Striped Rug, Black and Cream, 4 x 5 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.18,
+        0.01,
+        1.53
+      ],
+      "model": "/data/catalog/textiles/rug-navajo-stripe.glb",
+      "thumbnail": "/data/catalog/textiles/rug-navajo-stripe.jpg",
+      "colors": [
+        "Orange",
+        "Red",
+        "Black"
+      ],
+      "colorHex": "#aa9b87",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern",
+        "Southwestern",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 130,
+      "url": "https://clevelandart.org/art/1921.556",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-navajo-stepped",
+      "source": "publicdomain",
+      "title": "Navajo Stepped Stripe Rug, Coral and Black, 4' 6\" x 7' 3\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.39,
+        0.01,
+        2.2
+      ],
+      "model": "/data/catalog/textiles/rug-navajo-stepped.glb",
+      "thumbnail": "/data/catalog/textiles/rug-navajo-stepped.jpg",
+      "colors": [
+        "Red",
+        "Orange"
+      ],
+      "colorHex": "#b65346",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Southwestern",
+        "Modern"
+      ],
+      "priceEstimateUsd": 170,
+      "url": "https://clevelandart.org/art/1921.561",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-navajo-serape",
+      "source": "publicdomain",
+      "title": "Navajo Serape Rug, Cream with Diamonds, 4' 6\" x 7'",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.33,
+        0.01,
+        2.11
+      ],
+      "model": "/data/catalog/textiles/rug-navajo-serape.glb",
+      "thumbnail": "/data/catalog/textiles/rug-navajo-serape.jpg",
+      "colors": [
+        "Orange",
+        "Gray"
+      ],
+      "colorHex": "#bea382",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Contemporary",
+        "Southwestern",
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 170,
+      "url": "https://www.metmuseum.org/art/collection/search/823657",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-saltillo",
+      "source": "publicdomain",
+      "title": "Saltillo Sarape Rug, Pinstripes and Center Diamond, 3' 8\" x 6' 6\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.11,
+        0.01,
+        1.98
+      ],
+      "model": "/data/catalog/textiles/rug-saltillo.glb",
+      "thumbnail": "/data/catalog/textiles/rug-saltillo.jpg",
+      "colors": [
+        "Red",
+        "Brown",
+        "Orange"
+      ],
+      "colorHex": "#683a34",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Southwestern",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "https://www.artic.edu/artworks/20210",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "rug-star-kazak",
+      "source": "publicdomain",
+      "title": "Star Kazak Rug, Navy and Ivory, 5' 4\" x 6' 2\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.63,
+        0.01,
+        1.88
+      ],
+      "model": "/data/catalog/textiles/rug-star-kazak.glb",
+      "thumbnail": "/data/catalog/textiles/rug-star-kazak.jpg",
+      "colors": [
+        "Black",
+        "Brown",
+        "Red"
+      ],
+      "colorHex": "#170a0b",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Eclectic",
+        "Traditional",
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 190,
+      "url": "https://www.metmuseum.org/art/collection/search/447483",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-sewan-kazak",
+      "source": "publicdomain",
+      "title": "Sewan Kazak Rug, Red and Gold, 5 x 7 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.52,
+        0.01,
+        2.07
+      ],
+      "model": "/data/catalog/textiles/rug-sewan-kazak.glb",
+      "thumbnail": "/data/catalog/textiles/rug-sewan-kazak.jpg",
+      "colors": [
+        "Brown",
+        "Red",
+        "Gray"
+      ],
+      "colorHex": "#684d39",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Bohemian",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 180,
+      "url": "https://www.artic.edu/artworks/226150",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "rug-shirvan-kilim",
+      "source": "publicdomain",
+      "title": "Shirvan Kilim, Red and Ivory Medallions, 4 x 8 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.2,
+        0.01,
+        2.45
+      ],
+      "model": "/data/catalog/textiles/rug-shirvan-kilim.glb",
+      "thumbnail": "/data/catalog/textiles/rug-shirvan-kilim.jpg",
+      "colors": [
+        "Red",
+        "Brown",
+        "Orange"
+      ],
+      "colorHex": "#642f2c",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Traditional",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 170,
+      "url": "https://www.artic.edu/artworks/214907",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "rug-anatolian-runner",
+      "source": "publicdomain",
+      "title": "Anatolian Star Kilim Runner, 2' 6\" x 6' 8\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.76,
+        0.01,
+        2.01
+      ],
+      "model": "/data/catalog/textiles/rug-anatolian-runner.glb",
+      "thumbnail": "/data/catalog/textiles/rug-anatolian-runner.jpg",
+      "colors": [
+        "Red",
+        "Brown",
+        "Orange"
+      ],
+      "colorHex": "#7c3c37",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Rustic",
+        "Bohemian",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 110,
+      "url": "https://www.artic.edu/artworks/238762",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "rug-finnish-rya",
+      "source": "publicdomain",
+      "title": "Finnish Rya Rug, Blue and Gold, 5 x 7 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.63,
+        0.01,
+        2.11
+      ],
+      "model": "/data/catalog/textiles/rug-finnish-rya.glb",
+      "thumbnail": "/data/catalog/textiles/rug-finnish-rya.jpg",
+      "colors": [
+        "Brown",
+        "Gray"
+      ],
+      "colorHex": "#6f5431",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Scandinavian",
+        "Vintage",
+        "Rustic"
+      ],
+      "priceEstimateUsd": 190,
+      "url": "https://www.artic.edu/artworks/12821",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "rug-morris-holland-park",
+      "source": "publicdomain",
+      "title": "William Morris Holland Park Rug, 5 x 6' 6\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.54,
+        0.01,
+        2
+      ],
+      "model": "/data/catalog/textiles/rug-morris-holland-park.glb",
+      "thumbnail": "/data/catalog/textiles/rug-morris-holland-park.jpg",
+      "colors": [
+        "Brown",
+        "Gray"
+      ],
+      "colorHex": "#6d513d",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Traditional",
+        "Cottagecore"
+      ],
+      "priceEstimateUsd": 210,
+      "url": "https://www.metmuseum.org/art/collection/search/222094",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-chinese-medallion",
+      "source": "publicdomain",
+      "title": "Chinese Medallion Rug, Gold and Blue, 5' 3\" x 7' 6\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.6,
+        0.01,
+        2.26
+      ],
+      "model": "/data/catalog/textiles/rug-chinese-medallion.glb",
+      "thumbnail": "/data/catalog/textiles/rug-chinese-medallion.jpg",
+      "colors": [
+        "Brown",
+        "Gray",
+        "Orange"
+      ],
+      "colorHex": "#6c583a",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Eclectic",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 200,
+      "url": "https://www.metmuseum.org/art/collection/search/42748",
+      "attribution": "The Metropolitan Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-indian-runner",
+      "source": "publicdomain",
+      "title": "Indian Striped Runner, Raspberry and Gray-Blue, 2' 3\" x 7' 9\"",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.68,
+        0.01,
+        2.36
+      ],
+      "model": "/data/catalog/textiles/rug-indian-runner.glb",
+      "thumbnail": "/data/catalog/textiles/rug-indian-runner.jpg",
+      "colors": [
+        "Red",
+        "Gray"
+      ],
+      "colorHex": "#875051",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Farmhouse",
+        "Bohemian",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 100,
+      "url": "https://clevelandart.org/art/1918.16",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-moroccan-stripe",
+      "source": "publicdomain",
+      "title": "Moroccan Striped Rug, Indigo, Red and Saffron, 2' 7\" x 5'",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        0.79,
+        0.01,
+        1.52
+      ],
+      "model": "/data/catalog/textiles/rug-moroccan-stripe.glb",
+      "thumbnail": "/data/catalog/textiles/rug-moroccan-stripe.jpg",
+      "colors": [
+        "Orange",
+        "Gray",
+        "Red"
+      ],
+      "colorHex": "#b38f5f",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Moroccan",
+        "Bohemian",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://clevelandart.org/art/1953.321",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "rug-cretan-dancers",
+      "source": "publicdomain",
+      "title": "Cretan Folk Rug, Dancers and Riders, 5 x 7 Foot",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.6,
+        0.01,
+        2.19
+      ],
+      "model": "/data/catalog/textiles/rug-cretan-dancers.glb",
+      "thumbnail": "/data/catalog/textiles/rug-cretan-dancers.jpg",
+      "colors": [
+        "Orange",
+        "Brown"
+      ],
+      "colorHex": "#b29c7a",
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Eclectic",
+        "Bohemian",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 180,
+      "url": "https://clevelandart.org/art/1965.314",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "tapestry-pojagi",
+      "source": "publicdomain",
+      "title": "Korean Patchwork Wall Hanging (Pojagi)",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.24,
+        1.178,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-pojagi.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-pojagi.jpg",
+      "colors": [
+        "Pink",
+        "Green",
+        "Red"
+      ],
+      "colorHex": "#c96a93",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Eclectic",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.artic.edu/artworks/145403",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "tapestry-furoshiki-carp",
+      "source": "publicdomain",
+      "title": "Japanese Carp in Waves Wall Hanging",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.82,
+        0.728,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-furoshiki-carp.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-furoshiki-carp.jpg",
+      "colors": [
+        "Black",
+        "Gray"
+      ],
+      "colorHex": "#270e21",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Japanese",
+        "Eclectic",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 55,
+      "url": "https://www.artic.edu/artworks/157266",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "tapestry-katagami-peonies",
+      "source": "publicdomain",
+      "title": "Japanese Stencil Wall Hanging, Peonies on Waves",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.1800000000000002,
+        0.628,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-katagami-peonies.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-katagami-peonies.jpg",
+      "colors": [
+        "Orange",
+        "Brown"
+      ],
+      "colorHex": "#af9988",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Japanese",
+        "Minimalist",
+        "Modern",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://collection.cooperhewitt.org/view/objects/asitem/id/155936",
+      "attribution": "Cooper Hewitt, Smithsonian Design Museum. Public domain"
+    },
+    {
+      "id": "tapestry-moser-poppyheads",
+      "source": "publicdomain",
+      "title": "Koloman Moser Poppyheads Fabric Wall Hanging, Vermilion",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.98,
+        1.478,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-moser-poppyheads.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-moser-poppyheads.jpg",
+      "colors": [
+        "Red",
+        "Brown"
+      ],
+      "colorHex": "#9f3018",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Art Deco",
+        "Modern",
+        "Eclectic",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 75,
+      "url": "https://www.artic.edu/artworks/64884",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "tapestry-uzbek-ikat",
+      "source": "publicdomain",
+      "title": "Uzbek Ikat Wall Hanging, Crimson and Teal",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.4000000000000001,
+        1.678,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-uzbek-ikat.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-uzbek-ikat.jpg",
+      "colors": [
+        "Red",
+        "Orange"
+      ],
+      "colorHex": "#8e3c48",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Eclectic",
+        "Global",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://www.artic.edu/artworks/185616",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "tapestry-suzani",
+      "source": "publicdomain",
+      "title": "Uzbek Suzani Wall Hanging, Red Blossoms",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.53,
+        1.918,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-suzani.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-suzani.jpg",
+      "colors": [
+        "Red",
+        "Brown"
+      ],
+      "colorHex": "#993c39",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Eclectic",
+        "Global",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "https://www.artic.edu/artworks/248380",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "tapestry-inca-checks",
+      "source": "publicdomain",
+      "title": "Inca Key-Pattern Checks Wall Hanging",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.84,
+        0.868,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-inca-checks.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-inca-checks.jpg",
+      "colors": [
+        "Brown",
+        "Red",
+        "Orange"
+      ],
+      "colorHex": "#6c4d38",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Rustic",
+        "Modern",
+        "Global",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://clevelandart.org/art/1957.136",
+      "attribution": "The Cleveland Museum of Art. Public domain"
+    },
+    {
+      "id": "tapestry-princess-feather",
+      "source": "publicdomain",
+      "title": "Princess Feather Quilt Wall Hanging, Green and Red",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.58,
+        1.458,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-princess-feather.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-princess-feather.jpg",
+      "colors": [
+        "Yellow",
+        "Orange",
+        "Red"
+      ],
+      "colorHex": "#9b9973",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Farmhouse",
+        "Cottagecore",
+        "Vintage",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 85,
+      "url": "https://www.artic.edu/artworks/76067",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    },
+    {
+      "id": "tapestry-moroccan-banner",
+      "source": "publicdomain",
+      "title": "Moroccan Silk Banner Wall Hanging, Rose and Gold",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.6799999999999999,
+        1.818,
+        0.018
+      ],
+      "model": "/data/catalog/textiles/tapestry-moroccan-banner.glb",
+      "thumbnail": "/data/catalog/textiles/tapestry-moroccan-banner.jpg",
+      "colors": [
+        "Red",
+        "Orange"
+      ],
+      "colorHex": "#b4595d",
+      "materials": [
+        "Cotton",
+        "Wood"
+      ],
+      "styleTags": [
+        "Moroccan",
+        "Glam",
+        "Bohemian",
+        "tapestry"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "https://www.artic.edu/artworks/181173",
+      "attribution": "The Art Institute of Chicago. Public domain"
+    }
+  ]
+}

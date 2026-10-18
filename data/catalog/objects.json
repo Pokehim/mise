@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "obj-turntable-walnut",
+      "source": "generated",
+      "title": "Walnut Turntable Record Player with Vinyl Record",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.44,
+        0.117,
+        0.35
+      ],
+      "model": "/data/catalog/objects/obj-turntable-walnut.glb",
+      "thumbnail": "/data/catalog/objects/obj-turntable-walnut.jpg",
+      "colors": [
+        "Brown",
+        "Black",
+        "Orange"
+      ],
+      "materials": [
+        "Wood",
+        "Metal",
+        "Vinyl"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Retro",
+        "Music"
+      ],
+      "priceEstimateUsd": 180,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-suitcase-record-player-teal",
+      "source": "generated",
+      "title": "Vintage Suitcase Record Player, Teal",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.36,
+        0.395,
+        0.292
+      ],
+      "model": "/data/catalog/objects/obj-suitcase-record-player-teal.glb",
+      "thumbnail": "/data/catalog/objects/obj-suitcase-record-player-teal.jpg",
+      "colors": [
+        "Teal",
+        "Cream"
+      ],
+      "materials": [
+        "Leatherette",
+        "Wood",
+        "Metal"
+      ],
+      "styleTags": [
+        "Retro",
+        "Vintage",
+        "Music"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-suitcase-record-player-cream",
+      "source": "generated",
+      "title": "Vintage Suitcase Record Player, Cream",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.36,
+        0.395,
+        0.292
+      ],
+      "model": "/data/catalog/objects/obj-suitcase-record-player-cream.glb",
+      "thumbnail": "/data/catalog/objects/obj-suitcase-record-player-cream.jpg",
+      "colors": [
+        "Beige",
+        "Brown"
+      ],
+      "materials": [
+        "Leatherette",
+        "Wood",
+        "Metal"
+      ],
+      "styleTags": [
+        "Retro",
+        "Vintage",
+        "Music"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-vinyl-wall-display",
+      "source": "generated",
+      "title": "Vinyl Record Wall Display, Set of 3",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        1.032,
+        0.304,
+        0.014
+      ],
+      "model": "/data/catalog/objects/obj-vinyl-wall-display.glb",
+      "thumbnail": "/data/catalog/objects/obj-vinyl-wall-display.jpg",
+      "colors": [
+        "Black",
+        "Orange",
+        "Blue"
+      ],
+      "materials": [
+        "Vinyl",
+        "Metal"
+      ],
+      "styleTags": [
+        "Retro",
+        "Music",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    },
+    {
+      "id": "obj-record-crate",
+      "source": "generated",
+      "title": "Wooden Record Crate with Vinyl Records",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.36,
+        0.33,
+        0.36
+      ],
+      "model": "/data/catalog/objects/obj-record-crate.glb",
+      "thumbnail": "/data/catalog/objects/obj-record-crate.jpg",
+      "colors": [
+        "Brown",
+        "Multicolor"
+      ],
+      "materials": [
+        "Wood",
+        "Cardboard"
+      ],
+      "styleTags": [
+        "Retro",
+        "Rustic",
+        "Music"
+      ],
+      "priceEstimateUsd": 55,
+      "url": "",
+      "attribution": "Modeled for Mise"
+    }
+  ]
+}

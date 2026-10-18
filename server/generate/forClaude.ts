@@ -10,3 +10,13 @@ export const offeredToClaude = ({ id }: CatalogItem) => !id.startsWith('placehol
 /** A Catalog item as Claude reads it: size_m is [width, height, depth], and prices are estimates. */
 export const catalogEntry = ({ id, title, category, size, colors, styleTags, priceEstimateUsd }: CatalogItem) =>
   ({ id, title, category, size_m: size.map(m), colors, styles: styleTags, price_usd: priceEstimateUsd });
+
+/** The items in a random order (Fisher–Yates). */
+export function shuffled<T>(items: T[], random = Math.random): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}

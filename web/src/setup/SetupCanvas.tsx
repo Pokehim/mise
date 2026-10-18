@@ -1,13 +1,15 @@
 import { Grid, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import { Canvas, type RootState, type RootStore, events, useThree } from '@react-three/fiber';
+import { Canvas, type RootState, type RootStore, type ThreeEvent, events, useThree } from '@react-three/fiber';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Box3, Color, type Intersection, type Mesh, type MeshBasicMaterial, type Object3D, Plane, Vector3 } from 'three';
 import type { Vec3 } from '@shared/types';
 import { disposeSplit, splitNodes, splitScan } from '../scene/splitScan';
 import { SPLIT } from './geometry/classify';
 import { type RoomBounds, polygonBounds, wallAxis } from './geometry/walls';
+import { clickFill, clickRoomCorner } from './fills';
 import { tagOriginalAt } from './originals';
-import { CeilingPlane, CornersOverlay, OpeningsOverlay, OriginalsOverlay } from './overlays';
+import { CeilingPlane, CornersOverlay, FillsOverlay, OpeningsOverlay, OriginalsOverlay } from './overlays';
+import { sceneTriangles } from './sceneTriangles';
 import { scanTriangles, type StepId, useSetup } from './store';
 import { ACCENT, clickOnly } from './ui';
 
@@ -42,15 +44,17 @@ function StepView() {
   const step = useSetup((s) => s.step);
   const ceilingHeight = useSetup((s) => s.setup!.ceilingHeight);
   // While corners are being clicked, frame the whole scan, not the polygon so far.
-  const bounds = useRoomBounds(step !== 'corners');
+  const bounds = useWithFillBounds(useRoomBounds(step !== 'corners'), step === 'fills');
   useCeilingClip(step === 'level' || step === 'ceiling' ? null : ceilingHeight - SPLIT.ceilingBand);
   const tagOnClick = clickOnly((e) => tagOriginalAt(e.point.toArray()));
+  const cornerOnClick = clickOnly((e) => clickRoomCorner(e.point.toArray()));
   return (
     <>
       <StepCamera step={step} bounds={bounds} />
-      <group onClick={step === 'originals' ? tagOnClick : undefined}>
+      <group onClick={step === 'originals' ? tagOnClick : step === 'fills' ? cornerOnClick : undefined}>
         <ScanView />
       </group>
+      {step === 'fills' && <FillView onClick={clickOnly((e) => clickFill(e.point.toArray()))} />}
       {step === 'level' && (
         <Grid infiniteGrid cellSize={0.25} sectionSize={1} cellColor="#6b7280" sectionColor={ACCENT} fadeDistance={40} position={[0, 0.001, 0]} />
       )}
@@ -58,6 +62,7 @@ function StepView() {
       {step === 'corners' && <CornersOverlay bounds={bounds} />}
       {step === 'openings' && <OpeningsOverlay />}
       {(step === 'originals' || step === 'bake') && <OriginalsOverlay editable={step === 'originals'} />}
+      {step === 'fills' && <FillsOverlay />}
     </>
   );
 }
@@ -74,7 +79,28 @@ function useRoomBounds(usePolygon: boolean): RoomBounds {
   return useMemo(() => (usePolygon && polygon.length >= 3 ? polygonBounds(polygon) : scanBounds), [scanBounds, polygon, usePolygon]);
 }
 
-/** Corners looks straight down with North (−Z) up; Openings faces the selected wall; the rest orbit from above. */
+/** Step 6: the room's bounds grown to take in the open Fill Capture where it is shown, beside the room until lined up. */
+function useWithFillBounds(bounds: RoomBounds, on: boolean): RoomBounds {
+  const fill = useSetup((s) => (on ? s.fill : undefined));
+  return useMemo(() => {
+    if (!fill?.scene) return bounds;
+    const { min, max } = new Box3().setFromArray(sceneTriangles(fill.scene, fill.transform).positions);
+    return { minX: Math.min(bounds.minX, min.x), maxX: Math.max(bounds.maxX, max.x), minZ: Math.min(bounds.minZ, min.z), maxZ: Math.max(bounds.maxZ, max.z) };
+  }, [bounds, fill?.scene, fill?.transform]);
+}
+
+/** Step 6: the open Fill Capture, where it is shown now. */
+function FillView({ onClick }: { onClick: (e: ThreeEvent<MouseEvent>) => void }) {
+  const fill = useSetup((s) => s.fill);
+  if (!fill?.scene) return null;
+  return (
+    <group position={fill.transform.position} rotation-y={fill.transform.rotationY} onClick={onClick}>
+      <primitive object={fill.scene} />
+    </group>
+  );
+}
+
+/** Corners and Fill Captures look straight down with North (−Z) up; Openings faces the selected wall; the rest orbit from above. */
 function StepCamera({ step, bounds }: { step: StepId; bounds: RoomBounds }) {
   const size = useThree((s) => s.size);
   const walls = useSetup((s) => s.setup!.walls);
@@ -85,7 +111,7 @@ function StepCamera({ step, bounds }: { step: StepId; bounds: RoomBounds }) {
   const cz = round((bounds.minZ + bounds.maxZ) / 2);
   const span = Math.max(round(bounds.maxX - bounds.minX), round(bounds.maxZ - bounds.minZ), 1);
 
-  if (step === 'corners') {
+  if (step === 'corners' || step === 'fills') {
     const zoom = 0.85 * Math.min(size.width / (bounds.maxX - bounds.minX + 0.5), size.height / (bounds.maxZ - bounds.minZ + 0.5));
     return (
       <>

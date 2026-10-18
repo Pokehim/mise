@@ -203,3 +203,34 @@ function nextId(prefix: string, existing: { id: string }[]) {
   while (existing.some((e) => e.id === `${prefix}_${n}`)) n++;
   return `${prefix}_${n}`;
 }
+
+/** Step 6: the corners clicked so far, numbered in pairs, and the moved copies marked in the Fill Capture. */
+export function FillsOverlay() {
+  const fill = useSetup((s) => s.fill);
+  const originals = useSetup((s) => s.setup!.originals);
+  if (!fill?.scene) return null;
+  const marker = (position: Vec3, text: string, key: string) => (
+    <group key={key} position={position}>
+      <mesh><sphereGeometry args={[0.07, 16, 12]} /><meshBasicMaterial color={ACCENT} /></mesh>
+      <Label position={[0, 0.25, 0]} text={text} />
+    </group>
+  );
+  return (
+    <>
+      {fill.roomCorners.map(([x, z], i) => marker([x, 0.02, z], `${i + 1}`, `room-${i}`))}
+      <group position={fill.transform.position} rotation-y={fill.transform.rotationY}>
+        {fill.fillCorners.map(([x, z], i) => marker([x, fill.floorHeight + 0.02, z], `${i + 1}`, `fill-${i}`))}
+      </group>
+      {Object.entries(fill.copies).map(([id, { box: { position, size: [w, h, d], rotationY } }]) => (
+        <group key={id} position={position} rotation-y={rotationY}>
+          <mesh position={[0, h / 2, 0]}>
+            <boxGeometry args={[w, h, d]} />
+            <meshBasicMaterial color="#60a5fa" transparent opacity={0.1} depthWrite={false} />
+            <Edges color="#60a5fa" />
+          </mesh>
+          <Label position={[0, h + 0.1, 0]} text={`${originals.find((o) => o.id === id)?.label ?? id}, moved`} />
+        </group>
+      ))}
+    </>
+  );
+}

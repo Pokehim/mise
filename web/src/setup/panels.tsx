@@ -8,6 +8,9 @@ import {
 } from './geometry/level';
 import { mm } from './geometry/mesh';
 import { wallAxis, withPolygon } from './geometry/walls';
+import {
+  CORNER_PAIRS, clearCorners, forgetMoved, isAligned, lineUp, openFill, refineLineUp, saveAndMerge, startMarking,
+} from './fills';
 import { CATEGORIES, CATEGORY_NAMES, UNBAKED_FLOOR_COLOR, defaultPartParams } from './originals';
 import { isLeveled, type StepId, scanTriangles, useSetup } from './store';
 
@@ -18,6 +21,7 @@ export function StepPanel({ step }: { step: StepId }) {
     case 'corners': return <CornersPanel />;
     case 'openings': return <OpeningsPanel />;
     case 'originals': return <OriginalsPanel />;
+    case 'fills': return <FillsPanel />;
     case 'bake': return <BakePanel />;
   }
 }
@@ -271,7 +275,82 @@ function CategorySelect({ value, onChange }: { value: Category; onChange: (categ
   );
 }
 
-/** Step 6: each Original's floorColor. */
+/** Step 6 (ADR-0007): line up each Fill Capture, mark the pieces it saw somewhere else, and rebuild room.glb. */
+function FillsPanel() {
+  const manifest = useSetup((s) => s.manifest!);
+  const originals = useSetup((s) => s.setup!.originals);
+  const draft = useSetup((s) => s.fill);
+  const fills = manifest.captures?.fills ?? [];
+  useEffect(() => {
+    if (fills.length > 0 && !useSetup.getState().fill) openFill(0);
+  }, []);
+
+  if (fills.length === 0) {
+    return (
+      <>
+        <p>A Fill Capture is a Capture taken after moving the furniture. It gives a removed or moved Original the real floor and wall it hid, and a moved one its real back.</p>
+        <p className="rs-note">This Scan has none. Import one with <code>npx tsx scripts/scan-import.ts &lt;export&gt; {manifest.id} --fill</code>, then reload.</p>
+      </>
+    );
+  }
+  const fill = draft && fills[draft.index];
+  const pairs = draft ? Math.min(draft.roomCorners.length, draft.fillCorners.length) : 0;
+  let next = 'All corners are clicked: line up.';
+  if (draft && draft.roomCorners.length > draft.fillCorners.length) next = `Click corner ${draft.roomCorners.length} on the Fill Capture.`;
+  else if (draft && draft.roomCorners.length < CORNER_PAIRS) next = `Click corner ${draft.roomCorners.length + 1} on the room.`;
+  return (
+    <>
+      <p>Line up each Fill Capture with the room, then mark where it saw the furniture that moved. Saving rebuilds room.glb with the Patches and completed Originals they give.</p>
+      <label className="rs-field">
+        <span>Fill Capture</span>
+        <select value={draft?.index ?? 0} onChange={(e) => openFill(Number(e.target.value))}>
+          {fills.map((f, i) => <option key={f.mesh} value={i}>{`${i + 1}. ${f.mesh}${isAligned(f) ? ' (lined up)' : ''}`}</option>)}
+        </select>
+      </label>
+      {!draft?.scene || !fill ? <p className="rs-note">Loading the Fill Capture…</p> : (
+        <>
+          <h3>Line up</h3>
+          <p className="rs-note">Click floor-level corners in pairs, first on the room, then the same one on the Fill Capture. {next} ({pairs} of {CORNER_PAIRS} pairs)</p>
+          <div className="rs-row">
+            <button type="button" onClick={clearCorners} disabled={draft.roomCorners.length === 0}>Clear corners</button>
+            <button type="button" className="rs-primary" onClick={lineUp} disabled={pairs < 3}>Line up</button>
+            <button type="button" onClick={refineLineUp} disabled={!isAligned(fill)}>Refine</button>
+          </div>
+          {draft.residual !== undefined && (
+            <p className="rs-note">Its floor and walls are within {(draft.residual * 100).toFixed(1)} cm of the room's (median).</p>
+          )}
+          <h3>Moved pieces</h3>
+          <p className="rs-note">For each piece that stood somewhere else in this Capture, press Mark, then click it in the Fill Capture.</p>
+          <ul className="rs-list">
+            {originals.filter((o) => !o.kept).map((o) => {
+              const moved = fill.moved.some((m) => m.originalId === o.id);
+              const copy = draft.copies[o.id];
+              const marking = draft.markingId === o.id;
+              const status = marking ? 'click it in the Fill Capture'
+                : moved ? `marked${copy ? `, within ${(copy.residual * 100).toFixed(1)} cm` : ''}` : 'not moved';
+              return (
+                <li key={o.id}>
+                  {o.label}
+                  <small>{status}</small>
+                  <button type="button" disabled={!isAligned(fill)} onClick={() => startMarking(marking ? undefined : o.id)}>
+                    {marking ? 'Cancel' : moved ? 'Mark again' : 'Mark'}
+                  </button>
+                  {moved && <button type="button" onClick={() => forgetMoved(o.id)}>Clear</button>}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="rs-row">
+            <button type="button" className="rs-primary" disabled={!isAligned(fill)} onClick={saveAndMerge}>Save and rebuild room.glb</button>
+          </div>
+          {draft.merged && <p className="rs-note">{draft.merged} To see a Patch, remove or move an Original in a Design.</p>}
+        </>
+      )}
+    </>
+  );
+}
+
+/** Step 7: each Original's floorColor. */
 function BakePanel() {
   const originals = useSetup((s) => s.setup!.originals);
   const [result, setResult] = useState<string>();

@@ -40,7 +40,7 @@ function ScanSection({ scan, designs }: { scan: ScanManifest; designs: Design[] 
             <li key={design.id}>
               <Link href={`/d/${design.id}`}>
                 <span className="name">
-                  {design.origin === 'claude' && <span className="by-claude" title="Made by Claude from a Brief"><Sparkle /><span className="sr-only">Made by Claude: </span></span>}
+                  {design.origin === 'claude' && <span className="by-claude" title="Made by AI from a Brief"><Sparkle /><span className="sr-only">Made by AI: </span></span>}
                   {design.name}
                 </span>
                 <span className="meta">

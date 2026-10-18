@@ -22,6 +22,12 @@ declare module '@react-three/fiber' {
   }
 }
 
+/**
+ * Splats drawn per frame. Spark builds a level of detail for the splat when it loads, and draws the
+ * nearest detail within this budget. On the M3, lounge-v1's 1.18M splats ran at 13 fps in the Walk
+ * view drawn whole, and 20 (Walk) to 27 (Dollhouse) at 250k, which looked the same up close.
+ */
+const LOD_BUDGET = 250_000;
 /** How far out of the room a faded Wall's splats hide too, past the wall line. */
 const FADE_OUTSIDE = 0.3;
 const debug = new URLSearchParams(location.search).has('debug');
@@ -36,8 +42,8 @@ export function SplatLook() {
   const { position, rotationY, scale } = useSplatTransform();
 
   // Stable args: new ones would make R3F build a new renderer, or load the splat again.
-  const rendererArgs = useMemo(() => [{ renderer: gl }] as const, [gl]);
-  const meshArgs = useMemo(() => [{ url: scanFileUrl(manifest.id, manifest.splat!) }] as const, [manifest.id, manifest.splat]);
+  const rendererArgs = useMemo(() => [{ renderer: gl, lodSplatCount: LOD_BUDGET }] as const, [gl]);
+  const meshArgs = useMemo(() => [{ url: scanFileUrl(manifest.id, manifest.splat!), lod: true }] as const, [manifest.id, manifest.splat]);
   const plan = useMemo(() => splatEditPlan(setup, roomState), [setup, roomState]);
 
   return (

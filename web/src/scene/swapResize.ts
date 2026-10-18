@@ -3,7 +3,7 @@ import { newId } from '@shared/ids';
 import type { Catalog, CatalogItem, Category, Placement, RoomSetup, RoomState, Vec3 } from '@shared/types';
 import { search } from '../state/core';
 import type { NewEdit } from '../state/store';
-import { keepInRoom, snapToWalls } from './placement';
+import { keepInRoom } from './placement';
 
 /** Swap's list (spec §10.4): the other items of the Piece's category, closest in size first. */
 export const swapCandidates = (catalog: Catalog, current: CatalogItem): CatalogItem[] =>
@@ -62,9 +62,9 @@ export function swapEdit(context: SwapContext, target: SwapTarget, item: Catalog
 
 /**
  * Where an item `depth` deep and `width` wide (by default, as wide as the old item) goes in place of
- * a Piece or an Original: with its back-center where the old item's was. On the floor, walls are
- * solid: a bigger item moves the shortest way to stay inside the room, or, when it can't fit at all,
- * stays put for the outside-floor Fit rule to report. In place of an Original, it also goes flush
+ * a Piece or an Original: with its back-center where the old item's was. Walls are solid: a bigger
+ * item moves the shortest way to stay inside the room, or, when it can't fit at all, stays put for
+ * the outside-floor Fit rule to report. In place of an Original, it also goes flush
  * against a wall or into a corner within 15 cm, as a dragged Piece does (spec §10.3): a Room Setup box
  * can stand a few cm off the wall the real item is against, while a Piece stands exactly where the Mover put it.
  */
@@ -76,7 +76,5 @@ export function swapPlacement(context: SwapContext, target: SwapTarget, depth: n
   const moved: Placement = { ...box.placement, position: [x + Math.sin(rotationY) * forward, y, z + Math.cos(rotationY) * forward] };
   if (moved.mount === 'wall') return moved;
   const size: Vec3 = [width ?? box.size[0], box.size[1], depth];
-  const snap = target.kind === 'original';
-  if (moved.mount === 'floor') return keepInRoom(moved, size, context.setup, { snap }) ?? moved;
-  return (snap && snapToWalls(moved, size, context.setup.walls)) || moved;
+  return keepInRoom(moved, size, context.setup, { snap: target.kind === 'original' }) ?? moved;
 }

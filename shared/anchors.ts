@@ -78,9 +78,9 @@ export function resolveAnchor(
   // The new Piece goes by its Catalog id while it is checked, so that is how violations name it.
   const violations = (placement: Placement) =>
     placementViolations(setup, withItem, { ...state, pieces: { ...state.pieces, [item.id]: { catalogId: item.id, placement, partColors: {} } } }, item.id);
-  // Walls are solid: a spot on the floor that pokes through one moves the shortest way back inside, as a dragged item does.
+  // Walls are solid: a spot that pokes through one moves the shortest way back inside, as a dragged item does.
   const inside = (placement: Placement) =>
-    (placement.mount === 'floor' && pushFootprintInside(placement, item.size, setup.floor.polygon)) || placement;
+    (placement.mount !== 'wall' && pushFootprintInside(placement, item.size, setup.floor.polygon)) || placement;
   const placements = candidates.placements.map(inside);
   const placement = placements.find((candidate) => !violations(candidate).length);
   if (placement) return { placement };

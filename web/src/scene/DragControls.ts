@@ -5,7 +5,7 @@ import type { CatalogItem, Placement, RoomSetup, Vec2 } from '@shared/types';
 import { pieceItem, useEditor } from '../state/store';
 import { faces, wallCoordinates } from './floorPlan';
 import { CLICK_TOLERANCE_PX, isDrawn } from './objects';
-import { floorHit, keepInRoom, liesFlat, onWall, snapToWalls } from './placement';
+import { floorHit, keepInRoom, liesFlat, onWall } from './placement';
 import type { SplitNodeData } from './splitScan';
 
 /** How high a hit must be to count as a furniture top rather than the floor (spec §9.4 uses 3 cm too). */
@@ -29,10 +29,10 @@ const onOriginal = (id: string) => ({ object }: Intersection) => {
 /**
  * Where the pointer puts a floor item (spec §10.3): on the upward-facing surface under the pointer,
  * such as a desk top, with its base right at the pointer, so it can't hang off the edge; else on
- * the floor, keeping the grabbed point under the pointer. Either way it snaps to a wall or into a
- * corner near it, unless `snap` is off (Alt). On the floor, walls are solid: its whole footprint
- * stays inside the room, so it stops flush at a wall while the pointer goes on, and slides along
- * it. Null where the item can't go, or fit at all, so the drag keeps its last good placement.
+ * the floor, keeping the grabbed point under the pointer. Either way walls are solid: its whole
+ * footprint stays inside the room, so it stops flush at a wall while the pointer goes on, and slides
+ * along it; and it snaps to a wall or into a corner near it, unless `snap` is off (Alt). Null where
+ * the item can't go, or fit at all, so the drag keeps its last good placement.
  */
 function onFloorOrSurface(
   raycaster: Raycaster, supports: Object3D[], skip: (hit: Intersection) => boolean,
@@ -40,8 +40,7 @@ function onFloorOrSurface(
 ): Placement | null {
   const hit = raycaster.intersectObjects(supports, true).find((it) => isDrawn(it) && !skip(it));
   if (hit && facesUp(hit) && hit.point.y > FLOOR_TOLERANCE && !liesFlat(item)) {
-    const placement: Placement = { position: hit.point.toArray(), rotationY: start.rotationY, mount: 'surface' };
-    return (snap && snapToWalls(placement, item.size, setup.walls)) || placement;
+    return keepInRoom({ position: hit.point.toArray(), rotationY: start.rotationY, mount: 'surface' }, item.size, setup, { snap });
   }
   const pointer = floorHit(raycaster.ray);
   if (!pointer) return null;

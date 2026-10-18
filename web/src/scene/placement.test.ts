@@ -105,6 +105,13 @@ describe('keepInRoom', () => {
     expect(rounded(keepInRoom(onFloor(0, -1.1), DESK, setup, { snap: false }))).toEqual({ at: [0, -1.1], facing: 0 });
   });
 
+  it('keeps an item resting on something inside the room too, at the height it rests at', () => {
+    // A lamp on a desk against the East wall, 5 cm of it past the wall.
+    const lamp: Placement = { position: [1.95, 0.76, 0], rotationY: 0, mount: 'surface' };
+
+    expect(keepInRoom(lamp, [0.2, 0.45, 0.2], setup, { snap: false })).toEqual({ ...lamp, position: [expect.closeTo(1.9), 0.76, 0] });
+  });
+
   it('is null for an item too big for the room', () => {
     expect(keepInRoom(onFloor(0, 0), [4.5, 0.5, 1], setup)).toBeNull();
   });

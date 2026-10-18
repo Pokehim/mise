@@ -108,8 +108,9 @@ function flushAgainst(wall: Wall, rect: OrientedRect): Vec2 {
 }
 
 /**
- * Where a floor item stands, as walls are solid: its whole footprint inside the room, moved the
- * shortest way, then snapped flush to a wall or into a corner near it, unless `snap` is off (Alt).
+ * Where an item on the floor, or on something on it, stands, as walls are solid: its whole footprint
+ * inside the room, moved the shortest way, then snapped flush to a wall or into a corner near it,
+ * unless `snap` is off (Alt).
  * Null when it can't fit in the room at all, so the caller can keep its last good placement.
  */
 export function keepInRoom(placement: Placement, size: Vec3, setup: RoomSetup, { snap = true } = {}): Placement | null {

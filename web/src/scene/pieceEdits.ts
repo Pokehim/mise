@@ -50,13 +50,13 @@ export function addPiece(item: CatalogItem, camera: Camera, at?: Vector2) {
 }
 
 /**
- * A placement turned by whole 15° steps. On the floor, walls are solid: an item turned into a wall
- * moves just enough to stay inside, without snapping back square. Undefined when it can't fit
- * turned that way at all, so it keeps its placement.
+ * A placement on the floor, or on something on it, turned by whole 15° steps. Walls are solid: an item
+ * turned into a wall moves just enough to stay inside, without snapping back square. Undefined when
+ * it can't fit turned that way at all, so it keeps its placement.
  */
 function turnedPlacement(placement: Placement, size: Vec3, steps: number): Placement | undefined {
   const turnedBy = { ...placement, rotationY: turned(placement.rotationY, steps) };
-  return placement.mount === 'floor' ? keepInRoom(turnedBy, size, useEditor.getState().setup!, { snap: false }) ?? undefined : turnedBy;
+  return keepInRoom(turnedBy, size, useEditor.getState().setup!, { snap: false }) ?? undefined;
 }
 
 /** Turns a Piece by whole 15° steps (R / Shift+R). Wall items stay square to their wall. */

@@ -6,8 +6,8 @@ Written by `scripts/catalog-build.ts` from `catalog.json`: edit the script, not 
 
 | Source | License | Items | Terms |
 |---|---|---|---|
-| [Amazon Berkeley Objects](https://amazon-berkeley-objects.s3.amazonaws.com/index.html) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 165 | Credit "Amazon Berkeley Objects (CC BY 4.0), Amazon.com" wherever the models are shown, as the app footer does. Covers both the 3D models and the product photos the flat rugs and thumbnails are made from. |
-| [Poly Haven](https://polyhaven.com/license) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 22 | Public domain: no conditions. Credited here anyway. |
+| [Amazon Berkeley Objects](https://amazon-berkeley-objects.s3.amazonaws.com/index.html) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 191 | Credit "Amazon Berkeley Objects (CC BY 4.0), Amazon.com" wherever the models are shown, as the app footer does. Covers both the 3D models and the product photos the flat rugs and thumbnails are made from. |
+| [Poly Haven](https://polyhaven.com/license) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 62 | Public domain: no conditions. Credited here anyway. |
 | [Google Scanned Objects](https://app.gazebosim.org/GoogleResearch/fuel/collections/Scanned%20Objects%20by%20Google%20Research) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 16 | Credit "Google Scanned Objects (CC BY 4.0), Google LLC" wherever the models are shown. Downs, L., et al. (2022), "Google Scanned Objects: A High-Quality Dataset of 3D Scanned Household Items", ICRA 2022. |
 | Mise | — | 3 | Made for this project: placeholder boxes, and text-to-3D items (generated.json). |
 
@@ -217,3 +217,69 @@ differs from object to object.
 | placeholder-chair | [Placeholder Desk Chair](https://www.amazon.com/s?k=desk+chair) | Mise placeholder box model |
 | placeholder-desk | [Placeholder Writing Desk](https://www.amazon.com/s?k=writing+desk) | Mise placeholder box model |
 | placeholder-rug | [Placeholder 5×7 Rug](https://www.amazon.com/s?k=5x7+rug) | Mise placeholder box model |
+| ph-wall-clock | [Modern Station Wall Clock, 12", Silver and White](https://polyhaven.com/a/wall_clock) | Poly Haven (CC0): wall_clock |
+| ph-telephone-clock | [Vintage Telephone Wall Clock, Red](https://polyhaven.com/a/vintage_telephone_wall_clock) | Poly Haven (CC0): vintage_telephone_wall_clock |
+| ph-mantel-clock | [Tambour Mantel Clock, Mahogany](https://polyhaven.com/a/mantel_clock_01) | Poly Haven (CC0): mantel_clock_01 |
+| ph-dartboard | [Bristle Dartboard, 18"](https://polyhaven.com/a/dartboard) | Poly Haven (CC0): dartboard |
+| ph-gilt-landscape | [Oil Landscape Painting in Gilt Frame, Country Cottage](https://polyhaven.com/a/fancy_picture_frame_01) | Poly Haven (CC0): fancy_picture_frame_01 |
+| ph-gilt-townscape | [Oil Townscape Painting in Ornate Gilt Frame](https://polyhaven.com/a/fancy_picture_frame_02) | Poly Haven (CC0): fancy_picture_frame_02 |
+| ph-oval-frame | [Carved Oval Frame with Vintage Photograph, Mahogany](https://polyhaven.com/a/hanging_picture_frame_03) | Poly Haven (CC0): hanging_picture_frame_03 |
+| ph-lifebuoy | [Nautical Lifebuoy Ring, Red and White](https://polyhaven.com/a/lifebuoy) | Poly Haven (CC0): lifebuoy |
+| ph-ornate-mirror | [Arched Ornate Wall Mirror, Antique Gold](https://polyhaven.com/a/ornate_mirror_01) | Poly Haven (CC0): ornate_mirror_01 |
+| ph-boombox | [Retro Boombox Cassette Stereo, Black](https://polyhaven.com/a/boombox) | Poly Haven (CC0): boombox |
+| ph-cassette-player | [Portable Cassette Recorder, Silver](https://polyhaven.com/a/cassette_player) | Poly Haven (CC0): cassette_player |
+| ph-walkman | [Portable Cassette Player with Tape, Blue](https://polyhaven.com/a/portable_cassette_player) | Poly Haven (CC0): portable_cassette_player |
+| ph-retro-tv | [Retro CRT Television, 14", Silver](https://polyhaven.com/a/television_02) | Poly Haven (CC0): television_02 |
+| ph-film-camera | [Vintage Rangefinder Film Camera with Strap](https://polyhaven.com/a/Camera_01) | Poly Haven (CC0): Camera_01 |
+| ph-movie-camera | [Vintage 16 mm Movie Camera](https://polyhaven.com/a/vintage_video_camera) | Poly Haven (CC0): vintage_video_camera |
+| ph-chess-set | [Marble Chess Set and Board, Black and White](https://polyhaven.com/a/chess_set) | Poly Haven (CC0): chess_set |
+| ph-cat-statue | [Stone Cat Statue, 13"](https://polyhaven.com/a/concrete_cat_statue) | Poly Haven (CC0): concrete_cat_statue |
+| ph-elephant | [Hand-Carved Wooden Elephant](https://polyhaven.com/a/carved_wooden_elephant) | Poly Haven (CC0): carved_wooden_elephant |
+| ph-marble-bust | [Classical Marble Bust, 14"](https://polyhaven.com/a/marble_bust_01) | Poly Haven (CC0): marble_bust_01 |
+| ph-horse-statue | [Rearing Horse Porcelain Figurine, White](https://polyhaven.com/a/horse_statue_01) | Poly Haven (CC0): horse_statue_01 |
+| ph-lion-bust | [Bronze Lion Head Sculpture on Plinth](https://polyhaven.com/a/lion_head) | Poly Haven (CC0): lion_head |
+| ph-brass-vase | [Tall Brass Floor Vase, 27"](https://polyhaven.com/a/brass_vase_01) | Poly Haven (CC0): brass_vase_01 |
+| ph-copper-urn | [Etched Copper Urn Vase](https://polyhaven.com/a/brass_vase_03) | Poly Haven (CC0): brass_vase_03 |
+| ph-white-jar | [Matte White Ceramic Jar Vase](https://polyhaven.com/a/ceramic_vase_02) | Poly Haven (CC0): ceramic_vase_02 |
+| ph-square-vase | [Tall Square Stoneware Vase, White](https://polyhaven.com/a/ceramic_vase_03) | Poly Haven (CC0): ceramic_vase_03 |
+| ph-jug-vase | [White Ceramic Jug Vase with Handle](https://polyhaven.com/a/ceramic_vase_04) | Poly Haven (CC0): ceramic_vase_04 |
+| ph-tulip-pitcher | [Hand-Painted Tulip Porcelain Pitcher](https://polyhaven.com/a/jug_01) | Poly Haven (CC0): jug_01 |
+| ph-conch-shell | [Spider Conch Seashell](https://polyhaven.com/a/lambis_shell) | Poly Haven (CC0): lambis_shell |
+| ph-rubber-duck | [Giant Rubber Duck, Yellow](https://polyhaven.com/a/rubber_duck_toy) | Poly Haven (CC0): rubber_duck_toy |
+| ph-compass | [Antique Brass Pocket Compass](https://polyhaven.com/a/seadogs_compass) | Poly Haven (CC0): seadogs_compass |
+| ph-suitcase | [Vintage Leather Travel Suitcase, Olive](https://polyhaven.com/a/vintage_suitcase) | Poly Haven (CC0): vintage_suitcase |
+| ph-arm-lamp | [Swing-Arm Architect Desk Lamp, Orange](https://polyhaven.com/a/desk_lamp_arm_01) | Poly Haven (CC0): desk_lamp_arm_01 |
+| ph-oil-lamp | [Floral Porcelain Oil Lamp, Brass](https://polyhaven.com/a/vintage_oil_lamp) | Poly Haven (CC0): vintage_oil_lamp |
+| ph-hurricane-lantern | [Hurricane Lantern, Black](https://polyhaven.com/a/Lantern_01) | Poly Haven (CC0): Lantern_01 |
+| ph-bergere-armchair | [Upholstered Bergère Armchair, Dove Gray](https://polyhaven.com/a/ArmChair_01) | Poly Haven (CC0): ArmChair_01 |
+| ph-lounge-chair | [Mid-Century Swivel Lounge Chair, Cognac Leather](https://polyhaven.com/a/mid_century_lounge_chair) | Poly Haven (CC0): mid_century_lounge_chair |
+| ph-leather-armchair | [Leather Sling Lounge Armchair, Black and Walnut](https://polyhaven.com/a/modern_arm_chair_01) | Poly Haven (CC0): modern_arm_chair_01 |
+| ph-leather-ottoman | [Leather Ottoman Footstool, Espresso](https://polyhaven.com/a/Ottoman_01) | Poly Haven (CC0): Ottoman_01 |
+| ph-rocking-chair | [Spindle-Back Wooden Rocking Chair](https://polyhaven.com/a/Rockingchair_01) | Poly Haven (CC0): Rockingchair_01 |
+| ph-chesterfield | [Tufted Chesterfield Sofa, Black Leather](https://polyhaven.com/a/sofa_02) | Poly Haven (CC0): sofa_02 |
+| B07TN1YBXZ | [AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 4', Red](https://www.amazon.com/dp/B07TN1YBXZ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07TN1X4D2 | [AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 3', Black](https://www.amazon.com/dp/B07TN1X4D2) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07TP4S5SZ | [AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 3', Espresso](https://www.amazon.com/dp/B07TP4S5SZ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07TP4SPQ9 | [AmazonBasics Memory Foam Filled Beanbag Lounger with Microfiber Cover - 7', Red](https://www.amazon.com/dp/B07TP4SPQ9) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B078J9MF2W | [Solimo XL Beanbag Chair, Green](https://www.amazon.com/dp/B078J9MF2W) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07Q2PGH2T | [Amazonbasics Swivel Foam Lounge Chair - with Headrest, Adjustable, Denim](https://www.amazon.com/dp/B07Q2PGH2T) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07Q3WM673 | [AmazonBasics Fully Adjustable 53-inch Memory Foam Floor Chair - Brown](https://www.amazon.com/dp/B07Q3WM673) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07N2Z2WQV | [AmazonBasics Classic Faux Leather Extra Padded Recliner Chair - Black](https://www.amazon.com/dp/B07N2Z2WQV) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B085FJR48X | [Ravenna Home Beaver Creek Upholstered Rocking Recliner Chair with Swivel, 40"W, Cream](https://www.amazon.com/dp/B085FJR48X) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B085FHGJT4 | [Ravenna Home Contemporary Swivel Glider Recliner Chair, 33.9"W, Cream](https://www.amazon.com/dp/B085FHGJT4) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07DBGPHM9 | [Ravenna Home Westcott Curved Tufted Rolled Arm Accent Chair, 34"W, Cream](https://www.amazon.com/dp/B07DBGPHM9) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B075X4N4S4 | [Rivet Aiden Tufted Mid-Century Modern Velvet Accent Chair, 35.4"W, Hunter Green](https://www.amazon.com/dp/B075X4N4S4) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07F4D1TDW | [HomePop K6908-B269 Miller Modern Swoop Arm Velvet Accent Chair, Gray](https://www.amazon.com/dp/B07F4D1TDW) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07DBGHZDZ | [Ravenna Home Justin Round Tufted Storage Pouf Ottoman Bench, 24"W, Seafoam Green](https://www.amazon.com/dp/B07DBGHZDZ) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07J2VY53W | [Rivet Contemporary Leather Ottoman Pouf, 36"W, Cognac](https://www.amazon.com/dp/B07J2VY53W) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07B4FZXL1 | [Rivet Cliff Mid-Century Modern Round Tufted Velvet Pouf Ottoman, 39"W, Navy](https://www.amazon.com/dp/B07B4FZXL1) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07MFYTSHL | [Ravenna Home Westcott Tufted Loveseat Sofa Couch, 60"W, Cream Velvet](https://www.amazon.com/dp/B07MFYTSHL) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07BKK336B | [Rivet Aiden Tufted Mid-Century Modern Velvet Bench Loveseat Sofa, 74"W, Hunter Green](https://www.amazon.com/dp/B07BKK336B) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07QXY5X2Z | [Movian Scutari - 3 Seater Sofa Bed, 181 x 83 x 82, Blue Velvet](https://www.amazon.com/dp/B07QXY5X2Z) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B082XLWY2S | [Rivet Globe Stick Floor Lamp, 69"H, Pink Terrazzo](https://www.amazon.com/dp/B082XLWY2S) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B082XM1MZT | [Rivet Globe Stick Table Lamp, 19"H, Pink Terrazzo](https://www.amazon.com/dp/B082XM1MZT) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07DTFBDTL | [Rivet Modern Gold Globe Table Lamp 22" H, Integrated LED Light](https://www.amazon.com/dp/B07DTFBDTL) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B073NZS57V | [Rivet Ciao Neon Light Sign, 11x6](https://www.amazon.com/dp/B073NZS57V) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07TVD4QNC | [Amazon Basics - 4'X6' Solid Color Shag Rug, Ivory](https://www.amazon.com/dp/B07TVD4QNC) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07HSHT9YC | [Rivet Modern Geometric Area Rug, 5 x 8 Foot, Round, Multicolor](https://www.amazon.com/dp/B07HSHT9YC) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |
+| B07QHKWJV2 | [Ravenna Home Round Vintage Damask Patterned Rug, 5'3" Round, Pink on Ivory](https://www.amazon.com/dp/B07QHKWJV2) | Amazon Berkeley Objects (CC BY 4.0), Amazon.com |

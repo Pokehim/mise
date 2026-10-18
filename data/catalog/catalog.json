@@ -5449,6 +5449,1833 @@
       "priceEstimateUsd": 80,
       "url": "https://www.amazon.com/s?k=5x7+rug",
       "attribution": "Mise placeholder box model"
+    },
+    {
+      "id": "ph-wall-clock",
+      "source": "polyhaven",
+      "title": "Modern Station Wall Clock, 12\", Silver and White",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.321,
+        0.32,
+        0.047
+      ],
+      "model": "/data/catalog/models/ph-wall-clock.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-wall-clock.jpg",
+      "colors": [
+        "Silver",
+        "White",
+        "Red"
+      ],
+      "materials": [
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Industrial"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://polyhaven.com/a/wall_clock",
+      "attribution": "Poly Haven (CC0): wall_clock"
+    },
+    {
+      "id": "ph-telephone-clock",
+      "source": "polyhaven",
+      "title": "Vintage Telephone Wall Clock, Red",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.343,
+        0.501,
+        0.193
+      ],
+      "model": "/data/catalog/models/ph-telephone-clock.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-telephone-clock.jpg",
+      "colors": [
+        "Red",
+        "Silver"
+      ],
+      "materials": [
+        "Metal",
+        "Wood"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Retro",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 55,
+      "url": "https://polyhaven.com/a/vintage_telephone_wall_clock",
+      "attribution": "Poly Haven (CC0): vintage_telephone_wall_clock"
+    },
+    {
+      "id": "ph-mantel-clock",
+      "source": "polyhaven",
+      "title": "Tambour Mantel Clock, Mahogany",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.342,
+        0.16,
+        0.126
+      ],
+      "model": "/data/catalog/models/ph-mantel-clock.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-mantel-clock.jpg",
+      "colors": [
+        "Brown",
+        "Gold"
+      ],
+      "materials": [
+        "Wood",
+        "Brass",
+        "Glass"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://polyhaven.com/a/mantel_clock_01",
+      "attribution": "Poly Haven (CC0): mantel_clock_01"
+    },
+    {
+      "id": "ph-dartboard",
+      "source": "polyhaven",
+      "title": "Bristle Dartboard, 18\"",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.451,
+        0.451,
+        0.04
+      ],
+      "model": "/data/catalog/models/ph-dartboard.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-dartboard.jpg",
+      "colors": [
+        "Black",
+        "Red",
+        "Green",
+        "Cream"
+      ],
+      "materials": [
+        "Sisal",
+        "Metal"
+      ],
+      "styleTags": [
+        "Casual",
+        "Industrial"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://polyhaven.com/a/dartboard",
+      "attribution": "Poly Haven (CC0): dartboard"
+    },
+    {
+      "id": "ph-gilt-landscape",
+      "source": "polyhaven",
+      "title": "Oil Landscape Painting in Gilt Frame, Country Cottage",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.603,
+        0.464,
+        0.02
+      ],
+      "model": "/data/catalog/models/ph-gilt-landscape.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-gilt-landscape.jpg",
+      "colors": [
+        "Gold",
+        "Green",
+        "Blue"
+      ],
+      "materials": [
+        "Wood",
+        "Canvas"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Vintage",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://polyhaven.com/a/fancy_picture_frame_01",
+      "attribution": "Poly Haven (CC0): fancy_picture_frame_01"
+    },
+    {
+      "id": "ph-gilt-townscape",
+      "source": "polyhaven",
+      "title": "Oil Townscape Painting in Ornate Gilt Frame",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.661,
+        0.771,
+        0.089
+      ],
+      "model": "/data/catalog/models/ph-gilt-townscape.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-gilt-townscape.jpg",
+      "colors": [
+        "Gold",
+        "Brown",
+        "Blue"
+      ],
+      "materials": [
+        "Wood",
+        "Canvas"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Vintage",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 90,
+      "url": "https://polyhaven.com/a/fancy_picture_frame_02",
+      "attribution": "Poly Haven (CC0): fancy_picture_frame_02"
+    },
+    {
+      "id": "ph-oval-frame",
+      "source": "polyhaven",
+      "title": "Carved Oval Frame with Vintage Photograph, Mahogany",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.385,
+        0.502,
+        0.032
+      ],
+      "model": "/data/catalog/models/ph-oval-frame.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-oval-frame.jpg",
+      "colors": [
+        "Brown",
+        "Gray"
+      ],
+      "materials": [
+        "Wood",
+        "Glass"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Traditional"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://polyhaven.com/a/hanging_picture_frame_03",
+      "attribution": "Poly Haven (CC0): hanging_picture_frame_03"
+    },
+    {
+      "id": "ph-lifebuoy",
+      "source": "polyhaven",
+      "title": "Nautical Lifebuoy Ring, Red and White",
+      "category": "wall_art",
+      "mount": "wall",
+      "size": [
+        0.783,
+        0.841,
+        0.155
+      ],
+      "model": "/data/catalog/models/ph-lifebuoy.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-lifebuoy.jpg",
+      "colors": [
+        "Red",
+        "White"
+      ],
+      "materials": [
+        "Foam",
+        "Rope"
+      ],
+      "styleTags": [
+        "Coastal",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://polyhaven.com/a/lifebuoy",
+      "attribution": "Poly Haven (CC0): lifebuoy"
+    },
+    {
+      "id": "ph-ornate-mirror",
+      "source": "polyhaven",
+      "title": "Arched Ornate Wall Mirror, Antique Gold",
+      "category": "mirror",
+      "mount": "wall",
+      "size": [
+        0.487,
+        0.744,
+        0.026
+      ],
+      "model": "/data/catalog/models/ph-ornate-mirror.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-ornate-mirror.jpg",
+      "colors": [
+        "Gold"
+      ],
+      "materials": [
+        "Wood",
+        "Glass"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Vintage",
+        "Glam"
+      ],
+      "priceEstimateUsd": 85,
+      "url": "https://polyhaven.com/a/ornate_mirror_01",
+      "attribution": "Poly Haven (CC0): ornate_mirror_01"
+    },
+    {
+      "id": "ph-boombox",
+      "source": "polyhaven",
+      "title": "Retro Boombox Cassette Stereo, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.724,
+        0.47,
+        0.186
+      ],
+      "model": "/data/catalog/models/ph-boombox.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-boombox.jpg",
+      "colors": [
+        "Black",
+        "Silver"
+      ],
+      "materials": [
+        "Plastic",
+        "Metal"
+      ],
+      "styleTags": [
+        "Retro",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://polyhaven.com/a/boombox",
+      "attribution": "Poly Haven (CC0): boombox"
+    },
+    {
+      "id": "ph-cassette-player",
+      "source": "polyhaven",
+      "title": "Portable Cassette Recorder, Silver",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.129,
+        0.237,
+        0.049
+      ],
+      "model": "/data/catalog/models/ph-cassette-player.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-cassette-player.jpg",
+      "colors": [
+        "Silver",
+        "Black"
+      ],
+      "materials": [
+        "Plastic"
+      ],
+      "styleTags": [
+        "Retro",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://polyhaven.com/a/cassette_player",
+      "attribution": "Poly Haven (CC0): cassette_player"
+    },
+    {
+      "id": "ph-walkman",
+      "source": "polyhaven",
+      "title": "Portable Cassette Player with Tape, Blue",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.172,
+        0.13,
+        0.04
+      ],
+      "model": "/data/catalog/models/ph-walkman.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-walkman.jpg",
+      "colors": [
+        "Blue",
+        "Silver"
+      ],
+      "materials": [
+        "Plastic"
+      ],
+      "styleTags": [
+        "Retro",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://polyhaven.com/a/portable_cassette_player",
+      "attribution": "Poly Haven (CC0): portable_cassette_player"
+    },
+    {
+      "id": "ph-retro-tv",
+      "source": "polyhaven",
+      "title": "Retro CRT Television, 14\", Silver",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.4,
+        0.411,
+        0.35
+      ],
+      "model": "/data/catalog/models/ph-retro-tv.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-retro-tv.jpg",
+      "colors": [
+        "Silver",
+        "Black"
+      ],
+      "materials": [
+        "Plastic",
+        "Glass"
+      ],
+      "styleTags": [
+        "Retro",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "https://polyhaven.com/a/television_02",
+      "attribution": "Poly Haven (CC0): television_02"
+    },
+    {
+      "id": "ph-film-camera",
+      "source": "polyhaven",
+      "title": "Vintage Rangefinder Film Camera with Strap",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.214,
+        0.078,
+        0.263
+      ],
+      "model": "/data/catalog/models/ph-film-camera.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-film-camera.jpg",
+      "colors": [
+        "Black",
+        "Silver"
+      ],
+      "materials": [
+        "Metal",
+        "Leather"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Retro"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://polyhaven.com/a/Camera_01",
+      "attribution": "Poly Haven (CC0): Camera_01"
+    },
+    {
+      "id": "ph-movie-camera",
+      "source": "polyhaven",
+      "title": "Vintage 16 mm Movie Camera",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.071,
+        0.145,
+        0.133
+      ],
+      "model": "/data/catalog/models/ph-movie-camera.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-movie-camera.jpg",
+      "colors": [
+        "Black",
+        "Gray"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Industrial"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://polyhaven.com/a/vintage_video_camera",
+      "attribution": "Poly Haven (CC0): vintage_video_camera"
+    },
+    {
+      "id": "ph-chess-set",
+      "source": "polyhaven",
+      "title": "Marble Chess Set and Board, Black and White",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.553,
+        0.112,
+        0.553
+      ],
+      "model": "/data/catalog/models/ph-chess-set.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-chess-set.jpg",
+      "colors": [
+        "Black",
+        "White"
+      ],
+      "materials": [
+        "Marble"
+      ],
+      "styleTags": [
+        "Classic",
+        "Modern"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://polyhaven.com/a/chess_set",
+      "attribution": "Poly Haven (CC0): chess_set"
+    },
+    {
+      "id": "ph-cat-statue",
+      "source": "polyhaven",
+      "title": "Stone Cat Statue, 13\"",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.153,
+        0.283,
+        0.25
+      ],
+      "model": "/data/catalog/models/ph-cat-statue.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-cat-statue.jpg",
+      "colors": [
+        "Gray"
+      ],
+      "materials": [
+        "Concrete"
+      ],
+      "styleTags": [
+        "Eclectic",
+        "Rustic"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://polyhaven.com/a/concrete_cat_statue",
+      "attribution": "Poly Haven (CC0): concrete_cat_statue"
+    },
+    {
+      "id": "ph-elephant",
+      "source": "polyhaven",
+      "title": "Hand-Carved Wooden Elephant",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.109,
+        0.096,
+        0.058
+      ],
+      "model": "/data/catalog/models/ph-elephant.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-elephant.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Global"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://polyhaven.com/a/carved_wooden_elephant",
+      "attribution": "Poly Haven (CC0): carved_wooden_elephant"
+    },
+    {
+      "id": "ph-marble-bust",
+      "source": "polyhaven",
+      "title": "Classical Marble Bust, 14\"",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.272,
+        0.515,
+        0.3
+      ],
+      "model": "/data/catalog/models/ph-marble-bust.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-marble-bust.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [
+        "Marble"
+      ],
+      "styleTags": [
+        "Classic",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 55,
+      "url": "https://polyhaven.com/a/marble_bust_01",
+      "attribution": "Poly Haven (CC0): marble_bust_01"
+    },
+    {
+      "id": "ph-horse-statue",
+      "source": "polyhaven",
+      "title": "Rearing Horse Porcelain Figurine, White",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.163,
+        0.22,
+        0.108
+      ],
+      "model": "/data/catalog/models/ph-horse-statue.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-horse-statue.jpg",
+      "colors": [
+        "White",
+        "Gold"
+      ],
+      "materials": [
+        "Porcelain"
+      ],
+      "styleTags": [
+        "Classic",
+        "Glam"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://polyhaven.com/a/horse_statue_01",
+      "attribution": "Poly Haven (CC0): horse_statue_01"
+    },
+    {
+      "id": "ph-lion-bust",
+      "source": "polyhaven",
+      "title": "Bronze Lion Head Sculpture on Plinth",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.321,
+        0.436,
+        0.207
+      ],
+      "model": "/data/catalog/models/ph-lion-bust.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-lion-bust.jpg",
+      "colors": [
+        "Bronze",
+        "Black"
+      ],
+      "materials": [
+        "Bronze",
+        "Stone"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 55,
+      "url": "https://polyhaven.com/a/lion_head",
+      "attribution": "Poly Haven (CC0): lion_head"
+    },
+    {
+      "id": "ph-brass-vase",
+      "source": "polyhaven",
+      "title": "Tall Brass Floor Vase, 27\"",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.227,
+        0.692,
+        0.227
+      ],
+      "model": "/data/catalog/models/ph-brass-vase.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-brass-vase.jpg",
+      "colors": [
+        "Gold"
+      ],
+      "materials": [
+        "Brass"
+      ],
+      "styleTags": [
+        "Glam",
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 28,
+      "url": "https://polyhaven.com/a/brass_vase_01",
+      "attribution": "Poly Haven (CC0): brass_vase_01"
+    },
+    {
+      "id": "ph-copper-urn",
+      "source": "polyhaven",
+      "title": "Etched Copper Urn Vase",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.083,
+        0.2,
+        0.083
+      ],
+      "model": "/data/catalog/models/ph-copper-urn.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-copper-urn.jpg",
+      "colors": [
+        "Copper",
+        "Bronze"
+      ],
+      "materials": [
+        "Copper"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Global",
+        "Traditional"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://polyhaven.com/a/brass_vase_03",
+      "attribution": "Poly Haven (CC0): brass_vase_03"
+    },
+    {
+      "id": "ph-white-jar",
+      "source": "polyhaven",
+      "title": "Matte White Ceramic Jar Vase",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.218,
+        0.309,
+        0.218
+      ],
+      "model": "/data/catalog/models/ph-white-jar.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-white-jar.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Minimalist",
+        "Scandinavian",
+        "Modern"
+      ],
+      "priceEstimateUsd": 22,
+      "url": "https://polyhaven.com/a/ceramic_vase_02",
+      "attribution": "Poly Haven (CC0): ceramic_vase_02"
+    },
+    {
+      "id": "ph-square-vase",
+      "source": "polyhaven",
+      "title": "Tall Square Stoneware Vase, White",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.112,
+        0.414,
+        0.112
+      ],
+      "model": "/data/catalog/models/ph-square-vase.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-square-vase.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [
+        "Stoneware"
+      ],
+      "styleTags": [
+        "Minimalist",
+        "Modern"
+      ],
+      "priceEstimateUsd": 22,
+      "url": "https://polyhaven.com/a/ceramic_vase_03",
+      "attribution": "Poly Haven (CC0): ceramic_vase_03"
+    },
+    {
+      "id": "ph-jug-vase",
+      "source": "polyhaven",
+      "title": "White Ceramic Jug Vase with Handle",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.181,
+        0.342,
+        0.181
+      ],
+      "model": "/data/catalog/models/ph-jug-vase.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-jug-vase.jpg",
+      "colors": [
+        "White"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Farmhouse",
+        "Scandinavian"
+      ],
+      "priceEstimateUsd": 22,
+      "url": "https://polyhaven.com/a/ceramic_vase_04",
+      "attribution": "Poly Haven (CC0): ceramic_vase_04"
+    },
+    {
+      "id": "ph-tulip-pitcher",
+      "source": "polyhaven",
+      "title": "Hand-Painted Tulip Porcelain Pitcher",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.275,
+        0.211,
+        0.168
+      ],
+      "model": "/data/catalog/models/ph-tulip-pitcher.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-tulip-pitcher.jpg",
+      "colors": [
+        "White",
+        "Pink",
+        "Green"
+      ],
+      "materials": [
+        "Porcelain"
+      ],
+      "styleTags": [
+        "Cottagecore",
+        "Farmhouse",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 24,
+      "url": "https://polyhaven.com/a/jug_01",
+      "attribution": "Poly Haven (CC0): jug_01"
+    },
+    {
+      "id": "ph-conch-shell",
+      "source": "polyhaven",
+      "title": "Spider Conch Seashell",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.139,
+        0.047,
+        0.075
+      ],
+      "model": "/data/catalog/models/ph-conch-shell.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-conch-shell.jpg",
+      "colors": [
+        "Cream",
+        "Brown"
+      ],
+      "materials": [
+        "Shell"
+      ],
+      "styleTags": [
+        "Coastal",
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 18,
+      "url": "https://polyhaven.com/a/lambis_shell",
+      "attribution": "Poly Haven (CC0): lambis_shell"
+    },
+    {
+      "id": "ph-rubber-duck",
+      "source": "polyhaven",
+      "title": "Giant Rubber Duck, Yellow",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.214,
+        0.286,
+        0.3
+      ],
+      "model": "/data/catalog/models/ph-rubber-duck.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-rubber-duck.jpg",
+      "colors": [
+        "Yellow",
+        "Orange"
+      ],
+      "materials": [
+        "Rubber"
+      ],
+      "styleTags": [
+        "Playful",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 15,
+      "url": "https://polyhaven.com/a/rubber_duck_toy",
+      "attribution": "Poly Haven (CC0): rubber_duck_toy"
+    },
+    {
+      "id": "ph-compass",
+      "source": "polyhaven",
+      "title": "Antique Brass Pocket Compass",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.081,
+        0.087,
+        0.144
+      ],
+      "model": "/data/catalog/models/ph-compass.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-compass.jpg",
+      "colors": [
+        "Bronze"
+      ],
+      "materials": [
+        "Brass",
+        "Glass"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Coastal"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://polyhaven.com/a/seadogs_compass",
+      "attribution": "Poly Haven (CC0): seadogs_compass"
+    },
+    {
+      "id": "ph-suitcase",
+      "source": "polyhaven",
+      "title": "Vintage Leather Travel Suitcase, Olive",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.694,
+        0.568,
+        0.239
+      ],
+      "model": "/data/catalog/models/ph-suitcase.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-suitcase.jpg",
+      "colors": [
+        "Olive",
+        "Brown"
+      ],
+      "materials": [
+        "Leather",
+        "Canvas"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 70,
+      "url": "https://polyhaven.com/a/vintage_suitcase",
+      "attribution": "Poly Haven (CC0): vintage_suitcase"
+    },
+    {
+      "id": "ph-arm-lamp",
+      "source": "polyhaven",
+      "title": "Swing-Arm Architect Desk Lamp, Orange",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.202,
+        0.893,
+        0.614
+      ],
+      "model": "/data/catalog/models/ph-arm-lamp.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-arm-lamp.jpg",
+      "colors": [
+        "Orange",
+        "Silver"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Retro",
+        "Industrial",
+        "Mid-Century Modern"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://polyhaven.com/a/desk_lamp_arm_01",
+      "attribution": "Poly Haven (CC0): desk_lamp_arm_01"
+    },
+    {
+      "id": "ph-oil-lamp",
+      "source": "polyhaven",
+      "title": "Floral Porcelain Oil Lamp, Brass",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.22,
+        0.802,
+        0.22
+      ],
+      "model": "/data/catalog/models/ph-oil-lamp.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-oil-lamp.jpg",
+      "colors": [
+        "Gold",
+        "White",
+        "Pink"
+      ],
+      "materials": [
+        "Porcelain",
+        "Brass",
+        "Glass"
+      ],
+      "styleTags": [
+        "Vintage",
+        "Cottagecore"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://polyhaven.com/a/vintage_oil_lamp",
+      "attribution": "Poly Haven (CC0): vintage_oil_lamp"
+    },
+    {
+      "id": "ph-hurricane-lantern",
+      "source": "polyhaven",
+      "title": "Hurricane Lantern, Black",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.122,
+        0.294,
+        0.097
+      ],
+      "model": "/data/catalog/models/ph-hurricane-lantern.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-hurricane-lantern.jpg",
+      "colors": [
+        "Black",
+        "Bronze"
+      ],
+      "materials": [
+        "Metal",
+        "Glass"
+      ],
+      "styleTags": [
+        "Rustic",
+        "Industrial"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://polyhaven.com/a/Lantern_01",
+      "attribution": "Poly Haven (CC0): Lantern_01"
+    },
+    {
+      "id": "ph-bergere-armchair",
+      "source": "polyhaven",
+      "title": "Upholstered Bergère Armchair, Dove Gray",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.848,
+        1.065,
+        0.766
+      ],
+      "model": "/data/catalog/models/ph-bergere-armchair.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-bergere-armchair.jpg",
+      "colors": [
+        "Gray",
+        "Black"
+      ],
+      "materials": [
+        "Fabric",
+        "Wood"
+      ],
+      "styleTags": [
+        "Traditional",
+        "French Country",
+        "Glam"
+      ],
+      "priceEstimateUsd": 320,
+      "url": "https://polyhaven.com/a/ArmChair_01",
+      "attribution": "Poly Haven (CC0): ArmChair_01"
+    },
+    {
+      "id": "ph-lounge-chair",
+      "source": "polyhaven",
+      "title": "Mid-Century Swivel Lounge Chair, Cognac Leather",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        1.009,
+        1.169,
+        1.19
+      ],
+      "model": "/data/catalog/models/ph-lounge-chair.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-lounge-chair.jpg",
+      "colors": [
+        "Brown",
+        "Black"
+      ],
+      "materials": [
+        "Leather",
+        "Wood",
+        "Metal"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Retro"
+      ],
+      "priceEstimateUsd": 450,
+      "url": "https://polyhaven.com/a/mid_century_lounge_chair",
+      "attribution": "Poly Haven (CC0): mid_century_lounge_chair"
+    },
+    {
+      "id": "ph-leather-armchair",
+      "source": "polyhaven",
+      "title": "Leather Sling Lounge Armchair, Black and Walnut",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.82,
+        1.023,
+        0.987
+      ],
+      "model": "/data/catalog/models/ph-leather-armchair.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-leather-armchair.jpg",
+      "colors": [
+        "Black",
+        "Brown"
+      ],
+      "materials": [
+        "Leather",
+        "Wood"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Modern",
+        "Industrial"
+      ],
+      "priceEstimateUsd": 380,
+      "url": "https://polyhaven.com/a/modern_arm_chair_01",
+      "attribution": "Poly Haven (CC0): modern_arm_chair_01"
+    },
+    {
+      "id": "ph-leather-ottoman",
+      "source": "polyhaven",
+      "title": "Leather Ottoman Footstool, Espresso",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.885,
+        0.624,
+        0.621
+      ],
+      "model": "/data/catalog/models/ph-leather-ottoman.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-leather-ottoman.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [
+        "Leather"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Industrial"
+      ],
+      "priceEstimateUsd": 150,
+      "url": "https://polyhaven.com/a/Ottoman_01",
+      "attribution": "Poly Haven (CC0): Ottoman_01"
+    },
+    {
+      "id": "ph-rocking-chair",
+      "source": "polyhaven",
+      "title": "Spindle-Back Wooden Rocking Chair",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.708,
+        0.995,
+        0.834
+      ],
+      "model": "/data/catalog/models/ph-rocking-chair.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-rocking-chair.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [
+        "Wood"
+      ],
+      "styleTags": [
+        "Farmhouse",
+        "Rustic",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 180,
+      "url": "https://polyhaven.com/a/Rockingchair_01",
+      "attribution": "Poly Haven (CC0): Rockingchair_01"
+    },
+    {
+      "id": "ph-chesterfield",
+      "source": "polyhaven",
+      "title": "Tufted Chesterfield Sofa, Black Leather",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.807,
+        0.71,
+        0.818
+      ],
+      "model": "/data/catalog/models/ph-chesterfield.glb",
+      "thumbnail": "/data/catalog/thumbs/ph-chesterfield.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [
+        "Leather",
+        "Wood"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Glam",
+        "Industrial"
+      ],
+      "priceEstimateUsd": 700,
+      "url": "https://polyhaven.com/a/sofa_02",
+      "attribution": "Poly Haven (CC0): sofa_02"
+    },
+    {
+      "id": "B07TN1YBXZ",
+      "source": "abo",
+      "title": "AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 4', Red",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        1.213,
+        0.762,
+        1.219
+      ],
+      "model": "/data/catalog/models/B07TN1YBXZ.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TN1YBXZ.jpg",
+      "colors": [
+        "Red"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07TN1YBXZ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07TN1X4D2",
+      "source": "abo",
+      "title": "AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 3', Black",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.918,
+        0.605,
+        0.913
+      ],
+      "model": "/data/catalog/models/B07TN1X4D2.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TN1X4D2.jpg",
+      "colors": [
+        "Black"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07TN1X4D2",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07TP4S5SZ",
+      "source": "abo",
+      "title": "AmazonBasics Memory Foam Filled Beanbag Chair with Microfiber Cover - 3', Espresso",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.918,
+        0.616,
+        0.913
+      ],
+      "model": "/data/catalog/models/B07TP4S5SZ.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TP4S5SZ.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07TP4S5SZ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07TP4SPQ9",
+      "source": "abo",
+      "title": "AmazonBasics Memory Foam Filled Beanbag Lounger with Microfiber Cover - 7', Red",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        2.293,
+        0.867,
+        1.216
+      ],
+      "model": "/data/catalog/models/B07TP4SPQ9.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TP4SPQ9.jpg",
+      "colors": [
+        "Red"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07TP4SPQ9",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B078J9MF2W",
+      "source": "abo",
+      "title": "Solimo XL Beanbag Chair, Green",
+      "brand": "Amazon Brand - Solimo",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        1.07,
+        0.99,
+        1.07
+      ],
+      "model": "/data/catalog/models/B078J9MF2W.glb",
+      "thumbnail": "/data/catalog/thumbs/B078J9MF2W.jpg",
+      "colors": [
+        "Green"
+      ],
+      "materials": [
+        "Leatherette"
+      ],
+      "styleTags": [
+        "Casual",
+        "Playful"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B078J9MF2W",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07Q2PGH2T",
+      "source": "abo",
+      "title": "Amazonbasics Swivel Foam Lounge Chair - with Headrest, Adjustable, Denim",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.597,
+        0.749,
+        0.668
+      ],
+      "model": "/data/catalog/models/B07Q2PGH2T.glb",
+      "thumbnail": "/data/catalog/thumbs/B07Q2PGH2T.jpg",
+      "colors": [
+        "Denim"
+      ],
+      "colorHex": "#666a7d",
+      "materials": [],
+      "styleTags": [
+        "Chair with headrest"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07Q2PGH2T",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07Q3WM673",
+      "source": "abo",
+      "title": "AmazonBasics Fully Adjustable 53-inch Memory Foam Floor Chair - Brown",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.714,
+        0.892,
+        0.985
+      ],
+      "model": "/data/catalog/models/B07Q3WM673.glb",
+      "thumbnail": "/data/catalog/thumbs/B07Q3WM673.jpg",
+      "colors": [
+        "Brown"
+      ],
+      "colorHex": "#7c6447",
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07Q3WM673",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07N2Z2WQV",
+      "source": "abo",
+      "title": "AmazonBasics Classic Faux Leather Extra Padded Recliner Chair - Black",
+      "brand": "AmazonBasics",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.855,
+        0.992,
+        0.919
+      ],
+      "model": "/data/catalog/models/B07N2Z2WQV.glb",
+      "thumbnail": "/data/catalog/thumbs/B07N2Z2WQV.jpg",
+      "colors": [
+        "Black"
+      ],
+      "colorHex": "#313131",
+      "materials": [
+        "Polyurethane"
+      ],
+      "styleTags": [
+        "Classic"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07N2Z2WQV",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B085FJR48X",
+      "source": "abo",
+      "title": "Ravenna Home Beaver Creek Upholstered Rocking Recliner Chair with Swivel, 40\"W, Cream",
+      "brand": "Ravenna Home",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.798,
+        1.013,
+        1.043
+      ],
+      "model": "/data/catalog/models/B085FJR48X.glb",
+      "thumbnail": "/data/catalog/thumbs/B085FJR48X.jpg",
+      "colors": [
+        "Beige"
+      ],
+      "colorHex": "#c9c9c8",
+      "materials": [],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B085FJR48X",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B085FHGJT4",
+      "source": "abo",
+      "title": "Ravenna Home Contemporary Swivel Glider Recliner Chair, 33.9\"W, Cream",
+      "brand": "Ravenna Home",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.861,
+        0.964,
+        0.969
+      ],
+      "model": "/data/catalog/models/B085FHGJT4.glb",
+      "thumbnail": "/data/catalog/thumbs/B085FHGJT4.jpg",
+      "colors": [
+        "Cream"
+      ],
+      "materials": [
+        "Textile"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B085FHGJT4",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07DBGPHM9",
+      "source": "abo",
+      "title": "Ravenna Home Westcott Curved Tufted Rolled Arm Accent Chair, 34\"W, Cream",
+      "brand": "Ravenna Home",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.903,
+        0.826,
+        0.851
+      ],
+      "model": "/data/catalog/models/B07DBGPHM9.glb",
+      "thumbnail": "/data/catalog/thumbs/B07DBGPHM9.jpg",
+      "colors": [
+        "Cream"
+      ],
+      "colorHex": "#bbb0ab",
+      "materials": [
+        "Velvet",
+        "Plywood",
+        "Textile"
+      ],
+      "styleTags": [
+        "Glam"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07DBGPHM9",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B075X4N4S4",
+      "source": "abo",
+      "title": "Rivet Aiden Tufted Mid-Century Modern Velvet Accent Chair, 35.4\"W, Hunter Green",
+      "brand": "Rivet",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.928,
+        0.773,
+        0.843
+      ],
+      "model": "/data/catalog/models/B075X4N4S4.glb",
+      "thumbnail": "/data/catalog/thumbs/B075X4N4S4.jpg",
+      "colors": [
+        "Hunter Green"
+      ],
+      "colorHex": "#434f43",
+      "materials": [
+        "Velvet"
+      ],
+      "styleTags": [
+        "Mid-Century modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B075X4N4S4",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07F4D1TDW",
+      "source": "abo",
+      "title": "HomePop K6908-B269 Miller Modern Swoop Arm Velvet Accent Chair, Gray",
+      "brand": "HomePop",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.629,
+        0.895,
+        0.629
+      ],
+      "model": "/data/catalog/models/B07F4D1TDW.glb",
+      "thumbnail": "/data/catalog/thumbs/B07F4D1TDW.jpg",
+      "colors": [
+        "Grey"
+      ],
+      "colorHex": "#84827b",
+      "materials": [
+        "Textile"
+      ],
+      "styleTags": [
+        "Chair"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07F4D1TDW",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07DBGHZDZ",
+      "source": "abo",
+      "title": "Ravenna Home Justin Round Tufted Storage Pouf Ottoman Bench, 24\"W, Seafoam Green",
+      "brand": "Ravenna Home",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.6,
+        0.453,
+        0.6
+      ],
+      "model": "/data/catalog/models/B07DBGHZDZ.glb",
+      "thumbnail": "/data/catalog/thumbs/B07DBGHZDZ.jpg",
+      "colors": [
+        "Seafoam Green"
+      ],
+      "colorHex": "#cfd5cb",
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07DBGHZDZ",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07J2VY53W",
+      "source": "abo",
+      "title": "Rivet Contemporary Leather Ottoman Pouf, 36\"W, Cognac",
+      "brand": "Rivet",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.902,
+        0.395,
+        0.901
+      ],
+      "model": "/data/catalog/models/B07J2VY53W.glb",
+      "thumbnail": "/data/catalog/thumbs/B07J2VY53W.jpg",
+      "colors": [
+        "Cognac"
+      ],
+      "colorHex": "#936243",
+      "materials": [
+        "Leather"
+      ],
+      "styleTags": [
+        "Mid-Century modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07J2VY53W",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07B4FZXL1",
+      "source": "abo",
+      "title": "Rivet Cliff Mid-Century Modern Round Tufted Velvet Pouf Ottoman, 39\"W, Navy",
+      "brand": "Rivet",
+      "category": "chair",
+      "mount": "floor",
+      "size": [
+        0.998,
+        0.398,
+        0.998
+      ],
+      "model": "/data/catalog/models/B07B4FZXL1.glb",
+      "thumbnail": "/data/catalog/thumbs/B07B4FZXL1.jpg",
+      "colors": [
+        "Navy"
+      ],
+      "colorHex": "#143350",
+      "materials": [
+        "Velvet"
+      ],
+      "styleTags": [
+        "Mid-Century Modern"
+      ],
+      "priceEstimateUsd": 120,
+      "url": "https://www.amazon.com/dp/B07B4FZXL1",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07MFYTSHL",
+      "source": "abo",
+      "title": "Ravenna Home Westcott Tufted Loveseat Sofa Couch, 60\"W, Cream Velvet",
+      "brand": "Ravenna Home",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.558,
+        0.826,
+        0.834
+      ],
+      "model": "/data/catalog/models/B07MFYTSHL.glb",
+      "thumbnail": "/data/catalog/thumbs/B07MFYTSHL.jpg",
+      "colors": [
+        "Cream"
+      ],
+      "colorHex": "#b6ada7",
+      "materials": [
+        "Velvet"
+      ],
+      "styleTags": [
+        "Transitional"
+      ],
+      "priceEstimateUsd": 450,
+      "url": "https://www.amazon.com/dp/B07MFYTSHL",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07BKK336B",
+      "source": "abo",
+      "title": "Rivet Aiden Tufted Mid-Century Modern Velvet Bench Loveseat Sofa, 74\"W, Hunter Green",
+      "brand": "Rivet",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.878,
+        0.772,
+        0.914
+      ],
+      "model": "/data/catalog/models/B07BKK336B.glb",
+      "thumbnail": "/data/catalog/thumbs/B07BKK336B.jpg",
+      "colors": [
+        "Hunter Green"
+      ],
+      "colorHex": "#2f3a30",
+      "materials": [
+        "Velvet"
+      ],
+      "styleTags": [
+        "Mid-Century modern"
+      ],
+      "priceEstimateUsd": 450,
+      "url": "https://www.amazon.com/dp/B07BKK336B",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QXY5X2Z",
+      "source": "abo",
+      "title": "Movian Scutari - 3 Seater Sofa Bed, 181 x 83 x 82, Blue Velvet",
+      "category": "sofa",
+      "mount": "floor",
+      "size": [
+        1.81,
+        0.825,
+        0.83
+      ],
+      "model": "/data/catalog/models/B07QXY5X2Z.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QXY5X2Z.jpg",
+      "colors": [
+        "Blue Velvet"
+      ],
+      "materials": [],
+      "styleTags": [],
+      "priceEstimateUsd": 450,
+      "url": "https://www.amazon.com/dp/B07QXY5X2Z",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B082XLWY2S",
+      "source": "abo",
+      "title": "Rivet Globe Stick Floor Lamp, 69\"H, Pink Terrazzo",
+      "brand": "Rivet",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.229,
+        1.747,
+        0.229
+      ],
+      "model": "/data/catalog/models/B082XLWY2S.glb",
+      "thumbnail": "/data/catalog/thumbs/B082XLWY2S.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "materials": [
+        "Acrylic"
+      ],
+      "styleTags": [
+        "Floor"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B082XLWY2S",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B082XM1MZT",
+      "source": "abo",
+      "title": "Rivet Globe Stick Table Lamp, 19\"H, Pink Terrazzo",
+      "brand": "Rivet",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.153,
+        0.48,
+        0.153
+      ],
+      "model": "/data/catalog/models/B082XM1MZT.glb",
+      "thumbnail": "/data/catalog/thumbs/B082XM1MZT.jpg",
+      "colors": [
+        "Pink"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Table"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B082XM1MZT",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07DTFBDTL",
+      "source": "abo",
+      "title": "Rivet Modern Gold Globe Table Lamp 22\" H, Integrated LED Light",
+      "brand": "Rivet",
+      "category": "lamp",
+      "mount": "floor",
+      "size": [
+        0.207,
+        0.559,
+        0.324
+      ],
+      "model": "/data/catalog/models/B07DTFBDTL.glb",
+      "thumbnail": "/data/catalog/thumbs/B07DTFBDTL.jpg",
+      "colors": [
+        "Brushed Brass"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Table Lamp"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://www.amazon.com/dp/B07DTFBDTL",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B073NZS57V",
+      "source": "abo",
+      "title": "Rivet Ciao Neon Light Sign, 11x6",
+      "brand": "Rivet",
+      "category": "decor",
+      "mount": "floor",
+      "size": [
+        0.211,
+        0.294,
+        0.042
+      ],
+      "model": "/data/catalog/models/B073NZS57V.glb",
+      "thumbnail": "/data/catalog/thumbs/B073NZS57V.jpg",
+      "colors": [],
+      "materials": [],
+      "styleTags": [
+        "Playful",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://www.amazon.com/dp/B073NZS57V",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07TVD4QNC",
+      "source": "abo",
+      "title": "Amazon Basics - 4'X6' Solid Color Shag Rug, Ivory",
+      "brand": "Amazon Basics",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.778,
+        0.03,
+        1.219
+      ],
+      "model": "/data/catalog/models/B07TVD4QNC.glb",
+      "thumbnail": "/data/catalog/thumbs/B07TVD4QNC.jpg",
+      "colors": [
+        "Ivory"
+      ],
+      "materials": [
+        "Polypropylene"
+      ],
+      "styleTags": [
+        "Area Rug"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07TVD4QNC",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07HSHT9YC",
+      "source": "abo",
+      "title": "Rivet Modern Geometric Area Rug, 5 x 8 Foot, Round, Multicolor",
+      "brand": "Rivet",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        2.461,
+        0.033,
+        2.453
+      ],
+      "model": "/data/catalog/models/B07HSHT9YC.glb",
+      "thumbnail": "/data/catalog/thumbs/B07HSHT9YC.jpg",
+      "colors": [],
+      "materials": [
+        "Wool"
+      ],
+      "styleTags": [
+        "Modern"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07HSHT9YC",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
+    },
+    {
+      "id": "B07QHKWJV2",
+      "source": "abo",
+      "title": "Ravenna Home Round Vintage Damask Patterned Rug, 5'3\" Round, Pink on Ivory",
+      "brand": "Ravenna Home",
+      "category": "rug",
+      "mount": "floor",
+      "size": [
+        1.593,
+        0.012,
+        1.593
+      ],
+      "model": "/data/catalog/models/B07QHKWJV2.glb",
+      "thumbnail": "/data/catalog/thumbs/B07QHKWJV2.jpg",
+      "colors": [
+        "Ivory/Pink"
+      ],
+      "materials": [],
+      "styleTags": [
+        "Vintage"
+      ],
+      "priceEstimateUsd": 80,
+      "url": "https://www.amazon.com/dp/B07QHKWJV2",
+      "attribution": "Amazon Berkeley Objects (CC BY 4.0), Amazon.com"
     }
   ]
 }

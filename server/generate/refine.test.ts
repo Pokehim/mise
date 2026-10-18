@@ -91,7 +91,7 @@ describe('refineDesign', () => {
     await refine(client);
 
     const [{ messages: [first], system, model }] = requests;
-    expect(model).toBe('claude-opus-5-5');
+    expect(model).toBe('claude-sonnet-5-5');
     expect(JSON.stringify(system)).toContain("You are Mise's interior designer");
     expect(first.content).toContain('The Mover asks: "make it cozier"');
     expect(first.content).toContain('"id":"pc_rug"');

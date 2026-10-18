@@ -106,7 +106,7 @@ export const loadCatalog = () => Promise.all([
 export const generateObject = (body: GenerateRequest) => request<{ jobId: string }>('POST', '/api/generate-object', body);
 export const getJob = (jobId: string) => request<Job>('GET', `/api/jobs/${jobId}`);
 /** Has the server write what a Scan's Designs read first to Claude's prompt cache (spec §13.1): how many tokens it holds. */
-export const warmGenerate = (scanId: string) => request<{ cachedTokens: number }>('POST', '/api/generate/warm', { scanId });
+export const warmGenerate = (scanId: string, fast: boolean) => request<{ cachedTokens: number }>('POST', '/api/generate/warm', { scanId, fast });
 
 /** A Scan's Designs. The demo is shared, so there each visitor sees the seeds and their own Designs, with their copy of a seed in its place. */
 export async function listDesigns(scanId?: string) {

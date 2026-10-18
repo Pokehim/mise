@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { budgetInText } from '../../shared/generate';
 import { replay } from '../../shared/replay';
 import type { Brief, Catalog, Design, Edit, RoomSetup, RoomState } from '../../shared/types';
-import { sharedRequest } from './agent';
+import { LOOP_TIMEOUT_MS, sharedRequest, standardSpeed } from './agent';
 import { designInWords } from './forClaude';
 import { roomSummary } from './roomSummary';
 import { createSession, type DesignContext, type DesignSession } from './tools';
@@ -15,8 +15,6 @@ export const REFINE_EDITS: [min: number, max: number] = [1, 4];
 /** Enough for a few searches, the Edits, and a fix or two. */
 const MAX_TOOL_CALLS = 14;
 const MAX_REQUESTS = 4;
-/** The same limit as one Generate loop (spec §13.3). */
-const TIMEOUT_MS = 45_000;
 const NUDGE = 'Call finish_design now to finish this Refine.';
 
 export interface RefineRequest extends Omit<DesignContext, 'brief' | 'edits' | 'editRange'> {
@@ -24,6 +22,7 @@ export interface RefineRequest extends Omit<DesignContext, 'brief' | 'edits' | '
   design: Design;
   /** What the Mover asks for: "make it cozier". */
   text: string;
+  /** Fast mode, as for Generate: Claude Opus 5.5 at its fast speed. */
   fast?: boolean;
   timeoutMs?: number;
 }
@@ -31,9 +30,9 @@ export interface RefineRequest extends Omit<DesignContext, 'brief' | 'edits' | '
 /** The Design with Claude's Edits appended, and just the new ones. */
 export interface RefineResult { design: Design; edits: Edit[]; seconds: number }
 
-/** Runs one Refine of a Design. It fails when Claude makes no Edit, or takes too long. */
+/** Runs one Refine of a Design, in as long as a Generate loop may take. It fails when Claude makes no Edit in that time. */
 export async function refineDesign(request: RefineRequest): Promise<RefineResult> {
-  const { client, design, text, setup, catalog, fast = false, timeoutMs = TIMEOUT_MS } = request;
+  const { client, design, text, setup, catalog, fast = false, timeoutMs = LOOP_TIMEOUT_MS } = request;
   const started = performance.now();
   // A budget the Mover's words name ("keep it under $300") is this Refine's; otherwise the Brief's stands.
   const budgetUsd = budgetInText(text) ?? design.brief?.budgetUsd;
@@ -60,11 +59,11 @@ export async function refineDesign(request: RefineRequest): Promise<RefineResult
       try {
         messages = await run(client, params, session, messages, signal);
       } catch (error) {
-        // Refused in fast mode before any Edit, it goes on at standard speed, as a Generate loop does.
+        // Refused in fast mode before any Edit, it goes on at standard speed on the same model, as a Generate loop does.
         const refused = error instanceof Anthropic.RateLimitError || error instanceof Anthropic.InternalServerError;
         if (!refused || params.speed !== 'fast' || made()) throw error;
         console.warn(`Refine: fast mode refused (${error.message}), going on at standard speed`);
-        params = sharedRequest({ setup, catalog });
+        params = standardSpeed(params);
         messages = before;
         attempt--;
       }

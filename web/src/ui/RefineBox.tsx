@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import type { RefineResult } from '../../../server/generate/refine';
 import { reveal, useReveal } from '../scene/Reveal';
+import { useGenerate } from '../state/generate';
 import { saveNow } from '../state/history';
 import { useEditor } from '../state/store';
 import { RotateLeft, Sparkle } from './icons';
@@ -34,7 +35,8 @@ export function RefineBox() {
       const res = await fetch(`/api/designs/${id}/refine`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.trim() }),
+        // At the speed the Mover picked for Briefs.
+        body: JSON.stringify({ text: text.trim(), fast: useGenerate.getState().fast }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? `The server answered ${res.status}`);

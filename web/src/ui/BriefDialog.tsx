@@ -2,16 +2,17 @@ import { type FormEvent, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { budgetInText } from '@shared/generate';
 import type { Brief } from '@shared/types';
-import { generate, useGenerate, warm } from '../state/generate';
+import { chooseSpeed, generate, useGenerate, warm } from '../state/generate';
 import { saveNow } from '../state/history';
 import { useEditor } from '../state/store';
 import { DesignCards } from './DesignCards';
-import { count } from './format';
 import { Close, Sparkle } from './icons';
 import './brief.css';
 
 /** The style chips of the Brief (spec §13.1). */
 const STYLES = ['Japandi', 'Minimal', 'Mid-century', 'Cozy', 'Industrial', 'Boho'];
+/** The speeds the AI can design at: standard, for the least credit, or fast mode, quicker for several times the credit. */
+const SPEEDS = [{ fast: false, name: 'Standard' }, { fast: true, name: 'Fast' }];
 /** What a Brief can look like, shown in the empty field. */
 const EXAMPLE = 'cozy Japandi, under $400, I need a reading corner';
 
@@ -21,11 +22,10 @@ const EXAMPLE = 'cozy Japandi, under $400, I need a reading corner';
  */
 export function BriefDialog() {
   const scanId = useEditor((s) => s.design!.scanId);
-  const { designName, designEdits, hasOriginals } = useEditor(useShallow((s) => ({
-    designName: s.design!.name, designEdits: s.design!.edits.length, hasOriginals: !!s.setup?.originals.length,
-  })));
+  const designEdits = useEditor((s) => s.design!.edits.length);
   // The Brief of this Scan the Mover last sent, if any: the takes on it, or the form again to change it.
   const sent = useGenerate(useShallow((s) => (s.scanId === scanId ? { status: s.status, brief: s.brief, error: s.error } : undefined)));
+  const fast = useGenerate((s) => s.fast);
   const step = sent?.status ?? 'brief';
   const dialog = useRef<HTMLDialogElement>(null);
   const [text, setText] = useState(sent?.brief?.text ?? '');
@@ -101,18 +101,32 @@ export function BriefDialog() {
                 ))}
               </div>
             </fieldset>
-            <fieldset className="field start-from">
-              <legend>Start from</legend>
-              <div className="chips">
-                <button type="button" aria-pressed={fromCurrent} disabled={!designEdits} onClick={() => setStart('current')}>Current room</button>
-                <button type="button" aria-pressed={!fromCurrent} onClick={() => setStart('empty')}>{hasOriginals ? 'Room as scanned' : 'Empty room'}</button>
-              </div>
-              <span className="hint">
-                {!designEdits ? 'This Design has no Edits yet, so the AI starts from the room as it is.'
-                  : fromCurrent ? `"${designName}" as it is now: the AI keeps its ${count(designEdits, 'Edit')} and designs around them. Its Pieces don't count toward the budget.`
-                  : hasOriginals ? "The room as it was scanned, without this Design's Edits." : "The room with nothing in it: the AI furnishes it from scratch."}
-              </span>
-            </fieldset>
+            {/* Where the takes start, and how fast they come: side by side. */}
+            <div className="field-row">
+              <fieldset className="field start-from">
+                <legend>Start from</legend>
+                <div className="chips">
+                  <button type="button" aria-pressed={fromCurrent} disabled={!designEdits} onClick={() => setStart('current')}>Current room</button>
+                  <button type="button" aria-pressed={!fromCurrent} onClick={() => setStart('empty')}>Empty room</button>
+                </div>
+              </fieldset>
+              <fieldset className="field speed">
+                <legend>Speed</legend>
+                <div className="chips">
+                  {SPEEDS.map((speed) => (
+                    <button
+                      type="button"
+                      key={speed.name}
+                      aria-pressed={speed.fast === fast}
+                      // Each speed runs on its own model, whose cache gets the room too.
+                      onClick={() => { chooseSpeed(speed.fast); warm(scanId); }}
+                    >
+                      {speed.name}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            </div>
             <label className="field budget">
               <span>Budget <span className="muted">(optional)</span></span>
               <span className="money">

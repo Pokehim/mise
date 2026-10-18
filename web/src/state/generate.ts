@@ -5,9 +5,11 @@
  *
  *   useGenerate(selector)   status 'brief' | 'designing' | 'done'; the Scan and Brief; the Design the takes start from,
  *                           if any; the takes by direction; since (when the Brief was sent), seconds (once done);
- *                           error (why the Brief was refused).
- *   generate(scanId, brief, from?) Sends the Brief, with the Design to start from, and reads the stream to its end.
+ *                           error (why the Brief was refused); fast (the speed the Mover picked).
+ *   generate(scanId, brief, from?) Sends the Brief, with the Design to start from, at the speed picked, and reads
+ *                           the stream to its end.
  *   warm(scanId)            Has the server cache what the Scan's Designs read first, so they start sooner.
+ *   chooseSpeed(fast)       Picks standard or fast mode for the Briefs and Refines to come, and remembers it.
  */
 import { create } from 'zustand';
 import { DIRECTIONS, type Direction, type GenerateEvent, type LoopReport } from '@shared/generate';
@@ -27,19 +29,42 @@ interface Generating {
   since?: number;
   seconds?: number;
   error?: string;
+  /** Fast mode: quicker Designs from Claude Opus 5.5, for several times the credit of the standard, Sonnet 5.5. */
+  fast: boolean;
 }
 
 const noTakes = (): Record<Direction, Take> => ({ literal: { edits: [] }, bolder: { edits: [] }, budget: { edits: [] } });
 
-export const useGenerate = create<Generating>()(() => ({ status: 'brief', takes: noTakes() }));
+const SPEED = 'mise.generate.speed';
+
+function storedFast() {
+  try {
+    return localStorage.getItem(SPEED) === 'fast';
+  } catch {
+    return false;
+  }
+}
+
+export const useGenerate = create<Generating>()(() => ({ status: 'brief', takes: noTakes(), fast: storedFast() }));
+
+/** Picks the speed of the Briefs and Refines to come; the Mover's pick is remembered in this browser. */
+export function chooseSpeed(fast: boolean): void {
+  useGenerate.setState({ fast });
+  try {
+    localStorage.setItem(SPEED, fast ? 'fast' : 'standard');
+  } catch {
+    // Private windows can refuse storage; the pick still holds for this visit.
+  }
+}
 
 /**
  * Sends the Brief, and keeps each take up to date from the server's stream until every take is done. With
  * `from`, a saved Design of the Scan, the takes start from it instead of the Scan as it is.
  */
 export async function generate(scanId: string, brief: Brief, from?: Design): Promise<void> {
+  const { fast } = useGenerate.getState();
   // The takes' requests keep the cache warm as warm() would.
-  warmed.set(scanId, Date.now());
+  warmed.set(warmKey(scanId, fast), Date.now());
   useGenerate.setState({
     status: 'designing', scanId, brief, from: from && { designId: from.id, edits: from.edits },
     takes: noTakes(), since: Date.now(), seconds: undefined, error: undefined,
@@ -48,7 +73,7 @@ export async function generate(scanId: string, brief: Brief, from?: Design): Pro
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
-      body: JSON.stringify({ scanId, brief, ...(from && { fromDesignId: from.id }) }),
+      body: JSON.stringify({ scanId, brief, fast, ...(from && { fromDesignId: from.id }) }),
     });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? `The server answered ${res.status}`);
     for await (const event of ndjson<GenerateEvent>(res.body!)) receive(event);
@@ -106,13 +131,17 @@ async function* ndjson<T>(body: ReadableStream<Uint8Array>): AsyncGenerator<T> {
 /** Claude's prompt cache keeps a prefix 5 minutes after its last use; warming again before then is wasted. */
 const WARM_FOR_MS = 4 * 60_000;
 const warmed = new Map<string, number>();
+/** Each speed runs on a model of its own, which caches the room apart. */
+const warmKey = (scanId: string, fast: boolean) => `${scanId} ${fast ? 'fast' : 'standard'}`;
 
 /**
  * Has the server write what every take of this Scan's Brief reads first to Claude's prompt cache, so that
  * the Designs start a few seconds sooner. Called when the Mover starts writing a Brief; once is enough.
  */
 export function warm(scanId: string): void {
-  if (Date.now() - (warmed.get(scanId) ?? -Infinity) < WARM_FOR_MS) return;
-  warmed.set(scanId, Date.now());
-  warmGenerate(scanId).catch(() => warmed.delete(scanId));
+  const { fast } = useGenerate.getState();
+  const key = warmKey(scanId, fast);
+  if (Date.now() - (warmed.get(key) ?? -Infinity) < WARM_FOR_MS) return;
+  warmed.set(key, Date.now());
+  warmGenerate(scanId, fast).catch(() => warmed.delete(key));
 }

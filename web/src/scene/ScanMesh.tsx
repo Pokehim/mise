@@ -1,6 +1,6 @@
 import { Bvh } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
-import { use, useLayoutEffect, useMemo } from 'react';
+import { use, useEffect, useLayoutEffect, useMemo } from 'react';
 import { MeshBasicMaterial, type MeshStandardMaterial, type Object3D, Plane, Vector3 } from 'three';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { RoomSetup, RoomState } from '@shared/types';
@@ -9,7 +9,8 @@ import { type Selection, useEditor } from '../state/store';
 import { wallCoordinates } from './floorPlan';
 import { withMeshopt } from './gltf';
 import { CLICK_TOLERANCE_PX, forEachMaterial } from './objects';
-import { type ScanNodes, setupRoomNodes, splitScanStub } from './scanNodes';
+import { type ScanNodes, setupRoomNodes } from './scanNodes';
+import { disposeSplit, splitScan } from './splitScan';
 import { WallFader } from './WallFader';
 
 const scanLoads = new Map<string, Promise<GLTF | null>>();
@@ -84,9 +85,12 @@ export function ScanMesh() {
   const nodes = useMemo(() => {
     if (!gltf) return setupRoomNodes(setup);
     makeUnlit(gltf.scene);
-    // #8: splitScan(gltf.scene, setup, manifest) from './splitScan'.
-    return splitScanStub(gltf.scene, setup, manifest);
+    return splitScan(gltf.scene, setup, manifest);
   }, [gltf, setup, manifest]);
+  // A split owns its geometry and materials; the glTF it was cut from stays cached for the next one.
+  useEffect(() => () => {
+    if (gltf) disposeSplit(nodes);
+  }, [gltf, nodes]);
 
   // The Dollhouse looks in from above, so it clips everything near the ceiling (spec §10.2).
   const ceilingClip = useMemo(() => new Plane(new Vector3(0, -1, 0)), []);

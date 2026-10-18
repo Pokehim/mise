@@ -2,7 +2,7 @@ import {
   BackSide, BoxGeometry, DoubleSide, Group, Matrix4, Mesh, MeshStandardMaterial, type Object3D, Path, Shape,
   ShapeGeometry, type Side, Vector2, Vector3,
 } from 'three';
-import type { RoomSetup, ScanManifest, Wall } from '@shared/types';
+import type { RoomSetup, Wall } from '@shared/types';
 import { floorGeometry } from './floorPlan';
 
 /** The Scan mesh as separate nodes in the room frame: the shape that splitScan (#8) returns. */
@@ -12,16 +12,6 @@ export interface ScanNodes {
   ceiling: Object3D;
   walls: Record<string, Object3D>;
   originals: Record<string, Object3D>;
-}
-
-/**
- * Stand-in for #8's splitScan, with the same signature: the whole mesh, placed by meshTransform,
- * becomes the shell, so Walls and Originals have no nodes of their own yet.
- */
-export function splitScanStub(scene: Object3D, _setup: RoomSetup, manifest: ScanManifest): ScanNodes {
-  scene.position.set(...manifest.meshTransform.position);
-  scene.rotation.y = manifest.meshTransform.rotationY;
-  return { shell: scene, floor: new Group(), ceiling: new Group(), walls: {}, originals: {} };
 }
 
 const matte = (color: string, side: Side) => new MeshStandardMaterial({ color, side, roughness: 0.9 });

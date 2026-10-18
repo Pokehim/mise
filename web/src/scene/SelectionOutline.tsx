@@ -35,8 +35,7 @@ function selectedBox(selection: Selection | null, setup: RoomSetup, roomState: R
 }
 
 /**
- * Outlines the selected Original or Wall. Until splitScan (#8) gives them nodes of their own they
- * are part of one Scan mesh, so the outline goes around their Room Setup box. It is drawn over the
+ * Outlines the selected Original or Wall, around its Room Setup box. It is drawn over the
  * scene (a Hud, always mounted so rendering never changes), because Originals and Walls touch the
  * floor and the other walls, which would otherwise hide most of it. The box writes depth but no
  * color, so the Outline shows only around its silhouette.

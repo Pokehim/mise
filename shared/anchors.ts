@@ -1,15 +1,17 @@
-import { checkFit, type Item, roomItems, TOLERANCE } from './fit';
+import { checkFit, type Item as RoomItem, roomItems, TOLERANCE } from './fit';
 import {
   distanceToWall, footprint, type OrientedRect, overlapLength, polygonsOverlap, rectCorners, rectInPolygon, wallPoint,
 } from './geometry';
 import type { Catalog, CatalogItem, FitViolation, Placement, RoomSetup, RoomState, Vec2, Wall } from './types';
 
-/** How far, in meters, each step slides a Placement that breaks a Fit rule; also the spacing of open-floor spots. */
+/** How far, in meters, each step slides a Placement that breaks a Fit rule. */
 const STEP = 0.1;
 /** How far it may slide each way. */
 const MAX_SLIDE = 1;
 /** The slides to try, nearest first: 0, +0.1, −0.1, +0.2, … −1. */
 const SLIDES = [0, ...Array.from({ length: Math.round(MAX_SLIDE / STEP) }, (_, i) => [(i + 1) * STEP, -(i + 1) * STEP]).flat()];
+/** How far apart, in meters, the spots open_floor looks at are. */
+const SPOT_SPACING = 0.1;
 /** How many open-floor spots are checked against the Fit rules, best first, before giving up: each check is a walkway search. */
 const OPEN_FLOOR_TRIES = 20;
 /** How far apart those spots are, at least, so that they spread over the room instead of crowding the best one. */
@@ -49,7 +51,7 @@ export function resolveAnchor(setup: RoomSetup, catalog: Catalog, state: RoomSta
   // The new Piece goes by its Catalog id while it is checked, so that is how violations name it.
   const violations = (placement: Placement) => checkFit(setup, withItem, {
     ...state, pieces: { ...state.pieces, [item.id]: { catalogId: item.id, placement, partColors: {} } },
-  }, [item.id]);
+  }, [item.id], { walkway: true });
   const [asked, ...slid] = candidates.placements;
   const askedViolations = asked ? violations(asked) : [];
   if (asked && !askedViolations.length) return { placement: asked };
@@ -58,7 +60,7 @@ export function resolveAnchor(setup: RoomSetup, catalog: Catalog, state: RoomSta
 }
 
 /** The Placements an Anchor allows for `item`, before the Fit rules pick among them, or why it allows none. */
-function candidatesFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anchor: Anchor): Candidates | { error: string } {
+function candidatesFor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, anchor: Anchor): Candidates | { error: string } {
   const [width, height, depth] = item.size;
   /** The Placement, then the Placement slid along the unit vector [ax, az], from `min` to `max` meters, where `allowed`. */
   const sliding = (placement: Placement, [ax, az]: Vec2, [min, max] = [-Infinity, Infinity], allowed = (_: number) => true) => {
@@ -95,7 +97,7 @@ function candidatesFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anch
     const hung = sliding(placement, direction(wall), range, (slide) => !over(slide));
     // No Fit rule covers an Opening on the wall, so the error has to say so.
     const covered = over(0);
-    return covered ? { ...hung, noFit: `${hung.noFit}: there, it would hang over ${covered.id}` } : hung;
+    return covered ? { ...hung, noFit: `${hung.noFit}: where asked, it would hang over ${covered.id}` } : hung;
   };
   const wallOf = (id: string) => setup.walls.find((wall) => wall.id === id);
   const targetOf = (id: string) => inRoom.find((target) => target.id === id);
@@ -104,7 +106,9 @@ function candidatesFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anch
 
   // A wall item only hangs, and only a wall item hangs.
   if (item.mount === 'wall' && anchor.kind !== 'on_wall') return { error: `${item.title} hangs on a wall: use on_wall` };
-  if (item.mount !== 'wall' && anchor.kind === 'on_wall') return { error: `${item.title} stands on the floor: on_wall is for wall items` };
+  if (item.mount !== 'wall' && anchor.kind === 'on_wall') {
+    return { error: `${item.title} stands on the floor: on_wall is for wall items` };
+  }
   switch (anchor.kind) {
     case 'against_wall':
     case 'on_wall': {
@@ -128,20 +132,21 @@ function candidatesFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anch
       const target = targetOf(anchor.target_id);
       if (!target) return noTarget(anchor.target_id);
       const { placement: { rotationY }, rect: { size: [targetWidth, targetDepth] } } = target;
-      // Beside it, backs in line; in front of it, facing it. It slides along the side it is at, staying next to it.
-      const [across, out, turn] = anchor.side === 'front'
-        ? [0, targetDepth / 2 + depth / 2, Math.PI]
-        : [(anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2), depth / 2 - targetDepth / 2, 0];
+      // Beside it, backs in line; in front of it, facing it. It slides along the side it is at, but
+      // its center never past that side's ends, so that it stays next to the target.
+      const [across, out, turn, axis, range]: [number, number, number, Vec2, [number, number]] = anchor.side === 'front'
+        ? [0, targetDepth / 2 + depth / 2, Math.PI, rightOf(rotationY), [-targetWidth / 2, targetWidth / 2]]
+        : [(anchor.side === 'right' ? 1 : -1) * (targetWidth / 2 + width / 2), depth / 2 - targetDepth / 2, 0,
+          frontOf(rotationY), [-depth / 2, targetDepth - depth / 2]];
       const [x, z] = inFrameOf(target.placement, [across, out]);
-      const axis = anchor.side === 'front' ? rightOf(rotationY) : frontOf(rotationY);
-      return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis);
+      return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, axis, range);
     }
     case 'on_top_of': {
       const target = targetOf(anchor.target_id);
       if (!target) return noTarget(anchor.target_id);
       const { placement: { position: [x, , z], rotationY }, rect: { size: [targetWidth, targetDepth] }, heights: [, top] } = target;
       if (width > targetWidth + EPSILON || depth > targetDepth + EPSILON) {
-        return { error: `${item.title} doesn't fit on top of ${anchor.target_id}` };
+        return { error: `${item.title} doesn't fit on top of ${target.name}` };
       }
       // Across the top, never off its sides.
       const slack = (targetWidth - width) / 2;
@@ -158,8 +163,9 @@ function candidatesFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anch
       // how far it reaches out goes under the target's front, so its center is a sixth past it.
       const [reach, turn] = width >= depth ? [depth, 0] : [width, Math.PI / 2];
       const [x, z] = inFrameOf(target.placement, [0, targetDepth / 2 + reach / 6]);
-      // It slides further under the target or out from it, staying centered.
-      return sliding({ position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' }, frontOf(rotationY));
+      // It slides further under the target, or out from it until only a sixth of it is under, staying centered.
+      const placement: Placement = { position: [x, 0, z], rotationY: wrapped(rotationY + turn), mount: 'floor' };
+      return sliding(placement, frontOf(rotationY), [-Infinity, reach / 6]);
     }
     case 'open_floor': {
       const near = anchor.near_id === undefined ? undefined : targetOf(anchor.near_id);
@@ -174,17 +180,17 @@ function candidatesFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anch
  * walls and furniture, or the nearest to `near`. Open floor is floor no furniture stands on, and
  * for a rug, no other rug lies on. The Fit rules, the walkway among them, then pick among them.
  */
-function openFloor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, near?: Item): Placement[] {
+function openFloor(setup: RoomSetup, inRoom: RoomItem[], item: CatalogItem, near?: RoomItem): Placement[] {
   const { polygon } = setup.floor;
   const obstacles = inRoom.filter(({ category, placement }) =>
     placement.mount === 'floor' && (category !== 'rug' || item.category === 'rug'));
   const [xs, zs] = [polygon.map(([x]) => x), polygon.map(([, z]) => z)];
   const [minX, minZ] = [Math.min(...xs), Math.min(...zs)];
-  const [cols, rows] = [Math.floor((Math.max(...xs) - minX) / STEP), Math.floor((Math.max(...zs) - minZ) / STEP)];
+  const [cols, rows] = [Math.ceil((Math.max(...xs) - minX) / SPOT_SPACING), Math.ceil((Math.max(...zs) - minZ) / SPOT_SPACING)];
   const spots: { placement: Placement; clearance: number; nearness: number }[] = [];
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
-      const point: Vec2 = [minX + (i + 0.5) * STEP, minZ + (j + 0.5) * STEP];
+      const point: Vec2 = [minX + (i + 0.5) * SPOT_SPACING, minZ + (j + 0.5) * SPOT_SPACING];
       // The walls it faces, by the distance to their planes: in a room with an inner corner, a
       // wall's plane can pass nearer than the wall itself, which only makes the spot look smaller.
       const walls = setup.walls.map((wall) => ({ wall, distance: distanceToWall(point, wall) })).filter(({ distance }) => distance >= 0);

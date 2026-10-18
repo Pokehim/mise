@@ -18,7 +18,8 @@ const chest = item('chest-tall', 'dresser', 'Tall Chest', [0.6, 1.1, 0.45]);
 const print = item('print-fern', 'wall_art', 'Fern Print', [0.6, 0.8, 0.03], { mount: 'wall' });
 const plant = item('plant-fig', 'plant', 'Fiddle Leaf Fig', [0.4, 1.2, 0.4]);
 const cube = item('cube-storage', 'storage', 'Storage Cube', [0.5, 0.5, 0.5]);
-const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant, cube] };
+const smallRug = item('rug-small', 'rug', 'Small Rug', [1.2, 0.01, 1]);
+const furnished = { ...catalog, items: [...catalog.items, nightstand, sofa, chest, print, plant, cube, smallRug] };
 
 /** The room with nothing in it. */
 const empty: RoomSetup = { ...setup, originals: [] };
@@ -33,7 +34,7 @@ function placementOf(resolution: Resolution): Placement {
   return resolution.placement;
 }
 
-/** A number within 1 mm of `meters`, matched loosely enough for floating point. */
+/** A number within half a millimeter of `meters`, loose enough for floating point. */
 const closeTo = (meters: number) => expect.closeTo(meters, 3);
 
 describe('resolveAnchor', () => {
@@ -66,7 +67,7 @@ describe('resolveAnchor', () => {
       });
     });
 
-    it("returns an error, with the violations where it asked for, when nothing within 1 m fits", () => {
+    it('returns an error, with the violations where it asked for, when nothing within 1 m fits', () => {
       // The bed takes 2.03 m of the 3 m West wall, so a 2 m sofa against it always overlaps the bed.
       expect(resolve(sofa, { kind: 'against_wall', wall_id: 'wl_west', along: 'center' })).toEqual({
         error: "Gray Sofa doesn't fit there, even slid up to 1 m either way",
@@ -109,6 +110,16 @@ describe('resolveAnchor', () => {
 
       expect(resolve(nightstand, { kind: 'beside', target_id: 'og_bed', side: 'right' }, [cubeByBed])).toEqual({
         placement: { position: [closeTo(-0.785), 0, closeTo(-0.8)], rotationY: closeTo(0), mount: 'floor' },
+      });
+    });
+
+    it("returns an error rather than slide past the end of the target's side", () => {
+      // A cube fills the desk's right side, south of it: sliding the nightstand toward the desk's front
+      // would take it past the desk's front edge, at x = 1.4, where it is no longer beside the desk.
+      const cubeByDesk = place('pc_cube', 'cube-storage', onFloor(1.75, 0.185));
+
+      expect(resolve(nightstand, { kind: 'beside', target_id: 'og_desk', side: 'right' }, [cubeByDesk])).toMatchObject({
+        error: "Oak Nightstand doesn't fit there, even slid up to 1 m either way",
       });
     });
 
@@ -178,7 +189,7 @@ describe('resolveAnchor', () => {
       // 0.9 m wide, a print would have to slide 1.05 m to clear the window.
       const widePrint = item('print-wide', 'wall_art', 'Wide Print', [0.9, 1.2, 0.03], { mount: 'wall' });
       expect(resolve(widePrint, { kind: 'on_wall', wall_id: 'wl_north', along: 'center' })).toEqual({
-        error: "Wide Print doesn't fit there, even slid up to 1 m either way: there, it would hang over op_window", violations: [],
+        error: "Wide Print doesn't fit there, even slid up to 1 m either way: where asked, it would hang over op_window", violations: [],
       });
       expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_north', along: 'left', center_height_m: 2.4 })).toEqual({
         error: "Fern Print, 0.8 m tall, doesn't fit on the North wall 2.4 m up: the wall is 2.6 m tall", violations: [],
@@ -210,7 +221,7 @@ describe('resolveAnchor', () => {
 
     it('returns an error when the item is bigger than the top', () => {
       expect(resolve(sofa, { kind: 'on_top_of', target_id: 'og_desk' })).toEqual({
-        error: "Gray Sofa doesn't fit on top of og_desk", violations: [],
+        error: "Gray Sofa doesn't fit on top of your desk", violations: [],
       });
     });
   });
@@ -235,11 +246,22 @@ describe('resolveAnchor', () => {
       });
     });
 
-    it("returns an error when the target is too near a wall to center the rug on, as the bed is", () => {
+    it('returns an error when the target is too near a wall to center the rug on, as the bed is', () => {
       // Turned across the bed, the rug is 2.13 m wide, but the bed's center is 0.495 m from the West wall.
       expect(resolve(rug, { kind: 'centered_under', target_id: 'og_bed' })).toEqual({
         error: "Mainstays 5×7 Rug doesn't fit there, even slid up to 1 m either way",
         violations: [{ rule: 'outside-floor', subjectId: 'rug-gray', message: 'Outside the room' }],
+      });
+    });
+
+    it('never slides the rug out from under the target', () => {
+      // A small rug already lies in front of the sofa, at z −1.4 to −0.4. Slid out past it, the new rug
+      // would have nothing under the sofa.
+      const sofaOnNorthWall = place('pc_sofa', 'sofa-gray', onFloor(0, -1.05));
+      const rugInFront = place('pc_rug', 'rug-small', onFloor(0, -0.9));
+
+      expect(resolve(rug, { kind: 'centered_under', target_id: 'pc_sofa' }, [sofaOnNorthWall, rugInFront], empty)).toMatchObject({
+        error: "Mainstays 5×7 Rug doesn't fit there, even slid up to 1 m either way",
       });
     });
 

@@ -13,7 +13,7 @@ const ARC_SEGMENTS = 16;
 const CELL = 0.05;
 /** Half the width of someone walking: the walkway keeps their center this far from floor items and walls. */
 const WALKER_RADIUS = 0.3;
-/** How near the walker's center comes to what it reaches: just past the WALKER_RADIUS it keeps from it. */
+/** How far from a target's edge the walker's center can be and still reach it: one cell past the WALKER_RADIUS it keeps. */
 const REACH = WALKER_RADIUS + CELL;
 /** What a walkway must reach the front of, from each door. */
 const WALKWAY_TARGETS: Category[] = ['bed', 'desk', 'dresser'];
@@ -35,19 +35,22 @@ export interface Item {
 interface Zone { opening: Opening; wall: Wall; corners: Vec2[] }
 
 /** A grid of CELL squares over the floor: for each cell, how many things keep a walker's center out of it. */
-interface Grid { minX: number; minZ: number; cols: number; rows: number; blocked: Uint8Array }
+interface Grid { minX: number; minZ: number; cols: number; rows: number; blockers: Uint8Array }
 
-/** The cells of the grid a walker comes in through a door at. */
-interface Doorway { door: Opening; cells: number[] }
+/** The cells of the grid a walker comes in through a door at, and the items in the door's clear floor. */
+interface Doorway { door: Opening; cells: number[]; inTheWay: Item[] }
 
 /** The cells of the grid a walker stands in to reach a target. */
 interface Goal { target: Item; cells: number[] }
 
 /**
- * The Fit rule violations of a room (spec §10.6, §13.2): overlap, outside-floor, door-swing,
- * blocks-window and walkway. With `subjectIds`, only those items' violations, still checked against everything.
+ * The Fit rule violations of a room (spec §10.6): overlap, outside-floor, door-swing and blocks-window,
+ * plus walkway when asked for, as only Claude's Edits are held to it (§13.2). With `subjectIds`, only
+ * those items' violations, still checked against everything.
  */
-export function checkFit(setup: RoomSetup, catalog: Catalog, state: RoomState, subjectIds?: string[]): FitViolation[] {
+export function checkFit(
+  setup: RoomSetup, catalog: Catalog, state: RoomState, subjectIds?: string[], { walkway: withWalkway = false } = {},
+): FitViolation[] {
   const items = roomItems(setup, catalog, state);
   const zones = openingZones(setup);
   const subjects = subjectIds ? items.filter((item) => subjectIds.includes(item.id)) : items;
@@ -58,7 +61,7 @@ export function checkFit(setup: RoomSetup, catalog: Catalog, state: RoomState, s
         .map((other): FitViolation => ({ rule: 'overlap', subjectId: subject.id, otherId: other.id, message: `Overlaps ${other.name}` })),
       ...(subject.placement.mount === 'floor' ? floorChecks(subject, setup, zones) : []),
     ]),
-    ...walkway(setup, items, zones, subjects),
+    ...(withWalkway ? walkway(setup, items, zones, subjects) : []),
   ];
 }
 
@@ -122,22 +125,23 @@ function walkway(setup: RoomSetup, items: Item[], zones: Zone[], subjects: Item[
   const cells = new Map(obstacles.map((item) => [item, cellsNear(grid, item.rect, WALKER_RADIUS)]));
   for (const own of cells.values()) stamp(grid, own, 1);
   // The walker comes in anywhere across a doorway, 0.3 m in.
-  const doorways = doors.map(({ opening, wall }): Doorway => ({
+  const doorways = doors.map(({ opening, wall, corners }): Doorway => ({
     door: opening,
     cells: cellsNear(grid, {
       center: wallPoint(wall, opening.offset + opening.width / 2, (WALKER_RADIUS + REACH) / 2),
       size: [opening.width, REACH - WALKER_RADIUS],
       rotationY: Math.atan2(...wall.normal),
     }),
+    inTheWay: obstacles.filter((item) => polygonsOverlap(item.corners, corners, TOLERANCE)),
   }));
   // A chair pulled up to a desk stands in its front: walking up to the chair is walking up to the desk.
   const chairs = obstacles.filter(({ category }) => category === 'chair');
   const goals = targets.map((target): Goal => {
-    const strips = fronts(target);
-    const front = rectCorners(strips[0]);
+    const [front] = fronts(target).map(rectCorners);
     const pulledUp = target.category === 'desk' ? chairs.filter(({ corners }) => polygonsOverlap(corners, front, TOLERANCE)) : [];
-    const cells = [...strips.flatMap((strip) => cellsNear(grid, strip)), ...pulledUp.flatMap(({ rect }) => cellsNear(grid, rect, REACH))];
-    return { target, cells };
+    // Someone stands squarely in front of it: all of them, WALKER_RADIUS each side of their center, within its ends.
+    const squarely = fronts(target, WALKER_RADIUS).flatMap((strip) => cellsNear(grid, strip));
+    return { target, cells: [...squarely, ...pulledUp.flatMap(({ rect }) => cellsNear(grid, rect, REACH))] };
   });
 
   const cut = cutOff(grid, doorways, goals);
@@ -147,7 +151,7 @@ function walkway(setup: RoomSetup, items: Item[], zones: Zone[], subjects: Item[
     if (!own) return [];
     const door = cut.get(subject);
     stamp(grid, own, -1);
-    const without = cutOff(grid, doorways, goals);
+    const without = cutOff(grid, doorways, goals, subject);
     stamp(grid, own, 1);
     const violation = (otherId: string, message: string): FitViolation => ({ rule: 'walkway', subjectId: subject.id, otherId, message });
     return [
@@ -160,17 +164,18 @@ function walkway(setup: RoomSetup, items: Item[], zones: Zone[], subjects: Item[
 }
 
 /**
- * The targets the walkway in through some door doesn't reach, each with the first such door. A
- * doorway with no open cell at all is left out: something stands in the door, which door-swing reports.
+ * The targets the walkway in through some door doesn't reach, each with the first such door, with
+ * the grid as it is stamped and `removed` out of the room. A doorway with no open cell at all, while
+ * something stands in the door's clear floor, is left out: door-swing reports that.
  */
-function cutOff(grid: Grid, doorways: Doorway[], goals: Goal[]): Map<Item, Opening> {
+function cutOff(grid: Grid, doorways: Doorway[], goals: Goal[], removed?: Item): Map<Item, Opening> {
   // Each search marks the cells it reaches with its own number, so cells with the same number are connected.
-  const reached = new Int32Array(grid.blocked.length).fill(-1);
+  const reached = new Int32Array(grid.blockers.length).fill(-1);
   let searches = 0;
   const cut = new Map<Item, Opening>();
-  for (const { door, cells } of doorways) {
-    const open = cells.filter((cell) => !grid.blocked[cell]);
-    if (!open.length) continue;
+  for (const { door, cells, inTheWay } of doorways) {
+    const open = cells.filter((cell) => !grid.blockers[cell]);
+    if (!open.length && inTheWay.some((item) => item !== removed)) continue;
     for (const cell of open) if (reached[cell] === -1) search(grid, cell, searches++, reached);
     const walkways = new Set(open.map((cell) => reached[cell]));
     for (const { target, cells: goal } of goals) {
@@ -181,11 +186,11 @@ function cutOff(grid: Grid, doorways: Doorway[], goals: Goal[]): Map<Item, Openi
 }
 
 /** Breadth-first search from a cell through the open cells next to each other, marking each with `mark`. */
-function search({ cols, rows, blocked }: Grid, start: number, mark: number, reached: Int32Array) {
-  const queue = new Int32Array(blocked.length);
+function search({ cols, rows, blockers }: Grid, start: number, mark: number, reached: Int32Array) {
+  const queue = new Int32Array(blockers.length);
   let [head, tail] = [0, 0];
   const visit = (cell: number) => {
-    if (reached[cell] !== -1 || blocked[cell]) return;
+    if (reached[cell] !== -1 || blockers[cell]) return;
     reached[cell] = mark;
     queue[tail++] = cell;
   };
@@ -205,7 +210,7 @@ function floorGrid({ floor: { polygon }, walls }: RoomSetup, doors: Opening[]): 
   const [minX, minZ] = [Math.min(...polygon.map(([x]) => x)), Math.min(...polygon.map(([, z]) => z))];
   const cols = Math.ceil((Math.max(...polygon.map(([x]) => x)) - minX) / CELL);
   const rows = Math.ceil((Math.max(...polygon.map(([, z]) => z)) - minZ) / CELL);
-  const grid = { minX, minZ, cols, rows, blocked: new Uint8Array(cols * rows).fill(1) };
+  const grid = { minX, minZ, cols, rows, blockers: new Uint8Array(cols * rows).fill(1) };
   // Row by row, the floor is between pairs of the polygon's edge crossings, as in pointInPolygon.
   for (let j = 0; j < rows; j++) {
     const [, z] = cellCenter(grid, 0, j);
@@ -216,7 +221,7 @@ function floorGrid({ floor: { polygon }, walls }: RoomSetup, doors: Opening[]): 
     for (let k = 0; k + 1 < crossings.length; k += 2) {
       const [from, to] = [crossings[k], crossings[k + 1]];
       for (let i = Math.max(0, Math.ceil((from - minX) / CELL - 0.5)); i < cols && cellCenter(grid, i, j)[0] < to; i++) {
-        grid.blocked[j * cols + i] = 0;
+        grid.blockers[j * cols + i] = 0;
       }
     }
   }
@@ -238,7 +243,7 @@ function blockNear(grid: Grid, a: Vec2, b: Vec2) {
   const [i0, i1, j0, j1] = cellBounds(grid, [a, b], WALKER_RADIUS);
   for (let j = j0; j <= j1; j++) {
     for (let i = i0; i <= i1; i++) {
-      if (distanceToSegment(cellCenter(grid, i, j), a, b) < WALKER_RADIUS) grid.blocked[j * grid.cols + i] = 1;
+      if (distanceToSegment(cellCenter(grid, i, j), a, b) < WALKER_RADIUS) grid.blockers[j * grid.cols + i] = 1;
     }
   }
 }
@@ -275,18 +280,22 @@ function cellsNear(grid: Grid, rect: OrientedRect, margin = 0): number[] {
 
 /** Puts something on these cells (+1), or takes it off (−1). */
 const stamp = (grid: Grid, cells: number[], change: 1 | -1) => {
-  for (const cell of cells) grid.blocked[cell] += change;
+  for (const cell of cells) grid.blockers[cell] += change;
 };
 
-/** The strips, REACH deep, along an item's front, where someone stands to use it; a bed's long sides too. */
-function fronts({ category, rect: { center: [cx, cz], size: [width, depth], rotationY } }: Item): OrientedRect[] {
+/**
+ * The strips, REACH deep, along an item's front, where someone stands to use it; a bed's long sides
+ * too. Each stops `inset` short of the ends, but stays two cells long.
+ */
+function fronts({ category, rect: { center: [cx, cz], size: [width, depth], rotationY } }: Item, inset = 0): OrientedRect[] {
   const [cos, sin] = [Math.cos(rotationY), Math.sin(rotationY)];
   // The strip centered at [x, z] in the item's own frame, turned as rectCorners turns it.
   const strip = (x: number, z: number, size: Vec2): OrientedRect =>
     ({ center: [cx + x * cos + z * sin, cz - x * sin + z * cos], size, rotationY });
-  const front = strip(0, (depth + REACH) / 2, [width, REACH]);
+  const along = (length: number) => Math.max(length - 2 * inset, 2 * CELL);
+  const front = strip(0, (depth + REACH) / 2, [along(width), REACH]);
   if (category !== 'bed') return [front];
-  return [front, strip((width + REACH) / 2, 0, [REACH, depth]), strip(-(width + REACH) / 2, 0, [REACH, depth])];
+  return [front, strip((width + REACH) / 2, 0, [REACH, along(depth)]), strip(-(width + REACH) / 2, 0, [REACH, along(depth)])];
 }
 
 /** How far a floor point is from the segment between a and b. */

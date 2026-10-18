@@ -3,7 +3,8 @@
 - POLYCAM_ROOM_GLB_1 is the room frame's own source, through lounge-v1's meshTransform.
 - The other room meshes: level by the floor, then wall occupancy correlation (yaw and x/z), then trimmed
   point-to-plane ICP against GLB_1 (the method of PR #50).
-- The chair Detail Captures: level by their floor, yaw from the floor grain, then x/z by ICP from each Layout chair.
+- The chair Detail Captures, which aren't to scale (SCALE): level by their floor, yaw from the floor grain, then x/z
+  by ICP from each Layout chair and a grid over the room.
 - The splats: the comparison's fits (docs/research/lounge-compare/align-ROOM_*.json), tilt included.
 - The KIRI Layouts: from layout.py, which fits their walls to the room's.
 
@@ -164,6 +165,10 @@ def fit_room_mesh(name, tgt, tgt_n, tree, scale=False):
 # The floor grain's angle from +x in each Detail Capture's own frame (ortho.py with ORTHO_OWN_FRAME=1, then
 # grain.py). The room's grain runs along x (KIRI 179.7°, GLB_1 2.5°), so it pins the chair's yaw to two choices.
 GRAIN_DEG = {'POLYCAM_CHAIR_1.glb': 99.37, 'POLYCAM_CHAIR_2.glb': 70.65}
+# The Detail Captures aren't to scale (room = SCALE x capture). CHAIR_1 also caught the East wall under the
+# whiteboard: its outlet and switch plate are 0.198 m apart and 0.31 m up, against the Main Capture's 0.287 m and
+# 0.46 m, and its chair is 0.59 m tall. CHAIR_2's chair is 0.804 m tall; the Layout's chairs are 0.835 m.
+SCALE = {'POLYCAM_CHAIR_1.glb': 1.449, 'POLYCAM_CHAIR_2.glb': 1.039}
 
 
 def fit_chair(name, tgt, tgt_n, tree, chairs):
@@ -172,10 +177,13 @@ def fit_chair(name, tgt, tgt_n, tree, chairs):
     # Level by the floor scraps and turn the grain onto the room's, then fit x/z. ICP alone can't find the
     # yaw: the floor scraps are flat and GLB_1's chairs are torn.
     y0 = floor_height(p, n)
-    p = p - [0, y0, 0]
-    ps, ns = p[::4], n[::4]
+    sc = SCALE[name]
+    p = (p - [0, y0, 0]) * sc
+    ps, ns = p[::6], n[::6]
     best = None
-    for c in chairs:
+    # Start from each Layout chair, and from a grid over the room: CHAIR_1 was taken against the East wall.
+    starts = list(chairs) + [(x, z) for x in np.arange(X0 + 0.4, X1 - 0.3, 0.4) for z in np.arange(Z0 + 0.4, Z1 - 0.3, 0.5)]
+    for c in starts:
         for k in range(2):
             M0 = mat4(rot_y(np.radians(GRAIN_DEG[name]) + k * np.pi), [c[0], 0, c[1]])
             mask = lambda q: in_room(q, 0.1)
@@ -188,7 +196,7 @@ def fit_chair(name, tgt, tgt_n, tree, chairs):
     M = icp(p, n, tree, tgt, tgt_n, M, dists=(0.03, 0.02, 0.015), iters=8, mask=lambda q: in_room(q, 0.1), planar='xz')
     r = residual(M, p, tree, lambda q: in_room(q, 0.1))
     print(name, '→', r, flush=True)
-    return M @ mat4(np.eye(3), [0, -y0, 0]), r
+    return M @ mat4(np.eye(3), [0, -y0 * sc, 0], sc), r
 
 
 def entry(M, note, res=None, flip=np.eye(3)):
@@ -232,7 +240,7 @@ def main():
     chairs = [it['box']['position'][::2] for it in layout['items'] if it['category'] == 'chair']
     for name in ['POLYCAM_CHAIR_1.glb', 'POLYCAM_CHAIR_2.glb']:
         M, r = fit_chair(name, tgt, tgt_n, tree, chairs)
-        S[name] = entry(M, 'Detail Capture: leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair, best fit', r)
+        S[name] = entry(M, 'Detail Capture, not to scale (align.py SCALE): leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair and a grid over the room, best fit', r)
     for name, M in layout['sourceTransforms'].items():
         S[name] = entry(np.array(M), 'KIRI Layout: its walls fitted to the room walls (layout.py)')
     write_json(os.path.join(V2, 'align.json'), out)
@@ -250,7 +258,7 @@ def refit_chairs(tgt, tgt_n, tree):
         out['sources'][f'SPLAT_{name}.ply'] = entry(mat4(R @ F, t, s), f'docs/research/lounge-compare/align-{name}.json full fit (room = t + s R F p_raw), tilt included', flip=F)
     for name in ['POLYCAM_CHAIR_1.glb', 'POLYCAM_CHAIR_2.glb']:
         M, r = fit_chair(name, tgt, tgt_n, tree, chairs)
-        out['sources'][name] = entry(M, 'Detail Capture: leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair, best fit', r)
+        out['sources'][name] = entry(M, 'Detail Capture, not to scale (align.py SCALE): leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair and a grid over the room, best fit', r)
     write_json(path, out)
 
 

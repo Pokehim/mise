@@ -210,22 +210,22 @@
     "POLYCAM_CHAIR_1.glb": {
       "matrix": [
         [
-          -0.162809,
+          0.235911,
           0.0,
-          0.986658,
-          -0.76711
+          -1.429667,
+          0.427321
         ],
         [
           0.0,
-          1.0,
+          1.449,
           0.0,
-          -0.015752
+          -0.022825
         ],
         [
-          -0.986658,
+          1.429667,
           0.0,
-          -0.162809,
-          0.477593
+          0.235911,
+          -2.226954
         ],
         [
           0.0,
@@ -234,35 +234,35 @@
           1.0
         ]
       ],
-      "note": "Detail Capture: leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair, best fit",
-      "scale": 1.0,
-      "yawDeg": 99.37,
+      "note": "Detail Capture, not to scale (align.py SCALE): leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair and a grid over the room, best fit",
+      "scale": 1.449,
+      "yawDeg": -80.63,
       "residual": {
-        "points": 119964,
-        "medianM": 0.0157,
-        "inlierShareLt5cm": 0.718,
-        "medianInliersM": 0.0117
+        "points": 119156,
+        "medianM": 0.0156,
+        "inlierShareLt5cm": 0.876,
+        "medianInliersM": 0.014
       }
     },
     "POLYCAM_CHAIR_2.glb": {
       "matrix": [
         [
-          0.331338,
+          0.34426,
           0.0,
-          0.943512,
-          -1.053202
+          0.980309,
+          -0.416952
         ],
         [
           0.0,
-          1.0,
+          1.039,
           0.0,
-          -0.021059
+          -0.02188
         ],
         [
-          -0.943512,
+          -0.980309,
           0.0,
-          0.331338,
-          -0.466046
+          0.34426,
+          -3.343311
         ],
         [
           0.0,
@@ -271,14 +271,14 @@
           1.0
         ]
       ],
-      "note": "Detail Capture: leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair, best fit",
-      "scale": 1.0,
+      "note": "Detail Capture, not to scale (align.py SCALE): leveled by its floor, turned so its floor grain runs along x, then ICP (x/z) to GLB_1 from each Layout chair and a grid over the room, best fit",
+      "scale": 1.039,
       "yawDeg": 70.65,
       "residual": {
-        "points": 91510,
-        "medianM": 0.022,
-        "inlierShareLt5cm": 0.683,
-        "medianInliersM": 0.0148
+        "points": 65607,
+        "medianM": 0.0179,
+        "inlierShareLt5cm": 0.827,
+        "medianInliersM": 0.015
       }
     },
     "KIRI_ENGINE_ROOM_1/room.usdz": {

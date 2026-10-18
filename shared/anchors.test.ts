@@ -175,6 +175,11 @@ describe('resolveAnchor', () => {
       expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_north', along: 'center' })).toMatchObject({
         placement: { position: [closeTo(0.9), closeTo(1.05), closeTo(-1.485)] },
       });
+      // 0.9 m wide, a print would have to slide 1.05 m to clear the window.
+      const widePrint = item('print-wide', 'wall_art', 'Wide Print', [0.9, 1.2, 0.03], { mount: 'wall' });
+      expect(resolve(widePrint, { kind: 'on_wall', wall_id: 'wl_north', along: 'center' })).toEqual({
+        error: "Wide Print doesn't fit there, even slid up to 1 m either way: there, it would hang over op_window", violations: [],
+      });
       expect(resolve(print, { kind: 'on_wall', wall_id: 'wl_north', along: 'left', center_height_m: 2.4 })).toEqual({
         error: "Fern Print, 0.8 m tall, doesn't fit on the North wall 2.4 m up: the wall is 2.6 m tall", violations: [],
       });

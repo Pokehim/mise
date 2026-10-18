@@ -87,10 +87,15 @@ function candidatesFor(setup: RoomSetup, inRoom: Item[], item: CatalogItem, anch
       return { error: `${item.title}, ${height} m tall, doesn't fit on ${where}: the wall is ${wall.height} m tall` };
     }
     const openings = setup.openings.filter(({ wallId }) => wallId === wall.id);
-    const besideOpenings = (slide: number) => openings.every((opening) =>
-      overlapLength([opening.offset, opening.offset + opening.width], [along + slide - width / 2, along + slide + width / 2]) <= TOLERANCE
-      || overlapLength([opening.bottom, opening.bottom + opening.height], [bottom, bottom + height]) <= TOLERANCE);
-    return sliding({ position: [x, bottom, z], rotationY, mount: 'wall', wallId: wall.id }, direction(wall), range, besideOpenings);
+    /** The Opening it would hang over, slid this far. */
+    const over = (slide: number) => openings.find((opening) =>
+      overlapLength([opening.offset, opening.offset + opening.width], [along + slide - width / 2, along + slide + width / 2]) > TOLERANCE
+      && overlapLength([opening.bottom, opening.bottom + opening.height], [bottom, bottom + height]) > TOLERANCE);
+    const placement: Placement = { position: [x, bottom, z], rotationY, mount: 'wall', wallId: wall.id };
+    const hung = sliding(placement, direction(wall), range, (slide) => !over(slide));
+    // No Fit rule covers an Opening on the wall, so the error has to say so.
+    const covered = over(0);
+    return covered ? { ...hung, noFit: `${hung.noFit}: there, it would hang over ${covered.id}` } : hung;
   };
   const wallOf = (id: string) => setup.walls.find((wall) => wall.id === id);
   const targetOf = (id: string) => inRoom.find((target) => target.id === id);

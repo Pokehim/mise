@@ -48,7 +48,8 @@ image (`alphaMode: BLEND`) on the floor, or on the wall for the whiteboard.
     from a capture that is clean there. `swap_textures.py` puts them in the file.
 11. `measure/tpose.py`, `measure/tpeaks.py`, `measure/tthick.py`, `measure/tcolor.py`: the table, from the splat.
 12. `table_top_image.py`, then `table.py` (Blender).
-13. `render.py` (Blender) with the East wall view, `whiteboard_image.py`, then `whiteboard.py` (Blender).
+13. `render.py` (Blender) with the East wall view of GLB_1 and of GLB_3, `whiteboard_image.py` (GLB_1's image, with
+    the North end's top from GLB_3 and its smeared bottom corner refilled), then `whiteboard.py` (Blender).
 14. `recenter_glb.py` on each file, so its origin is the center of its footprint.
 15. `fit_originals.py`: the 16 Originals; `check_chair.py`: the chair's Done-when numbers.
 

@@ -132,7 +132,7 @@
         ],
         "rotationY": 0
       },
-      "floorColor": "#96785a"
+      "floorColor": "#96795b"
     },
     {
       "id": "og_desk",
@@ -152,7 +152,13 @@
         ],
         "rotationY": 0
       },
-      "floorColor": "#9a7b5d"
+      "floorColor": "#9a7c5d",
+      "patch": {
+        "floor": "patches/og_desk.floor.png",
+        "walls": {
+          "wl_1": "patches/og_desk.wl_1.png"
+        }
+      }
     },
     {
       "id": "og_chair",
@@ -172,7 +178,10 @@
         ],
         "rotationY": 3.141592653589793
       },
-      "floorColor": "#9b7c5d"
+      "floorColor": "#9b7d5e",
+      "patch": {
+        "floor": "patches/og_chair.floor.png"
+      }
     },
     {
       "id": "og_dresser",

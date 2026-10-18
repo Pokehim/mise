@@ -14,7 +14,8 @@
  *   selection                  The selected Piece, Original or Wall, or null.
  *   highlight                  The item a hovered History row changed (#11): outlined like the selection.
  *   view                       'dollhouse' | 'walk'.
- *   preview                    A Piece's placement while it is being dragged: shown instead of its
+ *   preview                    A Piece's or Original's placement while it is being dragged (pieceId holds the
+ *                              Original's id too, as ids are unique across both): shown instead of its
  *                              roomState placement, and committed as one move Edit when the drag ends.
  *
  *   load(designId)             Fetches the Design, its Scan's manifest and setup, and the Catalog.

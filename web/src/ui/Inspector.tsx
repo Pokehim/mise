@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { SearchResult } from '@shared/catalog-search';
 import type { CatalogItem, Category, Vec3 } from '@shared/types';
 import { wallLength } from '../scene/floorPlan';
-import { removePiece, rotatePiece } from '../scene/pieceEdits';
+import { removeOriginal, removePiece, rotateOriginal, rotatePiece } from '../scene/pieceEdits';
 import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget, targetBox } from '../scene/swapResize';
 import { closeResize, openResize, setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
@@ -139,9 +139,14 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
 type Tool = 'swap' | 'resize' | 'replace';
 
 /** A tool's button, pressed while the tool is open. */
-const ToolButton = ({ tool, name, open, setOpen }: { tool: Tool; name: string; open: Tool | null; setOpen: (tool: Tool | null) => void }) => (
-  <button aria-pressed={open === tool} onClick={() => setOpen(open === tool ? null : tool)}>{name}</button>
+const ToolButton = ({ tool, name, open, setOpen, disabled, title }: {
+  tool: Tool; name: string; open: Tool | null; setOpen: (tool: Tool | null) => void; disabled?: boolean; title?: string;
+}) => (
+  <button aria-pressed={open === tool} disabled={disabled} title={title} onClick={() => setOpen(open === tool ? null : tool)}>{name}</button>
 );
+
+/** Why a Kept Original's Move, Replace and Remove are off (the Glossary's Kept). */
+const KEPT_HINT = 'Kept: it stays in the room. It can be recolored, but not moved, replaced or removed.';
 
 function PieceInspector({ pieceId }: { pieceId: string }) {
   const item = useEditor((s) => pieceItem(s, pieceId));
@@ -183,12 +188,17 @@ function OriginalInspector({ originalId }: { originalId: string }) {
   if (!original) return null;
   return (
     <>
-      <h2>{original.label}</h2>
+      <h2>{original.label}{original.kept && <span title={KEPT_HINT}> 🔒</span>}</h2>
       <Size size={original.box.size} />
-      {original.kept && <p className="badge" title="It stays in the room: it can be recolored, but not moved, replaced or removed.">Kept</p>}
+      {original.kept && <p className="badge" title={KEPT_HINT}>Kept</p>}
       <div className="actions">
-        {!original.kept && <ToolButton tool="replace" name="Replace" open={open} setOpen={setOpen} />}
-        {!original.kept && <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} />}
+        <ToolButton tool="replace" name="Replace" open={open} setOpen={setOpen} disabled={original.kept} title={original.kept ? KEPT_HINT : undefined} />
+        <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} disabled={original.kept} title={original.kept ? KEPT_HINT : undefined} />
+      </div>
+      <div className="actions">
+        <button title={original.kept ? KEPT_HINT : 'R'} disabled={original.kept} onClick={() => rotateOriginal(originalId, 1)}>↺ 15°</button>
+        <button title={original.kept ? KEPT_HINT : 'Shift+R'} disabled={original.kept} onClick={() => rotateOriginal(originalId, -1)}>↻ 15°</button>
+        <button title={original.kept ? KEPT_HINT : 'Delete'} disabled={original.kept} onClick={() => removeOriginal(originalId)}>Remove</button>
       </div>
       {open === 'replace' && <OriginalReplace original={original} onPick={(item) => putInPlace({ kind: 'original', id: originalId }, item)} />}
       {open === 'resize' && (

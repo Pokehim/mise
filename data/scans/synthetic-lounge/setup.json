@@ -141,7 +141,13 @@
         ],
         "rotationY": 1.5707963267948966
       },
-      "floorColor": "#666c74"
+      "floorColor": "#676c75",
+      "patch": {
+        "floor": "patches/og_sofa.floor.png",
+        "walls": {
+          "wl_4": "patches/og_sofa.wl_4.png"
+        }
+      }
     },
     {
       "id": "og_coffee_table",
@@ -161,7 +167,10 @@
         ],
         "rotationY": 1.5707963267948966
       },
-      "floorColor": "#686d76"
+      "floorColor": "#686d76",
+      "patch": {
+        "floor": "patches/og_coffee_table.floor.png"
+      }
     },
     {
       "id": "og_side_table",
@@ -181,7 +190,10 @@
         ],
         "rotationY": 1.5707963267948966
       },
-      "floorColor": "#696f78"
+      "floorColor": "#6a6f79",
+      "patch": {
+        "floor": "patches/og_side_table.floor.png"
+      }
     },
     {
       "id": "og_armchair",
@@ -201,7 +213,10 @@
         ],
         "rotationY": 3.141592653589793
       },
-      "floorColor": "#6d727c"
+      "floorColor": "#6d737c",
+      "patch": {
+        "floor": "patches/og_armchair.floor.png"
+      }
     },
     {
       "id": "og_bench",
@@ -221,7 +236,7 @@
         ],
         "rotationY": -1.5707963267948966
       },
-      "floorColor": "#6f757f"
+      "floorColor": "#70757f"
     }
   ]
 }

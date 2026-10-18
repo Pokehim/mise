@@ -1,8 +1,9 @@
 import { existsSync, globSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import { MergeInputError, mergeScan } from '../scripts/scan-merge';
 import { newId } from '../shared/ids';
@@ -77,6 +78,27 @@ const saveScanFile = (file: string) => async (c: Context) => {
 
 app.put('/api/scans/:id/setup', saveScanFile('setup.json'));
 app.put('/api/scans/:id/manifest', saveScanFile('manifest.json'));
+
+// Phase 2 (spec §11.2): Room Setup's Bake step saves each baked Patch image here. A 512×512 PNG is far under the cap.
+const MAX_PNG_BYTES = 2 * 1024 * 1024;
+// Dot-separated words, so "og_sofa.floor.png" and "og_sofa.wl_2.png" pass, but ".." and any "/" can't.
+const PNG_NAME = /^[\w-]+(\.[\w-]+)*\.png$/;
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+app.put(
+  '/api/scans/:id/files/:name',
+  bodyLimit({ maxSize: MAX_PNG_BYTES, onError: (c) => c.json({ error: 'A Patch image can be at most 2 MB' }, 413) }),
+  async (c) => {
+    const dir = requireScan(c.req.param('id'));
+    const name = c.req.param('name');
+    if (!PNG_NAME.test(name)) fail(400, `Not a PNG file name: ${name}`);
+    const png = Buffer.from(await c.req.arrayBuffer());
+    if (!png.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) fail(400, 'The body must be a PNG');
+    await mkdir(join(dir, 'patches'), { recursive: true });
+    await writeFile(join(dir, 'patches', name), png);
+    return c.json({ path: `patches/${name}` });
+  },
+);
 
 // Phase 2 (ADR-0007): Room Setup's Fill Captures step saves the manifest, then rebuilds room.glb here.
 app.post('/api/scans/:id/merge', async (c) => {

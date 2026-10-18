@@ -58,3 +58,25 @@ export function rotatePiece(pieceId: string, steps: number) {
 }
 
 export const removePiece = (pieceId: string) => useEditor.getState().applyEdit({ type: 'remove', targetId: pieceId });
+
+/**
+ * The Original's state while the Mover can still change it: in the room, and not Kept (spec §11.1).
+ * Replay would skip such an Edit, so the Mover's actions don't create it.
+ */
+function movableOriginal(originalId: string) {
+  const { setup, roomState } = useEditor.getState();
+  const state = roomState!.originals[originalId];
+  return state?.visible && !setup!.originals.find(({ id }) => id === originalId)?.kept ? state : undefined;
+}
+
+/** Turns an Original by whole 15° steps, like rotatePiece. It leaves its spot, so its Patch shows. */
+export function rotateOriginal(originalId: string, steps: number) {
+  const placement = movableOriginal(originalId)?.placement;
+  if (!placement || placement.mount === 'wall') return;
+  useEditor.getState().applyEdit({ type: 'move', targetId: originalId, placement: { ...placement, rotationY: turned(placement.rotationY, steps) } });
+}
+
+/** Remove Original (spec §11.1): hides it, and its Patch covers the spot. */
+export function removeOriginal(originalId: string) {
+  if (movableOriginal(originalId)) useEditor.getState().applyEdit({ type: 'remove', targetId: originalId });
+}

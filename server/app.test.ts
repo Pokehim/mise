@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { cp, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -116,6 +117,59 @@ describe('POST /api/scans/:id/merge', () => {
 
   it('404s for a Scan that does not exist', async () => {
     expect((await app.request('/api/scans/nowhere/merge', { method: 'POST' })).status).toBe(404);
+  });
+});
+
+describe('PUT /api/scans/:id/files/:name', () => {
+  const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  const png = (extra = 8) => new Uint8Array([...PNG_SIGNATURE, ...new Array(extra).fill(7)]);
+  const put = (path: string, body: BodyInit) => app.request(path, { method: 'PUT', headers: { 'Content-Type': 'image/png' }, body });
+
+  it('saves a PNG under the Scan’s patches folder and answers with its path', async () => {
+    const res = await put('/api/scans/fixture/files/og_sofa.wl_2.png', png());
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ path: 'patches/og_sofa.wl_2.png' });
+    expect(new Uint8Array(await (await app.request('/data/scans/fixture/patches/og_sofa.wl_2.png')).arrayBuffer())).toEqual(png());
+  });
+
+  it('replaces the file when it is baked again', async () => {
+    await put('/api/scans/fixture/files/og_sofa.floor.png', png(4));
+    await put('/api/scans/fixture/files/og_sofa.floor.png', png(12));
+
+    const saved = new Uint8Array(await (await app.request('/data/scans/fixture/patches/og_sofa.floor.png')).arrayBuffer());
+    expect(saved).toEqual(png(12));
+  });
+
+  it.each(['..%2Fsetup.png', '%2e%2e%2f%2e%2e%2fmanifest.png', 'a%2Fb.png', 'a..png', '.png', 'floor.jpg', 'floor.png.exe', 'floor', 'sofa.floor.PNG'])(
+    '400s for the name %s, so nothing is written outside patches/',
+    async (name) => {
+      const res = await put(`/api/scans/fixture/files/${name}`, png());
+      expect(res.status).toBe(400);
+      expect(existsSync(join(dataDir, 'scans/fixture/patches'))).toBe(false);
+      expect(existsSync(join(dataDir, 'scans/setup.png'))).toBe(false);
+    },
+  );
+
+  it('400s for a body that is not a PNG', async () => {
+    const res = await put('/api/scans/fixture/files/og_sofa.floor.png', '<script>alert(1)</script>');
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/must be a PNG/);
+    expect(existsSync(join(dataDir, 'scans/fixture/patches'))).toBe(false);
+  });
+
+  it('413s for a body over 2 MB', async () => {
+    const res = await put('/api/scans/fixture/files/og_sofa.floor.png', new Uint8Array([...PNG_SIGNATURE, ...new Array(2 * 1024 * 1024).fill(0)]));
+    expect(res.status).toBe(413);
+    expect(existsSync(join(dataDir, 'scans/fixture/patches'))).toBe(false);
+  });
+
+  it('404s for a Scan that does not exist', async () => {
+    expect((await put('/api/scans/nowhere/files/og_sofa.floor.png', png())).status).toBe(404);
+  });
+
+  it('400s for a Scan id that is not a plain id', async () => {
+    expect((await put('/api/scans/..%2Ffixture/files/og_sofa.floor.png', png())).status).toBe(400);
   });
 });
 

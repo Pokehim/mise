@@ -1,7 +1,7 @@
 import { Hud, Outlines } from '@react-three/drei';
 import { wallPoint } from '@shared/geometry';
 import type { RoomSetup, RoomState, Vec3 } from '@shared/types';
-import { type Selection, useEditor } from '../state/store';
+import { type Preview, type Selection, useEditor } from '../state/store';
 import { wallLength, wallRotationY } from './floorPlan';
 import { ignoreRaycast } from './objects';
 
@@ -17,10 +17,11 @@ export const Outline = ({ renderOrder, angle = 0, color = '#1a73e8' }: { renderO
 type OutlineBox = { center: Vec3; size: Vec3; rotationY: number };
 
 /** The box to outline for the selected Original (its Room Setup box, where it is now) or Wall. */
-function selectedBox(selection: Selection | null, setup: RoomSetup, roomState: RoomState): OutlineBox | null {
+function selectedBox(selection: Selection | null, setup: RoomSetup, roomState: RoomState, preview: Preview | null): OutlineBox | null {
   if (selection?.kind === 'original') {
     const original = setup.originals.find(({ id }) => id === selection.id);
-    const placement = roomState.originals[selection.id]?.placement;
+    // Where it is shown: dragged Originals follow the pointer, as Pieces do.
+    const placement = preview?.pieceId === selection.id ? preview.placement : roomState.originals[selection.id]?.placement;
     if (!original || !placement) return null;
     const { position: [x, y, z], rotationY } = placement;
     const [width, height, depth] = original.box.size;
@@ -46,7 +47,8 @@ export function SelectionOutline() {
   const selection = useEditor((s) => (s.highlight && s.highlight.kind !== 'piece' ? s.highlight : s.selection));
   const setup = useEditor((s) => s.setup!);
   const roomState = useEditor((s) => s.roomState!);
-  const box = selectedBox(selection, setup, roomState);
+  const preview = useEditor((s) => s.preview);
+  const box = selectedBox(selection, setup, roomState, preview);
   return (
     <Hud>
       {box && (

@@ -4,7 +4,7 @@ import type { CatalogItem, Placement, Vec2, Vec3, Wall } from '@shared/types';
 import { wallCoordinates, wallLength, wallRotationY } from './floorPlan';
 
 /** Rugs lie flat: they stay on the floor, nothing rests on them, and they cast no blob shadow. */
-export const liesFlat = (item: CatalogItem) => item.category === 'rug';
+export const liesFlat = (item: Pick<CatalogItem, 'category'>) => item.category === 'rug';
 
 /** Where a ray meets the horizontal plane at height y (the floor by default), if it points at it. */
 export function floorHit(ray: Ray, y = 0): Vec2 | null {

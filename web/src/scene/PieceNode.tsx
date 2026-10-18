@@ -5,6 +5,7 @@ import type { Mesh } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useShallow } from 'zustand/react/shallow';
 import type { CatalogItem, Hex, Vec3 } from '@shared/types';
+import { useRealism } from '../state/realism';
 import { pieceItem, type Selection, useEditor } from '../state/store';
 import { applyParts, recolorParts } from './applyParts';
 import { useDragPiece } from './DragControls';
@@ -34,6 +35,10 @@ const PieceModel = memo(function PieceModel({ item, partColors, selected }: Piec
       const mesh = object as Mesh;
       if (!mesh.isMesh) return;
       mesh.geometry = mesh.geometry.clone();
+      // Shadows show only at the Max level (CastShadows). A rug casts none, and takes those of what
+      // stands on it, which the Floor under it can't show.
+      mesh.castShadow = !liesFlat(item);
+      mesh.receiveShadow = liesFlat(item);
       found.push(mesh);
     });
     applyParts(copy, item.category, item.size, item.partParams);
@@ -64,6 +69,8 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
   const partColors = useEditor(useShallow((s) => s.roomState!.pieces[pieceId]?.partColors));
   // Outlined when selected, or when a hovered History row changed it (#11).
   const selected = useEditor((s) => isPiece(s.selection, pieceId) || isPiece(s.highlight, pieceId));
+  // Max draws the shadows Pieces really cast instead.
+  const showBlobShadow = useRealism() !== 'max';
   const onPointerDown = useDragPiece(pieceId);
   const [hovered, setHovered] = useState(false);
   useCursor(hovered, 'grab');
@@ -84,7 +91,7 @@ export function PieceNode({ pieceId }: { pieceId: string }) {
       onPointerOut={() => setHovered(false)}
     >
       <PieceModel item={item} partColors={partColors} selected={selected} />
-      {placement.mount === 'floor' && !liesFlat(item) && <BlobShadow size={item.size} />}
+      {showBlobShadow && placement.mount === 'floor' && !liesFlat(item) && <BlobShadow size={item.size} />}
     </group>
   );
 }

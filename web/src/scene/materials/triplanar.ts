@@ -1,6 +1,6 @@
 // Finishes with a material from the Material Library (spec §11.1), drawn through the same shader
 // patch as Recolor and Paint (spec §10.6): the Walls, the Floor and the Parts of Originals.
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import {
   Color, type IUniform, type Material, MeshBasicMaterial, RepeatWrapping, SRGBColorSpace, type Texture, TextureLoader,
   type WebGLProgramParametersWithUniforms,
@@ -157,6 +157,8 @@ export const textureSource = {
 
 interface TextureEntry { texture: Texture; loaded: boolean; waiting: (() => void)[] }
 const textures = new Map<string, TextureEntry>();
+let texturesLoaded = 0;
+const onTextureLoaded = new Set<() => void>();
 
 /** The texture at a URL: loaded once, then kept. */
 function textureFor(url: string): Texture {
@@ -166,6 +168,8 @@ function textureFor(url: string): Texture {
     created.texture = textureSource.load(url, () => {
       created.loaded = true;
       created.waiting.splice(0).forEach((callback) => callback());
+      texturesLoaded++;
+      onTextureLoaded.forEach((listener) => listener());
     });
     created.texture.wrapS = created.texture.wrapT = RepeatWrapping;
     created.texture.colorSpace = SRGBColorSpace;   // the color map is sRGB; the shader gets it in linear light
@@ -173,6 +177,23 @@ function textureFor(url: string): Texture {
     textures.set(url, (entry = created));
   }
   return entry.texture;
+}
+
+/**
+ * How many Material Library textures have loaded so far. It goes up as a material Finish starts to
+ * show, which can be a moment after its Edit, so whatever draws from the Scan's look (the room
+ * light) knows to look again.
+ */
+export const loadedTextureCount = () => texturesLoaded;
+
+/** loadedTextureCount, kept current in a React component. */
+export function useLoadedTextureCount() {
+  return useSyncExternalStore((listener) => {
+    onTextureLoaded.add(listener);
+    return () => {
+      onTextureLoaded.delete(listener);
+    };
+  }, loadedTextureCount);
 }
 
 /** Calls back once the texture at the URL (see textureFor) has loaded, which may be now. */
@@ -186,12 +207,13 @@ function whenLoaded(url: string, callback: () => void) {
 export const materialThumbnail = ({ id }: LibraryMaterial) => `/data/materials/thumbs/${id}.jpg`;
 
 let library: Promise<ReadonlyMap<string, LibraryMaterial>> | undefined;
+let loadedLibrary: ReadonlyMap<string, LibraryMaterial> | null = null;
 
 /** The Material Library by id, fetched once. */
 export function loadMaterialLibrary() {
   library ??= fetch('/data/materials/materials.json')
     .then((res) => (res.ok ? (res.json() as Promise<LibraryMaterial[]>) : Promise.reject(new Error(`GET materials.json: ${res.status}`))))
-    .then((materials) => new Map(materials.map((material) => [material.id, material] as const)))
+    .then((materials) => (loadedLibrary = new Map(materials.map((material) => [material.id, material] as const))))
     .catch((error) => {
       library = undefined;   // try again next time
       throw error;
@@ -199,9 +221,9 @@ export function loadMaterialLibrary() {
   return library;
 }
 
-/** The Material Library once it has loaded, and null until then. */
+/** The Material Library once it has loaded, and null until then: from the first render, once it has loaded before. */
 export function useMaterialLibrary(): ReadonlyMap<string, LibraryMaterial> | null {
-  const [loaded, setLoaded] = useState<ReadonlyMap<string, LibraryMaterial> | null>(null);
+  const [loaded, setLoaded] = useState(loadedLibrary);
   useEffect(() => {
     loadMaterialLibrary().then(setLoaded, (error) => console.warn('Could not load the Material Library', error));
   }, []);

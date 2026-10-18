@@ -3,10 +3,13 @@ import { Canvas, events } from '@react-three/fiber';
 import { Component, type DragEvent, type ReactNode, type RefObject, Suspense, useRef } from 'react';
 import { type Camera, NeutralToneMapping, Vector2 } from 'three';
 import { useShallow } from 'zustand/react/shallow';
+import { useRealism } from '../state/realism';
 import { useEditor } from '../state/store';
 import { CATALOG_ITEM_TYPE } from '../ui/CatalogPanel';
+import { CastShadows } from './CastShadows';
 import { DollhouseCamera } from './DollhouseCamera';
 import { FitHighlights } from './FitHighlights';
+import { FILL_LIGHT, RoomLighting } from './Lighting';
 import { ScanColors } from './materials/ScanColors';
 import { isDrawn } from './objects';
 import { PieceNode } from './PieceNode';
@@ -54,6 +57,7 @@ interface SceneCanvasProps {
 /** The 3D view: the Scan, the Pieces, and the camera for the current view, which it shares through cameraRef. */
 export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
   const view = useEditor((s) => s.view);
+  const realism = useRealism();
   const container = useRef<HTMLDivElement>(null!);
   const onDrop = (event: DragEvent) => {
     const itemId = event.dataTransfer.getData(CATALOG_ITEM_TYPE);
@@ -72,7 +76,10 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
     >
       <Canvas
         camera={{ fov: 55, near: 0.05, far: 100, position: [0, 5, 5] }}
-        gl={{ localClippingEnabled: true, toneMapping: NeutralToneMapping }}
+        // The stencil keeps overlapping shadow receivers from darkening a shadow twice (CastShadows).
+        gl={{ localClippingEnabled: true, toneMapping: NeutralToneMapping, stencil: true }}
+        // Only the Max level has a light that casts shadows; without one, the shadow map costs nothing.
+        shadows="percentage"
         // Faded walls, replaced Originals and the clipped ceiling must not catch the pointer.
         events={(store) => ({ ...events(store), filter: (hits) => hits.filter(isDrawn) })}
         onPointerMissed={() => useEditor.getState().select(null)}
@@ -81,13 +88,20 @@ export function SceneCanvas({ cameraRef, onDropItem }: SceneCanvasProps) {
         }}
       >
         <color attach="background" args={['#f4f1ea']} />
-        <hemisphereLight args={['#ffffff', '#d9cfbf', 0.6]} />
-        <Optional what="The environment map">
-          <Environment preset="apartment" />
-        </Optional>
+        {realism === 'quick' && (
+          <>
+            <hemisphereLight args={FILL_LIGHT} />
+            <Optional what="The environment map">
+              <Environment preset="apartment" />
+            </Optional>
+          </>
+        )}
         <Suspense fallback={null}>
           <ScanMesh />
           <ScanColors />
+          {/* After the Scan nodes: they light Pieces from them, and shadow them (spec §12). */}
+          {realism !== 'quick' && <RoomLighting />}
+          {realism === 'max' && <CastShadows />}
         </Suspense>
         <Pieces />
         <SelectionOutline />

@@ -1,6 +1,6 @@
 import { Box3, MathUtils, Shape, ShapeGeometry, Vector2, Vector3 } from 'three';
 import { distanceToWall, pointInPolygon, wallPoint } from '@shared/geometry';
-import type { RoomSetup, Vec2, Wall } from '@shared/types';
+import type { Opening, RoomSetup, Vec2, Wall } from '@shared/types';
 
 /** The room as a box: its floor polygon, from the floor up to the ceiling. */
 export function roomBounds(setup: RoomSetup) {
@@ -21,6 +21,12 @@ export const wallLength = ({ start, end }: Wall) => Math.hypot(end[0] - start[0]
 
 /** The rotationY that turns something's front (+Z) away from a wall, into the room. */
 export const wallRotationY = ({ normal }: Wall) => Math.atan2(normal[0], normal[1]);
+
+/** The center of an Opening in its wall, or `out` meters from the wall into the room. */
+export function openingCenter(opening: Opening, wall: Wall, out = 0) {
+  const [x, z] = wallPoint(wall, opening.offset + opening.width / 2, out);
+  return new Vector3(x, opening.bottom + opening.height / 2, z);
+}
 
 /** Where a floor point lands on a wall's line: how far along it from its start, and how far into the room. */
 export function wallCoordinates([x, z]: Vec2, wall: Wall) {
@@ -51,6 +57,15 @@ export function keepInside(point: Vec2, setup: RoomSetup, margin: number): Vec2 
     p = [onWall[0] + wall.normal[0] * margin, onWall[1] + wall.normal[1] * margin];
   }
   return p;
+}
+
+/**
+ * The middle of the room, on the floor: the center of its bounds, or, when that is off the floor
+ * (in an L-shaped room), the nearest floor point to it, half a meter from the walls.
+ */
+export function roomCenter(setup: RoomSetup): Vec2 {
+  const { x, z } = roomBounds(setup).getCenter(new Vector3());
+  return keepInside([x, z], setup, 0.5);
 }
 
 /** Whether a wall's inside faces a point, such as the camera: the walls the Dollhouse view shows. */

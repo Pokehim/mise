@@ -9,7 +9,7 @@
 #   Master Copy's size against each real chair.
 # Tables: the two East legs are crisp columns in the splat: their centers give the yaw and the position; the
 #   Master Copy's legs are put on them.
-# Whiteboard: flat against the East wall (x = 1.55, setup.json), ends and height measured on GLB_1's image.
+# Whiteboard: flat against the East wall (x = 1.5759, setup.json), ends and height measured on GLB_1's image.
 import json, sys
 import numpy as np
 import trimesh
@@ -187,7 +187,7 @@ for i, it in enumerate(chairs):
                   f'(median {meds * 1000:.1f} mm); Layout box center moved {np.hypot(x[1] - bx, x[2] - bz) * 100:.1f} cm')
 
 # ---------------- whiteboard ----------------
-WB_Z0, WB_Z1, WALL_X = -3.565, 2.522, 1.55
+WB_Z0, WB_Z1, WALL_X = -3.565, 2.522, 1.5759
 _, wb_bounds = model_points('whiteboard', 1000)
 size = box_size(wb_bounds)
 pos = [round(WALL_X - size[2] / 2, 4), 0, round((WB_Z0 + WB_Z1) / 2, 4)]

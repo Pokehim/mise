@@ -84,7 +84,8 @@ With 1.170 the Master Copy's seat and back heights land within 4 mm of the room'
 6.087 m from the North corner (z = -3.565) to z = 2.522, 0.845 to 2.330 m high including the tray; the board's
 face 12 mm off the wall, the tray 33 mm. Ends and heights from 1 mm/px orthographic renders of GLB_1. GLB_1's East
 wall leans (x = 1.586 at 0.5 m, 1.52 near the ceiling), so the board is kept vertical, its back on setup.json's
-East wall (x = 1.55), which is where GLB_1 has it at mid-height.
+East wall (x = 1.5759, the Empty Room's since #92; GLB_1 has the wall at 1.55 at the board's mid-height), so it never
+floats off the wall the room draws.
 
 ### Shadows
 

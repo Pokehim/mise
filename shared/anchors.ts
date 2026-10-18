@@ -1,7 +1,7 @@
 import { checkFit, type Item as RoomItem, roomItems, TOLERANCE } from './fit';
 import {
-  alongFromStart, distanceToWall, footprint, isBy, type OrientedRect, overlapLength, polygonsOverlap, rectCorners, rectInPolygon,
-  spanFromLeft, spanFromStart, startIsLeft, wallLength, wallPoint,
+  alongFromStart, distanceToWall, footprint, isBy, type OrientedRect, overlapLength, polygonsOverlap, pushFootprintInside, rectCorners,
+  rectInPolygon, spanFromLeft, spanFromStart, startIsLeft, wallLength, wallPoint,
 } from './geometry';
 import { BEDDING_RANGE, HEADBOARD_DEPTH } from './parts';
 import type { Catalog, CatalogItem, FitViolation, PartParams, Placement, RoomSetup, RoomState, Vec2, Wall } from './types';
@@ -78,9 +78,13 @@ export function resolveAnchor(
   // The new Piece goes by its Catalog id while it is checked, so that is how violations name it.
   const violations = (placement: Placement) =>
     placementViolations(setup, withItem, { ...state, pieces: { ...state.pieces, [item.id]: { catalogId: item.id, placement, partColors: {} } } }, item.id);
-  const placement = candidates.placements.find((candidate) => !violations(candidate).length);
+  // Walls are solid: a spot on the floor that pokes through one moves the shortest way back inside, as a dragged item does.
+  const inside = (placement: Placement) =>
+    (placement.mount === 'floor' && pushFootprintInside(placement, item.size, setup.floor.polygon)) || placement;
+  const placements = candidates.placements.map(inside);
+  const placement = placements.find((candidate) => !violations(candidate).length);
   if (placement) return { placement };
-  const [asked] = candidates.placements;
+  const [asked] = placements;
   return { error: candidates.noFit, violations: asked ? violations(asked) : [] };
 }
 

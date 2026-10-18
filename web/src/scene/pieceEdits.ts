@@ -1,10 +1,10 @@
 import type { Camera, Vector2 } from 'three';
 import { newId } from '@shared/ids';
-import type { CatalogItem, Edit, Placement, Vec2 } from '@shared/types';
+import type { CatalogItem, Edit, Placement, Vec2, Vec3 } from '@shared/types';
 import { checkFit, replay } from '../state/core';
-import { useEditor } from '../state/store';
+import { pieceItem, useEditor } from '../state/store';
 import { faces, keepInside, nearestWall, wallCoordinates } from './floorPlan';
-import { facing, floorPointInView, onWall, spiral, turned } from './placement';
+import { facing, floorPointInView, keepInRoom, onWall, spiral, turned } from './placement';
 
 // The Mover's Piece Edits that aren't a drag. Each one goes through applyEdit.
 
@@ -49,12 +49,24 @@ export function addPiece(item: CatalogItem, camera: Camera, at?: Vector2) {
   select({ kind: 'piece', id: pieceId });
 }
 
+/**
+ * A placement turned by whole 15° steps. On the floor, walls are solid: an item turned into a wall
+ * moves just enough to stay inside, without snapping back square. Undefined when it can't fit
+ * turned that way at all, so it keeps its placement.
+ */
+function turnedPlacement(placement: Placement, size: Vec3, steps: number): Placement | undefined {
+  const turnedBy = { ...placement, rotationY: turned(placement.rotationY, steps) };
+  return placement.mount === 'floor' ? keepInRoom(turnedBy, size, useEditor.getState().setup!, { snap: false }) ?? undefined : turnedBy;
+}
+
 /** Turns a Piece by whole 15° steps (R / Shift+R). Wall items stay square to their wall. */
 export function rotatePiece(pieceId: string, steps: number) {
-  const { roomState, applyEdit } = useEditor.getState();
-  const placement = roomState!.pieces[pieceId]?.placement;
-  if (!placement || placement.mount === 'wall') return;
-  applyEdit({ type: 'move', targetId: pieceId, placement: { ...placement, rotationY: turned(placement.rotationY, steps) } });
+  const editor = useEditor.getState();
+  const placement = editor.roomState!.pieces[pieceId]?.placement;
+  const item = pieceItem(editor, pieceId);
+  if (!placement || !item || placement.mount === 'wall') return;
+  const turnedTo = turnedPlacement(placement, item.size, steps);
+  if (turnedTo) editor.applyEdit({ type: 'move', targetId: pieceId, placement: turnedTo });
 }
 
 export const removePiece = (pieceId: string) => useEditor.getState().applyEdit({ type: 'remove', targetId: pieceId });
@@ -72,8 +84,10 @@ function movableOriginal(originalId: string) {
 /** Turns an Original by whole 15° steps, like rotatePiece. It leaves its spot, so its Patch shows. */
 export function rotateOriginal(originalId: string, steps: number) {
   const placement = movableOriginal(originalId)?.placement;
-  if (!placement || placement.mount === 'wall') return;
-  useEditor.getState().applyEdit({ type: 'move', targetId: originalId, placement: { ...placement, rotationY: turned(placement.rotationY, steps) } });
+  const original = useEditor.getState().setup!.originals.find(({ id }) => id === originalId);
+  if (!placement || !original || placement.mount === 'wall') return;
+  const turnedTo = turnedPlacement(placement, original.box.size, steps);
+  if (turnedTo) useEditor.getState().applyEdit({ type: 'move', targetId: originalId, placement: turnedTo });
 }
 
 /** Remove Original (spec §11.1): hides it, and its Patch covers the spot. */

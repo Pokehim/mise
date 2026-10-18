@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  distanceToWall, footprint, type OrientedRect, overlapLength, pointInPolygon, rectCorners, rectInPolygon, rectsOverlap, wallPoint,
+  distanceToWall, footprint, type OrientedRect, overlapLength, pointInPolygon, pushInside, rectCorners, rectInPolygon, rectsOverlap, wallPoint,
 } from './geometry';
 import { setup } from './test-room';
 import type { Vec2, Wall } from './types';
@@ -119,5 +119,72 @@ describe('overlapLength', () => {
     expect(overlapLength([0, 2], [1, 5])).toBe(1);
     expect(overlapLength([0, 2], [0.5, 1])).toBe(0.5);
     expect(overlapLength([0, 2], [3, 5])).toBe(-1);
+  });
+});
+
+describe('pushInside', () => {
+  const room = setup.floor.polygon; // x −2 to 2, z −1.5 to 1.5
+
+  it('moves a rectangle poking through a wall straight back in, until it is flush with that wall', () => {
+    const pushed = pushInside(rect(1.9, 0.2, 1, 0.6), room);
+
+    expect(pushed!.center[0]).toBeCloseTo(1.5);
+    expect(pushed!.center[1]).toBeCloseTo(0.2);
+  });
+
+  it('leaves a rectangle that is already inside where it is', () => {
+    const inside = rect(0.5, -0.5, 1, 0.6, 0.4);
+
+    expect(pushInside(inside, room)).toBe(inside);
+  });
+
+  it('pushes a rectangle out past two walls into their corner', () => {
+    const pushed = pushInside(rect(2.1, -1.6, 1, 0.6), room);
+
+    expect(pushed!.center[0]).toBeCloseTo(1.5);
+    expect(pushed!.center[1]).toBeCloseTo(-1.2);
+  });
+
+  it('keeps a turned rectangle’s yaw, and pushes it just until its farthest corner is at the wall', () => {
+    // Turned 30°, a 1 × 0.6 rectangle reaches 0.5 cos 30° + 0.3 sin 30° = 0.583 along x.
+    const pushed = pushInside(rect(1.9, 0, 1, 0.6, Math.PI / 6), room);
+
+    expect(pushed!.rotationY).toBe(Math.PI / 6);
+    expect(pushed!.center[0]).toBeCloseTo(2 - 0.583, 3);
+    expect(pushed!.center[1]).toBeCloseTo(0);
+    expect(rectInPolygon(pushed!, room)).toBe(true);
+  });
+
+  it('is null for a rectangle bigger than the room', () => {
+    expect(pushInside(rect(0, 0, 4.5, 1), room)).toBeNull();
+  });
+
+  describe('in an L-shaped room', () => {
+    // x 0–4 along the north, z 0–4 along the west, with the inner corner at [2, 2].
+    const lRoom: Vec2[] = [[0, 0], [4, 0], [4, 2], [2, 2], [2, 4], [0, 4]];
+
+    it('pushes a rectangle off the wall it pokes through, to the nearer side', () => {
+      // x 1.6–2.6, z 1.7–2.7: back west 0.6 m to clear the inner wall at x = 2, or north 0.7 m.
+      const pushed = pushInside(rect(2.1, 2.2, 1, 1), lRoom);
+
+      expect(pushed!.center[0]).toBeCloseTo(1.5);
+      expect(pushed!.center[1]).toBeCloseTo(2.2);
+    });
+
+    it('pushes a rectangle off the inner corner when that corner cuts into it, though all its own corners are inside', () => {
+      // A 1 × 1 square turned 45° about [1.8, 1.8]: its points are inside, but [2, 2] is 0.28 along the
+      // diagonal toward its side 0.5 out, so it backs off 0.22 along that diagonal.
+      const pushed = pushInside(rect(1.8, 1.8, 1, 1, Math.PI / 4), lRoom);
+
+      expect(pushed!.center[0]).toBeCloseTo(1.646, 3);
+      expect(pushed!.center[1]).toBeCloseTo(1.646, 3);
+    });
+
+    it('slides a rectangle along a wall rather than through the inner corner', () => {
+      // Pushed far east along the north arm, it stops at the east wall; pushed far south down the
+      // west arm, it stops at the south wall: it never cuts across the corner.
+      expect(pushInside(rect(9, 1, 1, 0.6), lRoom)!.center).toEqual([expect.closeTo(3.5), expect.closeTo(1)]);
+      expect(pushInside(rect(1, 9, 1, 0.6), lRoom)!.center).toEqual([expect.closeTo(1), expect.closeTo(3.7)]);
+    });
   });
 });

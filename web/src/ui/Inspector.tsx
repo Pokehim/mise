@@ -7,6 +7,7 @@ import { resizeCandidates, swapCandidates, swapEdit, type SwapTarget, targetBox 
 import { closeResize, openResize, setResizeSide, useResize } from '../state/resize';
 import { pieceItem, useEditor } from '../state/store';
 import { cm, cmSize, inches, priceEstimate } from './format';
+import { GenerateItem } from './GenerateItem';
 import { Lock, RotateLeft, RotateRight, Unlock } from './icons';
 import { FinishPicker } from './inspector/FinishPicker';
 import { OriginalReplace } from './inspector/OriginalReplace';
@@ -130,6 +131,7 @@ function ResizePanel({ target, category: startCategory, size: startSize, current
             onDone();
           }} />
         : <p className="muted">Nothing {currentId && category === startCategory ? 'else ' : ''}in the Catalog is a {category.replace('_', ' ')}.</p>}
+      {!candidates.length && <GenerateItem key={category} query={categoryName(category)} category={category} targetSize={size} />}
     </div>
   );
 }
@@ -156,7 +158,7 @@ function PieceInspector({ pieceId }: { pieceId: string }) {
       <h2 title={item.title}>{item.title}</h2>
       <Size size={item.size} />
       <p className="price">{priceEstimate(item.priceEstimateUsd)}</p>
-      <p><a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a></p>
+      <p>{item.url ? <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a> : <span className="muted">Generated, so no product link</span>}</p>
       <div className="actions">
         <ToolButton tool="swap" name="Swap" open={open} setOpen={setOpen} />
         <ToolButton tool="resize" name="Resize" open={open} setOpen={setOpen} />

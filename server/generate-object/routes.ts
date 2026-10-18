@@ -30,6 +30,17 @@ function view(entry: Entry): Job {
   return { status: 'running', step: entry.step, progress: Math.round(progress * 100) / 100 };
 }
 
+/**
+ * Why a run failed: in fal's words when fal refused it, since its `detail` (an empty balance, or the fields it rejected)
+ * says more than the HTTP status in the message.
+ */
+function reason(error: Error): string {
+  const detail = (error as { body?: { detail?: unknown } }).body?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map(({ loc, msg }: { loc?: unknown[]; msg?: string }) => `${loc?.at(-1)}: ${msg}`).join('; ');
+  return error.message;
+}
+
 function fail(status: 400 | 404 | 503, message: string): never {
   throw new HTTPException(status, { message });
 }
@@ -73,11 +84,15 @@ export function generateObjectRoutes(dataDir: () => string) {
 
       if (!process.env.FAL_KEY) fail(503, 'Text-to-3D needs FAL_KEY in .env');
       setStep(id, 'photo');
+      const started = Date.now();
       generateObject(request, id, dataDir(), (step) => setStep(id, step)).then(
-        (item) => jobs.set(id, { status: 'done', progress: 1, item }),
+        (item) => {
+          console.log(`generate-object "${request.query}" → ${id} in ${Math.round((Date.now() - started) / 1000)} s`);
+          jobs.set(id, { status: 'done', progress: 1, item });
+        },
         (error: Error) => {
           console.error(`generate-object "${request.query}" failed:`, error);
-          jobs.set(id, { status: 'failed', progress: view(jobs.get(id)!).progress, error: error.message });
+          jobs.set(id, { status: 'failed', progress: view(jobs.get(id)!).progress, error: reason(error) });
         },
       );
       return c.json({ jobId: id });

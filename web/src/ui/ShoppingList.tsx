@@ -21,7 +21,7 @@ function List({ list: { pieces, totalUsd, alreadyInRoom } }: { list: ReturnType<
               <img src={item.thumbnail} alt="" width={48} height={48} loading="lazy" />
               <div className="cart-piece">
                 <span className="title" title={item.title}>{item.title}</span>
-                <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a>
+                {item.url ? <a href={item.url} target="_blank" rel="noreferrer">View on Amazon</a> : <span className="muted">Generated, so no product link</span>}
               </div>
               {/* A price is always an estimate (spec §8.3). */}
               <span className="price">{priceEstimate(item.priceEstimateUsd)}</span>

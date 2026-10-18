@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CatalogItem, Category } from '@shared/types';
+import type { CatalogItem, Category, Vec3 } from '@shared/types';
 import type { Step } from '../../../server/generate-object/pipeline';
 import type { Job } from '../../../server/generate-object/routes';
 import { generateObject, getJob } from '../api';
@@ -20,11 +20,12 @@ function addToCatalog(item: CatalogItem) {
 }
 
 /**
- * The offer under a Catalog search that found nothing: generate it with text-to-3D (spec §13.3, Stretch), about 30 s.
- * The new item joins the Catalog and is placed like any other. It takes the selected category, which sets its size,
- * so under All the Mover picks one first. A run keeps going if this unmounts, and still adds its item.
+ * The offer where the Catalog has nothing to show: under a search that found nothing, and in Resize when no item of the
+ * category is left. It generates `query` with text-to-3D (spec §13.3, Stretch), in about 30 s, scaled into `targetSize`
+ * or else the category's typical size, so under All the Mover picks a category first. The new item joins the Catalog
+ * and is placed like any other. A run keeps going if this unmounts, and still adds its item.
  */
-export function GenerateItem({ query, category }: { query: string; category: Category | null }) {
+export function GenerateItem({ query, category, targetSize }: { query: string; category: Category | null; targetSize?: Vec3 }) {
   const [run, setRun] = useState<Job & { startedAt: number }>();
   const text = query.trim();
   if (!text) return null;
@@ -34,7 +35,7 @@ export function GenerateItem({ query, category }: { query: string; category: Cat
     const showJob = (job: Job) => setRun({ ...job, startedAt });
     showJob({ status: 'running', step: 'photo', progress: 0 });
     try {
-      const { jobId } = await generateObject({ query: text, category: inCategory });
+      const { jobId } = await generateObject({ query: text, category: inCategory, targetSize });
       for (;;) {
         const job = await getJob(jobId);
         showJob(job);

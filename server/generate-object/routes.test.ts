@@ -141,6 +141,30 @@ describe('POST /api/generate-object', () => {
     expect(job).toEqual({ status: 'failed', progress: 0, error: 'Unprocessable Entity' });
   });
 
+  it("fails with fal's own reason, such as an empty balance, rather than its HTTP status", async () => {
+    const refused = Object.assign(new Error('Forbidden'), {
+      status: 403,
+      body: { detail: 'User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing.' },
+    });
+    fal.subscribe.mockRejectedValue(refused);
+
+    const job = await finished(await start({ query: 'koi pond', category: 'decor' }));
+
+    expect(job).toMatchObject({ status: 'failed', error: 'User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing.' });
+  });
+
+  it("fails with fal's field errors when it rejects the input", async () => {
+    const invalid = Object.assign(new Error('Unprocessable Entity'), {
+      status: 422,
+      body: { detail: [{ loc: ['body', 'resolution'], msg: 'Input should be 512, 1024 or 1536', type: 'literal_error' }] },
+    });
+    fal.subscribe.mockRejectedValue(invalid);
+
+    const job = await finished(await start({ query: 'terrarium', category: 'decor' }));
+
+    expect(job).toMatchObject({ status: 'failed', error: 'resolution: Input should be 512, 1024 or 1536' });
+  });
+
   it('refuses a category that is not a Category', async () => {
     const res = await post({ query: 'aquarium', category: 'aquarium' });
 

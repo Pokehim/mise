@@ -11,6 +11,7 @@
  * <id>.webp, and the first frame (the empty lounge, the same for every Design) as empty.webp. The editor
  * reads Designs from data/designs, so each one is copied there while it is recorded, then removed.
  * The GPU flags matter: without them Chromium draws the scene in software, at about 6 frames a second.
+ * Then run scripts/landing-clips-compress.py, which re-encodes the new clips at a third of the bytes.
  */
 import { copyFileSync, existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

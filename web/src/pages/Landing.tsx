@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'wouter';
 import { ArrowRight } from '../ui/icons';
 import { Credits } from './Credits';
@@ -7,12 +8,19 @@ import './home.css';
 
 /** Where "Try the demo" goes: the Scans, with the study lounge. */
 const DEMO = '/scans';
+/** The Scans' code, fetched ahead of "Try the demo": when it's pointed at, or once the rooms have had the connection. */
+const prefetchScans = () => void import('./Home');
+const PREFETCH_MS = 8000;
 
 /**
  * `/`: what Mise is, and the demo: a photo of the real study lounge, then the 16 rooms Claude made of
  * its Scan, assembling themselves as the page opens, which open the Scans like the button beside it.
  */
 export function Landing() {
+  useEffect(() => {
+    const timer = window.setTimeout(prefetchScans, PREFETCH_MS);
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <div className="home landing">
       <main className="landing-main">
@@ -23,7 +31,7 @@ export function Landing() {
               <p className="tagline">A sketchbook for your real room.</p>
             </hgroup>
             <p>Redesign your real room before you buy a thing. Try Catalog furniture at true size in your Scan, then shop the Design.</p>
-            <Link href={DEMO} className="cta">Try the demo<ArrowRight /></Link>
+            <Link href={DEMO} className="cta" onPointerEnter={prefetchScans} onFocus={prefetchScans} onTouchStart={prefetchScans}>Try the demo<ArrowRight /></Link>
           </header>
           {/* The room as it really is, a print on the sheet, with an arrow to what was made of it. */}
           <figure className="landing-real">
@@ -36,7 +44,7 @@ export function Landing() {
           </figure>
         </div>
         <figure className="landing-demo">
-          <Link href={DEMO} className="landing-rooms" aria-label="Try the demo: 16 rooms AI made of the Oliver Hall 6th Floor Study Lounge">
+          <Link href={DEMO} className="landing-rooms" onPointerEnter={prefetchScans} onTouchStart={prefetchScans} aria-label="Try the demo: 16 rooms AI made of the Oliver Hall 6th Floor Study Lounge">
             <RoomGrid />
           </Link>
           {/* Labeled like a drawing, lettered under it. */}

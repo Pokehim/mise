@@ -99,7 +99,7 @@ const TO_SRGB = Uint8ClampedArray.from({ length: 256 }, (_, i) => {
  * Draws the nodes alone through `camera` as IMAGE_SIZE² RGBA in sRGB, top row first, with alpha 0
  * wherever nothing was drawn. A hidden node (a Patch, until its Original is lifted) is shown for the draw.
  */
-function renderRgba(renderer: WebGLRenderer, nodes: Object3D[], camera: OrthographicCamera, mirror = false): Uint8ClampedArray {
+function renderRgba(renderer: WebGLRenderer, nodes: Object3D[], camera: OrthographicCamera): Uint8ClampedArray {
   const scene = new Scene();
   const hidden = nodes.filter((node) => !node.visible);
   hidden.forEach((node) => { node.visible = true; });
@@ -128,7 +128,7 @@ function renderRgba(renderer: WebGLRenderer, nodes: Object3D[], camera: Orthogra
   for (let row = 0; row < IMAGE_SIZE; row++) {
     for (let column = 0; column < IMAGE_SIZE; column++) {
       const from = ((IMAGE_SIZE - 1 - row) * IMAGE_SIZE + column) * 4;
-      const to = (row * IMAGE_SIZE + (mirror ? IMAGE_SIZE - 1 - column : column)) * 4;
+      const to = (row * IMAGE_SIZE + column) * 4;
       for (let c = 0; c < 3; c++) out[to + c] = TO_SRGB[raw[from + c]];
       out[to + 3] = raw[from + 3];
     }
@@ -147,9 +147,9 @@ function floorCamera({ center: [x, z], side }: FloorFrame) {
 }
 
 /**
- * From 1 m inside the room, facing the Wall. Looking at the Wall, the camera's right is (nz, −nx),
- * which is the Wall's direction (start → end) or its opposite; `mirror` says which, so that the image
- * always runs along the Wall from its start.
+ * From 1 m inside the room, facing the Wall, so the image is the Wall as seen from the room and
+ * Patch.tsx hangs it on the Wall facing in. The camera's right is (nz, −nx), which is the Wall's
+ * direction (start → end) or its opposite; `mirror` says which, for turning a column into a distance along the Wall.
  */
 function wallCamera(wall: Wall, { along: [a0, a1], up: [y0, y1] }: WallFrame) {
   const y = (y0 + y1) / 2;
@@ -228,14 +228,14 @@ export async function bakePatches(
         const [along0, up1] = [frame.along[0], frame.up[1]];
         const [pixelAlong, pixelUp] = [(frame.along[1] - frame.along[0]) / IMAGE_SIZE, (frame.up[1] - frame.up[0]) / IMAGE_SIZE];
         const { camera, mirror } = wallCamera(wall, frame);
-        const alongAt = (column: number) => along0 + (column + 0.5) * pixelAlong;
+        const alongAt = (column: number) => (mirror ? frame.along[1] - (column + 0.5) * pixelAlong : along0 + (column + 0.5) * pixelAlong);
         const heightAt = (row: number) => up1 - (row + 0.5) * pixelUp;
         const openings = setup.openings.filter((opening) => opening.wallId === wall.id);
         const built = buildPatchImage({
           width: IMAGE_SIZE,
           height: IMAGE_SIZE,
-          base: renderRgba(renderer, [split.walls[wall.id]], camera, mirror),
-          captured: captured && renderRgba(renderer, [captured], camera, mirror),
+          base: renderRgba(renderer, [split.walls[wall.id]], camera),
+          captured: captured && renderRgba(renderer, [captured], camera),
           inRegion: (column, row) => {
             const [x, z] = wallPoint(wall, alongAt(column), 0);
             return inRegion(box, [x, heightAt(row), z]);

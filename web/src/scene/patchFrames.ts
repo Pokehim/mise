@@ -20,7 +20,7 @@ const FLOOR_STANDING = 0.1;
 /** The floor image: an axis-aligned square, North (−Z) up, whose top row is its smallest z. */
 export interface FloorFrame { center: Vec2; side: number }
 
-/** The Wall image: `along` meters from the Wall's start (left to right) and `up` meters above the floor (bottom to top). */
+/** The Wall image: the strip `along` the Wall (meters from its start) and `up` (meters above the floor), seen from inside the room. */
 export interface WallFrame { along: [number, number]; up: [number, number] }
 
 /** The floor image of an Original, or null for one that hangs on a wall. */

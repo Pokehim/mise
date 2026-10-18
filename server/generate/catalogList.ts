@@ -3,7 +3,7 @@
 // Brief so that it caches, and the same size however large the Catalog grows; search_catalog finds the rest.
 import type { Catalog, CatalogItem, Category } from '../../shared/types';
 import { m, offeredToClaude } from './forClaude';
-import { isFloorLamp, isUsefulOnWall } from './moves';
+import { isFloorLamp, isLightOnWall, isUsefulOnWall } from './moves';
 
 /** Chairs for sitting at a desk or a counter, not in a reading corner. */
 const WORK_CHAIR = /\b(office|desk chair|task|counter|stool|kitchen|dining|gaming)\b/i;
@@ -34,6 +34,7 @@ const COLLECTIONS: Record<string, string> = {
 const PER_COLLECTION = 5;   // 10 collections × 5, about the 7 × 8 it showed before art nouveau, Japanese prints and nature & science
 const OTHER_ART = 8;
 const NOT_ART = 4;
+const LIGHTS_ON_WALL = 6;
 
 const of = (category: Category) => (item: CatalogItem) => item.category === category;
 /** Books: rows for a shelf's levels, and stacks for a coffee table or a desk. */
@@ -43,7 +44,7 @@ const SECTIONS: { name: string; count: number; includes: (item: CatalogItem) => 
   { name: 'mirror', count: 6, includes: of('mirror') },
   { name: 'rug', count: 14, includes: of('rug') },
   { name: 'lamp', count: 14, includes: of('lamp') },
-  { name: 'plant', count: 12, includes: of('plant') },
+  { name: 'plant', count: 12, includes: (item) => item.category === 'plant' && item.mount === 'floor' },
   { name: 'decor', count: 18, includes: (item) => item.category === 'decor' && !isBooks(item) },
   { name: 'books (stock_shelves puts rows on a bookcase\'s levels; a stack goes on a coffee table or desk)', count: 6, includes: isBooks },
   { name: 'chair', count: 10, includes: (item) => item.category === 'chair' && !WORK_CHAIR.test(item.title) },
@@ -88,8 +89,9 @@ function wallArt(offered: CatalogItem[]): string[] {
       `wall_art, ${collection}${COLLECTIONS[collection] ? ` (${COLLECTIONS[collection]})` : ''}`,
       art.filter((item) => collectionOf(item) === collection).slice(0, PER_COLLECTION),
     )),
-    ...section('wall_art', spread(art.filter((item) => !collectionOf(item) && !isUsefulOnWall(item)), OTHER_ART)),
+    ...section('wall_art', spread(art.filter((item) => !collectionOf(item) && !isUsefulOnWall(item) && !isLightOnWall(item)), OTHER_ART)),
     ...section('not_art (hangs on its own by the desk or the door, never in a gallery)', spread(art.filter(isUsefulOnWall), NOT_ART)),
+    ...section('wall_lights_and_greenery (hangs on its own over the bed, the desk or a window, never in a gallery)', spread(offered.filter(isLightOnWall), LIGHTS_ON_WALL)),
   ];
 }
 

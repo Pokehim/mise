@@ -21067,6 +21067,620 @@
       "attribution": "\"Hourglass Sand Timer\" by Henry VIII (CC BY 4.0), Sketchfab, via Objaverse: 62aeeb7d51ae470c909c3b7fbdcdefb7"
     },
     {
+      "id": "sf-monstera",
+      "source": "sketchfab",
+      "title": "Monstera Deliciosa in White Pot on Mid-Century Plant Stand, 3'",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.639,
+        1,
+        0.581
+      ],
+      "collision": [
+        { "min": [-0.15, 0, -0.1], "max": [0.12, 0.42, 0.16] },
+        { "min": [-0.29, 0.42, -0.27], "max": [0.29, 1, 0.27] }
+      ],
+      "model": "/data/catalog/models/sf-monstera.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-monstera.jpg",
+      "colors": [
+        "Green",
+        "White",
+        "Brown"
+      ],
+      "materials": [
+        "Ceramic",
+        "Wood"
+      ],
+      "styleTags": [
+        "Mid-Century Modern",
+        "Bohemian",
+        "Tropical"
+      ],
+      "priceEstimateUsd": 95,
+      "url": "https://sketchfab.com/3d-models/1ab9bf841df04c07b1819be596327629",
+      "attribution": "\"Monstera Deliciosa Potted Mid-Century plant\" by Giora (CC BY 4.0), Sketchfab, via Objaverse: 1ab9bf841df04c07b1819be596327629"
+    },
+    {
+      "id": "sf-snake-plant",
+      "source": "sketchfab",
+      "title": "Snake Plant (Sansevieria) in Terracotta Pot, 18\"",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.292,
+        0.45,
+        0.304
+      ],
+      "collision": [
+        { "min": [-0.086, 0.06, -0.112], "max": [0.074, 0.3, 0.048] },
+        { "min": [-0.126, 0.18, -0.112], "max": [0.014, 0.34, 0.028] },
+        { "min": [-0.059, 0.225, -0.152], "max": [0.047, 0.38, -0.112] },
+        { "min": [0.074, 0.16, -0.072], "max": [0.134, 0.284, 0.017] },
+        { "min": [-0.066, 0, 0.008], "max": [0.054, 0.335, 0.068] },
+        { "min": [-0.063, 0, -0.092], "max": [0.059, 0.06, -0.032] },
+        { "min": [-0.123, 0.12, -0.052], "max": [-0.046, 0.45, -0.012] },
+        { "min": [-0.109, 0.225, 0.048], "max": [-0.031, 0.32, 0.108] },
+        { "min": [0.074, 0.22, -0.127], "max": [0.134, 0.332, -0.072] },
+        { "min": [-0.106, 0.3, 0.088], "max": [-0.046, 0.372, 0.148] },
+        { "min": [0.034, 0, -0.052], "max": [0.08, 0.16, 0.008] },
+        { "min": [-0.146, 0.23, -0.098], "max": [-0.126, 0.339, -0.062] }
+      ],
+      "model": "/data/catalog/models/sf-snake-plant.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-snake-plant.jpg",
+      "colors": [
+        "Green",
+        "Yellow",
+        "Terracotta"
+      ],
+      "materials": [
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://sketchfab.com/3d-models/7f335af96fbf4e0e8da7d1e9c41d525c",
+      "attribution": "\"Snake Plant (Sansevieria)\" by Scaniverse (CC BY 4.0), Sketchfab, via Objaverse: 7f335af96fbf4e0e8da7d1e9c41d525c"
+    },
+    {
+      "id": "sf-snake-plant-white",
+      "source": "sketchfab",
+      "title": "Snake Plant (Sansevieria) in White Ceramic Pot, 28\"",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.282,
+        0.7,
+        0.209
+      ],
+      "collision": [
+        { "min": [-0.121, 0, -0.084], "max": [0.059, 0.22, 0.096] },
+        { "min": [-0.13, 0.02, -0.024], "max": [0.059, 0.5, 0.016] },
+        { "min": [-0.081, 0.04, -0.09], "max": [0.019, 0.22, 0.104] },
+        { "min": [-0.001, 0.04, -0.004], "max": [0.079, 0.556, 0.036] },
+        { "min": [-0.141, 0.36, -0.064], "max": [-0.021, 0.58, -0.024] },
+        { "min": [-0.13, 0.04, -0.044], "max": [0.065, 0.22, 0.056] },
+        { "min": [0.079, 0.44, 0.001], "max": [0.141, 0.617, 0.031] },
+        { "min": [-0.135, 0.566, -0.104], "max": [-0.088, 0.7, -0.064] },
+        { "min": [-0.038, 0.5, -0.024], "max": [0.021, 0.589, -0.004] }
+      ],
+      "model": "/data/catalog/models/sf-snake-plant-white.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-snake-plant-white.jpg",
+      "colors": [
+        "Green",
+        "White"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist",
+        "Scandinavian"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://sketchfab.com/3d-models/777fd61f1bb749e1a503d72303620152",
+      "attribution": "\"Snake Plant\" by Modelling in Progress (CC BY 4.0), Sketchfab, via Objaverse: 777fd61f1bb749e1a503d72303620152"
+    },
+    {
+      "id": "sf-pothos",
+      "source": "sketchfab",
+      "title": "Trailing Golden Pothos in Terracotta Planter with Wood Legs",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.626,
+        0.6,
+        0.738
+      ],
+      "collision": [
+        { "min": [-0.17, 0, -0.19], "max": [0.16, 0.1, 0.13] },
+        { "min": [-0.3, 0.06, -0.36], "max": [0.3, 0.6, 0.3] }
+      ],
+      "model": "/data/catalog/models/sf-pothos.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-pothos.jpg",
+      "colors": [
+        "Green",
+        "Terracotta",
+        "Brown"
+      ],
+      "materials": [
+        "Terracotta",
+        "Wood"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Mid-Century Modern"
+      ],
+      "priceEstimateUsd": 50,
+      "url": "https://sketchfab.com/3d-models/e9832f38484f4f85b3f9081b51fa3799",
+      "attribution": "\"[FREE] Pothos Potted Plant - Money Plant\" by AllQuad (CC BY 4.0), Sketchfab, via Objaverse: e9832f38484f4f85b3f9081b51fa3799"
+    },
+    {
+      "id": "sf-peace-lily",
+      "source": "sketchfab",
+      "title": "Peace Lily (Spathiphyllum) in Yellow Ceramic Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.658,
+        0.7,
+        0.719
+      ],
+      "collision": [
+        { "min": [-0.19, 0, -0.22], "max": [0.2, 0.3, 0.19] },
+        { "min": [-0.329, 0.3, -0.359], "max": [0.329, 0.7, 0.36] }
+      ],
+      "model": "/data/catalog/models/sf-peace-lily.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-peace-lily.jpg",
+      "colors": [
+        "Green",
+        "White",
+        "Yellow"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Traditional",
+        "Eclectic"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://sketchfab.com/3d-models/0e2f0ce141c040a1b716993709ce4d32",
+      "attribution": "\"Peace Lilies (Spathiphyllum)\" by Rafael Rodrigues (CC BY 4.0), Sketchfab, via Objaverse: 0e2f0ce141c040a1b716993709ce4d32"
+    },
+    {
+      "id": "sf-rubber-plant",
+      "source": "sketchfab",
+      "title": "Rubber Plant (Ficus Elastica) in Terracotta Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.761,
+        0.8,
+        0.687
+      ],
+      "collision": [
+        { "min": [-0.19, 0, -0.14], "max": [0.16, 0.32, 0.2] },
+        { "min": [-0.38, 0.32, -0.34], "max": [0.38, 0.8, 0.34] }
+      ],
+      "model": "/data/catalog/models/sf-rubber-plant.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-rubber-plant.jpg",
+      "colors": [
+        "Green",
+        "Terracotta"
+      ],
+      "materials": [
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Modern",
+        "Casual"
+      ],
+      "priceEstimateUsd": 45,
+      "url": "https://sketchfab.com/3d-models/410e3e70d7a64cf6a059f33407d1afcd",
+      "attribution": "\"Ficus in a pot\" by Yury Misiyuk (CC BY 4.0), Sketchfab, via Objaverse: 410e3e70d7a64cf6a059f33407d1afcd"
+    },
+    {
+      "id": "sf-ficus-tree",
+      "source": "sketchfab",
+      "title": "Ficus Tree (Weeping Fig) in Tall Square Planter, 5'",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.799,
+        1.5,
+        0.712
+      ],
+      "collision": [
+        { "min": [-0.22, 0, -0.29], "max": [0.17, 0.6, 0.13] },
+        { "min": [-0.399, 0.6, -0.356], "max": [0.4, 1.5, 0.356] }
+      ],
+      "model": "/data/catalog/models/sf-ficus-tree.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-ficus-tree.jpg",
+      "colors": [
+        "Green",
+        "Gray"
+      ],
+      "materials": [
+        "Stone"
+      ],
+      "styleTags": [
+        "Modern",
+        "Contemporary"
+      ],
+      "priceEstimateUsd": 110,
+      "url": "https://sketchfab.com/3d-models/24a28ab7c7794778ba23ee8275c1febb",
+      "attribution": "\"Ficus\" by Armawiz (CC BY 4.0), Sketchfab, via Objaverse: 24a28ab7c7794778ba23ee8275c1febb"
+    },
+    {
+      "id": "sf-ivy",
+      "source": "sketchfab",
+      "title": "Trailing English Ivy in Terracotta Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.45,
+        0.334,
+        0.55
+      ],
+      "collision": [
+        { "min": [-0.125, 0.08, -0.175], "max": [0.135, 0.28, 0.165] },
+        { "min": [-0.085, 0.02, -0.075], "max": [0.095, 0.3, 0.105] },
+        { "min": [-0.185, 0.1, -0.155], "max": [0.195, 0.24, 0.065] },
+        { "min": [0.095, 0.18, -0.095], "max": [0.195, 0.32, 0.145] },
+        { "min": [-0.145, 0.16, 0.065], "max": [0.115, 0.24, 0.205] },
+        { "min": [-0.085, 0.06, -0.235], "max": [0.035, 0.2, -0.175] },
+        { "min": [-0.145, 0.06, -0.135], "max": [0.035, 0.32, -0.055] },
+        { "min": [-0.149, 0.1, 0.125], "max": [-0.065, 0.16, 0.275] },
+        { "min": [0.095, 0, -0.015], "max": [0.135, 0.08, 0.163] },
+        { "min": [-0.205, 0.1, -0.075], "max": [0.215, 0.26, 0.045] },
+        { "min": [-0.045, 0.02, -0.275], "max": [0.035, 0.12, -0.195] },
+        { "min": [-0.185, 0.04, -0.095], "max": [0.115, 0.28, 0.005] }
+      ],
+      "model": "/data/catalog/models/sf-ivy.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-ivy.jpg",
+      "colors": [
+        "Green",
+        "Terracotta"
+      ],
+      "materials": [
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Cottagecore",
+        "Traditional"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://sketchfab.com/3d-models/507dae90a1f541e0a3e2ccbee5abc333",
+      "attribution": "\"Plant Pot Ivy\" by anybody (CC BY 4.0), Sketchfab, via Objaverse: 507dae90a1f541e0a3e2ccbee5abc333"
+    },
+    {
+      "id": "sf-bonsai",
+      "source": "sketchfab",
+      "title": "Bonsai Tree in Blue Ceramic Tray",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.225,
+        0.3,
+        0.266
+      ],
+      "collision": [
+        { "min": [-0.093, 0.18, -0.093], "max": [0.047, 0.28, 0.067] },
+        { "min": [-0.047, 0, -0.111], "max": [0.061, 0.08, 0.045] },
+        { "min": [-0.11, 0.22, -0.053], "max": [0.101, 0.296, 0.047] },
+        { "min": [-0.053, 0.08, -0.051], "max": [0.021, 0.18, 0.007] },
+        { "min": [-0.073, 0.2, -0.133], "max": [0.047, 0.26, 0.087] },
+        { "min": [-0.013, 0.178, 0.067], "max": [0.046, 0.22, 0.133] },
+        { "min": [-0.11, 0.2, -0.013], "max": [0.107, 0.24, 0.067] },
+        { "min": [-0.1, 0.169, 0.007], "max": [-0.013, 0.2, 0.047] },
+        { "min": [-0.1, 0.228, -0.067], "max": [-0.09, 0.265, -0.053] },
+        { "min": [0.087, 0.222, 0.047], "max": [0.113, 0.233, 0.072] }
+      ],
+      "model": "/data/catalog/models/sf-bonsai.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-bonsai.jpg",
+      "colors": [
+        "Green",
+        "Brown",
+        "Blue"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Japandi",
+        "Zen",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 60,
+      "url": "https://sketchfab.com/3d-models/85a06b2cfe434a4ebed80d932090a75c",
+      "attribution": "\"Bonsai tree\" by alban (CC BY 4.0), Sketchfab, via Objaverse: 85a06b2cfe434a4ebed80d932090a75c"
+    },
+    {
+      "id": "sf-cactus",
+      "source": "sketchfab",
+      "title": "Cactus in Terracotta Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.164,
+        0.3,
+        0.164
+      ],
+      "collision": [
+        { "min": [-0.062, 0, -0.062], "max": [0.078, 0.26, 0.058] },
+        { "min": [-0.082, 0.04, -0.082], "max": [0.058, 0.18, 0.078] },
+        { "min": [-0.042, 0.18, -0.071], "max": [0.038, 0.3, 0.018] },
+        { "min": [-0.002, 0.1, -0.022], "max": [0.082, 0.22, 0.078] },
+        { "min": [-0.025, 0.1, 0.072], "max": [0.025, 0.157, 0.082] }
+      ],
+      "model": "/data/catalog/models/sf-cactus.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-cactus.jpg",
+      "colors": [
+        "Green",
+        "Terracotta"
+      ],
+      "materials": [
+        "Terracotta"
+      ],
+      "styleTags": [
+        "Southwestern",
+        "Bohemian"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://sketchfab.com/3d-models/f951db3894cf49448fd6359470a53580",
+      "attribution": "\"Cactus\" by Yury Misiyuk (CC BY 4.0), Sketchfab, via Objaverse: f951db3894cf49448fd6359470a53580"
+    },
+    {
+      "id": "sf-prickly-pear",
+      "source": "sketchfab",
+      "title": "Prickly Pear Cactus in White Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.202,
+        0.45,
+        0.228
+      ],
+      "collision": [
+        { "min": [-0.097, 0, -0.108], "max": [0.099, 0.18, 0.09] },
+        { "min": [-0.061, 0.18, -0.074], "max": [0.046, 0.34, 0.066] },
+        { "min": [-0.001, 0.28, -0.114], "max": [0.039, 0.44, 0.086] },
+        { "min": [0.091, 0, -0.026], "max": [0.101, 0.165, 0.008] },
+        { "min": [-0.101, 0.221, -0.063], "max": [-0.041, 0.381, -0.034] },
+        { "min": [-0.038, 0.239, 0.066], "max": [-0.024, 0.339, 0.114] },
+        { "min": [-0.001, 0.34, 0.025], "max": [0.065, 0.45, 0.046] }
+      ],
+      "model": "/data/catalog/models/sf-prickly-pear.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-prickly-pear.jpg",
+      "colors": [
+        "Green",
+        "White"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Southwestern",
+        "Modern"
+      ],
+      "priceEstimateUsd": 30,
+      "url": "https://sketchfab.com/3d-models/fa479faaff0c4133aa9e6720cfd9aab7",
+      "attribution": "\"Prickly Pear in a Pot\" by Anežka Hájková (CC BY 4.0), Sketchfab, via Objaverse: fa479faaff0c4133aa9e6720cfd9aab7"
+    },
+    {
+      "id": "sf-aloe-vera",
+      "source": "sketchfab",
+      "title": "Aloe Vera in White Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.398,
+        0.4,
+        0.398
+      ],
+      "collision": [
+        { "min": [-0.099, 0, -0.099], "max": [0.101, 0.26, 0.101] },
+        { "min": [-0.113, 0, -0.059], "max": [0.113, 0.14, 0.061] },
+        { "min": [-0.059, 0, -0.112], "max": [0.061, 0.14, 0.112] },
+        { "min": [-0.031, 0.26, -0.079], "max": [0.041, 0.376, 0.081] },
+        { "min": [-0.079, 0.26, -0.011], "max": [0.081, 0.376, 0.021] },
+        { "min": [0.041, 0.18, -0.159], "max": [0.08, 0.295, -0.099] },
+        { "min": [-0.155, 0.162, -0.077], "max": [-0.099, 0.28, -0.039] },
+        { "min": [0.101, 0.18, 0.041], "max": [0.161, 0.297, 0.081] },
+        { "min": [-0.077, 0.18, 0.101], "max": [-0.039, 0.28, 0.155] },
+        { "min": [0.161, 0.29, 0.068], "max": [0.199, 0.345, 0.094] },
+        { "min": [0.067, 0.287, -0.199], "max": [0.094, 0.345, -0.159] },
+        { "min": [-0.196, 0.28, -0.092], "max": [-0.149, 0.34, -0.064] }
+      ],
+      "model": "/data/catalog/models/sf-aloe-vera.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-aloe-vera.jpg",
+      "colors": [
+        "Green",
+        "White"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Modern",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 20,
+      "url": "https://sketchfab.com/3d-models/e48b02d7ee2e49e2aa7090e149adf77c",
+      "attribution": "\"Aloe Plant Potted\" by brow1275 (CC BY 4.0), Sketchfab, via Objaverse: e48b02d7ee2e49e2aa7090e149adf77c"
+    },
+    {
+      "id": "sf-orchid",
+      "source": "sketchfab",
+      "title": "White Phalaenopsis Orchid in White Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.423,
+        0.55,
+        0.399
+      ],
+      "collision": [
+        { "min": [-0.092, 0, -0.119], "max": [0.048, 0.18, 0.021] },
+        { "min": [-0.072, 0.4, 0.081], "max": [0.068, 0.5, 0.181] },
+        { "min": [-0.032, 0.44, -0.019], "max": [0.068, 0.54, 0.121] },
+        { "min": [0.008, 0.08, -0.159], "max": [0.108, 0.2, -0.019] },
+        { "min": [-0.012, 0.34, 0.101], "max": [0.108, 0.44, 0.181] },
+        { "min": [-0.206, 0.12, -0.019], "max": [-0.032, 0.14, 0.116] },
+        { "min": [0.028, 0.08, -0.199], "max": [0.204, 0.112, -0.099] },
+        { "min": [-0.127, 0.18, -0.019], "max": [-0.052, 0.235, 0.056] },
+        { "min": [-0.132, 0.06, -0.059], "max": [0.028, 0.14, 0.041] },
+        { "min": [0.048, 0.415, 0.055], "max": [0.104, 0.5, 0.101] },
+        { "min": [-0.092, 0.445, 0.061], "max": [-0.032, 0.539, 0.101] },
+        { "min": [-0.072, 0.18, -0.097], "max": [-0.052, 0.479, -0.059] }
+      ],
+      "model": "/data/catalog/models/sf-orchid.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-orchid.jpg",
+      "colors": [
+        "White",
+        "Green"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Modern",
+        "Glam",
+        "Minimalist"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://sketchfab.com/3d-models/6e6e2ac8986e4fc1bb7c046208e2dacd",
+      "attribution": "\"Orchid\" by fakefurfetishferre (CC BY 4.0), Sketchfab, via Objaverse: 6e6e2ac8986e4fc1bb7c046208e2dacd"
+    },
+    {
+      "id": "sf-jade-plant",
+      "source": "sketchfab",
+      "title": "Jade Plant (Crassula) Succulent in Pot",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.21,
+        0.35,
+        0.191
+      ],
+      "collision": [
+        { "min": [-0.065, 0.08, -0.055], "max": [0.095, 0.34, 0.085] },
+        { "min": [-0.045, 0, -0.075], "max": [0.075, 0.32, -0.015] },
+        { "min": [-0.105, 0.22, 0.025], "max": [0.095, 0.34, 0.095] },
+        { "min": [-0.052, 0, 0.025], "max": [0.075, 0.08, 0.074] },
+        { "min": [-0.054, 0, -0.035], "max": [-0.025, 0.08, 0.025] },
+        { "min": [0.055, 0, -0.015], "max": [0.077, 0.08, 0.045] },
+        { "min": [-0.073, 0.34, 0.033], "max": [-0.039, 0.35, 0.089] },
+        { "min": [-0.025, 0.214, -0.095], "max": [0.011, 0.317, -0.075] }
+      ],
+      "model": "/data/catalog/models/sf-jade-plant.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-jade-plant.jpg",
+      "colors": [
+        "Green"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Modern",
+        "Casual"
+      ],
+      "priceEstimateUsd": 25,
+      "url": "https://sketchfab.com/3d-models/32e40b8af6124cb9bb4ff390b2a8652d",
+      "attribution": "\"Jade Plant\" by Kyle Burnham (CC BY 4.0), Sketchfab, via Objaverse: 32e40b8af6124cb9bb4ff390b2a8652d"
+    },
+    {
+      "id": "sf-tulips",
+      "source": "sketchfab",
+      "title": "Yellow Tulips in Vase",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.234,
+        0.45,
+        0.234
+      ],
+      "collision": [
+        { "min": [-0.097, 0.32, -0.097], "max": [0.083, 0.44, 0.103] },
+        { "min": [-0.057, 0, -0.057], "max": [0.063, 0.26, 0.043] },
+        { "min": [-0.077, 0.2, -0.117], "max": [0.063, 0.44, -0.037] },
+        { "min": [-0.117, 0.18, -0.017], "max": [-0.057, 0.45, 0.043] },
+        { "min": [-0.033, 0.009, 0.043], "max": [0.023, 0.32, 0.083] },
+        { "min": [0.043, 0.28, -0.037], "max": [0.117, 0.439, 0.043] },
+        { "min": [-0.037, 0.26, 0.043], "max": [0.043, 0.444, 0.117] },
+        { "min": [-0.117, 0.42, -0.057], "max": [0.043, 0.45, 0.063] },
+        { "min": [0.043, 0.2, -0.008], "max": [0.097, 0.28, 0.034] },
+        { "min": [-0.032, 0.13, -0.084], "max": [-0.001, 0.2, -0.057] },
+        { "min": [-0.084, 0.272, 0.043], "max": [-0.058, 0.32, 0.061] },
+        { "min": [-0.017, 0, -0.058], "max": [0.043, 0.06, 0.053] }
+      ],
+      "model": "/data/catalog/models/sf-tulips.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-tulips.jpg",
+      "colors": [
+        "Yellow",
+        "Green"
+      ],
+      "materials": [
+        "Ceramic"
+      ],
+      "styleTags": [
+        "Cottagecore",
+        "Scandinavian"
+      ],
+      "priceEstimateUsd": 35,
+      "url": "https://sketchfab.com/3d-models/31101f1f7e204ad2bd5478bf6453c12b",
+      "attribution": "\"March bouquet 2018\" by SCADL & Co (CC BY 4.0), Sketchfab, via Objaverse: 31101f1f7e204ad2bd5478bf6453c12b"
+    },
+    {
+      "id": "sf-dried-flowers",
+      "source": "sketchfab",
+      "title": "Dried Flower Arrangement in Bronze Vase",
+      "category": "plant",
+      "mount": "floor",
+      "size": [
+        0.417,
+        0.599,
+        0.293
+      ],
+      "collision": [
+        { "min": [-0.109, 0.06, 0.053], "max": [-0.009, 0.3, 0.147] },
+        { "min": [-0.149, 0.3, 0.013], "max": [0.031, 0.42, 0.093] },
+        { "min": [-0.009, 0.36, 0.013], "max": [0.091, 0.52, 0.117] },
+        { "min": [0.071, 0.44, 0.017], "max": [0.208, 0.599, 0.073] },
+        { "min": [-0.189, 0.36, -0.007], "max": [-0.109, 0.5, 0.073] },
+        { "min": [-0.129, 0, 0.073], "max": [-0.009, 0.36, 0.133] },
+        { "min": [-0.007, 0.48, -0.146], "max": [0.028, 0.559, -0.067] },
+        { "min": [-0.009, 0.28, 0.053], "max": [0.05, 0.36, 0.117] },
+        { "min": [-0.069, 0.268, -0.007], "max": [-0.029, 0.41, 0.053] },
+        { "min": [-0.208, 0.44, -0.027], "max": [-0.098, 0.5, 0.033] },
+        { "min": [0.091, 0.42, 0.037], "max": [0.131, 0.52, 0.108] },
+        { "min": [-0.029, 0.4, -0.055], "max": [-0.009, 0.46, 0.063] }
+      ],
+      "model": "/data/catalog/models/sf-dried-flowers.glb",
+      "thumbnail": "/data/catalog/thumbs/sf-dried-flowers.jpg",
+      "colors": [
+        "Beige",
+        "Brown",
+        "Pink"
+      ],
+      "materials": [
+        "Metal"
+      ],
+      "styleTags": [
+        "Bohemian",
+        "Rustic",
+        "Vintage"
+      ],
+      "priceEstimateUsd": 40,
+      "url": "https://sketchfab.com/3d-models/9b4039619bca402abd89e0765910567b",
+      "attribution": "\"Vase of dried flowers - photogrammetry\" by Nicolas Diolez (CC BY 4.0), Sketchfab, via Objaverse: 9b4039619bca402abd89e0765910567b"
+    },
+    {
       "id": "placeholder-chair",
       "source": "generated",
       "title": "Placeholder Desk Chair",

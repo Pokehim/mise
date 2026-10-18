@@ -14,6 +14,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { Document, type Material, type TypedArray } from '@gltf-transform/core';
+import { getBounds } from '@gltf-transform/functions';
 import sharp from 'sharp';
 import type { Catalog, CatalogItem, Category, Hex, Vec3 } from '../shared/types';
 import { optimizeModel } from './catalog-build';
@@ -158,6 +159,95 @@ const sphere = (radius: number, steps = 16): [number, number][] =>
     const polar = (k / steps) * Math.PI;
     return [radius * Math.sin(polar), radius * (1 - Math.cos(polar))] as [number, number];
   });
+
+const plus = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const minus = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const times = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
+const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const unit = (a: Vec3): Vec3 => times(a, 1 / (Math.hypot(...a) || 1));
+
+/**
+ * Adds a tube of `radius` along `path`, as a wire, a vine, a cord or a neon tube is drawn: a ring of `sides` points
+ * about each point of the path, each ring turned from the last one with the path, so the tube doesn't twist. Its ends
+ * are open.
+ */
+export function addTube(mesh: Mesh, path: Vec3[], radius: number, { sides = 8 }: { sides?: number } = {}) {
+  const tangents = path.map((_, i) => unit(minus(path[Math.min(i + 1, path.length - 1)], path[Math.max(i - 1, 0)])));
+  let normal = unit(cross(tangents[0], Math.abs(tangents[0][1]) < 0.9 ? [0, 1, 0] : [1, 0, 0]));
+  const first = mesh.positions.length / 3;
+  for (const [i, p] of path.entries()) {
+    const t = tangents[i];
+    normal = unit(minus(normal, times(t, dot(normal, t))));
+    const binormal = cross(t, normal);
+    for (let k = 0; k <= sides; k++) {
+      const angle = (k / sides) * Math.PI * 2;
+      const n = plus(times(normal, Math.cos(angle)), times(binormal, Math.sin(angle)));
+      mesh.positions.push(...plus(p, times(n, radius)));
+      mesh.normals.push(...n);
+      mesh.uvs.push(i / (path.length - 1), k / sides);
+    }
+  }
+  for (let i = 0; i < path.length - 1; i++) {
+    for (let k = 0; k < sides; k++) {
+      const [a, b] = [first + i * (sides + 1) + k, first + (i + 1) * (sides + 1) + k];
+      mesh.indices.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+  }
+}
+
+/** A wire hung from `from` to `to`, sagging `sag` at its middle as a swag of lights or a garland does, in `steps`. */
+function swag(from: Vec3, to: Vec3, sag: number, steps = 24): Vec3[] {
+  return Array.from({ length: steps + 1 }, (_, k) => {
+    const t = k / steps;
+    return plus(plus(from, times(minus(to, from), t)), [0, -4 * sag * t * (1 - t), 0]);
+  });
+}
+
+/** Points every `spacing` m along `path`, the first `start` m along it, with the way the path runs there: bulbs on a wire, leaves on a vine. */
+function every(path: Vec3[], spacing: number, start = spacing / 2): { at: Vec3; along: Vec3 }[] {
+  const points: { at: Vec3; along: Vec3 }[] = [];
+  let [next, walked] = [start, 0];
+  for (let i = 0; i < path.length - 1; i++) {
+    const step = minus(path[i + 1], path[i]);
+    const length = Math.hypot(...step);
+    if (!length) continue;
+    for (; next <= walked + length; next += spacing) points.push({ at: plus(path[i], times(step, (next - walked) / length)), along: unit(step) });
+    walked += length;
+  }
+  return points;
+}
+
+/**
+ * Adds a leaf, or a plume: a card `length` long from `base` along `along`, stem to tip, and `width` wide, facing `facing`
+ * as nearly as it can, its sides folded toward it by `fold` of its half width, as a leaf cups along its midrib. Its
+ * texture is the leaf pointing up with its stem at the bottom middle, cut out by its alpha; its material shows both sides.
+ */
+function addLeaf(mesh: Mesh, base: Vec3, along: Vec3, facing: Vec3, length: number, width: number, fold = 0.3) {
+  const up = unit(along);
+  const across = times(unit(cross(up, facing)), width / 2);
+  const lift = times(unit(cross(across, up)), (fold * width) / 2);
+  const tip = plus(base, times(up, length));
+  const halves: [Vec3[], number][] = [
+    [[plus(minus(base, across), lift), base, tip, plus(minus(tip, across), lift)], 0],
+    [[base, plus(plus(base, across), lift), plus(plus(tip, across), lift), tip], 0.5],
+  ];
+  for (const [corners, u] of halves) {
+    const normal = unit(cross(minus(corners[1], corners[0]), minus(corners[3], corners[0])));
+    const start = mesh.positions.length / 3;
+    corners.forEach((p, k) => {
+      mesh.positions.push(...p);
+      mesh.normals.push(...normal);
+      mesh.uvs.push(u + (k === 1 || k === 2 ? 0.5 : 0), k < 2 ? 1 : 0);
+    });
+    mesh.indices.push(start, start + 1, start + 2, start, start + 2, start + 3);
+  }
+}
+
+/** Keeps every point of `mesh` in front of the wall, `z` m or more out: leaves that grew behind a wall piece lie flat on the wall. */
+function clearOfWall(mesh: Mesh, z = 0.003) {
+  for (let i = 2; i < mesh.positions.length; i += 3) mesh.positions[i] = Math.max(mesh.positions[i], z);
+}
 
 /** A seeded random number in [0, 1), the same on every build, so each object's books keep their colors and sizes. */
 function seeded(seed: number) {
@@ -325,6 +415,147 @@ async function stainedGlassTexture(colors: Hex[], band: Hex): Promise<Buffer> {
   return sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toBuffer();
 }
 
+/** An image from each pixel's u and v (0 to 1, v down) as RGBA from 0 to 1: a glow's smooth falloff, which SVG's gradients would band. */
+async function pixelTexture([w, h]: [number, number], pixel: (u: number, v: number) => [number, number, number, number]): Promise<Buffer> {
+  const data = Buffer.alloc(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      pixel((x + 0.5) / w, (y + 0.5) / h).forEach((value, c) => {
+        data[(y * w + x) * 4 + c] = Math.round(Math.min(Math.max(value, 0), 1) * 255);
+      });
+    }
+  }
+  return sharp(data, { raw: { width: w, height: h, channels: 4 } }).png().toBuffer();
+}
+
+/** The rainbow's color `t` (0 to 1) of the way round it, as an RGB strip shows its colors along it. */
+const rainbow = (t: number): Vec3 => [0, 4, 2].map((offset) => Math.min(Math.max(Math.abs(((t * 6 + offset) % 6) - 3) - 1, 0), 1)) as Vec3;
+
+/** The light an LED strip throws on the wall it's on: brightest along its middle, fading above and below it and at its ends. */
+const stripGlowTexture = (color: (u: number) => Vec3) => pixelTexture([512, 64], (u, v) => {
+  const ends = Math.min(u / 0.03, (1 - u) / 0.03, 1);
+  return [...color(u), 0.8 * ends * Math.exp(-((((v - 0.5) * 2) / 0.42) ** 2))];
+});
+
+/** The round glow a bulb or a sign throws on the wall behind it, `peak` opaque at its middle. */
+const roundGlowTexture = (color: Vec3, peak = 0.7) => pixelTexture([64, 64], (u, v) =>
+  [...color, peak * Math.exp(-(((Math.hypot(u - 0.5, v - 0.5) * 2) / 0.45) ** 2))]);
+
+/**
+ * The light a neon sign throws on the wall behind it: each tube's path, blurred wide, in its color. `frame` is the part
+ * of the wall the texture covers: its left, bottom, width and height, in meters.
+ */
+async function neonGlowTexture(tubes: NeonTube[], [left, bottom, w, h]: [number, number, number, number]): Promise<Buffer> {
+  const [tw, th] = [256, Math.round((256 * h) / w)];
+  const px = ([x, y]: [number, number]) => `${(((x - left) / w) * tw).toFixed(1)},${(((bottom + h - y) / h) * th).toFixed(1)}`;
+  const rgb = (color: Vec3) => `rgb(${color.map((c) => Math.round(c * 255)).join(',')})`;
+  const strokes = tubes.map(({ path, color }) => `<polyline points="${path.map(px).join(' ')}" stroke="${rgb(color)}" fill="none" stroke-linejoin="round"/>`).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${tw}" height="${th}">
+    <filter id="wide" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${tw / 14}"/></filter>
+    <filter id="near" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${tw / 50}"/></filter>
+    <g filter="url(#wide)" stroke-width="${tw / 18}" opacity="0.55">${strokes}</g>
+    <g filter="url(#near)" stroke-width="${tw / 40}" opacity="0.6">${strokes}</g></svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/** A five-lobed ivy leaf in `fill`, pointing up, its stem at the bottom middle, with paler veins; transparent around it. */
+async function ivyLeafTexture(fill: Hex, vein: Hex): Promise<Buffer> {
+  const leaf = 'M128 250 C110 232 64 236 30 204 C52 190 40 162 14 142 C48 130 60 110 70 84 C92 94 104 60 128 10 C152 60 164 94 186 84 C196 110 208 130 242 142 C216 162 204 190 226 204 C192 236 146 232 128 250 Z';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
+    <radialGradient id="g" cx="0.5" cy="0.75" r="0.7"><stop offset="0" stop-color="${vein}" stop-opacity="0.35"/><stop offset="1" stop-color="${vein}" stop-opacity="0"/></radialGradient>
+    <path d="${leaf}" fill="${fill}"/><path d="${leaf}" fill="url(#g)"/>
+    <path d="M128 244 L128 36 M128 206 L44 150 M128 206 L212 150 M128 190 L82 96 M128 190 L174 96" stroke="${vein}" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.75"/></svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/** A heart-shaped pothos leaf in `fill`, pointing up, its stem at the bottom middle, streaked with `streak` as golden pothos is. */
+async function pothosLeafTexture(fill: Hex, streak: Hex, seed: number): Promise<Buffer> {
+  const random = seeded(seed);
+  const leaf = 'M128 226 C92 252 18 232 24 158 C30 98 92 52 128 8 C164 52 226 98 232 158 C238 232 164 252 128 226 Z';
+  const streaks = Array.from({ length: 9 }, () => {
+    const [y, side] = [60 + random() * 160, random() < 0.5 ? -1 : 1];
+    const reach = 40 + random() * 70;
+    return `<path d="M128 ${y.toFixed(0)} Q${(128 + side * reach * 0.5).toFixed(0)} ${(y - 20).toFixed(0)} ${(128 + side * reach).toFixed(0)} ${(y - 50).toFixed(0)}" stroke="${streak}" stroke-width="${(3 + random() * 8).toFixed(1)}" fill="none" stroke-linecap="round"/>`;
+  });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
+    <clipPath id="leaf"><path d="${leaf}"/></clipPath>
+    <path d="${leaf}" fill="${fill}"/><g clip-path="url(#leaf)" opacity="0.6">${streaks.join('')}</g>
+    <path d="M128 226 Q125 120 128 18" stroke="${streak}" stroke-width="4" fill="none" opacity="0.7"/></svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/** A pampas grass plume, pointing up, its stem at the bottom middle: fine strands fanning up and out, widest below its middle. */
+async function plumeTexture(colors: Hex[]): Promise<Buffer> {
+  const random = seeded(31);
+  const strands = Array.from({ length: 700 }, () => {
+    const s = 0.04 + random() * 0.94;                               // how far up the plume, 0 at its stem
+    const spread = Math.sin(Math.PI * s ** 0.8) * 100 * (0.25 + random() * 0.75);
+    const [y, side] = [250 - s * 236, random() < 0.5 ? -1 : 1];
+    const color = colors[Math.floor(random() * colors.length)];
+    return `<path d="M128 ${y.toFixed(1)} q${(side * spread * 0.4).toFixed(1)} ${(-spread * 0.2).toFixed(1)} ${(side * spread).toFixed(1)} ${(-spread * 0.55).toFixed(1)}" stroke="${color}" stroke-width="${(1.6 + random() * 1.6).toFixed(1)}" fill="none" stroke-linecap="round"/>`;
+  });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
+    <filter id="soft"><feGaussianBlur stdDeviation="0.7"/></filter>
+    <g filter="url(#soft)">${strands.join('')}</g><path d="M128 256 L128 14" stroke="${colors[0]}" stroke-width="3"/></svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/** The moon's face, round a sphere: pale gray with darker seas and craters, each crater with a light rim. */
+async function moonTexture(): Promise<Buffer> {
+  const random = seeded(17);
+  const seas = Array.from({ length: 7 }, () =>
+    `<ellipse cx="${(random() * 512).toFixed(0)}" cy="${(60 + random() * 136).toFixed(0)}" rx="${(30 + random() * 50).toFixed(0)}" ry="${(18 + random() * 30).toFixed(0)}" fill="#a39c8e" opacity="0.55"/>`);
+  const craters = Array.from({ length: 60 }, () => {
+    const [x, y, r] = [random() * 512, 20 + random() * 216, 2 + random() ** 2 * 16];
+    return `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#b0a99b" stroke="#efe9dc" stroke-width="${(r / 5).toFixed(1)}" opacity="0.7"/>`;
+  });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="256">
+    <filter id="dust"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" seed="5"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.4  0 0 0 0 0.38  0 0 0 0 0.34  0 0 0 -0.7 0.45"/></filter>
+    <filter id="blur"><feGaussianBlur stdDeviation="10"/></filter>
+    <rect width="512" height="256" fill="#ddd7ca"/><g filter="url(#blur)">${seas.join('')}</g>
+    <rect width="512" height="256" filter="url(#dust)"/>${craters.join('')}</svg>`;
+  return sharp(Buffer.from(svg)).jpeg({ quality: 86 }).toBuffer();
+}
+
+/** Each instant photo's card, in px, in the photo atlas: an Instax Mini, 54 × 86 mm, its picture 46 × 62 mm. */
+const PHOTO_PX: [width: number, height: number] = [108, 172];
+/**
+ * Instant photos side by side, each a white card with a picture on it of no one in particular: a sunset over the sea,
+ * mountains, a city at night, a beach or a field of flowers.
+ */
+async function photoAtlas(count: number): Promise<Buffer> {
+  const random = seeded(41);
+  const [w, h] = PHOTO_PX;
+  const pick = <T,>(options: T[]) => options[Math.floor(random() * options.length)];
+  const scene = (x: number, y: number, pw: number, ph: number, i: number) => {
+    const sky = (top: Hex, bottom: Hex) => `<linearGradient id="s${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bottom}"/></linearGradient><rect x="${x}" y="${y}" width="${pw}" height="${ph}" fill="url(#s${i})"/>`;
+    const at = (fx: number, fy: number) => `${(x + fx * pw).toFixed(1)},${(y + fy * ph).toFixed(1)}`;
+    switch (i % 5) {
+      case 0: return `${sky(pick(['#ff9a62', '#f77f7f', '#ffb36b']), '#ffd89b')}<circle cx="${x + pw * 0.5}" cy="${y + ph * 0.6}" r="${pw * 0.16}" fill="#fff1c9"/>
+        <rect x="${x}" y="${y + ph * 0.64}" width="${pw}" height="${ph * 0.36}" fill="#3d5a80"/><rect x="${x + pw * 0.38}" y="${y + ph * 0.68}" width="${pw * 0.24}" height="3" fill="#ffd89b" opacity="0.7"/>`;
+      case 1: return `${sky('#8ec9ee', '#e6f4fb')}<polygon points="${at(0, 0.8)} ${at(0.35, 0.3)} ${at(0.7, 0.8)}" fill="#5b7a8c"/><polygon points="${at(0.27, 0.43)} ${at(0.35, 0.3)} ${at(0.43, 0.43)}" fill="#ffffff"/>
+        <polygon points="${at(0.4, 0.8)} ${at(0.72, 0.42)} ${at(1, 0.8)}" fill="#46677a"/><rect x="${x}" y="${y + ph * 0.78}" width="${pw}" height="${ph * 0.22}" fill="#6f9a5a"/>`;
+      case 2: return `${sky('#1d2340', '#4a4a7a')}${Array.from({ length: 6 }, (_, k) => {
+        const [bx, bh] = [x + (k / 6) * pw, ph * (0.3 + random() * 0.4)];
+        const lit = Array.from({ length: 5 }, () => `<rect x="${(bx + 3 + random() * (pw / 6 - 8)).toFixed(1)}" y="${(y + ph - bh + 4 + random() * (bh - 10)).toFixed(1)}" width="3" height="4" fill="#ffd36b"/>`).join('');
+        return `<rect x="${bx.toFixed(1)}" y="${(y + ph - bh).toFixed(1)}" width="${(pw / 6 - 1).toFixed(1)}" height="${bh.toFixed(1)}" fill="#11142a"/>${lit}`;
+      }).join('')}`;
+      case 3: return `${sky('#7fcdf0', '#d8f1fb')}<rect x="${x}" y="${y + ph * 0.5}" width="${pw}" height="${ph * 0.2}" fill="#2f9cc4"/>
+        <polygon points="${at(0, 0.66)} ${at(1, 0.6)} ${at(1, 1)} ${at(0, 1)}" fill="#f1dcaa"/><circle cx="${x + pw * 0.8}" cy="${y + ph * 0.18}" r="${pw * 0.09}" fill="#fff6c8"/>`;
+      default: return `${sky('#bfe3f5', '#f4f9e9')}<rect x="${x}" y="${y + ph * 0.55}" width="${pw}" height="${ph * 0.45}" fill="#7fb069"/>${Array.from({ length: 40 }, () =>
+        `<circle cx="${(x + random() * pw).toFixed(1)}" cy="${(y + ph * (0.58 + random() * 0.4)).toFixed(1)}" r="${(1.5 + random() * 2).toFixed(1)}" fill="${pick(['#f7a1c4', '#ffffff', '#ffd166', '#e86a92'])}"/>`).join('')}`;
+    }
+  };
+  const [side, top] = [w * (4 / 54), h * (7 / 86)];
+  const cards = Array.from({ length: count }, (_, i) => {
+    const x = i * w;
+    const [pw, ph] = [w - 2 * side, h * (62 / 86)];
+    return `<rect x="${x}" width="${w}" height="${h}" fill="#fbfaf6"/><g>${scene(x + side, top, pw, ph, i)}</g>`;
+  });
+  return sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w * count}" height="${h}">${cards.join('')}</svg>`)).jpeg({ quality: 88 }).toBuffer();
+}
+
 /* ───────────── The objects ───────────── */
 
 /** Builds a document from named parts: each part a Mesh and the Material it is drawn in. */
@@ -339,12 +570,15 @@ class Model {
   /**
    * A material. `glow` makes it give off light, through its texture when it has one: a number for a lit
    * screen, whose picture glows a little so it reads as on in a dim room, or a color for a lit lampshade.
-   * `twoSided` draws a shade's inside too.
+   * `twoSided` draws a shade's inside too. `alpha` cuts a leaf out of its texture ('MASK'), or lets the wall show
+   * through a glow or clear acrylic ('BLEND'), by its texture's alpha and its color's.
    */
-  material(name: string, { color = [1, 1, 1, 1], roughness = 0.8, metallic = 0, texture, mime = 'image/jpeg', glow, twoSided = false }:
-    { color?: [number, number, number, number]; roughness?: number; metallic?: number; texture?: Buffer; mime?: string; glow?: number | Vec3; twoSided?: boolean } = {}): Material {
+  material(name: string, { color = [1, 1, 1, 1], roughness = 0.8, metallic = 0, texture, mime = 'image/jpeg', glow, twoSided = false, alpha }:
+    { color?: [number, number, number, number]; roughness?: number; metallic?: number; texture?: Buffer; mime?: string; glow?: number | Vec3; twoSided?: boolean; alpha?: 'MASK' | 'BLEND' } = {}): Material {
     const material = this.doc.createMaterial(name).setBaseColorFactor(color).setRoughnessFactor(roughness).setMetallicFactor(metallic)
       .setDoubleSided(twoSided);
+    if (alpha) material.setAlphaMode(alpha);
+    if (alpha === 'MASK') material.setAlphaCutoff(0.4);
     const image = texture && this.doc.createTexture(name).setImage(new Uint8Array(texture)).setMimeType(mime);
     if (image) material.setBaseColorTexture(image);
     if (glow) material.setEmissiveFactor(typeof glow === 'number' ? [glow, glow, glow] : glow).setEmissiveTexture(image ?? null);
@@ -362,6 +596,13 @@ class Model {
       .setAttribute('TEXCOORD_0', accessor('VEC2', new Float32Array(mesh.uvs)))
       .setIndices(accessor('SCALAR', new Uint32Array(mesh.indices)))
       .setMaterial(material));
+  }
+
+  /** Moves the model to stand on its bottom center, for one grown at random, as a vine is. */
+  ground(): Document {
+    const { min, max } = getBounds(this.doc.getRoot().listScenes()[0]);
+    this.doc.getRoot().listNodes()[0].setTranslation([-(min[0] + max[0]) / 2, -min[1], 0]);
+    return this.doc;
   }
 }
 
@@ -501,6 +742,195 @@ function addBookcase(m: Mesh, [w, h, d]: Vec3, boards: number[], { side = 0.022,
 const LAMPLIGHT: Vec3 = [1, 0.78, 0.5];
 const BRASS = { color: [0.78, 0.6, 0.3, 1] as [number, number, number, number], roughness: 0.35, metallic: 1 };
 const BRONZE = { color: [0.3, 0.2, 0.12, 1] as [number, number, number, number], roughness: 0.45, metallic: 0.9 };
+
+/* ───────────── Lights ───────────── */
+
+/** The light a glow gives off, with no color of its own, fading into the wall by its texture's alpha. */
+const glowMaterial = async (model: Model, name: string, texture: Promise<Buffer>) =>
+  model.material(name, { texture: await texture, mime: 'image/png', color: [0, 0, 0, 1], roughness: 1, glow: 1, alpha: 'BLEND' });
+
+/** A bulb's glass: the color it's lit in, washed toward white, as a lit bulb looks. */
+const litGlass = (color: Vec3, white = 0.6): [number, number, number, number] => [...plus(times(color, 1 - white), [white, white, white]), 1];
+
+/**
+ * An LED strip `length` long, stuck on the wall along the middle of the model, lit in `color` along it, and the
+ * glow it throws on the wall above and below it.
+ */
+async function ledStrip(model: Model, length: number, color: (u: number) => Vec3) {
+  const glow = 0.36;
+  model.add(await glowMaterial(model, 'wall-glow', stripGlowTexture(color)), (m) => addScreen(m, [0, 0, 0.001], length, glow));
+  model.add(model.material('strip', { color: [0.92, 0.92, 0.9, 1], roughness: 0.5 }), (m) => addBox(m, [0, glow / 2 - 0.006, 0.003], [length, 0.012, 0.006]));
+  model.add(model.material('leds', { texture: await pixelTexture([256, 4], (u) => [...color(u), 1]), mime: 'image/png', glow: 1, roughness: 0.3 }),
+    (m) => addScreen(m, [0, glow / 2 - 0.004, 0.0062], length, 0.008));
+}
+
+/** A bulb of `radius` at each point, lit in `color`, each with the glow it throws on the wall behind it, `glow` m across. */
+async function bulbs(model: Model, points: Vec3[], radius: number, color: Vec3, glow = 0.07) {
+  model.add(model.material('bulbs', { color: litGlass(color), glow: color, roughness: 0.3 }), (m) => {
+    for (const [x, y, z] of points) addLathe(m, [x, y - radius, z], sphere(radius, 4), { segments: 8 });
+  });
+  model.add(await glowMaterial(model, 'bulb-glow', roundGlowTexture(color)), (m) => {
+    for (const [x, y] of points) addScreen(m, [x, y - glow / 2, 0.001], glow, glow);
+  });
+}
+
+/** Clear adhesive hooks on the wall at each point, for a string of lights or a garland to hang from. */
+function hooks(model: Model, points: Vec3[]) {
+  model.add(model.material('hooks', { color: [0.95, 0.95, 0.95, 1], roughness: 0.25 }), (m) => {
+    for (const [x, y] of points) {
+      addBox(m, [x, y - 0.024, 0.0015], [0.014, 0.028, 0.003]);   // the pad
+      addBox(m, [x, y - 0.008, 0.006], [0.005, 0.005, 0.01]);     // the hook
+    }
+  });
+}
+
+/** The copper wire fairy lights are strung on. */
+const COPPER = { color: [0.72, 0.45, 0.25, 1] as [number, number, number, number], roughness: 0.35, metallic: 1 };
+
+/** One tube of a neon sign: its path across the sign's face, in meters, and the color it's lit in. */
+interface NeonTube { path: [x: number, y: number][]; color: Vec3 }
+
+/**
+ * A neon sign: each tube along its path on clear acrylic cut to a rectangle round them, held off the wall on four
+ * standoffs, with the glow they throw on the wall round it.
+ */
+async function neonSign(model: Model, tubes: NeonTube[]) {
+  const [xs, ys] = [0, 1].map((axis) => tubes.flatMap(({ path }) => path.map((point) => point[axis])));
+  const margin = 0.03;
+  const [x0, x1, y0, y1] = [Math.min(...xs) - margin, Math.max(...xs) + margin, Math.min(...ys) - margin, Math.max(...ys) + margin];
+  const [w, h, cx, glow] = [x1 - x0, y1 - y0, (x0 + x1) / 2, 0.14];
+  const frame: [number, number, number, number] = [x0 - glow / 2, y0 - glow / 2, w + glow, h + glow];
+  model.add(await glowMaterial(model, 'wall-glow', neonGlowTexture(tubes, frame)), (m) => addScreen(m, [cx, frame[1], 0.001], frame[2], frame[3]));
+  model.add(model.material('acrylic', { color: [0.9, 0.95, 1, 0.14], roughness: 0.05, alpha: 'BLEND' }), (m) => addBox(m, [cx, y0, 0.016], [w, h, 0.004]));
+  model.add(model.material('standoffs', STEEL), (m) => {
+    for (const x of [x0 + 0.014, x1 - 0.014]) for (const y of [y0 + 0.014, y1 - 0.014]) addCylinder(m, [x, y, 0], 0.005, 0.02, { facing: 'z', segments: 12 });
+  });
+  const radius = 0.0045;
+  for (const [i, { path, color }] of tubes.entries()) {
+    model.add(model.material(`tube-${i}`, { color: litGlass(color, 0.5), glow: color, roughness: 0.25 }), (m) => {
+      addTube(m, path.map(([x, y]) => [x, y, 0.024]), radius);
+      for (const [x, y] of [path[0], path.at(-1)!]) addLathe(m, [x, y - radius, 0.024], sphere(radius, 4), { segments: 8 });
+    });
+  }
+}
+
+/** Points along an arc of a circle about (cx, cy), from `from` to `to` degrees counterclockwise from +X. */
+const arc = (cx: number, cy: number, r: number, from: number, to: number, steps = 48): [number, number][] =>
+  Array.from({ length: steps + 1 }, (_, k) => {
+    const angle = ((from + ((to - from) * k) / steps) * Math.PI) / 180;
+    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+  });
+
+/* ───────────── Greenery ───────────── */
+
+/** A vine's or a stem's green-brown. */
+const STEM = { color: [0.28, 0.32, 0.15, 1] as [number, number, number, number], roughness: 0.8 };
+
+/** A smooth curve through `points`, `per` points from each to the next (Catmull–Rom): a vine or a cord that bends rather than kinks. */
+function smooth(points: Vec3[], per = 6): Vec3[] {
+  const at = (i: number) => points[Math.min(Math.max(i, 0), points.length - 1)];
+  const curve: Vec3[] = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    for (let k = 0; k < per; k++) {
+      const t = k / per;
+      curve.push([0, 1, 2].map((c) => 0.5 * (2 * p1[c] + (p2[c] - p0[c]) * t + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t ** 2
+        + (3 * p1[c] - p0[c] - 3 * p2[c] + p3[c]) * t ** 3)) as Vec3);
+    }
+  }
+  curve.push(points.at(-1)!);
+  return curve;
+}
+
+/**
+ * Leaves along `path`, every `spacing` m from `start`, on alternate sides of it, each `size` m long at random within
+ * it, turned out from the vine and facing `facing` where it grows, with a little tilt of its own.
+ */
+function leavesAlong(m: Mesh, random: () => number, path: Vec3[], { spacing, start = spacing / 2, size: [small, large], facing }:
+  { spacing: number; start?: number; size: [number, number]; facing: (at: Vec3) => Vec3 }) {
+  for (const [k, { at, along }] of every(path, spacing, start).entries()) {
+    const face = unit(plus(facing(at), [random() * 0.7 - 0.35, random() * 0.7 - 0.35, random() * 0.7 - 0.35]));
+    const out = unit(plus(times(unit(cross(along, face)), k % 2 ? 1 : -1), times(along, 0.3 + random() * 0.5)));
+    const length = small + random() * (large - small);
+    addLeaf(m, at, out, face, length, length * 0.9);
+  }
+}
+
+/** A pot's profile for addLathe: `foot` across at its bottom, widening to its rim, `rim` across at `height`, its inside showing. */
+const potProfile = (foot: number, rim: number, height: number, wall = 0.008): [number, number][] =>
+  [[0, 0], [foot, 0], [foot, 0], [rim, height], [rim, height], [rim - wall, height], [rim - wall, height], [foot - wall, wall], [0, wall]];
+
+/** Golden pothos leaves: green streaked with yellow, in two patterns so that neighbors differ. */
+const pothosLeaves = async (model: Model) => Promise.all([[3, '#3f8a35'], [8, '#4c9a3c']].map(async ([seed, fill], i) =>
+  model.material(`leaves-${i}`, { texture: await pothosLeafTexture(fill as Hex, '#e2d878', seed as number), mime: 'image/png', alpha: 'MASK', twoSided: true, roughness: 0.55 })));
+
+/**
+ * Pothos vines out over a pot's rim, `rim` m from its middle at height `top`, and down from it, each `reach` m long at
+ * random within it: hanging free, or, when `floor` is a height, down the pot's side and out along what it stands on.
+ * Returns each vine's path.
+ */
+function pothosVines(random: () => number, count: number, [cx, top, cz]: Vec3, rim: number, [short, long]: [number, number],
+  { floor, around = [0, 360] }: { floor?: number; around?: [number, number] } = {}): Vec3[][] {
+  return Array.from({ length: count }, (_, i) => {
+    const angle = ((around[0] + ((around[1] - around[0]) * (i + 0.5 + (random() - 0.5) * 0.6)) / count) * Math.PI) / 180;
+    const [dx, dz] = [Math.cos(angle), Math.sin(angle)];
+    const out = (r: number, y: number, sway = 0): Vec3 => [cx + dx * r - dz * sway, y, cz + dz * r + dx * sway];
+    const reach = short + random() * (long - short);
+    const points: Vec3[] = [out(rim * 0.4, top - 0.01), out(rim * 1.05, top + 0.02), out(rim + 0.02, top - 0.03)];
+    if (floor === undefined) {
+      for (let y = top - 0.1; y > top - reach; y -= 0.1) points.push(out(rim + 0.03 + random() * 0.03, y, (random() - 0.5) * 0.05));
+    } else {
+      points.push(out(rim + 0.015, (top + floor) / 2), out(rim + 0.03, floor + 0.01));
+      points.push(out(rim + 0.03 + reach * 0.5, floor + 0.006, (random() - 0.5) * 0.06), out(rim + 0.03 + reach, floor + 0.006, (random() - 0.5) * 0.1));
+    }
+    return smooth(points);
+  });
+}
+
+/** Leaves growing up and out of the soil at `soil`, a pot's crown, `count` of them. */
+function crown(m: Mesh, random: () => number, [cx, y, cz]: Vec3, count: number, [small, large]: [number, number]) {
+  for (let k = 0; k < count; k++) {
+    const angle = random() * Math.PI * 2;
+    const [dx, dz] = [Math.cos(angle), Math.sin(angle)];
+    const lean = 0.4 + random() * 0.8;
+    const base: Vec3 = [cx + dx * random() * 0.03, y, cz + dz * random() * 0.03];
+    const length = small + random() * (large - small);
+    addLeaf(m, plus(base, [dx * 0.02, 0.03 + random() * 0.05, dz * 0.02]), [dx * lean, 1, dz * lean], [dx, 0.5, dz], length, length * 0.9);
+  }
+}
+
+/** Ivy leaves, dark and variegated. */
+const ivyLeaves = async (model: Model) => Promise.all([['#2f5d2a', '#8fb36a'], ['#5f8f3c', '#cfe0a0']].map(async ([fill, vein], i) =>
+  model.material(`ivy-${i}`, { texture: await ivyLeafTexture(fill as Hex, vein as Hex), mime: 'image/png', alpha: 'MASK', twoSided: true, roughness: 0.5 })));
+
+/**
+ * An ivy garland on the wall: two vines twisted together, swagged between hooks at `hangs`, sagging `sag`, with strands
+ * trailing down from it. Returns the swag's path, for lights to be strung along.
+ */
+async function ivyGarland(model: Model, random: () => number, hangs: Vec3[], sag: number): Promise<Vec3[]> {
+  const z = 0.014;
+  const swagPath = hangs.slice(1).flatMap((to, i) => swag([hangs[i][0], hangs[i][1] - 0.012, z], [to[0], to[1] - 0.012, z], sag).slice(i ? 1 : 0));
+  const twisted = swagPath.map((p, k): Vec3 => plus(p, [0, 0.012 * Math.sin(k * 0.8), 0.004 * Math.cos(k * 0.8)]));
+  const trails = Array.from({ length: (hangs.length - 1) * 3 }, (_, i) => {
+    const from = swagPath[Math.floor(((i + 0.3 + random() * 0.4) / ((hangs.length - 1) * 3)) * (swagPath.length - 1))];
+    const length = 0.18 + random() * 0.32;
+    const points: Vec3[] = [from];
+    for (let d = 0.08; d < length; d += 0.08) points.push(plus(from, [(random() - 0.5) * 0.05, -d, 0.004]));
+    return smooth(points);
+  });
+  model.add(model.material('vine', STEM), (m) => {
+    for (const path of [swagPath, twisted, ...trails]) addTube(m, path, 0.0022, { sides: 6 });
+  });
+  const [dark, light] = await ivyLeaves(model);
+  for (const [material, start] of [[dark, 0], [light, 0.018]] as const) {
+    model.add(material, (m) => {
+      for (const path of [swagPath, twisted, ...trails]) leavesAlong(m, random, path, { spacing: 0.036, start, size: [0.03, 0.05], facing: () => [0, 0, 1] });
+      clearOfWall(m);
+    });
+  }
+  hooks(model, hangs);
+  return swagPath;
+}
 
 
 export interface ObjectSpec {
@@ -1174,6 +1604,367 @@ export const OBJECTS: ObjectSpec[] = [
       });
       model.add(model.material('opal', { color: [0.97, 0.95, 0.9, 1], roughness: 0.35, glow: [0.6, 0.52, 0.4] }), (m) => {
         for (const [x, y] of lights) addLathe(m, [x, y + 0.012, 0], sphere(globe, 14), { segments: 32 });
+      });
+      return model.doc;
+    },
+  },
+  ...([
+    ['warm', 'Warm White', () => [1, 0.8, 0.55], ['White', 'Orange'], ['Cozy', 'Modern', 'Dorm']],
+    ['purple', 'Purple', () => [0.62, 0.25, 1], ['Purple'], ['Modern', 'Gaming', 'Dorm']],
+    ['blue', 'Ice Blue', () => [0.25, 0.55, 1], ['Blue'], ['Modern', 'Gaming', 'Dorm']],
+    ['pink', 'Pink', () => [1, 0.3, 0.65], ['Pink'], ['Modern', 'Y2K', 'Dorm']],
+    ['rgb', 'RGB Color Changing', rainbow, ['Multicolor'], ['Gaming', 'Modern', 'Dorm']],
+  ] as const).map(([key, name, color, colors, styleTags]): ObjectSpec => ({
+    id: `obj-led-strip-${key}`,
+    title: `${name} LED Strip Lights, 6.6 ft`,
+    category: 'wall_art',
+    mount: 'wall',
+    colors: [...colors],
+    materials: ['LED', 'Silicone'],
+    styleTags: [...styleTags],
+    price: key === 'rgb' ? 20 : 15,
+    async build() {
+      const model = new Model(this.id);
+      await ledStrip(model, 2, color as (u: number) => Vec3);
+      return model.doc;
+    },
+  })),
+  {
+    id: 'obj-fairy-lights-warm',
+    title: 'Fairy String Lights on Copper Wire, Warm White, Draped in Swags',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['White', 'Copper'],
+    materials: ['LED', 'Copper wire'],
+    styleTags: ['Cozy', 'Bohemian', 'Dorm'],
+    price: 12,
+    async build() {
+      const model = new Model(this.id);
+      const hangs: Vec3[] = [-0.75, -0.25, 0.25, 0.75].map((x) => [x, 0.34, 0]);
+      const wire = hangs.slice(1).flatMap((to, i) => swag([hangs[i][0], 0.33, 0.008], [to[0], 0.33, 0.008], 0.2).slice(i ? 1 : 0));
+      model.add(model.material('wire', COPPER), (m) => addTube(m, wire, 0.0012, { sides: 5 }));
+      await bulbs(model, every(wire, 0.07).map(({ at }) => at), 0.004, LAMPLIGHT);
+      hooks(model, hangs);
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-curtain-lights-warm',
+    title: 'LED Curtain String Lights, Warm White, 4 x 4.6 ft',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['White'],
+    materials: ['LED', 'Wire'],
+    styleTags: ['Cozy', 'Romantic', 'Dorm'],
+    price: 22,
+    async build() {
+      const model = new Model(this.id);
+      const random = seeded(5);
+      const [w, top] = [1.2, 1.4];
+      const strands = Array.from({ length: 12 }, (_, i) => -w / 2 + (w * (i + 0.5)) / 12);
+      model.add(model.material('wire', { color: [0.9, 0.9, 0.88, 1], roughness: 0.5 }), (m) => {
+        addTube(m, [[-w / 2, top, 0.008], [w / 2, top, 0.008]], 0.0015, { sides: 5 });
+        for (const [i, x] of strands.entries()) addTube(m, [[x, top, 0.008], [x, top - (i % 2 ? 1.2 : 1.32), 0.008]], 0.001, { sides: 4 });
+      });
+      const points = strands.flatMap((x, i) => Array.from({ length: i % 2 ? 12 : 13 }, (_, k): Vec3 => [x + (random() - 0.5) * 0.004, top - 0.06 - k * 0.1, 0.009]));
+      await bulbs(model, points, 0.004, LAMPLIGHT, 0.06);
+      hooks(model, [[-w / 2, top + 0.01, 0], [0, top + 0.01, 0], [w / 2, top + 0.01, 0]]);
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-photo-string-lights',
+    title: 'Photo Clip String Lights with 8 Instant Photos, Warm White',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['White', 'Multicolor'],
+    materials: ['LED', 'Wood', 'Paper'],
+    styleTags: ['Cozy', 'Dorm', 'Eclectic'],
+    price: 16,
+    async build() {
+      const model = new Model(this.id);
+      const random = seeded(9);
+      const hangs: Vec3[] = [-0.6, 0, 0.6].map((x) => [x, 0.4, 0]);
+      const wire = hangs.slice(1).flatMap((to, i) => swag([hangs[i][0], 0.39, 0.008], [to[0], 0.39, 0.008], 0.12).slice(i ? 1 : 0));
+      model.add(model.material('wire', COPPER), (m) => addTube(m, wire, 0.0012, { sides: 5 }));
+      await bulbs(model, every(wire, 0.1, 0.05).map(({ at }) => at), 0.007, LAMPLIGHT, 0.09);
+      // A photo between each two bulbs, clipped to the wire at its top middle, hanging a little crooked.
+      const clips = every(wire, 0.15, 0.1).slice(0, 8);
+      const [cw, ch] = [0.054, 0.086];
+      model.add(model.material('photos', { texture: await photoAtlas(clips.length), roughness: 0.4 }), (m) => {
+        for (const [i, { at: [x, y] }] of clips.entries()) {
+          const tilt = (random() - 0.5) * 0.2;
+          const corner = (dx: number, dy: number): Vec3 => [x + dx * Math.cos(tilt) - dy * Math.sin(tilt), y - 0.008 + dx * Math.sin(tilt) + dy * Math.cos(tilt), 0.006];
+          const [u0, u1] = [i / clips.length, (i + 1) / clips.length];
+          const start = m.positions.length / 3;
+          [[corner(-cw / 2, -ch), u0, 1], [corner(cw / 2, -ch), u1, 1], [corner(cw / 2, 0), u1, 0], [corner(-cw / 2, 0), u0, 0]].forEach(([p, u, v]) => {
+            m.positions.push(...(p as Vec3));
+            m.normals.push(0, 0, 1);
+            m.uvs.push(u as number, v as number);
+          });
+          m.indices.push(start, start + 1, start + 2, start, start + 2, start + 3);
+        }
+      });
+      model.add(model.material('clips', { texture: await woodTexture('#d8b483', '#a57a4a'), roughness: 0.7 }), (m) => {
+        for (const { at: [x, y] } of clips) addBox(m, [x, y - 0.018, 0.009], [0.008, 0.026, 0.006]);
+      });
+      hooks(model, hangs);
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-neon-heart-pink',
+    title: 'Pink Heart Neon Sign, LED, 14 x 13 in',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['Pink'],
+    materials: ['LED neon', 'Acrylic'],
+    styleTags: ['Y2K', 'Romantic', 'Dorm'],
+    price: 35,
+    async build() {
+      const model = new Model(this.id);
+      const heart = Array.from({ length: 97 }, (_, k): [number, number] => {
+        const t = (k / 96) * Math.PI * 2;
+        return [0.0105 * 16 * Math.sin(t) ** 3, 0.0105 * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))];
+      });
+      await neonSign(model, [{ path: heart, color: [1, 0.25, 0.6] }]);
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-neon-moon-star',
+    title: 'Crescent Moon and Star Neon Sign, Warm Yellow, LED, 15 in',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['Yellow'],
+    materials: ['LED neon', 'Acrylic'],
+    styleTags: ['Cozy', 'Celestial', 'Dorm'],
+    price: 38,
+    async build() {
+      const model = new Model(this.id);
+      // The moon's outer edge, then its inner edge back: a circle through both horns, its center further right.
+      const moon = [...arc(0, 0, 0.17, 60, 300), ...arc(0.06, 0, 0.149, 279.7, 80.3, 40).slice(1)];
+      const star = Array.from({ length: 11 }, (_, k): [number, number] => {
+        const [angle, r] = [Math.PI / 2 + (k * Math.PI) / 5, k % 2 ? 0.016 : 0.04];
+        return [0.1 + r * Math.cos(angle), 0.01 + r * Math.sin(angle)];
+      });
+      await neonSign(model, [{ path: moon, color: [1, 0.8, 0.35] }, { path: star, color: [1, 0.8, 0.35] }]);
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-neon-rainbow',
+    title: 'Rainbow Neon Sign, Pastel, LED, 15 x 8 in',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['Multicolor', 'Pink', 'Yellow', 'Blue'],
+    materials: ['LED neon', 'Acrylic'],
+    styleTags: ['Playful', 'Kids', 'Dorm'],
+    price: 35,
+    async build() {
+      const model = new Model(this.id);
+      const colors: Vec3[] = [[1, 0.35, 0.6], [1, 0.82, 0.3], [0.3, 0.65, 1]];
+      await neonSign(model, [0.17, 0.135, 0.1].map((r, i) => ({ path: arc(0, 0, r, 0, 180, 40), color: colors[i] })));
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-moon-lamp',
+    title: '3D Moon Lamp on Wooden Stand, 6"',
+    category: 'lamp',
+    mount: 'floor',
+    colors: ['White', 'Brown'],
+    materials: ['PLA', 'Wood'],
+    styleTags: ['Cozy', 'Celestial', 'Dorm'],
+    price: 20,
+    async build() {
+      const model = new Model(this.id);
+      model.add(model.material('stand', { texture: await woodTexture('#b88a5a', '#7a5532'), roughness: 0.6 }), (m) => {
+        addLathe(m, [0, 0, 0], [[0, 0], [0.05, 0], [0.05, 0], [0.05, 0.016], [0.05, 0.016], [0.046, 0.02], [0, 0.02]]);
+        addCylinder(m, [0, 0.02, 0], 0.032, 0.012, { segments: 32, caps: false });
+      });
+      model.add(model.material('moon', { texture: await moonTexture(), glow: [0.62, 0.58, 0.5], roughness: 0.8 }),
+        (m) => addLathe(m, [0, 0.022, 0], sphere(0.075, 24), { segments: 48 }));
+      return model.doc;
+    },
+  },
+  ...([
+    ['purple', 'Purple Liquid with Pink Wax', [0.45, 0.2, 0.75], [1, 0.35, 0.65], ['Purple', 'Pink']],
+    ['orange', 'Yellow Liquid with Orange Wax', [1, 0.75, 0.2], [1, 0.38, 0.1], ['Yellow', 'Orange']],
+  ] as const).map(([key, name, liquid, wax, colors]): ObjectSpec => ({
+    id: `obj-lava-lamp-${key}`,
+    title: `Lava Lamp, 14.5", ${name}`,
+    category: 'lamp',
+    mount: 'floor',
+    colors: [...colors, 'Silver'],
+    materials: ['Glass', 'Metal'],
+    styleTags: ['Retro', '70s', 'Playful'],
+    price: 30,
+    async build() {
+      const model = new Model(this.id);
+      const metal = { color: [0.7, 0.7, 0.72, 1] as [number, number, number, number], roughness: 0.25, metallic: 1 };
+      model.add(model.material('base', metal), (m) => {
+        addLathe(m, [0, 0, 0], [[0, 0], [0.064, 0], [0.064, 0], [0.064, 0.008], [0.064, 0.008], [0.041, 0.125], [0, 0.125]]);
+        addLathe(m, [0, 0, 0], [[0.024, 0.333], [0.026, 0.333], [0.026, 0.333], [0.017, 0.37], [0.017, 0.37], [0, 0.37]]);
+      });
+      model.add(model.material('wax', { color: [...wax, 1], glow: times([...wax], 0.8), roughness: 0.3 }), (m) => {
+        const blob = (y: number, r: number, stretch = 1.3) => addLathe(m, [0, y, 0], sphere(r, 10).map(([a, b]) => [a, b * stretch] as [number, number]), { segments: 24 });
+        blob(0.125, 0.036, 0.5);
+        for (const [x, y, r] of [[0.006, 0.17, 0.02], [-0.008, 0.225, 0.015], [0.004, 0.275, 0.011], [-0.002, 0.305, 0.007]]) {
+          addLathe(m, [x, y, 0], sphere(r, 10).map(([a, b]) => [a, b * 1.35] as [number, number]), { segments: 24 });
+        }
+      });
+      model.add(model.material('liquid', { color: [...liquid, 0.5], glow: times([...liquid], 0.45), roughness: 0.05, alpha: 'BLEND', twoSided: true }),
+        (m) => addLathe(m, [0, 0, 0], smooth([[0.041, 0.125, 0], [0.05, 0.19, 0], [0.045, 0.26, 0], [0.024, 0.333, 0]], 6).map(([r, y]) => [r, y] as [number, number]), { segments: 40 }));
+      return model.doc;
+    },
+  })),
+  {
+    id: 'obj-ivy-garland',
+    title: 'Artificial Ivy Vine Garland, Hanging, 5 ft',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['Green'],
+    materials: ['Faux greenery', 'Wire'],
+    styleTags: ['Cottagecore', 'Bohemian', 'Dorm'],
+    price: 14,
+    async build() {
+      const model = new Model(this.id);
+      await ivyGarland(model, seeded(13), [-0.75, 0, 0.75].map((x): Vec3 => [x, 0.7, 0]), 0.16);
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-ivy-garland-lights',
+    title: 'Artificial Ivy Garland with Fairy Lights, Warm White, 5 ft',
+    category: 'wall_art',
+    mount: 'wall',
+    colors: ['Green', 'White'],
+    materials: ['Faux greenery', 'LED', 'Wire'],
+    styleTags: ['Cottagecore', 'Cozy', 'Dorm'],
+    price: 20,
+    async build() {
+      const model = new Model(this.id);
+      const swagPath = await ivyGarland(model, seeded(21), [-0.75, 0, 0.75].map((x): Vec3 => [x, 0.7, 0]), 0.16);
+      await bulbs(model, every(swagPath, 0.09).map(({ at }) => plus(at, [0, 0, 0.012])), 0.004, LAMPLIGHT);
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-pothos-trailing',
+    title: 'Golden Pothos in White Ceramic Pot, Trailing',
+    category: 'plant',
+    mount: 'floor',
+    colors: ['Green', 'White'],
+    materials: ['Ceramic'],
+    styleTags: ['Bohemian', 'Modern', 'Cozy'],
+    price: 28,
+    async build() {
+      const model = new Model(this.id);
+      const random = seeded(7);
+      const [rim, height] = [0.08, 0.14];
+      model.add(model.material('pot', { color: [0.94, 0.93, 0.9, 1], roughness: 0.3 }), (m) => addLathe(m, [0, 0, 0], potProfile(0.062, rim, height)));
+      model.add(model.material('soil', { color: [0.2, 0.14, 0.09, 1], roughness: 1 }), (m) => addCylinder(m, [0, height - 0.02, 0], rim - 0.01, 0.004, { segments: 32 }));
+      const vines = pothosVines(random, 8, [0, height, 0], rim, [0.03, 0.14], { floor: 0 });
+      model.add(model.material('vines', STEM), (m) => { for (const vine of vines) addTube(m, vine, 0.002, { sides: 5 }); });
+      const leaves = await pothosLeaves(model);
+      for (const [i, material] of leaves.entries()) {
+        model.add(material, (m) => {
+          for (const vine of vines) leavesAlong(m, random, vine, { spacing: 0.09, start: 0.03 + i * 0.045, size: [0.05, 0.075], facing: ([x, y, z]) => [x, y > 0.02 ? 0.4 : 3, z] });
+          crown(m, random, [0, height - 0.02, 0], 9, [0.06, 0.09]);
+        });
+      }
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-pothos-macrame',
+    title: 'Pothos in Macramé Plant Hanger, Wall Hook',
+    category: 'plant',
+    mount: 'wall',
+    colors: ['Green', 'Cream', 'Terracotta'],
+    materials: ['Cotton rope', 'Terracotta'],
+    styleTags: ['Bohemian', 'Cottagecore', 'Dorm'],
+    price: 32,
+    async build() {
+      const model = new Model(this.id);
+      const random = seeded(11);
+      const [rim, height, hook, zc] = [0.075, 0.13, 1.1, 0.13];
+      const top = 0.62;                                          // the pot's rim
+      model.add(model.material('pot', { color: [0.72, 0.4, 0.26, 1], roughness: 0.85 }), (m) => addLathe(m, [0, top - height, zc], potProfile(0.058, rim, height)));
+      model.add(model.material('soil', { color: [0.2, 0.14, 0.09, 1], roughness: 1 }), (m) => addCylinder(m, [0, top - 0.02, zc], rim - 0.01, 0.004, { segments: 32 }));
+      model.add(model.material('hook', BRASS), (m) => {
+        addBox(m, [0, hook - 0.02, 0.002], [0.03, 0.03, 0.004]);
+        addCylinder(m, [0, hook - 0.005, 0], 0.003, 0.03, { facing: 'z', segments: 8 });
+      });
+      const knot: Vec3 = [0, top - height - 0.05, zc];
+      model.add(model.material('cord', { color: [0.93, 0.88, 0.78, 1], roughness: 0.95 }), (m) => {
+        const ring: Vec3 = [0, hook - 0.03, 0.03];
+        for (let k = 0; k < 4; k++) {
+          const angle = Math.PI / 4 + (k * Math.PI) / 2;
+          const at = (r: number, y: number): Vec3 => [r * Math.cos(angle), y, zc + r * Math.sin(angle)];
+          // Each cord: from the ring down to a knot above the pot, round the pot's belly, and in under it to the gathering knot.
+          const above = plus(ring, times(minus(at(rim + 0.004, top), ring), 0.6));
+          addTube(m, smooth([ring, above, at(rim + 0.004, top), at(rim - 0.005, top - height * 0.6), at(0.03, top - height - 0.02), knot], 5), 0.0035, { sides: 6 });
+          addLathe(m, [above[0], above[1] - 0.008, above[2]], sphere(0.008, 6), { segments: 10 });
+        }
+        addLathe(m, [knot[0], knot[1] - 0.012, knot[2]], sphere(0.013, 6), { segments: 12 });
+        for (let k = 0; k < 10; k++) {
+          const angle = (k / 10) * Math.PI * 2;
+          addTube(m, [knot, plus(knot, [0.012 * Math.cos(angle), -0.16 - random() * 0.03, 0.012 * Math.sin(angle)])], 0.002, { sides: 4 });
+        }
+      });
+      // The vines fall over the front and sides of the pot, not behind it against the wall.
+      const vines = pothosVines(random, 7, [0, top, zc], rim, [0.3, 0.6], { around: [-20, 200] });
+      model.add(model.material('vines', STEM), (m) => {
+        for (const vine of vines) addTube(m, vine, 0.002, { sides: 5 });
+        clearOfWall(m, 0.01);
+      });
+      const leaves = await pothosLeaves(model);
+      for (const [i, material] of leaves.entries()) {
+        model.add(material, (m) => {
+          for (const vine of vines) leavesAlong(m, random, vine, { spacing: 0.09, start: 0.03 + i * 0.045, size: [0.05, 0.075], facing: ([x, , z]) => [x, 0.3, z - zc] });
+          crown(m, random, [0, top - 0.02, zc], 8, [0.06, 0.085]);
+          clearOfWall(m);
+        });
+      }
+      return model.ground();
+    },
+  },
+  {
+    id: 'obj-pampas-vase',
+    title: 'Dried Pampas Grass in White Ceramic Vase, 3 ft',
+    category: 'decor',
+    mount: 'floor',
+    colors: ['Beige', 'White'],
+    materials: ['Dried grass', 'Ceramic'],
+    styleTags: ['Bohemian', 'Japandi', 'Minimalist'],
+    price: 35,
+    async build() {
+      const model = new Model(this.id);
+      const random = seeded(19);
+      model.add(model.material('vase', { color: [0.95, 0.94, 0.9, 1], roughness: 0.6 }), (m) => addLathe(m, [0, 0, 0],
+        [[0, 0], [0.065, 0], [0.065, 0], [0.09, 0.08], [0.088, 0.17], [0.055, 0.25], [0.045, 0.29], [0.05, 0.3], [0.05, 0.3], [0.042, 0.3], [0.042, 0.3], [0.035, 0.26], [0, 0.26]]));
+      const stems = Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * Math.PI * 2 + random() * 0.5;
+        const splay = 0.08 + random() * 0.22;
+        const length = 0.55 + random() * 0.25;
+        const direction = unit([splay * Math.cos(angle), 1, splay * Math.sin(angle)]);
+        const base: Vec3 = [0.012 * Math.cos(angle), 0.26, 0.012 * Math.sin(angle)];
+        return { base, direction, length, angle };
+      });
+      model.add(model.material('stems', { color: [0.78, 0.68, 0.5, 1], roughness: 0.8 }), (m) => {
+        for (const { base, direction, length } of stems) addTube(m, [base, plus(base, times(direction, length))], 0.0025, { sides: 5 });
+      });
+      model.add(model.material('plumes', { texture: await plumeTexture(['#efe4cf', '#e2d2b3', '#d6c29c', '#f6efe2']), mime: 'image/png', alpha: 'MASK', twoSided: true, roughness: 0.9 }), (m) => {
+        for (const { base, direction, length, angle } of stems) {
+          const from = plus(base, times(direction, length * 0.62));
+          // Four cards crossed about the stem, so the plume is full from every side.
+          for (let k = 0; k < 4; k++) {
+            const turn = angle + (k * Math.PI) / 4;
+            addLeaf(m, from, direction, unit(cross(direction, [Math.cos(turn), 0, Math.sin(turn)])), length * 0.45, 0.12, 0);
+          }
+        }
       });
       return model.doc;
     },

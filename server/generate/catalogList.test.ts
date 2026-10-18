@@ -98,6 +98,26 @@ describe('catalogList', () => {
     expect(lines(text, 'not_art')).toEqual([expect.stringContaining('clock-wall')]);
   });
 
+  it('lists the lights and greenery that hang on a wall apart, never as wall art or among the plants on the floor', () => {
+    const catalog: Catalog = {
+      version: 1,
+      items: [
+        item('art-mountain', 'wall_art', 'Abstract Mountain Landscape Wall Art on Canvas', [1.22, 0.91, 0.04], { mount: 'wall' }),
+        item('led-strip', 'wall_art', 'Purple LED Strip Lights, 6.6 ft', [2, 0.36, 0.006], { mount: 'wall' }),
+        item('neon-heart', 'wall_art', 'Pink Heart Neon Sign, LED', [0.54, 0.5, 0.03], { mount: 'wall' }),
+        item('pothos-hanger', 'plant', 'Pothos in Macramé Plant Hanger, Wall Hook', [0.37, 1.03, 0.31], { mount: 'wall' }),
+        item('pothos-pot', 'plant', 'Golden Pothos in White Ceramic Pot', [0.5, 0.29, 0.5]),
+        item('neon-table', 'decor', 'Ciao Neon Light Sign', [0.28, 0.15, 0.05]),
+      ],
+    };
+    const text = catalogList(catalog);
+
+    expect(lines(text, 'wall_art')).toEqual([expect.stringContaining('art-mountain')]);
+    expect(lines(text, 'wall_lights_and_greenery').map((line) => line.split(' | ')[0])).toEqual(['- led-strip', '- neon-heart', '- pothos-hanger']);
+    expect(lines(text, 'plant')).toEqual([expect.stringContaining('pothos-pot')]);
+    expect(lines(text, 'decor')).toEqual([expect.stringContaining('neon-table')]);
+  });
+
   it("never lists the Catalog's placeholder boxes", () => {
     const placeholder = item('placeholder-rug', 'rug', 'Placeholder Rug', [1.5, 0.01, 2]);
 

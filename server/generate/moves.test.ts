@@ -24,7 +24,8 @@ const smallRug = item('rug-small', 'rug', 'Small Rug', [1.2, 0.01, 1], { priceEs
 const twinBed = item('bed-twin', 'bed', 'Twin Bed', [0.99, 0.6, 2.03], { priceEstimateUsd: 150 });
 const clock = item('clock-wall', 'wall_art', 'Vintage Decorative Wall Clock', [0.6, 0.6, 0.03], { mount: 'wall', priceEstimateUsd: 40 });
 const memoBoard = item('board-memo', 'wall_art', 'Dry Erase Memo Board', [0.56, 0.46, 0.03], { mount: 'wall', priceEstimateUsd: 40 });
-const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug, twinBed, clock, memoBoard] };
+const ledStrip = item('led-strip', 'wall_art', 'Purple LED Strip Lights, 6.6 ft', [2, 0.36, 0.006], { mount: 'wall', priceEstimateUsd: 15 });
+const decorCatalog = { ...catalog, items: [...catalog.items, print, poster, sketch, roundMirror, pillow, vase, fern, armchair, floorLamp, sideTable, smallRug, twinBed, clock, memoBoard, ledStrip] };
 
 const start = (onEdit?: (edit: Edit) => void) =>
   createSession({ setup, catalog: decorCatalog, brief: { text: 'cozy' }, materials: [], onEdit });
@@ -78,6 +79,15 @@ describe('the decorating moves', () => {
       expect(report.skipped).toEqual([
         { catalog_id: 'clock-wall', why: "Vintage Decorative Wall Clock isn't art: hang it on its own with place_piece (on_wall), by the desk or the door" },
         { catalog_id: 'board-memo', why: "Dry Erase Memo Board isn't art: hang it on its own with place_piece (on_wall), by the desk or the door" },
+      ]);
+    });
+
+    it('hangs no LED strip or string lights in a gallery: they light the wall on their own', async () => {
+      const report = await call(start(), 'hang_gallery', { over_id: 'og_bed', wall_id: 'wl_west', catalog_ids: ['print-fern', 'led-strip'] });
+
+      expect(report.placed.map(({ catalog_id }: { catalog_id: string }) => catalog_id)).toEqual(['print-fern']);
+      expect(report.skipped).toEqual([
+        { catalog_id: 'led-strip', why: "Purple LED Strip Lights, 6.6 ft isn't art: hang it on its own with place_piece (on_wall), over the bed, the desk or a window" },
       ]);
     });
 
